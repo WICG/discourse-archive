@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>More erognomic createElement function</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">More erognomic createElement function</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3565_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">theScottyJam</div>
+          <div class="creation_date">2021-06-23</div>
+          <div class="post_content">
+<p>I like to hang around the <a href="https://codereview.stackexchange.com/" rel="noopener nofollow ugc">code review stack exchange</a>. One of the most common issues I see with beginner Javascript developers is their constant reliance on using <code>.innerHTML</code>, without properly sanitizing the data. Sometimes more seasoned developers use it too, despite the risk, simply because it’s much simpler to use than alternatives. In some cases this can just lead to potential bugs, but in the worst scenarios, these developers introduce XSS issues into their code.</p>
+<p>I can understand the desire to use <code>.innerHTML</code>. The alternative is very unfriendly and cumbersome to use. Compare these two examples of creating a very small chunk of HTML (and imagine how much more verbose it gets as the amount of generated HTML grows, or how unreadable it gets when a little nesting gets involved)</p>
+<p>Without .innerHTML:</p>
+<pre><code class="lang-javascript">const heading = document.createElement('a')
+heading.classList.add('heading')
+heading.href = './over-there.html'
+
+const img = document.createElement('img')
+img.classList.add('img')
+img.src = './my-image.png'
+img.alt = 'some alt text'
+heading.appendChild(img)
+
+const text = document.createElement('h1')
+text.classList.add('heading-text')
+text.innerText = 'Information'
+heading.appendChild(text)
+
+const body = document.createElement('p')
+body.innerText = 'Lorum Ipsum'
+heading.appendChild(body)
+
+document.getElementById('main').appendChild(heading)
+</code></pre>
+<p>With .innerHTML</p>
+<pre><code class="lang-javascript">document.getElementById('main').innerHTML = `
+  &lt;a class="heading" href="./over-there.html"&gt;
+    &lt;img class="img" src="./my-image.png" alt="some alt text"/&gt;
+    &lt;h1 class="heading-text"&gt;Information&lt;/h1&gt;
+    &lt;p&gt;Lorum Ipsum&lt;/p&gt;
+  &lt;/a&gt;
+`
+</code></pre>
+<p>What if we provided a more ergonomic create-element function that tried to compete with how user-friendly <code>.innerHTML</code> is? This could help drive people away from relying on <code>.innerHTML</code> so much, and guide them to better and safer alternatives. For example, we could provide an <code>Element.create()</code> function that was defined somewhat like this:</p>
+<pre><code class="lang-javascript">Element.create = function(tagName, attrs = {}, children = []) {
+  const newElement = document.createElement(tagName)
+  for ([key, value] of Object.entries(attrs)) {
+    newElement.setAttribute(key, value)
+  }
+  newElement.append(...children)
+  return newElement
+}
+</code></pre>
+<p>And here’s a usage example</p>
+<pre><code class="lang-javascript">const heading = Element.create('a', { class: 'heading', href: './over-there.html' }, [
+  Element.create('img', { class: 'img', src: './my-image.png', alt: 'some alt text' }),
+  Element.create('h1', { class: 'heading-text' }, ['Information']),
+  Element.create('p', {}, ['Lorum Ipsum']),
+])
+
+document.getElementById('main').appendChild(heading)
+</code></pre>
+<p>Yes, this isn’t as concise as <code>.innerHTML</code>, but it’s certainly orders of magnitude better than the current DOM API functions we’ve got, and will hopefully be enticing enough to lead people away from <code>.innerHTML</code>.</p>
+<p>And yes, I acknowledge that it’s not that hard to just define this Element.create() in userland code, but newer Javascript programmers aren’t going to think to do that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Delapouite</div>
+          <div class="creation_date">2021-06-24</div>
+          <div class="post_content">
+<p>Yes. Over the years, I also added such a similar function to most of my front projects.</p>
+<p>Without surprise, it turns out that one the core pillar of React, the <code>createElement</code> function (the one which JSX desugars to), shares almost the same concept: <a href="https://reactjs.org/docs/react-api.html#createelement" rel="noopener nofollow ugc">https://reactjs.org/docs/react-api.html#createelement</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2021-06-30</div>
+          <div class="post_content">
+<p>I’m extremely in favor of such a method, and have written this function numerous times when dealing with more involved web pages where a web framework is too much, but static HTML is…well…too static.</p>
+<p>I would like to request a couple changes for usability:</p>
+<ol>
+<li>The <code>tagName</code> should admit a subset of <a href="https://drafts.csswg.org/selectors-4/#simple" rel="noopener nofollow ugc">simple CSS selectors</a>, with the conditions that 1. a tag name must be specified, 2. universal selectors and pseudoclasses must not be present, and 3. attribute selectors can only use <code>=</code>, not <code>~=</code>, <code>*=</code>, or similar.</li>
+<li>!f <code>attrs</code> is either a node or non-object, it should instead be treated as the first child.</li>
+</ol>
+<p>That way, I can just do <code>Element.create("div.app#root", "child")</code> or <code>Element.create("input[type=number][name=count]")</code>. There is precedent for both of these, in the form of Mithril and react-hyperscript, and I find myself frequently a least adding class and ID support if nothing else to my helpers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3315_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">easrng</div>
+          <div class="creation_date">2021-06-30</div>
+          <div class="post_content">
+<p>A pattern I’ve seen that can kinda fix this is</p>
+<pre><code class="lang-auto">const heading = Object.assign(document.createElement('a'), {
+  className: 'heading',
+  href: './over-there.html'
+})
+heading.append(
+  Object.assign(document.createElement('img', {
+    className: 'img',
+    src: './my-image.png',
+    alt: 'some alt text'
+  }),
+  Object.assign(document.createElement('h1', {
+    className: 'heading-text'
+    textContent: 'Information'
+  }),
+  Object.assign(document.createElement('p', {
+    textContent: "Lorem Ipsum"
+  }),
+])
+document.getElementById('main').appendChild(heading)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3315_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">easrng</div>
+          <div class="creation_date">2021-06-30</div>
+          <div class="post_content">
+<p>See also <code>htm</code>, a small library that makes creating element trees easier.</p>
+<pre><code class="lang-auto">import htm from 'htm';
+function h(type, props, ...children) {
+  let ele = Object.assign(document.createElement(type), props)
+  ele.append(...children)
+  return ele
+}
+const html = htm.bind(h);
+
+document.getElementById('main').appendChild(html`
+  &lt;a class="heading" href="./over-there.html"&gt;
+    &lt;img class="img" src="./my-image.png" alt="some alt text"/&gt;
+    &lt;h1 class="heading-text"&gt;Information&lt;/h1&gt;
+    &lt;p&gt;Lorum Ipsum&lt;/p&gt;
+  &lt;/a&gt;
+`)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3565_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">theScottyJam</div>
+          <div class="creation_date">2021-06-30</div>
+          <div class="post_content">
+<p>That’s a pretty neet pattern <span class="mention">@easrng</span>, and would certainly help, as would that htm library.</p>
+<p>However, my primary concern is with newer to mid-level developers. More advanced developers are probably just using a framework, or some templating library (like htm or handlebars), or they’re smart enough to figure out how to create a more ergonomic createElement function themself, etc. But, a newer developer is not going to figure out that clever pattern themself, nor would I recommend that they go off and install little libraries to solve day-to-day problems - and it’s these people who keep running off to use <code>.innerHTML</code>, often in unsafe ways.</p>
+<p><span class="mention">@isiahmeadows</span> those are good points worth considering. For point 1, I could see value in having a shorthand like that. It might be a little confusing that the shorthand uses query syntax to create an element, but it’s certainly an avenue worth considering. For point 2, that’s an excellent option worth considering - It’s common to have only one child, and I can see value in allowing someone to just pass in a straight value instead of an array.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2021-08-12</div>
+          <div class="post_content">
+<p>There is substantial library precedent for my suggestion, actually. (I’m admittedly a bit biased. <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=9" title=":wink:"/>)</p>
+<ul>
+<li>The original: <a class="inline-onebox" href="https://github.com/hyperhype/hyperscript" rel="noopener nofollow ugc">GitHub - hyperhype/hyperscript: Create HyperText with JavaScript.</a>
+</li>
+<li>Another early rendition: <a class="inline-onebox" href="https://github.com/Matt-Esch/virtual-dom/tree/master/virtual-hyperscript" rel="noopener nofollow ugc">virtual-dom/virtual-hyperscript at master · Matt-Esch/virtual-dom · GitHub</a>
+</li>
+<li>Mithril: <a href="https://mithril.js.org/" rel="noopener nofollow ugc">https://mithril.js.org/</a>
+</li>
+<li>Snabbdom: <a class="inline-onebox" href="https://github.com/snabbdom/snabbdom" rel="noopener nofollow ugc">GitHub - snabbdom/snabbdom: A virtual DOM library with focus on simplicity, modularity, powerful featu</a>
+</li>
+<li>react-hyperscript: <a class="inline-onebox" href="https://github.com/mlmorg/react-hyperscript" rel="noopener nofollow ugc">GitHub - mlmorg/react-hyperscript: Hyperscript syntax for React.js markup</a>
+</li>
+<li>Mercury: <a class="inline-onebox" href="https://github.com/Raynos/mercury" rel="noopener nofollow ugc">GitHub - Raynos/mercury: A truly modular frontend framework</a>
+</li>
+<li>Cycle.js uses a modified variant that makes the tag name static: <a href="https://cycle.js.org/" rel="noopener nofollow ugc">https://cycle.js.org/</a>
+</li>
+<li>Vue doesn’t support selectors or variable-length arguments, but it does support the rest of the usual stuff, including allowing omitting attributes while still providing children exist: <a class="inline-onebox" href="http://v3.vuejs.org/guide/render-function.html#h-arguments" rel="noopener nofollow ugc">Render Functions | Vue.js</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3565_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">theScottyJam</div>
+          <div class="creation_date">2021-08-12</div>
+          <div class="post_content">
+<p>Wow, apparently there is a number of libraries out there that support it. I guess that form of shorthand isn’t uncommon or unintuitive.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

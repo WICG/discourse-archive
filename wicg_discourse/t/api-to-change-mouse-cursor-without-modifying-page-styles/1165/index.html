@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>API to change mouse cursor without modifying page styles</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">API to change mouse cursor without modifying page styles</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>Changing the mouse cursor for an entire page is sometimes necessary, and the only way I can find to do this is to change the styling of the body element. However with a complex document this can cause reflow for the entire page, so changing the mouse cursor this way can end up being a cause of serious jank!</p>
+<p>To solve this:</p>
+<ul>
+<li>is there another way to change the cursor I’m not aware of?</li>
+<li>could browsers optimise specifically the cursor property to not cause reflow?</li>
+<li>perhaps there could be a new API like <code>window.setMouseCursor(style)</code> which avoids touching styling?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-11-02</div>
+          <div class="post_content">
+<p>Is there a reason why a reflow would be needed when the cursor changes? It seems to me that the shape of the cursor (by itself) should <em>not</em> influence the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-11-02</div>
+          <div class="post_content">
+<p>I think it’s pretty obvious a reflow is not necessary for a cursor change, but the problem is it’s implemented by setting a class/attribute on the body tag. So in order to optimise it the browser has to prove that class/attribute has no other effects on the document and that the same class/attribute is not referenced in any other rules applying to the document. This could be particularly tricky with some CSS selectors. So I guess it’s quite a complex optimisation to make for a specific case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-11-02</div>
+          <div class="post_content">
+<p>Would just setting <code>document.body.style.cursor</code> suffice? It gets the job done.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p>I agree this is something that should be possible to do very quickly.   If this is slow in chromium, then please <a href="http://crbug.com/" rel="nofollow noopener">file a bug</a> with a concrete repro (and ideally <a href="https://www.chromium.org/developers/how-tos/submitting-a-performance-bug" rel="nofollow noopener">a trace</a>) and reference it here, and I’ll try to get it to the right engineers to look at.</p>
+<p>Hopefully no new API is necessary.  But if implementing such an optimization is really difficult, then a new API may not be insane.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

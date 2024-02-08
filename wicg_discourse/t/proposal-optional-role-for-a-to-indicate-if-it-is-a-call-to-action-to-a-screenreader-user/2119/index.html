@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal - optional role for &lt;a&gt; to indicate if it is a &lsquo;call to action&rsquo; to a screenreader user</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal - optional role for &lt;a&gt; to indicate if it is a &lsquo;call to action&rsquo; to a screenreader user</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1142_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">peterheery</div>
+          <div class="creation_date">2017-04-15</div>
+          <div class="post_content">
+<p>Not sure if this is in the right place… however.</p>
+<p>For a sighted user, a visually prominent ‘call to action’ hyperlink in a document is normally created following the principle of Fitts’ law (ie: targets that are larger and closer to the pointing device are easier to hit than ones that are smaller and further away).</p>
+<p>Large, colourful with enticing text, it’s pretty clear to a sighted user what the primary call to action on a page would be.</p>
+<p>There is no equivalent of a call to action link for a screen reader user, as all links are given equal weighting in a rotor (VoiceOver) or list view (JAWS / NVDA).</p>
+<p>In usability studies with screenreader users I’ve observed in documents with multiple links it can be difficult for  users to determine what the primary or secondary call to action is (there’s a similar thread on a <a href="http://webaim.org/discussion/mail_thread?thread=7685" rel="nofollow noopener">webaim mailing list</a>).</p>
+<p>In the interests of providing an equivalent user experience, perhaps adding an attribute to the native <code>&lt;a&gt;</code> might work, or maybe use of WAI-ARIA could plug a semantic gap where HTML cannot facilitate.</p>
+<p>I’d like to propose a semantic role could be applied to a hyperlink to programmatically determine if it is the primary or secondary call to action in document.</p>
+<p>Maybe a little bit like this.</p>
+<p>Primary:</p>
+<p><code>&lt;a href="tickets.html" role="calltoaction" aria-level="1"&gt;Buy tickets&lt;/a&gt;</code>
+Secondary:</p>
+<p><code>&lt;a href="contact.html" role="calltoaction" aria-level="2"&gt;Contact&lt;/a&gt;</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-04-15</div>
+          <div class="post_content">
+<p>I think, it would be useful to establish what good solutions or workarounds for this exist using ARIA today.</p>
+<p>Does ARIA define anything for indicating priority? Do screen readers (and other AT) have features for performing the main actions on a web page?</p>
+<p>For instance, on this page, the main action is the blue “Reply” button. What can this web page do with HTML and ARIA to identify this button’s importance and special role?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1142_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">peterheery</div>
+          <div class="creation_date">2017-04-16</div>
+          <div class="post_content">
+<p>Well, you could do something like this…</p>
+<pre><code> &lt;a href="foo.html" aria-label="Buy now (primary call to action)"&gt;Buy now&lt;/a&gt;
+ &lt;a href="foo.html"&gt;Buy now &lt;span class="visuallyhidden"&gt;(Primary call to action)&lt;/span&gt;&lt;/a&gt;
+</code></pre>
+<p><code>.visuallyhidden { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }</code></p>
+<p>And both are a bit web 1.0 and fudges.</p>
+<p>To answer your questions</p>
+<p>As far as I am aware, ARIA doesn’t have a means to indicate priority. The closest we would have would be the <a href="https://www.w3.org/TR/wai-aria/states_and_properties#aria-level">aria-level attribute</a> which is used for defining a heading structure or the level of a list item within a list.</p>
+<p>Screen reader users sometimes obtain an alphabetically-organised list of links, or a list in the order of which the links appear in the document.</p>
+<p>Each link will have the same priority.</p>
+<p>Another useful feature is the ability to obtain a list of the document landmarks <a href="https://pbs.twimg.com/media/CbasIIYW8AUT9-R.jpg" rel="nofollow noopener">(image)</a>  to allow a user to jump quickly to the respective page section. It would be desirable to show a call to action in a similar way to assist with the proverbial signal to noise ratio on larger pages.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1142_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">peterheery</div>
+          <div class="creation_date">2017-04-16</div>
+          <div class="post_content">
+<p>I suppose a possible workaround would be to use <a href="https://www.w3.org/TR/wai-aria-1.1/#aria-roledescription">aria-roledescription</a> which would augment what would be announced by a screenreader…</p>
+<p>eg :  <code>&lt;a href="foo.html" aria-roledescription="primary call to action"&gt;Buy now&lt;/a&gt;</code></p>
+<p>So, this would be announced as ‘Primary call to action, Buy now, link’ - which is good as it’s not web 1.0.</p>
+<p>However, if we go back to think about Fitts’ law in an analogous way, this isn’t changing the findability of the link, just the computed text value.</p>
+<p>Ideally a call to action link should be very clear at the top of the links list of the screenreader, or maybe displayed in the document landmarks list…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2017-04-17</div>
+          <div class="post_content">
+<p>having something specific just for “call to action” seems short-sighted. some more generic way of indicating levels of prominence/importance would seem more appropriate, and future-proof, to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1142_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">peterheery</div>
+          <div class="creation_date">2017-04-17</div>
+          <div class="post_content">
+<p>Yeah, I’d agree it’s maybe a bit too specific, but certainly having granularity to the relative importance of hyperlinks would be useful in some use cases for sure.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2017-04-17</div>
+          <div class="post_content">
+<p>granularity can come from context (i.e. what the prominence/importance attribute is applied to). by going for a more generic attribute, you avoid having to reinvent the wheel (or creating lots of redundant roles) when you go beyond “call to action”. for instance, what about a page with various  elements to trigger actions, but one of these buttons is the “primary”/“main” action while the others are ancilliary? you could say “oh well, in that case you can also add role=‘call-to-action’ or whatever there” but then you’ve already painted yourself in a naming corner and having to retrospectively define that even though you say “call to action” the term applies to anything important/primary…</p>
+<p>in short, keeping it generic makes it far more applicable. AT can then work out how they want to best expose this (for instance, having a rotor setting, list, announcement, hotkey, whatever to say “show me/jump to all important links, all important buttons, all important elements in general, etc”)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1142_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">peterheery</div>
+          <div class="creation_date">2017-04-17</div>
+          <div class="post_content">
+<blockquote>
+<p>keeping it generic makes it far more applicable. AT can then work out how they want to best expose this (for instance, having a rotor setting, list, announcement, hotkey, whatever to say “show me/jump to all important links, all important buttons, all important elements in general, etc”)</p>
+</blockquote>
+<p>Yup - that’s it in a nutshell.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1828_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">heydonworks</div>
+          <div class="creation_date">2017-09-27</div>
+          <div class="post_content">
+<p>I think <code>role</code> should be avoided because it would replace / override any extant role. For instance, you may have a link that’s important/call-to-action and a button that’s important/call-to-action but they’d both just be communicated as “call to action”, removing the original role and expected behavior.</p>
+<p>Perhaps a property would be better e.g. <code>aria-important="true"</code> or similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1142_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">peterheery</div>
+          <div class="creation_date">2017-09-29</div>
+          <div class="post_content">
+<p>Yes, agree - that makes sense, thanks Heydon.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

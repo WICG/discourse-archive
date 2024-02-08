@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for enhanced sibling selector</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for enhanced sibling selector</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gazibara</div>
+          <div class="creation_date">2018-03-12</div>
+          <div class="post_content">
+<p>We have the adjacent sibling selector:</p>
+<blockquote>
+<p>E1 + E2</p>
+</blockquote>
+<p>We have the general sibling selector:</p>
+<blockquote>
+<p>E1 ~ E2</p>
+</blockquote>
+<p>The general sibling selector matches all following siblings of E1 that match the selector E2. There is, however, no way to restrict the number of siblings matched.</p>
+<p>If we want to match only the third sibling, we would write a selector like:</p>
+<blockquote>
+<p>E1 + E2 + E3</p>
+</blockquote>
+<p>If we want to match the first five siblings, we would write five selectors like:</p>
+<blockquote>
+<p>E1 + E2<br/>
+E1 + E2 + E3<br/>
+E1 + E2 + E3 + E4<br/>
+E1 + E2 + E3 + E4 + E5</p>
+</blockquote>
+<p>What do we do if we want to match the first n siblings that match another criterion as well (e.g. only the first three h3 siblings of an h2)? What do we do if we want to stop matching sibling if some other sibling is encountered (e.g. match all siblings of h2 until another h2 is encountered).</p>
+<p>All these are issues that I have had in my practice. I will write a proposal for a syntax of this kind of later.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-03-17</div>
+          <div class="post_content">
+<p>It’s not custom-made CSS selector syntax, but <a href="https://alistapart.com/article/quantity-queries-for-css" rel="nofollow noopener">quantity queries</a> could get you the functionality you want today:</p>
+<pre><code>li:nth-last-child(6):first-child, 
+li:nth-last-child(6):first-child ~ li {
+	color: green;
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gazibara</div>
+          <div class="creation_date">2018-03-20</div>
+          <div class="post_content">
+<p>This is not what I need. Your CSS selects all child nodes of an element if their count is exactly 6.</p>
+<p>Imagine the following markup:<br/></p>
+<ul>
+<li>&lt;ol&gt;<br/>
+</li>
+<li>
+<pre><code>   &amp;lt;li&gt;Something&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li&gt;Something&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li data-start&gt;Something else&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li&gt;Something else&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li&gt;Something else&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li data-end&gt;Something else&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li&gt;Something&lt;br&gt;
+</code></pre>
+</li>
+<li>
+<pre><code>   &amp;lt;li&gt;Something&lt;br&gt;
+</code></pre>
+</li>
+<li>&lt;/ol&gt;<br/>
+</li>
+</ul>
+<p>In the simpler case I want selected the first three siblings of li[data-start] while in fact there may be more. Chaining the neighbor sibling selector (li[data-start], li[data-start] + li, li[data-start] + li + li, etc.) can do this but imagine the nightmare if you need more than a few.</p>
+<p>In the more complex case I selected all items between li[data-start] and li[data-end] (inclusive or exclusive does not matter) and I don’t known in advance how many of these items there are; there may even be more than one such group among the sibling and I want them selected all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-03-21</div>
+          <div class="post_content">
+<p>Gotcha, I think I understand now. I think <code>:nth-child()</code> <em>might</em> be able to hack it when used with negative <em>n</em>.</p>
+<blockquote>
+<p><strong><code>:nth-child(-n+3)</code></strong>
+Represents the first three elements among a group of siblings.</p>
+<p>— <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-child" rel="nofollow noopener">:nth-child on MDN</a></p>
+</blockquote>
+<p>But that would be very hard to match consistently and robustly.</p>
+<p>Syntax patterned after <code>:nth-child()</code>, like <code>:nth-sibling()</code>, might be a good idea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gazibara</div>
+          <div class="creation_date">2018-03-21</div>
+          <div class="post_content">
+<p>I propose the following selectors:</p>
+<ul>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>first-sibling</strong><br/>
+Selects only the first matching sibling element which unlike the + combinator may be non-adjacent</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>last-sibling</strong><br/>
+Selects only the last matching sibling element</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>nth-sibling</strong>(an+b of <em>selector3</em>)<br/>
+Akin to nth-child<br/>
+<em>nth-sibling</em> matches siblings of <em>selector1</em>. A compound selector like <em>selector1</em> ~ <em>selector2</em>:nth-child() would match all elements that are following siblings of <em>selector1</em>, match <em>selector2</em> and are nth-child of <em>selector1</em> and <em>selector2</em> common parent.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>nth-last-sibling</strong>(an+b of <em>selector3</em>)<br/>
+Akin to nth-last-child</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>start-from</strong>(n of <em>selector3</em> [inclusive])<br/>
+Start matching sibling elements when the nth sibling matching <em>selector3</em> is encountered. If <strong>inclusive</strong> is not specified this element is not matched even if it otherwise matches <em>selector2</em>.<br/>
+If “<em>n</em> of” is omitted, stops at the first matched <em>selector3</em>. If <em>selector3</em> is omitted, ‘*’ assumed.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>end-at</strong>(<em>n</em> of <em>selector3</em> [inclusive])<br/>
+Stop matching sibling elements when the nth sibling matching <em>selector3</em> is encountered. If <strong>inclusive</strong> is specified this element is matched if it matches <em>selector2</em> as well.<br/>
+If “<em>n</em> of” is omitted, stops at the first matched <em>selector3</em>. If <em>selector3</em> is omitted, ‘*’ assumed.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>start-from</strong>(n of <em>selector3</em>):<strong>end-at</strong>(n of <em>selector4</em>)<br/>
+Naturally combines :start-from and :end-at</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>not</strong>(:<strong>start-from</strong>(n of <em>selector3</em>):<strong>end-at</strong>(n of <em>selector4</em>))<br/>
+Naturally combines :start-from and :end-at and then reverses the selection.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>nth-sibling</strong>(an+b of :<strong>start-from</strong>(n of <em>selector3</em>):<strong>end-at</strong>(n of <em>selector4</em>))<br/>
+Start matching child elements when a child matching <em>selector3</em> is encountered and stop when <em>selector4</em> is encountered, then form groups of siblings akin to nth-child.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>first-sibling</strong>(:<strong>start-from</strong>(n of <em>selector3</em>):<strong>end-at</strong>(n of <em>selector4</em>))<br/>
+Match only the first group of sibling groups.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>last-sibling</strong>(:<strong>start-from</strong>(n of <em>selector3</em>):<strong>end-at</strong>(n of <em>selector4</em>))<br/>
+Match only the last group of sibling groups.</p>
+</li>
+<li>
+<p><em>selector1</em> ~ <em>selector2</em>:<strong>only-sibling</strong>(:<strong>start-from</strong>(n of <em>selector3</em>):<strong>end-at</strong>(n of <em>selector4</em>))<br/>
+Match the group of sibling groups if it is the only such group among <em>selector1</em>’s following siblings</p>
+</li>
+</ul>
+<p>Combinators :start-from and :end-at and their combinations may be used with the child combinator as well.</p>
+<p>Examples:</p>
+<ul>
+<li>
+<p>Select only the first 20 siblings:<br/>
+E1 ~ E2:end-at(20 inclusive)</p>
+</li>
+<li>
+<p>Select the 5th through the 10th sibling:
+E1 ~ E2:start-at(5 inclusive):end-at(10 inclusive)</p>
+</li>
+<li>
+<p>Select all siblings of a H2 element until another H2 element is encountered:<br/>
+h2 ~ *:end-at(h2)<br/>
+Note the lack of the <strong>inclusive</strong> keyword here: the second h2 element itself will not be included in the matched siblings. A redundant keyword (e.g. <strong>exclusive</strong>) might be used to stress the situation.</p>
+</li>
+<li>
+<p>Select all elements from the markup in my previous:<br/>
+ol &gt; li:start-at([data-start]):end-at([data-end] inclusive)</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-03-21</div>
+          <div class="post_content">
+<p><code>selector1 ~ selector2:first-sibling</code> is already possible with <code>selector ~ selector2:first-of-type</code> and similar selectors for <code>:last-of-type</code>, <code>:nth-of-type</code>, <code>:nth-last-of-type</code>.</p>
+<p>As for <code>:start-from</code> and <code>:end-at</code> (and similar), what’s the use case here?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

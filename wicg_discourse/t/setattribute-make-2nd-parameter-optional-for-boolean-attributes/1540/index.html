@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>setAttribute(): make 2nd parameter optional for boolean attributes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">setAttribute(): make 2nd parameter optional for boolean attributes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>The second parameter of the <code>Element.setAttribute()</code> (JS/DOM) is redundant when setting a <em>boolean</em> attribute. So it would probably make sense to make it optional, so that the following calls are equivalent:</p>
+<pre><code>example.setAttribute('data-mybool', '');
+example.setAttribute('data-mybool');
+</code></pre>
+<p>If the boolean attribute to set already exists, the method should probably do nothing.</p>
+<p>A proof-of-concept polyfill:</p>
+<pre><code>(function() {
+    var nativeFunction = Element.prototype.setAttribute;
+
+    Element.prototype.setAttribute = function(name, value) {
+        if ('undefined' === typeof value) {
+            if (this.hasAttribute(name)) {
+                return;
+            }
+
+            this.setAttribute(name, '');
+        }
+        else {
+            nativeFunction.call(this, name, value);
+        }
+    };
+})();</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>“Boolean” attributes are purely a parsing convenience; as far as the DOM is concerned, there’s no such thing - all attributes have values.  It seems worthwhile to keep that fact explicit, so people aren’t surprised when they see that an attribute has a value of <code>""</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-01</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1540">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>“Boolean” attributes are purely a parsing convenience</p>
+</blockquote>
+</aside>
+<p><em>Standard</em> boolean attributes (<code>disabled</code>, <code>required</code>, etc.) are directly mapped to properties that are boolean (<code>true</code> / <code>false</code>) by definition, so this is not just about <em>parsing</em>.</p>
+<blockquote>
+<p>so people aren’t surprised when they see that an attribute has a value of “”.</p>
+</blockquote>
+<p>What <em>exact negative impact</em> you think could be a result of some people being <em>surprised</em>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2016-06-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1540">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Standard boolean attributes (disabled, required, etc.) are directly mapped to properties that are boolean (true / false) by definition, so this is not just about parsing.</p>
+</blockquote>
+</aside>
+<p>But if it’s a standard boolean attribute, it has an interface on the relevant element prototype, right?</p>
+<pre><code class="lang-auto">let p = document.query('p');
+// short &amp; sweet
+p.hidden = true;
+// longer &amp; backwards-compatible
+p.setAttribute('hidden', '');
+// proposed here, and not backwards-compatible
+p.setAttribute('hidden');
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-02</div>
+          <div class="post_content">
+<p>The fact that <em>standard</em> boolean attributes are directly mapped to boolean properties just proves that boolean attributes are not just about <em>parsing</em> as Tab has stated.</p>
+<p>This <em>in no way</em> means that <em>custom</em> attributes like <code>data-foo</code> cannot be used as boolean, but setting a property like <code>dataFoo</code> to <code>true</code> does <strong>not</strong> set the corresponding <code>data-foo</code> attribute to <code>''</code> value, as well as setting the property to <code>false</code> does not remove the attribute.</p>
+<p>Backward compatibility is an ephemeral thing in general (moreso in a discussion of any new feature by nature), but anyway, the proposed feature can be polyfilled easily and seamlessly as I’ve shown in my starting message.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

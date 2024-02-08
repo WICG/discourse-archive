@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Representing hierarchical tabular data in HTML - E.g. tree-tables</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Representing hierarchical tabular data in HTML - E.g. tree-tables</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/427_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">amtiskaw</div>
+          <div class="creation_date">2014-09-11</div>
+          <div class="post_content">
+<p>Conceptually, tree-tables can be thought of as a collection of records of identical shape, but where some records are subordinate to - e.g. contained within - another record. Tree-table widgets are common in LOB applications and tools like email clients. However they are difficult to build in HTML and CSS, due to the table element having no concept of nesting, and the list elements having no concept of columns.</p>
+<p>Semantically, it must be possible for table row elements to express a recursive, nested relationship. The most obvious way to express this relationship is through literal nesting of the table row elements in markup. These nested rows would not represent a sub-table, as they would still be governed by the columns and headings of the root table, but would be semantically a child of their parent row.</p>
+<p>Visually, tree-tables present an interesting challenge: The parent/child relationship of rows should be clear, but the columns of the table must still align across all rows. Tree-table widgets usually solve this by representing the hierarchy using indented names/ids within the first cell, where the amount of indentation represents the depth of the item within the tree.</p>
+<p>This is difficult to reproduce with CSS alone, because hierarchical nesting is done using margins or padding the nested element itself, e.g. the &lt;li&gt;, rather than an item <em>within</em> the &lt;li&gt;. In the case of tree-tables, it is not desirable to shift the <em>entire</em> row, as this would break the alignment of its cells with the table’s columns.</p>
+<p>Therefore, in order to allow this in pure CSS, it may require novel constructs that allow an element’s padding or margin to be calculated dependent on its context. E.g. a table cell must be able to say, “Left-pad my contents to 24px * the number of table-rows nested between me and the table root”.</p>
+<p>Behaviourally, it is desirable to collapse and expand the hierarchy, as well as perform standard table operations such as sorting and filtering - although the implementation and results of these operations may be different than in a non-hierarchical table. This could likely be achieved through script, as is currently done for regular tables.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="622">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/amtiskaw/40/427_1.png" width="20"/> amtiskaw:</div>
+<blockquote>
+<p>Therefore, in order to allow this in pure CSS, it may require novel constructs that allow an element’s padding or margin to be calculated dependent on its context. E.g. a table cell must be able to say, “Left-pad my contents to 24px * the number of table-rows nested between me and the table root”.</p>
+</blockquote>
+</aside>
+<p>While you can’t do it with the current CSS Variables spec, you’ll be able to in level 2 (I had to strip some stuff out to make level 1 simpler):</p>
+<pre><code class="lang-css">tr {
+  --nesting-level: calc(parent-var(--nesting-level, 0) + 1);
+  padding: calc(var(--nesting-level) * 24px);
+}
+</code></pre>
+<p><code>parent-var()</code> looks for the value of the custom property on the parent, using the second argument as a default if that custom property hasn’t been set yet.  This lets you accumulate a value as you nest further in the tree.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/427_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">amtiskaw</div>
+          <div class="creation_date">2014-09-14</div>
+          <div class="post_content">
+<p>Cool. Although this would still necessitate a change to HTML to allow trs to be nestable, right?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-15</div>
+          <div class="post_content">
+<p>Oh, sure, this doesn’t solve any of the other problems, just the “how do I get something that increases based on nesting depth” part.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

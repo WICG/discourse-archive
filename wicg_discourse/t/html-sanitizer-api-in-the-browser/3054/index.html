@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>HTML Sanitizer API in the browser</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">HTML Sanitizer API in the browser</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">freddyb</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>Hi folks,</p>
+<p>Together with <span class="mention">@mikewest</span> and Mario Heiderich (<span class="mention">@cure53</span>), we have started looking at how one could specify an HTML Sanitizer that lives in the browser.
+I could try to summarize all the greatness in here, but I think we’ve done a great job in the <a href="https://github.com/mikewest/purification#readme" rel="nofollow noopener">Sanitization explainer</a> already <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/></p>
+<p>Please let us know what you think. I’m thrilled to hear more!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>Hello there <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/> I signed up and look forward to your feedback as well!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2068_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Krzysztof_Kotowicz</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>To start with something: <a href="https://github.com/mikewest/purification/issues/1" rel="nofollow noopener">https://github.com/mikewest/purification/issues/1</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>I like your proposal but it doesn’t give me a feeling that this is something we can do without tremendous effort.</p>
+<p>I wonder if it makes sense to overshoot and thereby risk losing focus on the actual goals. Do we want to build a sanitizer that developers can use or do we want to have another complex beast like CSP that ends up being misused, misunderstood and sinkholes everyone’s resources?</p>
+<p>The beauty of the proposed Sanitizer API lies in the simplicity and the low implementation effort. Your proposals are valuable, but maybe something we should tackle in v2.0. Wdty?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>I like this idea. Is there any reason why we couldn’t just add this “purification” to the APIs that already exist? Like the <code>innerHTML</code> setter? <code>appendChild()</code> etc?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>No, we just want to start simple and create a solid foundation. The more fanciness we add now, the harder it will be to build the MVP.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2068_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Krzysztof_Kotowicz</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>In order for the sanitizer API to be usable, the browsers need to use the lower-level primitives anyway (e.g. they have to have a concrete whitelist, they need an inert DOM). It might be just a matter of exposing those primitives as a web API - which I believe might be simpler to agree on, than e.g. a list of necessary customization options and hooks for the sanitizer, and their actual implementation.</p>
+<p>For example, for clients to migrate to a native sanitizer, the native impl. needs to provide a superset of customization options for all large userland sanitizers (in other words, SAFE_FOR_JQUERY, name policies, URL policies and all other features must be possible to implement via the exposed native hooks). A missing configuration knob would mean that a DOMPurify-ng (backwards compatible &amp; wrapping over the native sanitizer) would have to make a second pass, legacy sanitization.</p>
+<p>I’m just wondering if this wouldn’t be actually simpler to agree on &amp; implement the primitives that don’t require that many config knobs to be functional (and so far over the years the client side sanitizers kept adding more config settings, suggesting that the devs actually need them). Lots of those primitives are already there and just need some finishing touches (e.g. the elem/attr list is implemented in browsers due to existing sanitizers, inert DOM APIs exists, but is inconsistent, DOMParser exists etc.). This task might be simply less bikesheddy, and more tangible to implement, than a full sanitizer.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<p>Sadly we don’t have any metrics to check who uses what config flag and why. We’d have to crawl Github and alike to learn more about the actual usage.</p>
+<p>From the more or less anecdotal data we gather in pen-tests, we can see that the majority of websites/apps/extensions just use the default. But that’s not really good data anyway, just mentioning.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2018-09-22</div>
+          <div class="post_content">
+<p>Possibly a dumb question, but what’s the problem with the following:</p>
+<pre><code class="lang-auto">function sanitizeAsFragment(html) {
+  const sanitizingSelector = "script,style"; // for example
+  const fragment = document.createRange().createContextualFragment(html);
+  for (const element of fragment.querySelectorAll(sanitizingSelector)) {
+    element.remove();
+  }
+}
+const userGeneratedHtml = "&lt;script&gt;alert('Hello buddies')&lt;/script&gt;&lt;a href='https://example.com/'&gt;Example&lt;/a&gt;"
+target.appendChild(sanitizeAsFragment(userGeneratedHtml));
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-22</div>
+          <div class="post_content">
+<p>Technically nothing at all, it’s just very limited and too simple to address XSS.</p>
+<p>Let’s say you want to remove all anchors but only if the href has a JavaScript URI.
+Then you also wanna remove all event handlers from all elements.
+Then you wanna take care of meta and base tags.</p>
+<p>Then, the further you go, more and more special cases pop up. And after a while you realize that you just re-implemented DOMPurify <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=6" title=":smiley:"/></p>
+<p>Our goal here is to create an API where all those worries can be left behind. And where a developer doesn’t have to trust some random folks (i.e. me) for any sanitization needs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2018-09-22</div>
+          <div class="post_content">
+<p>Thanks for your explanation, I forgot about those <code>onxxx</code> event handlers and TIL <code>base</code> tag.</p>
+<p>So situations can be pretty hard to sanitize everything, perhaps we can instead introduce a safety zone?</p>
+<pre><code class="lang-auto">&lt;safetyzone&gt;
+  &lt;script&gt;alert("This won't run in a safety zone");&lt;/script&gt;
+  &lt;a href="javascript:console.log('This also won't run')"&gt;&lt;/a&gt;
+  &lt;a onclick="console.log('because')"&gt;A safety zone won't allow running any JavaScript code&lt;/a&gt;
+  &lt;base href="http://nor-anything-that-affect-global.document" /&gt;
+  &lt;style&gt;.including-styling { display: none; }&lt;/style&gt;
+  &lt;link href="" rel="stylesheet" /&gt;
+&lt;/safetyzone&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-22</div>
+          <div class="post_content">
+<p>I think “jails” were discussed way earlier and are technically a different topic. Here, we discuss mostly the sanitization approach.</p>
+<p>The thing is, we know already what needs to be sanitized and how, even the crazier cases like template expressions, data-dash attributes, class attributes depending on the framework in use, id and name, etc. etc. - this is all not new. The idea is basically, take all the learnings and put them where they imho belong. The browser <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npdoty</div>
+          <div class="creation_date">2018-09-22</div>
+          <div class="post_content">
+<p>It might be useful in the explainer or in other documentation to describe what “we know already […] needs to be sanitized”. I had to get to the very end of the README before I concluded that it was just a proposal to make content static, with no executable JavaScript, and apparently the main threat model is within-page XSS. I would suggest that “Wait, what does secure even mean in this context?” be answered, very specifically, within the first couple paragraphs.</p>
+<p>Are data-dash or class attributes unsafe because a site’s particular framework might take actions based on them? That seems especially site- and framework- specific and I’m not sure that makes sense coded into a browser. If a new framework becomes popular that uses something different to trigger JavaScript or other logic, will we have to update the browser sanitization API?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-23</div>
+          <div class="post_content">
+<p>We believe we have mentioned this already, check here:
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://assets-cdn.github.com/favicon.ico" width="32"/>
+<a href="https://github.com/mikewest/purification#browser-whitelists" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars3.githubusercontent.com/u/1497?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/mikewest/purification#browser-whitelists" rel="nofollow noopener" target="_blank">mikewest/purification</a></h3>
+<p>Contribute to mikewest/purification development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+Would  you say we should position this more prominently?</p>
+<p>As for the framework-craziness causing formerly harmless attributes to be dangerous: The browser wouldn’t have to update their code, the developer would have to update the config, that is all. This is no different to what we have today with JavaScript-written sanitizer libraries.</p>
+<p>The browser can offer what the JavaScript-library, i.e. DOMPurify does as well: A safe default unless you have a nut-job JS-framework in use. If that is the case, you have to re-configure the whitelist anyway <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/> And with data-dash being blocked, we would catch a lot already.</p>
+<p>And let’s keep in mind, we cannot ever offer perfection in this realm, only increasing quality that serves the majority. There will always be edge cases of some sort - i.e. XSS from class atrributes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npdoty</div>
+          <div class="creation_date">2018-09-23</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="3054">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/cure53/40/2069_1.png" width="20"/> cure53:</div>
+<blockquote>
+<p>Would you say we should position this more prominently?</p>
+</blockquote>
+</aside>
+<p>Yeah, that’s what I mean. I read that exact README, but I didn’t really understand the solution until I got to the final question in the FAQ. As it is it might be assuming a lot more existing familiarity with the existing third-party libraries.</p>
+<aside class="quote no-group" data-post="14" data-topic="3054">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/cure53/40/2069_1.png" width="20"/> cure53:</div>
+<blockquote>
+<p>And with data-dash being blocked, we would catch a lot already.</p>
+</blockquote>
+</aside>
+<p>Sure. It’s kind of a pity that data attributes would be in the default blocklist though, as copying and pasting in HTML with marked-up microdata seems like exactly the kind of use case we’d want to encourage. (That’s not necessarily a critique of the proposal, just a lament about how maybe data attributes are being used most often not for their intended purpose but instead as embedding behavior within markup.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2069_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cure53</div>
+          <div class="creation_date">2018-09-24</div>
+          <div class="post_content">
+<p>I would then propose to add a short “In a Nutshell” section at the top of the explainer document, quickly explaining problem, where we are knowledge wise and solution in like four bullet points.</p>
+<p>Makes sense and fixes the issue?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

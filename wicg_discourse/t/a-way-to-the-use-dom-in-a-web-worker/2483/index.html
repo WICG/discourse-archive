@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A way to the use DOM in a Web Worker</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A way to the use DOM in a Web Worker</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-12-18</div>
+          <div class="post_content">
+<p>I’ve written an experimental library that uses Proxy objects to enable accessing the DOM APIs in a Web Worker:</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://assets-cdn.github.com/favicon.ico" width="32"/>
+<a href="https://github.com/AshleyScirra/via.js" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars3.githubusercontent.com/u/768723?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/AshleyScirra/via.js" rel="nofollow noopener" target="_blank">AshleyScirra/via.js</a></h3>
+<p>via.js - Use the DOM in a Web Worker.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>It’s very much experimental, but works surprisingly well as a proof-of-concept. It seems with a few browser additions, this could start to approach a practical way to use DOM APIs in a worker.</p>
+<p>If we had WeakRefs, this library could more or less handle it on its own. But if browsers used this approach in a built-in manner, it seems there would be a range of advantages:</p>
+<ul>
+<li>better performance</li>
+<li>better error-checking (perhaps using existing IDL)</li>
+<li>solving the memory management problem</li>
+<li>API improvements, e.g. removing the need for a special get() function (e.g. <code>await document.title</code> rather than <code>await get(via.document.title)</code>
+</li>
+<li>better supporting user-gesture limited APIs from a worker</li>
+</ul>
+<p>On the other hand it potentially duplicates APIs which are available directly from a worker, e.g. IndexedDB. Any thoughts on the practicality of this approach?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-12-19</div>
+          <div class="post_content">
+<p>WeakRefs could solve the memory leak problem, but I understand that they’re contentious due to making GC observable. However I think it should be possible to solve this without making GC observable.</p>
+<p>The fundamental problem is demonstrated by the following code:</p>
+<pre><code class="lang-auto">// ON THE WORKER:
+
+// This records the call and returns a placeholder
+// Proxy which is assigned object id 1
+const placeholderDiv = via.document.createElement("div");
+
+// This is then sent to the main thread as a command similar to:
+// 1. call "document.createElement" with argument "div" and assign
+//    the return value object id 1
+
+// Any subsequent calls then refer to the object id, e.g.:
+placeholderDiv.textContent = "foo";
+// results in a command like:
+// 2. assign object id 1 property "textContent" to "foo"
+
+// ON THE MAIN THREAD:
+
+// Upon receiving the first command the main thread does the real call:
+const realDiv = document.createElement("div");
+
+// Then assigns the intended object ID:
+idMap.set(1, realDiv);
+
+// The map is used to look up future commands, e.g. to run command 2 we
+// need to start by looking up object id 1, similar to this:
+const realDiv = idMap.get(1);
+realDiv.textContent = "foo";
+
+// However, now we have a permanent strong reference to the div, so
+// it will never be collected. We can't use a WeakMap here since
+// the key is not an object. We don't know when to delete the entry,
+// since GC is not observable and we don't know when the placeholder
+// Proxy on the worker will be collected.
+</code></pre>
+<p>To solve this, there could be a special <code>WeakKey</code> object. This is like a reduced WeakRef that only serves to be used as a key in a <code>WeakMap</code>. If a <code>WeakKey</code> can then be posted between a Worker and the main thread, this should solve the problem by using it in place of the object ID:</p>
+<pre><code class="lang-auto">// ON THE WORKER:
+
+// This records the call and returns a placeholder
+// Proxy which is assigned its own WeakKey
+const placeholderDiv = via.document.createElement("div");
+
+// internally, this will do something like:
+// placeholderProxy._key = new WeakKey(placeholderProxy)
+
+// This is then sent to the main thread as a command similar to:
+// 1. call "document.createElement" with argument "div" and
+//    here is a WeakKey representing the return value
+
+// Any subsequent calls then refer to the WeakKey, e.g.:
+placeholderDiv.textContent = "foo";
+// results in a command like:
+// 2. assign this WeakKey property "textContent" to "foo"
+
+// ON THE MAIN THREAD:
+
+// Upon receiving the first command the main thread does the real call:
+const realDiv = document.createElement("div");
+
+// Then assigns the intended object by its WeakKey:
+weakMap.set(weakKey, realDiv);
+
+// The map is used to look up future commands, e.g. to run command 2 we
+// need to start by looking up the same WeakKey, similar to this:
+const realDiv = weakMap.get(weakKey);
+realDiv.textContent = "foo";
+</code></pre>
+<p>This WeakKey approach then behaves how we want:</p>
+<ol>
+<li>The main thread can still look up real objects from messages sent from the worker.</li>
+<li>If a placeholder Proxy is collected on the worker, then there are no more references to its WeakKey. This allows the entry in the weak map on the main thread to be collected.</li>
+<li>GC is not observable.</li>
+</ol>
+<p>I guess the downsides are this is pretty specific to this library, I’m not sure there are any use cases for this outside of Via.js. It also looks like it involves cross-context garbage collection which may be tricky for implementors, but I don’t know much about that.</p>
+<p>Anyone have thoughts on this idea?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2018-01-02</div>
+          <div class="post_content">
+<p>No opinion on the DOM in a Web Worker idea, but I do like WeakKey a lot. I’ve experienced the same issue with trying to sync state between the main thread and a worker.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-01-02</div>
+          <div class="post_content">
+<p>Interesting - can you elaborate on the specific use case?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-01-22</div>
+          <div class="post_content">
+<p>I wrote a blog post that outlines the current problem with memory management and a few options for dealing with it: <a href="https://www.scirra.com/blog/ashley/38/why-javascript-needs-cross-heap-collection" rel="nofollow noopener">https://www.scirra.com/blog/ashley/38/why-javascript-needs-cross-heap-collection</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1647_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bcherny</div>
+          <div class="creation_date">2018-03-25</div>
+          <div class="post_content">
+<p><span class="mention">@AshleyScirra</span> This is a really neat idea! I was just thinking about doing something similar last night and found this when searching around to see if anyone’s done this already. If it’s any validation, sketching out how to build this, I ran across the same exact limitation. Consider creating a Stage 0 proposal?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-03-25</div>
+          <div class="post_content">
+<p>WeakRefs are now at stage 2 apparently: <a href="https://github.com/tc39/proposal-weakrefs" rel="nofollow noopener">https://github.com/tc39/proposal-weakrefs</a></p>
+<p>This would solve the memory management problem too. I think it’s worth seeing where that goes first.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsmith-cycorp</div>
+          <div class="creation_date">2018-04-24</div>
+          <div class="post_content">
+<p>I’ve been doing a lot of thinking about how great it would be if React’s core processes could be moved to a web worker to maintain page responsiveness when they take a long time. There are complex reasons why a piece of React couldn’t easily be moved to web workers, but then I thought, why not put the entire app in a worker and just send DOM updates to the main thread? Why does JS run in the same thread that handles reflow and scrolling in the first place?</p>
+<p>Really hope this gets some traction. Great idea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>+1</p>
+<p>React and other frameworks have a very high overhead cost. A native ability inside a browser would be a much more performance efficient option.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

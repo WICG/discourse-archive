@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allow stack for fallback CSS units</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allow stack for fallback CSS units</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/459_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gericci</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>Today, if we want to use the new viewport units we have to duplicate declarations, and we still have to watch for the support of some font-dependent units, like “rem” also. Also, new units will come – we hope - and we’ll always have to deal with backward compatibility.</p>
+<p>What if we could just create a stack of fallback units and values, in the same way we have for font-family?</p>
+<p>For example, we could adjust spacement or font-sizes until the most “reliable” unit, pixels:</p>
+<p>h1 {
+font-size: 5vw, 2em, 24px;
+margin: 1vh 1vw, 2%;
+}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>This sort of syntax doesn’t work generally.  You can’t use commas, spaces, or slashes as the delimiter for fallback here, as they’re all used by actual CSS properties to separate their normal values.</p>
+<p>Also, if one type of length isn’t supported, you might need to use a more different approach than just swapping in another length.  CSS’s fallback mechanism was built specifically to handle this gracefully, as you can make whatever changes you need when you duplicate the property.  (Or if you need to change more than just the one property, the newly-supported <span class="mention">@support</span> rule can be used to do fallback on entire groups of rules.)</p>
+<p>I notice, though, that your ‘margin’ example isn’t even doing a super-local fallback; it’s still providing a completely new value for the entire property (either uses “1vh 1vw” or “20%”, whichever the UA understands).  This is barely saving any keystrokes at all; it just avoids you having to repeat the property name itself.  That’s almost certainly not worth adding new syntax for. <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/></p>
+<p>But a hyper-local fallback mechanism that can fallback a <em>single value</em> might be worthwhile, like:</p>
+<pre><code class="lang-auto">margin: fallback(1vw, 2%) fallback(1vh, 1.5%);
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/459_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gericci</div>
+          <div class="creation_date">2014-11-06</div>
+          <div class="post_content">
+<p>Hi, Tab
+Thanks for the reply. I’ve probably should give it more thought. The goal wasn’t exactly to save keystrokes, but to centralize (in one and only property) possible fallbacks.
+My idea was indeed to create different value declarations, separated by coma, and the UA would get the first “understandable” one. I’m not aware of the contraints we may have in defining CSS syntax, so simple comas seemed to me enough. In this case, a fallback() options would be interesting indeed (though more verbose).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-11-09</div>
+          <div class="post_content">
+<p>At some point, I proposed to have things like this to deal with variables and graceful degradation:</p>
+<pre><code>background: firstOf(
+    var(my-bg-as-zogmatic-gradient),  // futurist browser
+    var(my-bg-as-radial-gradient),    // modern browser
+    var(my-bg-as-image-gradient)      // old browser
+);
+</code></pre>
+<p>At some point, I even <a href="http://lists.w3.org/Archives/Public/www-style/2008Jul/0052.html">proposed</a> a full algebra (and it’s still stored somewhere in my mind!)</p>
+<p>[EDIT] The point was that, unlike a simple syntactic check (multiple declarations), the value used for “firstOf” is only known at computed-time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-11-11</div>
+          <div class="post_content">
+<p>Why would it only be known at computed-value time?  I mean, if you have variables involved, yes, you have to wait, but otherwise you should be able to know which one to use at parse time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-11-11</div>
+          <div class="post_content">
+<p>Sure, I was imagining the worst case, but you are right that it doesn’t actually adds up to the delay effect of variables, it is jus the delay effect of variables.</p>
+<p>What I meant is that</p>
+<pre><code>property: var(v1);
+property: var(v2);
+</code></pre>
+<p>and</p>
+<pre><code>property: firstOf(var(v2), var(v1));
+</code></pre>
+<p>are actually different.</p>
+<p>Also, firstOf can require combinatorial attempt:</p>
+<pre><code>property: firstOf(a, b) firstOf(c, d); 
+// only valid may be "b d" or "a d"</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-11-11</div>
+          <div class="post_content">
+<blockquote>
+<p>Also, firstOf can require combinatorial attempt:</p>
+</blockquote>
+<p>Ah, right, we disallowed that from happening with <code>toggle()</code> - it can only be the sole value in the property.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/459_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gericci</div>
+          <div class="creation_date">2014-11-12</div>
+          <div class="post_content">
+<p>And how old browsers would handle the new syntax? (sorry if my question seems naive)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-11-12</div>
+          <div class="post_content">
+<p>Until it’s understood, it’ll be invalid and cause the property to be dropped, like any other new feature.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

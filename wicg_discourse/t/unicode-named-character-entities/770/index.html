@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Unicode Named Character Entities</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Unicode Named Character Entities</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-02-25</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/add-new-character-entity-references-like-power-to-match-new-unicode-specs/373/2">Add new character entity references like &amp;power; - to match new Unicode specs</a>:</p>
+<aside class="quote" data-post="2" data-topic="373">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/boldewyn/40/1262_1.png" width="20"/><a href="//discourse.wicg.io/t/add-new-character-entity-references-like-power-to-match-new-unicode-specs/373/2">Add new character entity references like &amp;power; - to match new Unicode specs</a>
+</div>
+<blockquote>
+<p>[A] mechanism to enter <em>arbitrary</em> codepoints by their name might be a better idea. Like:</p>
+<pre><code>&amp;"OHM SIGN";
+&amp;"ZERO WIDTH JOINER";
+</code></pre>
+<p>You get the idea. Final notation is of course debatable.</p>
+</blockquote>
+</aside>
+<p>Rather than inventing yet more named entities (with arbitrary names) to HTML, I think this would be a great forward-facing way to allow for semantic referencing of Unicode characters using plain ASCII source - just drop all the Unicode character names into the routine for looking up a named entity (after comparing against the “legacy” entity names). As an alternative to quotes in the entity name, it might be permissible to allow underscores in the identifier, per <a href="http://www.unicode.org/versions/Unicode7.0.0/ch04.pdf" rel="nofollow noopener">section 4.8 of the Unicode standard</a>, eg <code>&amp;ohm_sign;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-03-03</div>
+          <div class="post_content">
+<p>Just to clarify, this type of semantic referencing only benefits the author of the source text, and the users of the web page do not encounter these references, correct?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-03-03</div>
+          <div class="post_content">
+<p>Correct, users only encounter these references if they’re viewing the source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-03-03</div>
+          <div class="post_content">
+<p>In that case, it makes maybe more sense to create tools for this, e.g.</p>
+<ul>
+<li>the editor provides autocomplete which maps Unicode names to the corresponding characters, e.g. when I start typing “ZERO WIDTH…”, a drop down menu suggests that character,</li>
+<li>a built tool (preprocessor) which converts the <code>&amp;"NAME";</code> syntax into the corresponding character.</li>
+</ul>
+<p>Even if, say, Chrome and Firefox, implemented support for your proposed syntax, authors would still have to provide fallbacks, and in this case, a preprocessor would be a good option (a better option than a JS library which dynamically replaces this syntax on a live page). So why not just leave it at a preprocessor?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-31</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="770">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>So why not just leave it at a preprocessor?</p>
+</blockquote>
+</aside>
+<p>Because maybe it’s <em>not</em> a good option. Maybe preprocessing is prohibitive. Maybe the authoring environment is a low-end/IoT device. (Maybe people in the developing world without access to MacBook Pros would like to make apps too!) Maybe they’re publishing their content with a direct PUT to a CouchDB server. Maybe they don’t otherwise need a preprocessor because they just don’t have a problem with users not being able to see the character if their UA doesn’t support it (ie. they’re bundling the content with something like nw.js or Crosswalk).</p>
+<p>I don’t know about this <em>specific</em> feature - I hear what you’re saying about it being a lot of backward-incompatibility, where it’s not a lot of work to adjust to (and, realistically, if you’re looking up the character’s Unicode name, you’re probably going to see its codepoint) - but as I’ve been saying for the last couple days, <a href="//discourse.wicg.io/t/a-defense-of-declarative-content/988">we can’t just throw everything onto power-tool stacks we’ve built ourselves outside the browser</a>. That’s how we end up building slow, rickety, inconsistent, newbie-hostile dystopias that gradually collapse under the weight of their own self-imposed constraints.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

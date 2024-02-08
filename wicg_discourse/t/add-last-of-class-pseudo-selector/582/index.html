@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add last-of-class pseudo selector</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add last-of-class pseudo selector</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/406_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Wills</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>I’ve often wondered why this doesn’t exist already as I am <a href="http://stackoverflow.com/questions/13211453/css-how-to-say-classlast-of-type-classes-not-elements" rel="nofollow noopener">not</a> the first to think this would be useful. Perhaps there’s some implementation technicalities that I’ve not considered (most likely!).</p>
+<p>On occasion you may have a list of similar elements followed by an element which is not so similar. If you want to style the last element of your “similar” elements you can’t use :last-child. <a href="http://jsbin.com/maninu/2/" rel="nofollow noopener">Here’s a really simple example</a>. In this example, imagine you want to remove the border of the last “thing”. You can’t use :last-child because that matches the <code>&lt;button&gt;</code>.</p>
+<p>Of course there are many workarounds for this limitation. Notably the following spring to mind:</p>
+<blockquote>
+<p>“Add another class to the last item”</p>
+</blockquote>
+<p>or alternatively</p>
+<blockquote>
+<p>“wrap the elements which are similar in some other element (perhaps an
+(un)ordered list for semantics) and then use last-child”</p>
+</blockquote>
+<p>While these are of course perfectly valid, and in some situations will actually be a better or (arguably) more semantic solution, sometimes it’s extra hassle that could easily be avoided if we had something like <strong>:last-of-class(‘thing’)</strong></p>
+<p>Are there issues with this proposal that I might have not considered?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/406_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Wills</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>Additional links which point to examples from other developers who want to achieve the same thing which I was not permitted to post because of the 2 link limit for new users…</p>
+<ol>
+<li><a href="http://stackoverflow.com/questions/6401268/how-do-i-select-the-last-child-with-a-specific-class-name-in-css" rel="nofollow noopener">http://stackoverflow.com/questions/6401268/how-do-i-select-the-last-child-with-a-specific-class-name-in-css</a></li>
+<li><a href="http://stackoverflow.com/questions/7687597/using-last-child-with-class-selector" rel="nofollow noopener">http://stackoverflow.com/questions/7687597/using-last-child-with-class-selector</a></li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>The spec already covers this, via <code>:nth-child()</code>.  You can pass a selector argument to specialize the counting to only cover things matching that selector.  This hasn’t been implemented by anyone yet, to my knowledge.</p>
+<p>If the selector you want to use is just a type selector, <code>:nth-of-type()</code> works.  In that JSBin, for example, a selector like <code>div:last-of-type</code> would select the last “thing” as expected.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1828_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">heydonworks</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>+1 Yep, <code>:last-of-type</code> is probably what’s needed. Note also, <span class="mention">@Wills</span>, that <code>nth-last-of-type()</code> can be used to count back from the final instance of that type. So, for example, <code>p:nth-last-of-type(2)</code> would match each instance of a penultimate paragraph.</p>
+<p>There’s very little you can’t do with the extant CSS3 selectors, in my experience. Especially since you can concatenate them. Eg. <code>p:nth-child(even):nth-last-of-type(3)</code> would match any even occurences of a <code>p</code> if they are also third last in a succession of <code>p</code>s. Not that you’d need that particular one very often…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/406_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Wills</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> Thanks, I didn’t think to check the draft spec for Selectors Level 4. <a href="http://dev.w3.org/csswg/selectors4/#the-nth-child-pseudo">Here’s the relevant part of the spec</a> for others interested. This enhanced nth-child spec is exactly what I was looking for.</p>
+<p><span class="mention">@heydonworks</span> I’m aware of nth-of-type and last-of-type but using those results in a brittle solution which doesn’t actually select the element for the reasons the element is being targeted (in this case). Just because the element is the second-to-last child at the moment, doesn’t mean it will always be. It’s just a happy coincidence of the provided example. The same applies for if I’d have used last-of-type. If I suddenly needed to change the <code>&lt;button&gt;</code> to a <code>&lt;div&gt;</code> in my HTML, I’d have to go and find and alter the CSS for the (unrelated) element and update the <code>n</code> value for the nth-last-of-type.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1828_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">heydonworks</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>I wasn’t suggesting you use <code>nth-last-of-type</code>. All you need is <code>last-of-type</code> as <span class="mention">@tabatkins</span> suggested. I was just mentioning <code>nth-last-of-type</code> as an additional tool for more complex scenarios. You say ‘brittle’, I say ‘specific’ <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> Naturally, you’ll want to be as unspecific as you can get away with. Just using an extreme example to show what’s possible in current implementations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/406_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Wills</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>My point was that using last-of-type in some situations just <strong>coincidentally</strong> happens to select the right element.</p>
+<p>I said this was brittle as if you were to add another element of the same type then the last-of-type selector would no longer match the desired element. Whereas if last-child(.my-class) were available it would (assuming the new element didn’t also have that class of course…). Usually in these situations where I need to select these sorts of elements my though process is something like “I need to select the last .my-class element and remove the border”. Element type doesn’t come into it.</p>
+<p>Basically I’m saying type selectors are often best avoided as they are too broad, as demonstrated by the above example ;).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

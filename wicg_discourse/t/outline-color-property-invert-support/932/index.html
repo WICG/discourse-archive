@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Outline Color Property Invert Support</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Outline Color Property Invert Support</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/640_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JimBobSquarePants</div>
+          <div class="creation_date">2015-07-15</div>
+          <div class="post_content">
+<p>Hi everyone,</p>
+<p>I’ve been looking at the <code>invert</code> value that can be used for CSS <code>outline-color</code> property. According to the documentation for this on MDN browser support is extremely poor. <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color#Browser_compatibility" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color#Browser_compatibility</a></p>
+<p>According to the spec this is due to the caveat :</p>
+<blockquote>
+<p>Conformant UAs may ignore the ‘invert’ value on platforms that do not
+support color inversion of the pixels on the screen. If the UA does
+not support the ‘invert’ value then the initial value of the
+’outline-color’ property is the value of the ‘color’ property, similar
+to the initial value of the ‘border-top-color’ property.</p>
+</blockquote>
+<p>Does anyone know more about this? What would be limiting adoption on certain browsers, why they would not wish to implement the feature etc?</p>
+<p>It seems like something incredibly useful to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-15</div>
+          <div class="post_content">
+<p>‘invert’ requires reading the pixel values of arbitrary content under the outline.  As this content might be from multiple different GPU layers, this can be an incredibly expensive operation, for relatively little benefit.</p>
+<p>The CSS blending and compositing features, which would naively suffer the same problem, only blend/composite within a given stacking context (which is a proxy for GPU layers - we need a stacking context in order to create a GPU layer, to ensure that nothing else can get “between” the elements painted to a given layer).  Thus it’s possible to blend/composite efficiently, but not to do inverted outlines efficiently.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/640_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JimBobSquarePants</div>
+          <div class="creation_date">2015-07-15</div>
+          <div class="post_content">
+<p>Ah of course! I completely forgot about the possible layering inefficiency.</p>
+<p>Thanks for clearing that up.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>Spitballing here: it’d be nice if specs had links to rationales/discussions like these, even if it’s just non-normative links to messages on the mailing list / Discourse.</p>
+<p>Edit: see <a href="https://github.com/stuartpb/wicg-best-practices/issues/2" rel="nofollow noopener">https://github.com/stuartpb/wicg-best-practices/issues/2</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>One quick fix would be to change the wording in the spec:</p>
+<blockquote>
+<p>Conformant UAs may ignore the ‘invert’ value on platforms that do not support color inversion of the pixels on the screen, <em>or where calculating the color inversion is deemed as too expensive</em></p>
+</blockquote>
+<p>Or, if there is some form of consensus among browsers that they can’t support this, deprecate it…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-07-20</div>
+          <div class="post_content">
+<p>I don’t think there is total consensus about not supporting this, since IE does support it (and Presto did). However, the clarification you suggest is reasonable. I’ll slide it in into level 4.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/4028_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">osirisgothra</div>
+          <div class="creation_date">2023-02-13</div>
+          <div class="post_content">
+<p><strong>invert</strong> was abandoned and not brought back likely because there are already ways to duplicate this behavior through compositing and styling. Though, in today’s world it would not be all that expensive to do this, but since nobody seems to care about it being gone, it hasn’t come back and is removed from just about every browser support.
+“outline” came out in a time when web page rendering was far simpler than it has become.  It goes to the graveyard along with stuff like  (but blink can be easily duplicated with  providing you have something like  <span class="mention">@keyframes</span> blinker { 0%{ opacity: 0% } 100%{ opacity: 100% }  somewhere (in  for example) and is done in pure CSS)  HOWEVER, inverted border would require an extra element and/or special more complex manipulation to pull it off, which would probably be more trouble than it was worth for a simple border.</p>
+<p>What <em>should</em> be done is for the rendering engine to internally convert this request to the equivalent supported methods required to do so, but like I said, nobody really is making noise about wanting it so it will likely stay in the graveyard–features like this are usually needed for accessibility and therefore placed in the operating system’s charge or at the very least, a browser extension.</p>
+<p>So! In short there are a bunch of ways to mimic this, but most of them either are exotic, esoteric or time consuming in nature. And unless tons of people request it be brought back, you will have to kiss invert goodbye.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

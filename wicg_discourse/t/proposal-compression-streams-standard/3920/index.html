@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Compression Streams standard</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Compression Streams standard</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-09-19</div>
+          <div class="post_content">
+<p>Compression APIs are common in other languages, but not built-in to JavaScript in the browser. This is odd, as all browsers need an implementation of the “gzip” and “deflate” compression algorithms in order to implement HTTP, PNG and many other web standards.</p>
+<p>My proposal is to first expose these two ubiquitous algorithms to JavaScript authors, but design the API so that it can be extended to new algorithms in future.</p>
+<p>Since compression and decompression are streaming processes, they are a natural match for <a href="https://streams.spec.whatwg.org/">WHATWG Streams</a>. They match exactly the model of a <a href="https://streams.spec.whatwg.org/#ts-model">transform stream</a>. So this is what I have based my design around.</p>
+<p>Simple usage example:</p>
+<pre><code class="lang-javascript">const compressedReadableStream = inputReadableStream.pipeThrough(new CompressionStream('gzip'));
+</code></pre>
+<p>There are more examples in <a href="https://github.com/ricea/compressstream-explainer/blob/master/README.md" rel="nofollow noopener">the explainer</a>.</p>
+<p>There were enthusiastic responses to the Blink <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/9gaUKa3QmmE/z_Ef9Xr_DQAJ" rel="nofollow noopener">Intent to Implement thread</a> and I have seen a lot of support this week at TPAC 2019.</p>
+<p>The most pressing use case is compressed uploads, but there are many other exciting possibilities.</p>
+<p>Currently apps which have a keen need for compression, such as analytics, include a compression library such as <a href="https://github.com/nodeca/pako" rel="nofollow noopener">pako</a> with their code. Having the facility built-in to the platform would avoid the extra download.</p>
+<p>I would like to explore incubating a standard document with the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-09-30</div>
+          <div class="post_content">
+<p>This was <a href="https://docs.google.com/document/d/1-xMvUHAjqhQdegNqupxlqsLbfPHWq5MJ0iySg9Z1KBs/edit?ts=5d8bc8d1#heading=h.s3zkff3a00fs" rel="nofollow noopener">discussed</a> at the WebPerfWG F2F meeting at TPAC, with many folks enthusiastic about the use cases that this will enable! Would be good to capture those use-cases in the explainer (and would also be good if folks here would chime in stating use-cases we missed)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-02</div>
+          <div class="post_content">
+<p>As described at OP</p>
+<aside class="quote no-group" data-post="1" data-topic="3920">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ricea/40/2581_2.png" width="20"/> ricea:</div>
+<blockquote>
+<p>Having the facility built-in to the platform would avoid the extra download.</p>
+</blockquote>
+</aside>
+<p>and</p>
+<aside class="quote no-group" data-post="1" data-topic="3920">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ricea/40/2581_2.png" width="20"/> ricea:</div>
+<blockquote>
+<p>compressed uploads</p>
+</blockquote>
+</aside>
+<blockquote>
+<p>Is it possible, in javascript, to have multiple download urls sent into one zip file and that zip file can be downloaded. So pretty much, on my web page, there is one button, that when clicked downloads a zip file of all the files from the download urls compressed into the zip?</p>
+<p>I believe I’d need to use jszip or some tool like that. Is this at all possible and is there any advice on where to start?</p>
+</blockquote>
+<p><a href="https://stackoverflow.com/questions/37176397/multiple-download-links-to-one-zip-file-before-download-javascript" rel="nofollow noopener">Multiple download links to one zip file before download javascript</a> are reasons to standardize the procedure.</p>
+<p>At least one other use case is compressing text, audio, images (media) to stream compressed data from the browser capable of being decompressed and streamed (read, read/write) as media segments, plain text, captions, subtitles, animations, speech at a different browsing context and browser.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-10-02</div>
+          <div class="post_content">
+<p>Thank you for your response.</p>
+<blockquote>
+<p>I believe I’d need to use jszip or some tool like that. Is this at all possible and is there any advice on where to start?</p>
+</blockquote>
+<p>Yes, currently using jszip or a similar library is the right way to do it. Once CompressionStream has had support for “deflate-raw” added (see <a href="https://github.com/ricea/compressstream-explainer/issues/8" rel="nofollow noopener">issue #8 on the explainer</a>, it will be possible to create zip files with a much smaller library.</p>
+<p>The top-voted response to that stack overflow post (<a href="https://stackoverflow.com/a/37176830/2523224" rel="nofollow noopener">https://stackoverflow.com/a/37176830/2523224</a>) seems like a good place to start. As noted in the comments, that won’t work for cross-origin requests where the server hasn’t permitted access, due to the same-origin policy. In that case, a server-side solution would be the only answer.</p>
+<blockquote>
+<p>At least one other use case is compressing text, audio, images (media) to stream compressed data from the browser capable of being decompressed and streamed (read, read/write) as media segments, plain text, captions, subtitles, animations, speech at a different browsing context and browser.</p>
+</blockquote>
+<p>Thank you for suggesting use cases! I plan to add more use cases to the explainer soon.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-10-04</div>
+          <div class="post_content">
+<p>There is now a draft spec at <a href="https://ricea.github.io/compression" rel="nofollow noopener">https://ricea.github.io/compression</a>.
+Please take a look and tell me what you think.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-10-14</div>
+          <div class="post_content">
+<p>I updated the explainer with some use cases. Discourse won’t let me link to them, so you’ll need to follow the link in my original post. The list is incomplete so I would appreciate contributions.</p>
+<p>It would be good to keep track of requirements for each use case. For example,</p>
+<ul>
+<li>decoding zip files requires “deflate-raw” support</li>
+<li>in-memory databases would benefit from a high-performance algorithm such as LZ4.</li>
+</ul>
+<p>But I don’t know what would be a good place for tracking requirements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-15</div>
+          <div class="post_content">
+<p>Is there any reason <a href="https://github.com/ricea/compressstream-explainer/blob/master/README.md" rel="nofollow noopener">https://github.com/ricea/compressstream-explainer/blob/master/README.md</a> is not linked to from <a href="https://github.com/ricea/compression-streams/" rel="nofollow noopener">https://github.com/ricea/compression-streams/</a>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-10-15</div>
+          <div class="post_content">
+<p>No good reason. I have slightly improved the README.md at <a href="https://github.com/ricea/compression-streams/" rel="nofollow noopener">https://github.com/ricea/compression-streams/</a>. Please take look.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ericlaw1979</div>
+          <div class="creation_date">2019-10-21</div>
+          <div class="post_content">
+<p>I’m also excited about standardizing this. Compression is an important primitive for myriad features of the web platform, and it seems very redundant to force developers to polyfill this unexposed platform capability using JavaScript at a performance cost (both download and runtime operation).</p>
+<p>I’m particularly interested in raw-deflate support (many file formats are based around ZIP files) and in brotli support (for performance/size/polyfill-availability reasons).</p>
+<p>My personal use case for raw-DEFLATE would be in building a web-based viewer for Fiddler’s SAZ (Session Archive ZIP) traffic capture files… it would be great to be able to let users view the contents of these files without requiring a native client application, and especially useful on platforms (ChromeOS, MacOS) where no good client exists.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-11-12</div>
+          <div class="post_content">
+<p>I would like to transfer the standard repository at <a href="https://github.com/ricea/compression-streams/">https://github.com/ricea/compression-streams/</a> to WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-11-15</div>
+          <div class="post_content">
+<p>The repo now lives on <a href="https://github.com/WICG/compression">https://github.com/WICG/compression</a></p>
+<p>Yay!!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2774_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomByrer</div>
+          <div class="creation_date">2020-02-16</div>
+          <div class="post_content">
+<p>I believe exposing data compression to JS authors is a great idea!</p>
+<p>But I’m trying to understand why the compression methods are hard-coded?</p>
+<p>There is already interest for more flexible compression listed on GitHub: <a href="https://github.com/WICG/compression/issues/25" rel="nofollow noopener">deflate-raw</a>: <a href="https://github.com/WICG/compression/issues/22" rel="nofollow noopener">parameters &amp; flushing</a>, <a href="https://github.com/WICG/compression/issues/27" rel="nofollow noopener">custom dictionaries</a>. &amp; <a href="https://twitter.com/FezVrasta/status/1228990516852936706" rel="nofollow noopener">Brotli</a>.
+&amp; I do not see any <a href="https://caniuse.com/?#feat=brotli" rel="nofollow noopener">browsers that are not Brotli compatible</a> that will implement Compression Streams.</p>
+<p>Yes, it will take slightly longer to implement, but please ether add a hard statement that this is only a draft implementation, &amp; there will be a more flexible API before v1.0 (eg get browsers to add a beta behind a flag), or just add the flexibility to the standard now.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2020-02-17</div>
+          <div class="post_content">
+<blockquote>
+<p>But I’m trying to understand why the compression methods are hard-coded?</p>
+</blockquote>
+<p>Do you mean why is it not extensible via JavaScript? That will be added at some point, see <a href="https://github.com/WICG/compression/issues/9">https://github.com/WICG/compression/issues/9</a>.</p>
+<p>Or do you mean why is the list of built-in methods specified in the standard? This is to ensure predictability, ie. that authors can rely on the same set of methods regardless of the browser environment.</p>
+<blockquote>
+<p>I do not see any <a href="https://caniuse.com/?#feat=brotli">browsers that are not Brotli compatible</a> that will implement Compression Streams.</p>
+</blockquote>
+<p>Chrome includes the dictionary for Brotli decompression, but not for compression. The dictionary for compression is 190KB and it’s not clear that it would get sufficient usage to be worth putting that on everyone’s phones.</p>
+<blockquote>
+<p>Yes, it will take slightly longer to implement, but please ether add a hard statement that this is only a draft implementation</p>
+</blockquote>
+<p>As long as it is in WICG it will say “UNOFFICIAL DRAFT” across the top.</p>
+<blockquote>
+<p>there will be a more flexible API before v1.0</p>
+</blockquote>
+<p>This is a living standard. You can expect more features to be added in future. However, it is perfectly implementable as-is.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

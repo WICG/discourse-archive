@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Use &lt;iframe&gt; contents if srcdoc is present but empty</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Use &lt;iframe&gt; contents if srcdoc is present but empty</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>srcdoc is a much needed attribute, but specifying an entire HTML document inside an attribute is clumsy. On the other hand, I understand that just using the <code>&lt;iframe&gt;</code>’s contents was not feasible due to all the old markup using <code>&lt;iframe&gt;</code> contents as a fallback for non-iframe supporting UAs.</p>
+<p>Being able to use <code>srcdoc</code> as a flag alleviates this compat problem, and enables us to use the <code>&lt;iframe&gt;</code> contents as the <code>srcdoc</code>.</p>
+<p>I’m not sure if any UAs do weird things when there’s an entire other document inside <code>&lt;iframe&gt;</code> but since they do not process its contents, I suspect it’s probably ok, unless the document inside has iframes, in which case UAs will probably treat the <code>&lt;/iframe&gt;</code> closing tag as the closing tag for the outer iframe. However, in these cases, or in cases where this might happen (e.g. dynamically generated content), authors can always put the document inside the <code>srcdoc</code> attribute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>I’m sorry if I’m missing something, what’s the usecase here and why is it a much needed attribute?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>Ok, I think I get your point here now, use the content in between iframes like this:</p>
+<pre><code class="lang-auto">&lt;iframe srcdoc=""&gt;&lt;p&gt;Hello how are you&lt;/p&gt;&lt;/iframe&gt;
+</code></pre>
+<p>Would basically use the innerHTML of the iframe as though it’s the value of srcdoc - correct?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/917_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">craig.francis</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>I like the idea, and it would make the srcdoc easier than having to put all of the HTML into a single attribute (it can get really big).</p>
+<p>Just wondering though, how many browsers don’t use / ignore iframes (probably because they are really old), and considering iframes are used to typically host/isolate potentially more problematic content (e.g. using the sandbox attribute to limit what it can do), you now have this potentially dangerous code running in the main DOM… I usually use srcdoc to contain the dangerous HTML, and the iframe content to put in some safe fallback for those older browsers.</p>
+<p>I’m also wondering, browsers have a pre-scanner to look for resources later in the document (e.g. while waiting for some JS to load, they look ahead for any other images/JS to get)… I’ve not looked at the implementation, but I suspect these are very quick/simple, where I’m not sure if they will be cleaver enough to notice that the HTML tags are within an iframe, and might start downloading them (where an iframe might have a CSP that would otherwise block).</p>
+<p>That said, I would like iframes to be easier to use - I think they make a great way to improve security on a website (it’s a shame the CSS working group, and the browsers themselves, still haven’t allowed the <a href="https://github.com/craigfrancis/iframe-height" rel="nofollow noopener">height of the iframe</a> to change based on the content, without the use of messy JS).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>iFrames are often used just to isolate <strong>styling</strong> of the corresponding page fragment from the rest webpage (e. g. in WYSIWYG editors in CMS admin panels where there is no any security danger).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p><code>srcdoc</code> already exists and is implemented everywhere except IE/Edge, that’s not what I’m proposing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>Yes. This avoids the need for escaping quotes and brackets, and frankly, makes much more sense.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>I really don’t think there’s any browser in actual use today that doesn’t support <code>&lt;iframe&gt;</code>. It was introduced in HTML4, not exactly a cutting edge spec. Even IE4 supports it, lol.</p>
+<p>Good point about the pre-scanner but I doubt it. If they don’t take nesting into account <code>&lt;template&gt;</code> and <code>&lt;script&gt;</code> would have the same problem (<code>&lt;script&gt;</code> is often used for templating as it has better support than <code>&lt;template&gt;</code>). It’s not the first time we’re gonna have inert markup as content of an element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>Your point being?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-05</div>
+          <div class="post_content">
+<p>My comment was a reply to <span class="mention">@craig.francis</span> (for some reason, that fact is not always indicated here — probably due to some Discourse bug).</p>
+<p>I like your idea, Lea: when the <code>srcdoc</code> attribute has originally been introduced, one of my first thoughts was the same: why it’s the attribute and not just contents of iframe (probably with a boolean attribute [like <code>srcdoc=""</code> in your proposal] instructing browsers to interpret contents correspondigly).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<blockquote>
+<p>Good point about the pre-scanner but I doubt it. If they don’t take nesting into account <code>&lt;template&gt;</code> and <code>&lt;script&gt;</code> would have the same problem (<code>&lt;script&gt;</code> is often used for templating as it has better support than <code>&lt;template&gt;</code>).  It’s not the first time we’re gonna have inert markup as content of an element."</p>
+</blockquote>
+<p>Yup. Not a problem for preloaders to get around that and simply ignore tokens inside iframes. (as you say, very similar to <code>&lt;template&gt;</code>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="1" data-topic="1548">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/leaverou/40/110_1.png" width="20"/> leaverou:</div>
+<blockquote>
+<p>srcdoc is a much needed attribute, but specifying an entire HTML document inside an attribute is clumsy.</p>
+</blockquote>
+</aside>
+<p>As far as I know attributes can contain newlines, etc. So, for example, this works:</p>
+<pre><code>&lt;iframe srcdoc="&lt;!DOCTYPE html&gt;
+&lt;p&gt;Hello, world!&lt;/p&gt;
+"&gt;&lt;/iframe&gt;
+</code></pre>
+<p>So is the particular difficulty here not being able to use quotes in that content? Is there something else you find clumsy about this?</p>
+<p>Maybe attributes should be able to be delimited by more complex markers like Python’s triple-quoted strings. That may be useful for other attributes with long values which mix syntax (for example inline JavaScript which contains strings of CSS or HTML.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<p>One huge limitation of the attribute approach (beyond dev ergonomics with quotes) is that attributes are not parsed in a streaming fashion, leading to significant lag when downloading large iframes using srcdoc.</p>
+<p><span class="mention">@leaverou</span>’s suggestion would enable streaming HTML parsing for the iframe contents, resulting in better UX.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="1548">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>As far as I know attributes can contain newlines, etc. So, for example, this works:</p>
+<p>&lt;iframe srcdoc="&lt;!DOCTYPE html&gt;
+&lt;p&gt;Hello, world!&lt;/p&gt;
+"&gt;&lt;/iframe&gt;</p>
+</blockquote>
+</aside>
+<p>Fwiw, syntax highlighting in code editors and IDEs does not work with HTML code placed in attributes. Also, contents of an attribute cannot be directly dealt with as a DOM subtree.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<blockquote>
+<p>Also, contents of an attribute cannot be directly dealt with as a DOM subtree.</p>
+</blockquote>
+<p>To be fair, neither can inert subtrees, like the contents of <code>&lt;template&gt;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="15" data-topic="1548">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/leaverou/40/110_1.png" width="20"/> leaverou:</div>
+<blockquote>
+<blockquote>
+<p>Also, contents of an attribute cannot be directly dealt with as a DOM subtree.</p>
+</blockquote>
+<p>To be fair, neither can inert subtrees, like the contents of <code>&lt;template&gt;</code>.</p>
+</blockquote>
+</aside>
+<p>Looks like a thing to fix. Do you know the reason why it has been decided to introduce such limitation? Fwiw, this probably does not match reality for browsers that don’t support such elements as the <code>template</code> and therefore treat their contents as regular DOM subtrees, unlike newer browsers.</p>
+<p>Anyway, syntax highlighting in code editors is an important useful feature that should work with contents of such elements unlike attributes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1548">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/leaverou/40/110_1.png" width="20"/> leaverou:</div>
+<blockquote>
+<p>srcdoc is a much needed attribute, but specifying an entire HTML document inside an attribute is clumsy. On the other hand, I understand that just using the &lt;iframe&gt;’s contents was not feasible due to all the old markup using &lt;iframe&gt; contents as a fallback for non-iframe supporting UAs.</p>
+<p>Being able to use srcdoc as a flag alleviates this compat problem, and enables us to use the &lt;iframe&gt; contents as the srcdoc.</p>
+</blockquote>
+</aside>
+<p>Unfortunately, nope. This violates the security constraints that led to the development of srcdoc in the first place.  Namely, correctly munging raw hostile text so that it can’t escape the sandbox is relatively difficult in a full HTML context, but is very easy for attributes - just escape the attribute quoting char you’re using.  (And any ampersands if you want to prevent data corruption, but that’s not a security issue.)  And on the JS side, using <code>iframe.srcdoc</code> is identical to <code>iframe.innerHTML</code>, but the former is safe with <em>zero</em> effort (no escaping required at all) while the latter is just as difficult to secure.</p>
+<p>A lot of thought went into common failure patterns in designing secure systems for handling hostile text, and this was the best thing we could come up with.</p>
+<p>You’re not hand-authoring these, so what’s the difference to you between putting it in an attr and putting it in the contents? It’s just placing the emitting function a few characters one way or the other.  If it’s later debugging with DevTools, that can be fixed on the DevTools side (probably similar to how Shadow DOM is exposed today).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<p>I’m not suggesting that srcdoc should go away, I’m suggesting that this should <em>also</em> be available. Whoever is affected by the concerns you describe can use <code>srcdoc</code> as an attribute. Using <code>srcdoc</code> for sandboxing is only one out of multiple use cases.</p>
+<blockquote>
+<p>You’re not hand-authoring these, so what’s the difference to you between putting it in an attr and putting it in the contents?</p>
+</blockquote>
+<p>That’s a fairly big (and false) assumption there. What makes you think that nobody ever hand-authors <code>srcdoc</code>?!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<blockquote>
+<p>I’m not suggesting that srcdoc should go away, I’m suggesting that this should also be available. Whoever is affected by the concerns you describe can use srcdoc as an attribute. Using srcdoc for sandboxing is only one out of multiple use cases.</p>
+</blockquote>
+<p>That’s literally everyone. Give people a secure and insecure way of doing something and some people will choose the insecure one and get rekt.  <em>Particularly</em> when the insecure one looks more “natural”.</p>
+<blockquote>
+<p>That’s a fairly big (and false) assumption there. What makes you think that nobody ever hand-authors srcdoc?!</p>
+</blockquote>
+<p>What are you doing that needs hand-authored iframe contents?  The entire point of srcdoc is to help sandboxing; that’s why it was designed and implemented.</p>
+<p>(Regardless, as <span class="mention">@Dominic_Cooney</span> pointed out, you can put newlines in attrs, so the only thing awkward about hand-authoring <code>srcdoc</code> as opposed to raw HTML is that you have to avoid or escape the quoting char you’re using.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="1548">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>just escape the attribute quoting char you’re using</p>
+</blockquote>
+</aside>
+<p>So “hostile text” cannot be put into the attribute <strong>as is</strong> anyway, and there is no difference in terms of <em>security</em> between attribute and element contents.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

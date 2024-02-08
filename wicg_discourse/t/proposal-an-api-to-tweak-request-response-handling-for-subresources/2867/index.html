@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] An API to tweak request/response handling for subresources</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] An API to tweak request/response handling for subresources</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2807_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kinuko</div>
+          <div class="creation_date">2018-06-29</div>
+          <div class="post_content">
+<p>Many of you may have thought “Isn’t this what Service Workers are for?” after reading the headline. Yes, this proposal could be about Service Workers, but maybe not. On the Chrome team we’ve identified a set of problems that could be solved by Service Workers, but we feel that there are some downsides to that approach.</p>
+<p><strong>Problems</strong></p>
+<p>Anyways let me expand, here are some of the problems we would like to solve efficiently:</p>
+<ul>
+<li>
+<p>No easy way to control when to fetch and when to process the responses.
+I often see people confused by the timing of sub-resources fetches and responses handling: “um, why is this image fetched before that stylesheet?” or “gush, why is this script executed before we do X?”. There are some known techniques (e.g. preload and then change rel=) to achieve some ordering, but they don’t always work as intended and even if they work it’s extremely hard to make sure the ordering when third-party libraries and frameworks are involved.</p>
+</li>
+<li>
+<p>No easy way to rewrite multiple requests in a performant way.
+A/B testing frameworks are apparently using hacks (e.g. open a textarea tag early-on) to rewrite everything in the document body, but this collides with UA’s preload scanner, which leads to suboptimal performance.</p>
+</li>
+<li>
+<p>No easy way to bypass service workers for particular requests.
+We’ve heard some demand for a way to skip service workers for requests that are always meant to go to the network, e.g. video streams. It was once discussed in Service Workers F2F and <a href="https://github.com/w3c/ServiceWorker/issues/1026#issuecomment-342676442" rel="nofollow noopener">one of the resolution</a> was to add <code>service worker mode</code> to Fetch request, but it’s still not possible to apply the mode for resource requests that come from HTML elements or third-party libraries. For those another option could be <a href="https://github.com/w3c/ServiceWorker/issues/566#issuecomment-384938199" rel="nofollow noopener">static routes</a>, while its discussion is still up in the air.</p>
+</li>
+</ul>
+<p>As I wrote in the intro, any of the above be addressed by Service Workers, but there are some downsides or gaps:</p>
+<ul>
+<li>Service Workers can’t be used on the first page load. There’s an issue <a href="https://github.com/w3c/ServiceWorker/issues/1282" rel="nofollow noopener">https://github.com/w3c/ServiceWorker/issues/1282</a> but it’s not actively discussed.</li>
+<li>Service Workers’ registration model and complex lifetime may not always be worth the trouble if the website owner just want to fiddle with a few sub resources.</li>
+<li>Service Workers are “far” from the document(s), which makes it hard to coordinate the request/response ordering w.r.t. the page’s document state.</li>
+<li>Service Workers can’t observe responses that are returned from caches that sit above Service Workers, e.g. Memory Cache or preload cache.</li>
+<li>While Service Workers have fine control over the network, it doesn’t allow for fine control over the browser’s other most constrained resource: the main thread. Tasks will run unchecked and probably at the wrong time.</li>
+</ul>
+<p>These made us wonder if it’s worth having a different, possibly simpler API from Service Workers. E.g. it can just be an inline script (e.g. <code>&lt;script type=”loading”&gt;...&lt;/script&gt;</code>) in the page and just works for all the subresource loading after that. One could also imagine that certain HTML element provide hooks to provide the same level of control.</p>
+<p>Thoughts?  I and <span class="mention">@KenjiBaheux</span> are keen to hear your opinion! <img alt=":grinning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/grinning.png?v=5" title=":grinning:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-06-29</div>
+          <div class="post_content">
+<p>Thanks for your proposal! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>It’s not 100% clear what would be considered “tweaking” in that context and what would that “request handler” be able to do:</p>
+<ul>
+<li>Will it be able to modify the outgoing URL?</li>
+<li>Will it be able to have full <code>fetch()</code> options control?</li>
+<li>Will it be able to return a generated response instead?</li>
+<li>Will it be able to fetch the response, but fail the request if the response didn’t arrive within a certain timeout?</li>
+<li>Will it be able to pre-process the response before returning it?</li>
+</ul>
+<p>If it can’t do some of those, we’d need to see which use-cases we’re leaving out. If it can do all that, what’s the difference between that and a SW, other than SW being on a different thread?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-06-29</div>
+          <div class="post_content">
+<p>One more detail - will the preloader wait on kicking off resource requests until the inline request handler script is wired up? Are there any guarantees regarding how long that will take? Any estimates on potential regressions as a result of that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">steve_souders</div>
+          <div class="creation_date">2018-06-29</div>
+          <div class="post_content">
+<p>I think a “lazyload” attribute is a much higher priority. People want resources delayed until after the page is done - right now there’s no way to do that in markup. If we had that, would many of the use cases your thinking of be solved?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2018-07-01</div>
+          <div class="post_content">
+<p>Would these help achieve some of those goals?</p>
+<ul>
+<li><a href="https://github.com/WICG/priority-hints/blob/master/EXPLAINER.md" rel="nofollow noopener">Priority hints</a></li>
+<li><a href="https://github.com/whatwg/html/issues/2806" rel="nofollow noopener"><code>lazyLoad</code></a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1631_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">KenjiBaheux</div>
+          <div class="creation_date">2018-07-02</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="2867">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/1710_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<ul>
+<li>Will it be able to modify the outgoing URL?</li>
+<li>Will it be able to have full <code>fetch()</code> options control?</li>
+<li>Will it be able to return a generated response instead?</li>
+<li>Will it be able to fetch the response, but fail the request if the response didn’t arrive within a certain timeout?</li>
+<li>Will it be able to pre-process the response before returning it?</li>
+</ul>
+</blockquote>
+</aside>
+<p>I think the answer to all of those is “probably yes”.</p>
+<aside class="quote no-group">
+<blockquote>
+<p>If it can’t do some of those, we’d need to see which use-cases we’re leaving out. If it can do all that, what’s the difference between that and a SW, other than SW being on a different thread?</p>
+</blockquote>
+</aside>
+<p>There are a few differences with Service Worker as noted by Kinuko.</p>
+<p>I’m particularly interested in these 3 differences:</p>
+<ol>
+<li>Ability to act on “onEvaluate” events to control if/when/… work happen on the main thread, e.g. postpone evaluating the “async script in charge of comments at the end of an article” until the page reaches a meaningful above the fold state.</li>
+<li>Ability for third party optimization services to provide or insert a snippet that would implement good default behaviors for known third parties.</li>
+<li>Composable</li>
+</ol>
+<p>For item 1, a SW could postpone a response in order to delay evaluation. But, operating on events coming from the main thread should provide greater control over the timing of tasks. In other words, if a SW postpone a non-essential response until the main document says “ATF ready”, there is no guarantee that the task associated with the response will run immediately, and the situation could change in the meantime.</p>
+<ul>
+<li>Ideally, this type of “async script running at the wrong time” shouldn’t be a problem in the first place. But, for most websites out there, it’s hard if not impossible to do things in the ideal way (the third parties are added by a different team via a tag manager that they may not fully control). This would give the team that is tasked with crafting a good user experience, the ability to do so by having the final say. There are also some third parties who would love to have their render-blocking snippet come equipped with a user friendly timeout.</li>
+</ul>
+<p>For item 2, convincing a customer to install a (service worker) script on their server is a lot harder and complex than asking them to copy paste a snippet.</p>
+<p>For item 3, the devil is in the details but it seems quite appealing to give each player the ability to tweak their fetches and evaluation. Crazy idea: what if onfetch or onevaluation were attributes on certain HTML tags? Instead of shipping high level attributes such as timeout or lazyload, wouldn’t it be more aligned with the extensible web manifesto to start with a low level surface?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

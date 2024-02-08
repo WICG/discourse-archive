@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS round display</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS round display</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-28</div>
+          <div class="post_content">
+<p>With new devices popping up all over now with different screens of shapes and sizes would it make more sense for these changes to have further clarity around different display shapes?</p>
+<p><a class="onebox" href="https://lists.w3.org/Archives/Public/www-style/2015Mar/0358.html" target="_blank">https://lists.w3.org/Archives/Public/www-style/2015Mar/0358.html</a></p>
+<blockquote>
+<ul>
+<li>Spec: <a href="http://dev.w3.org/csswg/css-round-display/">http://dev.w3.org/csswg/css-round-display/</a>
+</li>
+</ul>
+</blockquote>
+<ul>
+<li>Polyfill: <a href="https://github.com/lgewst/jRound/" rel="nofollow noopener">https://github.com/lgewst/jRound/</a>
+</li>
+</ul>
+<p>Some devices that don’t fit this:</p>
+<p><img alt="Olio smart watch" height="" src="//discourse.wicg.io/uploads/default/558/73c56406b288f837.png" width=""/></p>
+<p>The cut off part of the screen here would have to be masked off leading to custom device profiling.</p>
+<p><img alt="Samsung gearfit" height="" src="//discourse.wicg.io/uploads/default/559/225128b68620b9f0.jpg" width=""/></p>
+<p>You could probably argue this is covered by the specification however it certainly highlights the issue further.</p>
+<p>There is also the VR headset boundaries that could be handled by this too:
+<img alt="Oculus preview" height="169" src="http://t0.gstatic.com/images?q=tbn:ANd9GcSndG9EEoh27C7GFbIokxk6yFSqWCQtH41vMKI5xp0EJiPWz1A7KA" width="298"/></p>
+<h2>Issues for different screen shapes</h2>
+<ul>
+<li>No media queries for the different device profiles</li>
+<li>Display is defined as <code>circle(50% at 50%, 50%) in a regular round display</code> further clarity would be needed around display shape.</li>
+<li>Polar position doesn’t always apply here</li>
+<li>Some form of CSSOM shape interface for JavaScript would likely be needed.</li>
+</ul>
+<h2>Issues</h2>
+<ul>
+<li>Code example issue in Example 4</li>
+</ul>
+<pre><code class="lang-css">    #container {
+        #shape-inside: display;
+        // the same as circle(50% at 50%, 50%) in a regular round display
+    }
+</code></pre>
+<p>This should likely just be <code>shape-inside: display;</code> without the <code>#</code>.</p>
+<ul>
+<li>The Example 6 code is likely the wrong way around:</li>
+</ul>
+<pre><code class="lang-auto">    &lt;div id="circle1" style="polar-angle: 0deg; polar-distance: 20%"&gt;&lt;/div&gt;
+    &lt;div id="circle2" style="polar-angle: 90deg; polar-distance: 50%"&gt;&lt;/div&gt;
+</code></pre>
+<p>Polar distance should be swapped to be:</p>
+<pre><code class="lang-auto">    &lt;div id="circle1" style="polar-angle: 0deg; polar-distance: 50%"&gt;&lt;/div&gt;
+    &lt;div id="circle2" style="polar-angle: 90deg; polar-distance: 20%"&gt;&lt;/div&gt;
+</code></pre>
+<p>To match the image:</p>
+<p><img alt="polar distance" height="" src="//discourse.wicg.io/uploads/default/562/1b41a86499a3c255.png" width=""/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-29</div>
+          <div class="post_content">
+<p>It also seems like rules similar to print CSS paging would help displaying on these devices. Overflow gets clipped when using the <code>shape-inside</code> demo. Issue 2 covers this.</p>
+<p>To have text fit into the the shape of the display, normal scrolling wouldn’t work as the text would start reflowing around as the user scrolled.</p>
+<p>So I think the only simple way once using shape-inside, the interface would turn to card mode and slice the content into pages which are fixed to the device size.</p>
+<p>Transition between one card and the next would need to be definable too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-21</div>
+          <div class="post_content">
+<p>This also relates to my comments on elements interactive areas:
+<aside class="quote" data-post="3" data-topic="499">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/><a href="//discourse.wicg.io/t/interactive-area-and-shape-outside/499/3" rel="nofollow noopener">Interactive area and shape-outside</a>
+</div>
+<blockquote>
+<p><span class="mention">@tabatkins</span> while I have your attention today, is there any intention to expose this sort of interface into CSS at any point also?</p>
+</blockquote>
+</aside></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p>The round display spec is in really early stages, and needs improvements. Your feedback looks good. Could you send it to the www-style mailing list?</p>
+<aside class="quote" data-post="2" data-topic="790">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>rules similar to print CSS paging would help displaying on these devices. Overflow gets clipped when using the shape-inside demo</p>
+</blockquote>
+</aside>
+<p>This isn’t quite solved yet, but pagination on demand based on overflow is being worked on: <a href="http://dev.w3.org/csswg/css-overflow-3/#fragmentation">http://dev.w3.org/csswg/css-overflow-3/#fragmentation</a></p>
+<p>A whole lot more work is needed before that’s usable, but once finish, it should fit right in with this rounded display situation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>Sent over to the working group.</p>
+<p>Like you say mostly it would be solved by:</p>
+<pre><code class="lang-auto">continue: paginate;
+</code></pre>
+<p>Transitions between paging would be nice but certainly that isn’t a high priority right now.</p>
+<p>Thanks for your comments.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hyojin</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>Hi Jonathan,
+I’m Hyojin Song who is an editor of the CSS Round Display spec.</p>
+<p>The first issue you indicated is exactly right, and I’ve applied the issue. I think you have an eye like a hawk <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> Even though I reviewed the spec with deliberation, I didn’t catch the error.</p>
+<p>For the second issue, I think it depends on where is the major axis, and it is normally the right direction as the 0 degree. You can find the background materials in the wiki page as follows. <a href="http://en.wikipedia.org/wiki/Polar_coordinate_system" rel="nofollow noopener">http://en.wikipedia.org/wiki/Polar_coordinate_system</a></p>
+<p>If I’m missing something, Feel free to let me know.</p>
+<p>Thank you for your interest and support of the CSS Round Display.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="790">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/h/a183cd/40.png" width="20"/> hyojin:</div>
+<blockquote>
+<p>For the second issue, I think it depends on where is the major axis, and it is normally the right direction as the 0 degree. You can find the background materials in the wiki page as follows. <a href="http://en.wikipedia.org/wiki/Polar_coordinate_system" rel="nofollow noopener">http://en.wikipedia.org/wiki/Polar_coordinate_system</a></p>
+</blockquote>
+</aside>
+<p>There is a different precedent in <a href="http://dev.w3.org/csswg/css-images-3/#linear-gradient-syntax"><code>linear-gradient()</code></a>:</p>
+<blockquote>
+<p>For the purpose of this argument,
+0deg points upward,
+and positive angles represent clockwise rotation,
+so 90deg point toward the right.</p>
+</blockquote>
+<p>Although, if I remember correctly, this detail has changed at least once in the various proposals for standardizing CSS gradients.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>Gradients used to have 0deg pointing to the right, to align with standard polar coordinates, and positive angles go CCW.  But SVG uses bearing angles, with 0deg pointing up and positive angles going CW, so I aligned with that.</p>
+<p>Everything in CSS that uses angles for directions should do the same.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

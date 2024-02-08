@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] video MediaError extension</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] video MediaError extension</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2251_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vicyao</div>
+          <div class="creation_date">2019-07-17</div>
+          <div class="post_content">
+<p><strong>Problem</strong></p>
+<p>When a video error occur, we can get the error code through MediaError. The code defines <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaError" rel="nofollow noopener">here</a>:</p>
+<p>interface MediaError {</p>
+<p>const unsigned short <a href="https://dev.w3.org/html5/pf-summary/video.html#dom-mediaerror-media_err_aborted">MEDIA_ERR_ABORTED</a> = 1;</p>
+<p>const unsigned short <a href="https://dev.w3.org/html5/pf-summary/video.html#dom-mediaerror-media_err_network">MEDIA_ERR_NETWORK</a> = 2;</p>
+<p>const unsigned short <a href="https://dev.w3.org/html5/pf-summary/video.html#dom-mediaerror-media_err_decode">MEDIA_ERR_DECODE</a> = 3;</p>
+<p>const unsigned short <a href="https://dev.w3.org/html5/pf-summary/video.html#dom-mediaerror-media_err_src_not_supported">MEDIA_ERR_SRC_NOT_SUPPORTED</a> = 4;</p>
+<p>readonly attribute unsigned short <a href="https://dev.w3.org/html5/pf-summary/video.html#dom-mediaerror-code">code</a>;</p>
+<p>};</p>
+<p>The problem is, when it comes to <strong>MEDIA_ERR_SRC_NOT_SUPPORTED</strong>, developer can’t confirm what had happened. It could be one of the following issues:</p>
+<ol>
+<li>The src request returned a 403, 403 or 5xx.</li>
+<li>The src request returned a 200, but it’s a html page instead of video. Most likely the request has been blocked.</li>
+<li>The src request returned a video but the encode was not supported.</li>
+<li>Other exceptions.</li>
+</ol>
+<p>In these cases the “error.message” is empty or just “Format error”, no further information.</p>
+<p><strong>Proposed API: a httpCode on MediaError</strong></p>
+<p>We propose an addition attribute, httpCode, on MediaError. So developer can figure out what happened and report the issue. Here’s a example:</p>
+<pre><code>let video = document.createElement('video');
+video.addEventListener('error', function() {
+    console.log(this.error.httpCode);
+}
+</code></pre>
+<p><strong>Other consideration</strong></p>
+<p>By getting the httpCode, we need to follow the <a href="http://dvcs.w3.org/hg/cors/raw-file/tip/Overview.html">CORS</a> specification. Only When the request pass the CORS successfully(or in the same domain), it’s allowed to read the httpCode, otherwise throw an exception.</p>
+<p>Besides video element, audio can share the httpCode too.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

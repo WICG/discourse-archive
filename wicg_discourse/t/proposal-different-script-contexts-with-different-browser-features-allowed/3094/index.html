@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[proposal] Different script contexts with different browser features allowed</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[proposal] Different script contexts with different browser features allowed</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">moonyowl</div>
+          <div class="creation_date">2018-10-14</div>
+          <div class="post_content">
+<p><em>Feature policy</em> can be defined for <em>browsing context</em> , but there is no way to define it for <em>script context</em>. I think it’s totally wrong, and there is an objective need to be able to run different scripts in different <em>script contexts</em> (with different global environments and different set of available <em>browser features / Web APIs</em>).
+Example:
+I need to run two scripts on a webpage. The first script is a first-party script that will access  sensetive data (or fingerprintable API’s). The second script is a third-party script that will make some network requests. I need to isolate these scripts from each other to ensure that the second script will never have access to sensetive data. But now there is no way to do it.
+I tried to create a model that can describe script contexts and <em>any</em> browser feature that can be used, maybe someone will find it helpful:
+<a class="onebox" href="https://pastebin.com/EGBX5Z5G" rel="nofollow noopener" target="_blank">https://pastebin.com/EGBX5Z5G</a></p>
+<p>Note: see also <a href="https://github.com/WICG/feature-policy/issues/238" rel="nofollow noopener">https://github.com/WICG/feature-policy/issues/238</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npdoty</div>
+          <div class="creation_date">2018-10-15</div>
+          <div class="post_content">
+<p>This is a very laudable goal, and I think it would help with various security and privacy issues on the Web. When suggestions along these lines have been raised in the past, the challenge of adding these restrictions to the existing scripting model has been a blocker.</p>
+<p>I think one of the first steps here needs to be documenting and preventing any workarounds. That is, scripts loaded with a limited set of privileges need to not be able to break out of that sandbox. If a script can modify the DOM, can it add another script element? And then, at the next level, if it has shared state with the more privileged scripts, can it influence the actions of those scripts in such a way that it effectively exceeds its privileges?</p>
+<p>Is there academic work on this topic? Could we collect it and synthesize the key conclusions or recommendations?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">moonyowl</div>
+          <div class="creation_date">2018-10-15</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="3094">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/npdoty/40/690_1.png" width="20"/> npdoty:</div>
+<blockquote>
+<p>If a script can modify the DOM, can it add another script element?</p>
+</blockquote>
+</aside>
+<p>Each script should have two ways of executing another scripts:</p>
+<ol>
+<li>Execute script within the same context.</li>
+<li>Execute script within a new script context. Each newly created <em>script context</em> should inherit all limitations from parent <em>script context</em>.</li>
+</ol>
+<aside class="quote no-group" data-post="2" data-topic="3094">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/npdoty/40/690_1.png" width="20"/> npdoty:</div>
+<blockquote>
+<p>And then, at the next level, if it has shared state with the more privileged scripts, can it influence the actions of those scripts in such a way that it effectively exceeds its privileges?</p>
+</blockquote>
+</aside>
+<ol>
+<li>Priveleged scripts <em>shouldn’t be able to influence</em> the actions of scripts that may send network requests.</li>
+<li>Priveleged scripts <em>should be able to be influenced</em> by scripts that may send network requests.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OpenLocationServices</div>
+          <div class="creation_date">2018-10-17</div>
+          <div class="post_content">
+<p>I don’t think it is possible. It is a paradox.</p>
+<p>As long as the ‘privileged’ script will be able to modify the DOM, it is impossible. And if the ‘privileged’ script cannot modify the DOM, then the privileged script is useless because you cannot do much without it.</p>
+<p>The argument is the same as those people who blame everything on 3rd party script by some Ad networks. What they dont realize is that their argument is insane. If ads were forced to be first party, they would still be tracked. But their ability to not be tracked would be hampered even more because when everyones browser does not support 3rd party scripts, then ad networks would develop a 1st party tracking ecosystem,  to track you via 1st party cookies and other identifiers like ip address and statistically correlate them.</p>
+<p>Tracking is an issue because of the users of the web platform expect everything for free. Its a race to bottom.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">moonyowl</div>
+          <div class="creation_date">2018-10-18</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="3094">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/4af34b/40.png" width="20"/> OpenLocationServices:</div>
+<blockquote>
+<p>As long as the ‘privileged’ script will be able to modify the DOM, it is impossible.</p>
+</blockquote>
+</aside>
+<p>It is possible if the ‘privileged’ script will not be able to create and / or modify <strong>script</strong> elements, but will be able to do any other DOM modifications.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

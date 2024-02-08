@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Import aliases &amp; `@private`</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Import aliases &amp; `@private`</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Zambonifofex</div>
+          <div class="creation_date">2017-09-18</div>
+          <div class="post_content">
+<p>Currently, in CSS, everything is global; there is no way to make something file-private, nor to have two different <code>keyframes</code> with the same name in different files.</p>
+<p>I propose a new syntax to imports, that’ll allow them to alias imported declarations:</p>
+<pre><code class="lang-auto">/* https://example.net/monica.css */
+
+@keyframes zomg
+{
+	0%, 100% { color: #7ccdea; }
+	16%      { color: #0074D9; }
+	32%      { color: #2ECC40; }
+	48%      { color: #FFDC00; }
+	64%      { color: #B10DC9; }
+	80%      { color: #FF4136; }
+}
+
+@keyframes avatarzomg
+{
+	0%, 100% { filter: invert(0) saturate(100%) hue-rotate(0deg); }
+	25%      { filter: invert(10%) saturate(500%) hue-rotate(180deg); }
+	50%      { filter: invert(10%) saturate(300%) hue-rotate(300deg); }
+	75%      { filter: invert(10%) saturate(500%) hue-rotate(90deg); }
+}
+</code></pre>
+<pre><code class="lang-auto">@import url("https://example.net/monica.css") {zomg, avatarzomg}
+</code></pre>
+<p>Such an import would only actually import the <code>zomg</code> and <code>avatarzomg</code> identifiers from <code>url("https://example.net/monica.css")</code>; if there were any others, they would not be imported.</p>
+<p>Importable statements could include <code>@keyframes</code>s, <code>@custom-selector</code>s, and <code>@mixin</code>s; other statements (e.g. rulesets) would be always imported, as they normally are.</p>
+<hr/>
+<p>Another problem that needs to be solved is name collision from different files. If there are multiple files with a <code>zomg</code> <code>@keyframes</code>, one would need to alias the import of at least one of those identifiers:</p>
+<pre><code class="lang-auto">@import url("https://example.net/monica.css") {zomg as meownica-zomg, avatarzomg}
+@import url("https://example.com/style.css") {zomg}
+</code></pre>
+<hr/>
+<p>However, there is still one problem: one might not want to expose their identifiers. The <code>@private</code> rule would hide importable statements from being imported. It would also allow imported identifiers to not be exported:</p>
+<pre><code class="lang-auto">@private import  url("https://example.net/monica.css") {zomg as meownica-zomg, avatarzomg}
+
+@private keyframes blackwhite
+{
+	0%
+	{
+		color: black;
+	}
+	
+	100%
+	{
+		color: white;
+	}
+}
+</code></pre>
+<p>One thing that remains to be done: one might want to make a statement be accessible only by certain URLs, or by certain domains. How would one be able to specify which resources can access the statement?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

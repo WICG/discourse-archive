@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: insertAdjacentTemplate function</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: insertAdjacentTemplate function</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-03-26</div>
+          <div class="post_content">
+<p>element.insertAdjacentTemplate(template: HTMLTemplateElement, position: InsertPosition)</p>
+<p>This can be done programmatically, but I wonder if it could be done more quickly closer to the metal?  I’m finding uses for this functionality,</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-03-31</div>
+          <div class="post_content">
+<p>Could you provide a code example of how this can be done using existing APIs, for the sake of comparison?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Here’s some sample code (I’m sure it could be improved):</p>
+<p>export function insertAdjacentTemplate(template, target, position) {
+const clone = document.importNode(template.content, true);
+let appendTarget = target;
+let isFirst = true;
+Array.from(clone.children).forEach(child =&gt; {
+const modifiedPosition = isFirst ? position : ‘afterend’;
+isFirst = false;
+appendTarget = appendTarget.insertAdjacentElement(modifiedPosition, child);
+});
+}</p>
+<p>So the amount of code might not be that much, but the act of having to essentially break the template into individual nodes to insert, makes me wonder if it’s possible if the browser could just slide the whole template in without having to di that, with better performance results.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Better formatting:</p>
+<pre><code class="lang-auto">export function insertAdjacentTemplate(template, target, position) {
+    const clone = document.importNode(template.content, true);
+    let appendTarget = target;
+    let isFirst = true;
+    Array.from(clone.children).forEach(child =&gt; {
+        const modifiedPosition = isFirst ? position : 'afterend';
+        isFirst = false;
+        appendTarget = appendTarget.insertAdjacentElement(modifiedPosition, child);
+    });
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Wait a second, can’t you just pass the clone to <code>appendChild</code>?</p>
+<pre><code class="lang-auto">target.appendChild(
+    document.importNode(template.content, true)
+);
+</code></pre>
+<p>Demo: <a href="https://jsbin.com/voxitur/edit?html,js,output" rel="nofollow noopener">https://jsbin.com/voxitur/edit?html,js,output</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Good thought, but that would make the template go inside the target element.  I want the template to be made adjacent to the target.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>To be clear… The main reason you are interested in this is mainly that there might be a kind of ‘transactional’ performance boost?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Yes, I think if there’s a significant performance gain, then it kind of seems like there shouldn’t be much argument against adding it.  A much weaker, second reason is if lots of people find such a function useful, that’s one less snippet of code that every application has to download.  But I suspect that isn’t the case at this time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-05</div>
+          <div class="post_content">
+<p>Ah I see. <code>insertAdjacentElement</code> does not accept a document fragment. This sounds like something that would be useful in general for document fragments. What about <code>insertAdjacentElements</code> (notice the plural) that could accept sets of multiple elements, be it document fragment, node list, etc.?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-06</div>
+          <div class="post_content">
+<p>InsertAdjacentElements could help, but the key issue is I want a function that can slide in a single chunk (document fragment) of HTML, hoping that fewer lower level operations can be made, resulting in a performance win (hopefully).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

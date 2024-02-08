@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] An API to allow webpage JavaScript to profile its own performance</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] An API to allow webpage JavaScript to profile its own performance</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vdjeric</div>
+          <div class="creation_date">2018-06-01</div>
+          <div class="post_content">
+<p>Web developers want to understand how their webapps perform on real user devices, and they want to know which parts of their code are slow so they can target optimizations.</p>
+<p>Currently, developers have to either profile their site in their own browser (not representative) or pepper their code with boilerplate timing statements (incomplete, doesn’t scale well). Facebook went one step further and implemented a sampling profiler with JavaScript and SharedArrayBuffers (which suffered from accuracy and performance drawbacks).</p>
+<p>The existing approaches for debugging webapp slowdowns in the field are laborious, don’t have complete coverage, and have serious overheads. A native API for pages to profile their own JS execution would make debugging web performance a lot easier. Note that this API would only allow profiling the page’s JS execution, not any browser internals like DOM implementation. And since similar functionality can be polyfilled with JS, there should be no security or privacy concerns.</p>
+<p>The collected profiles can be sent to analytics servers for aggregation and automatic analysis.</p>
+<p>Rough ideas for an API:</p>
+<p>window.performance.startProfiling(options) =&gt; Promise (resolves to a Profiler object)</p>
+<p>Profiler.stopProfiling() =&gt; Promise</p>
+<p>Profiler.cancelProfiling() =&gt; Promise</p>
+<p>I wrote up a more detailed proposal and motivation here: <a href="https://github.com/vdjeric/js-self-profiling" rel="nofollow noopener">https://github.com/vdjeric/js-self-profiling</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-06-01</div>
+          <div class="post_content">
+<p>I really like that proposal. I suspect that profiling would have some overhead, but:</p>
+<ul>
+<li>It’s opt-in only</li>
+<li>It’s probably less overhead than implementing profile as part of your JS like Facebook is doing now</li>
+</ul>
+<p>A few things that seem missing in your proposal:</p>
+<ul>
+<li>How does one collect the profiling info? I’m assuming some form of PerformanceEntry/PerfObserver, but that’s not explicitly mentioned.</li>
+<li>Have you thought about sampling? The JS profiling command could just be imperitively sampled, but it may make sense to also add sampling to the HTTP header based profiling instructions.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">msolnit</div>
+          <div class="creation_date">2018-06-01</div>
+          <div class="post_content">
+<p>This sounds awesome!  Some questions:</p>
+<ul>
+<li>Should there be header similar to <code>Timing-Allow-Origin</code> that lets a third party permit profiling of its scripts (even if they’re not same-origin)?</li>
+<li>Should the <code>JavaScript-Start-Profiling</code> header be on individual <code>&lt;script/&gt;</code> HTTP responses instead of at the page level?</li>
+</ul>
+<p>And finally: would you rather I post questions like this to the GitHub repo instead :-)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vdjeric</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<blockquote>
+<p>How does one collect the profiling info? I’m assuming some form of PerformanceEntry/PerfObserver, but that’s not explicitly mentioned.</p>
+</blockquote>
+<p>The <code>Profiler.stopProfiling()</code> call would return a Promise which resolves to a <code>ProfilingResult</code> JSON object containing the profile samples. <code>ProfilingResult</code> would be a JS object containing the information described at the bottom of the github doc.</p>
+<blockquote>
+<p>Have you thought about sampling? The JS profiling command could just be imperitively sampled, but it may make sense to also add sampling to the HTTP header based profiling instructions.</p>
+</blockquote>
+<p>Oh absolutely, this should be a sampling profiler that drives its own sampling. The idea is that <code>performance.startProfiling(options)</code> would turn on the sampling profiler and it would not stop collecting samples until <code>Profiler.stopProfiling()</code> was called (which would return all the samples at once).</p>
+<p>The <code>JavaScript-Start-Profiling: &lt;float&gt;</code> HTTP response header line described in the doc instructs the browser to start sampling at the specified interval even before page is fully transmitted. It wouldn’t stop profiling until <code>Profiler.stopProfiling()</code> was called (or maybe we could have some other mechanism like an event for returning the pageload profile).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vdjeric</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<blockquote>
+<p>Should there be header similar to Timing-Allow-Origin that lets a third party permit profiling of its scripts (even if they’re not same-origin)?</p>
+</blockquote>
+<p>That sounds like a good idea, but I will let others chime in before adding it to the proposal, since I haven’t thought enough about the privacy implications.</p>
+<p>What use case are you envisioning for this? Third party IFrame ads or something else?</p>
+<blockquote>
+<p>Should the JavaScript-Start-Profiling header be on individual  HTTP responses instead of at the page level?</p>
+</blockquote>
+<p>I was thinking it should be at the document level (page or iframe) and ignored otherwise. Is there a use-case for profiling on a script-by-script basis?</p>
+<blockquote>
+<p>And finally: would you rather I post questions like this to the GitHub repo instead :-)?</p>
+</blockquote>
+<p>I guess we should move further discussion to GitHub to keep the topics threaded. I will file Github issues for the topics you raised.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1714_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Benoit_Girard</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<p>Regarding a profiling HTTP header, a page can just insert  at the start of the document head. This proposal right now is only targeting JavaScript execution so there’s nothing that can happen before this point that this API would collect data for AFAIK. If an future extension to the specification was to include browser events then catching event before dom loading would be useful and an HTTP header would be a great way to cover it.</p>
+<p>I believe for now it’s not needed.</p>
+<p>I think exploring what we want to do for 3rd party script is interesting, particularly for 3rd party performance libraries and middle ware. Let’s continue to explore this in the issues that vdjeric has filed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vdjeric</div>
+          <div class="creation_date">2018-06-06</div>
+          <div class="post_content">
+<p>It looks like discussion has moved to GitHub issues for now: <a href="https://github.com/vdjeric/js-self-profiling/issues" rel="nofollow noopener">https://github.com/vdjeric/js-self-profiling/issues</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2226_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">acomminos</div>
+          <div class="creation_date">2019-03-12</div>
+          <div class="post_content">
+<p>We’d like to move forward with migrating this repo over to the WICG org. Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-03-12</div>
+          <div class="post_content">
+<p>There seems to be <a href="https://github.com/vdjeric/js-self-profiling/issues/14" rel="nofollow noopener">Akamai</a> and <a href="https://github.com/vdjeric/js-self-profiling/issues/9" rel="nofollow noopener">Dropbox</a> support on the issues, so I support moving the repo over.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-03-12</div>
+          <div class="post_content">
+<p>The repo has now moved to <a href="https://github.com/WICG/js-self-profiling" rel="nofollow noopener">https://github.com/WICG/js-self-profiling</a>
+I still haven’t got all the IPR hooks in place, because <a href="https://labs.w3.org/repo-manager/">ash-nazg</a> seems to be <a href="https://github.com/w3c/ash-nazg/issues/151" rel="nofollow noopener">down</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

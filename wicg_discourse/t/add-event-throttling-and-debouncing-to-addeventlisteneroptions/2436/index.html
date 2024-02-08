@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add event throttling and debouncing to AddEventListenerOptions</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add event throttling and debouncing to AddEventListenerOptions</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-16</div>
+          <div class="post_content">
+<p>The <code>addEventListener</code> method now accepts an optional, third <code>AddEventListenerOptions</code> argument <a href="https://dom.spec.whatwg.org/#interface-eventtarget">1</a>. I propose adding options for event throttling and debouncing.</p>
+<p>Example use case: Network Information API <a href="https://www.chromestatus.com/features#network%20information" rel="nofollow noopener">3</a></p>
+<pre><code class="lang-javascript">navigator.connection.addEventListener('change', () =&gt; {
+   // inspect navigator.connection
+}, { debounce: true });
+</code></pre>
+<p>The <code>change</code> event fires multiple times in rapid succession, e.g., when the user’s connection switches from Wi-Fi to cellular <a href="https://twitter.com/simevidas/status/930920445095895040" rel="nofollow noopener">2</a>, so it would be useful if a web app could specify that the event handler should be called only once after the final event (a.k.a. event debouncing).</p>
+<p>If you have other examples of when event throttling or debouncing is needed, please comment below.</p>
+<hr/>
+<p><strong>Update:</strong> Based on the discussion (as of November 20), I think it makes sense to treat debouncing and throttling as separate proposals, since their use cases are different.</p>
+<p>Use cases for event debouncing:</p>
+<ol>
+<li>Debounce the Network Information API <code>change</code> event, since only the last event is relevant when multiple events fire in rapid succession.</li>
+<li>Debounce keyboard events when the user is typing into a form field, to be able to perform an action (e.g. load search results) when the user <em>stops</em> typing.</li>
+<li>Debounce the global <code>resize</code> event when the user resizes the browser window<sup>1</sup>. This event fires in rapid succession during a single user operation (<a href="https://twitter.com/simevidas/status/937003204855857152" rel="nofollow noopener">demo</a>), so a web app may want to receive a single event after the user has <em>stopped</em> resizing the browser window, in order to perform “<a href="https://discourse.wicg.io/t/add-event-throttling-and-debouncing-to-addeventlisteneroptions/2436/19?u=simevidas">UI changes that aren’t easily achievable with media queries</a>.”</li>
+</ol>
+<p>Use cases for event throttling:</p>
+<ol>
+<li>Throttle mouse events to a lower frequency (e.g., 20 Hz) when displaying mouse coordinates in the app’s UI to conserve processing power, since users can’t perceive UI updates at a higher frequency anyway.</li>
+</ol>
+<hr/>
+<p>Footnotes:</p>
+<ol>
+<li>There is a new Resize Observer API, which can notify the web app when an element’s size changes via resize entries. However, the same problem of multiple entries firing in rapid succession exists, so this new API does not remove the need for debouncing <code>resize</code> events in the use case described above.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2017-11-16</div>
+          <div class="post_content">
+<p>Debounce typically needs a ms delay specified</p>
+<pre><code class="lang-auto">navigator.connection.addEventListener('change', () =&gt; {
+   // inspect navigator.connection
+}, { debounce: 1000 });
+</code></pre>
+<p>you’d also need options to specify leading or falling edge of the delay, not sure how you’d model that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-16</div>
+          <div class="post_content">
+<p>Personally, I’d be happy with the browser deciding what the the debounce delay should be. The browser knows in which scenarios it fires events in rapid succession, so it knows best when to and when not to perform event debouncing. That seems like the most reliable option.</p>
+<p>Regarding those additional values, I’m not sure what the use cases are for those.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-17</div>
+          <div class="post_content">
+<p>There are many ways to configure debouncing. It’s not just a delay period, which could be anything from 10ms to 60sec+. In some cases you want an immediate update on the first event and then a delay until the next event, and in others it’s better to have no event until a timeout expires.</p>
+<p>It’s straightforward to write a throttling class with your own policy and pipe your event callback in to that, so I’m not sure this needs to be part of the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-11-17</div>
+          <div class="post_content">
+<blockquote>
+<p>In some cases you want an immediate update on the first event and then a delay until the next event, and in others it’s better to have no event until a timeout expires.</p>
+</blockquote>
+<p>It would probably make sense to provide a specific example of those other cases. Though anyway, this is solvable with another boolean option for <code>addEventListener()</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-17</div>
+          <div class="post_content">
+<p>Let’s focus on the use case. I’m not proposing to add a general-purpose event throttling and debouncing API to the web platform. I’m proposing a simple solution to a specific problem:</p>
+<p>In certain situations, the browser fires events in rapid succession (for a valid reason). It would be useful if the web app could handle a single, debounced event in these cases, without needing to write custom code or use a library, would it not?</p>
+<p>Look at my example. Notice how there are 6 events in rapid succession when the user switches from Wi-Fi to cellular. Only the last event matters, so event debouncing is not really optional—it’s mandatory: if I want to use the Network Information API, I have to pull in a library for debouncing. I just want the browser to give me the final event, and a simple <code>debounce</code> option could enable that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-11-17</div>
+          <div class="post_content">
+<p>Throttling/debouncing is crucial for performance (e.g. for <code>scroll</code> event) and certainly deserves to be standardized. I believe it should be possible for web developer to specify a specific delay in each specific case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-17</div>
+          <div class="post_content">
+<p>It would be useful, yes, but this is still vaguely defined. Couldn’t pointermove events be fired in rapid succession? How would that be debounced?</p>
+<p>In Construct 3 we use debouncing (aka rate limiting) a lot - here are some of the places we use it:</p>
+<ul>
+<li>throttling the rate of UI updates as parallel network requests complete</li>
+<li>throttling the rate of DOM updates as state changes to avoid unnecessary performance overhead, e.g. reducing mouse position updates in the UI to 20 Hz, or limiting the rate of updating search results as the user types</li>
+<li>throttling the rate of writing to storage as in-memory data changes</li>
+<li>eliminating needless overhead of multiple simultaneous state changes by postponing updates for them until a timer fires, e.g. deleting multiple objects, each of which calls a Refresh() method, but which only really needs to be done once at the end</li>
+<li>imposing limits on the rate custom events are fired, so listeners themselves don’t need to debounce</li>
+</ul>
+<p>In some cases we want the first event to fire immediately and delay the next one (e.g. updating the mouse position, so it feels more responsive to input), but in others we prefer to not fire immediately and only run after a delay from the first event (e.g. updating the UI after a batch delete operation).</p>
+<p>In fact I think the most significant point is rate limiters have wide application outside of event listeners. So it is more useful to implement them separately rather than hard-wiring them in to the event methods. In which case, using a library is a lot more flexible than trying to enshrine this in a permanent spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>It would be useful, yes, but this is still vaguely defined. Couldn’t pointermove events be fired in rapid succession? How would that be debounced?</p>
+</blockquote>
+</aside>
+<p>If there’s a use case for debouncing <code>pointermove</code> events, it would be great if someone could describe it on an example. As I’ve said in my original post, I’m looking for more use cases, since one is not enough to motivate vendors.</p>
+<aside class="quote" data-post="8" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<ul>
+<li>throttling the rate of UI updates as parallel network requests complete</li>
+<li>throttling the rate of DOM updates as state changes to avoid unnecessary performance overhead, e.g. reducing mouse position updates in the UI to 20 Hz, or limiting the rate of updating search results as the user types</li>
+<li>throttling the rate of writing to storage as in-memory data changes</li>
+<li>eliminating needless overhead of multiple simultaneous state changes by postponing updates for them until a timer fires, e.g. deleting multiple objects, each of which calls a Refresh() method, but which only really needs to be done once at the end</li>
+<li>imposing limits on the rate custom events are fired, so listeners themselves don’t need to debounce</li>
+</ul>
+</blockquote>
+</aside>
+<p>Regarding network requests and memory storage, I don’t recall there being an event that you could observe (and potentially debounce).</p>
+<p>Regarding custom events, I’m not sure that debouncing should apply to them. AFAIK, the whole point of a custom event is that it’s tailored to the app’s needs. The object that dispatches custom events should fire them at a rate that suits the app. Otherwise, that objects needs to be updated to dispatch events (maybe of a different type?) at the rate the app wants them.</p>
+<p>Debouncing keyboard events as the user types into a form field is a good example. This could be the second use case. Once we have a  bunch of use cases, we will have a clearer picture of what the default delay for debouncing should be (and if there should be a default at all).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Regarding network requests and memory storage, I don’t recall there being an event that you could observe (and potentially debounce).</p>
+</blockquote>
+</aside>
+<p>Precisely, which is why I advocate a library solution.</p>
+<aside class="quote" data-post="9" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>If there’s a use case for debouncing pointermove events, it would be great if someone could describe it on an example. As I’ve said in my original post, I’m looking for more use cases, since one is not enough to motivate vendors.</p>
+</blockquote>
+</aside>
+<p>I gave one in my post: throttling mouse movement updates to 20 Hz. Modern browsers will issue these at 50Hz or more, and on the basis that 50ms is the threshold of perceiving an event as instantaneous, updates more frequent than 20 Hz are probably a waste of processing power.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Precisely, which is why I advocate a library solution.</p>
+</blockquote>
+</aside>
+<p>Well, if there are no events, then that’s unrelated to my proposal. <img alt=":sweat_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/sweat_smile.png?v=5" title=":sweat_smile:"/></p>
+<aside class="quote" data-post="10" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>I gave one in my post: throttling mouse movement updates to 20 Hz. Modern browsers will issue these at 50Hz or more, and on the basis that 50ms is the threshold of perceiving an event as instantaneous, updates more frequent than 20 Hz are probably a waste of processing power.</p>
+</blockquote>
+</aside>
+<p>Could you give an example of why an app would need to throttle mouse events (what does the app update)? That would be the use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Regarding custom events, I’m not sure that debouncing should apply to them. AFAIK, the whole point of a custom event is that it’s tailored to the app’s needs.</p>
+</blockquote>
+</aside>
+<p>I think a good usecase here isn’t apps generating their own events but frameworks generating events, an app may not need events at the rate a framework would issue but the alternative is for all libraries to bake their own methods in for debouncing or controlling event issuing. And from a developer point of view it’s added burden needing to treat custom events and built-in events differently.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Well, if there are no events, then that’s unrelated to my proposal. <img alt=":sweat_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/sweat_smile.png?v=5" title=":sweat_smile:"/></p>
+</blockquote>
+</aside>
+<p>My point was that using a library covers more use cases than limiting this features to event listeners only. So it is better to use a library.</p>
+<aside class="quote" data-post="11" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Could you give an example of why an app would need to throttle mouse events (what does the app update)?</p>
+</blockquote>
+</aside>
+<p>Our app displays the mouse position in a status bar. The rate at which the status bar updates the mouse position is throttled.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="13" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>My point was that using a library covers more use cases than limiting this features to event listeners only. So it is better to use a library.</p>
+</blockquote>
+</aside>
+<p>Libraries are and will always be more feature-rich than the standard APIs, but that doesn’t mean that the standard APIs shouldn’t be (carefully) extended with features, when it makes sense. To me, “use a library” is not a solution.</p>
+<aside class="quote" data-post="13" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Our app displays the mouse position in a status bar. The rate at which the status bar updates the mouse position is throttled.</p>
+</blockquote>
+</aside>
+<p>This is a good use case for event throttling. I think we should split up the proposals for debouncing and throttling, since their use cases don’t seem related.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Libraries are and will always be more feature-rich than the standard APIs, but that doesn’t mean that the standard APIs shouldn’t be (carefully) extended with features, when it makes sense. To me, “use a library” is not a solution.</p>
+</blockquote>
+</aside>
+<p>Perhaps, but since rate-limiting has wide application outside of event listeners, large web apps will need both anyway. This causes the same feature to be duplicated, unnecessarily increasing complexity. Alternatively a large web app would simply ignore the standardised feature in favour of consistently using the library everywhere.</p>
+<p>To solve this more elegantly, if you really think this belongs in the spec, I think a better idea would be to specify a debouncing/rate-limiting API in JavaScript, and then provide an easy way to link that to an event listener. For example, using independently:</p>
+<pre><code class="lang-auto">function DoRealWork() { ... };
+const rateLimiter = new RateLimiter(50 /* every 50ms, i.e. 20 Hz */, DoRealWork);
+rateLimiter.Call(); // calls DoRealWork()
+rateLimiter.Call(); // too soon, sets timer for next call
+</code></pre>
+<p>Or passing to an event listener:</p>
+<pre><code class="lang-auto">const rateLimiter = new RateLimiter(50 /* ms */);
+
+// passing a rateLimiter option causes the event listener callback to be throttled
+window.addEventListener("pointermove", HandlePointerMode, { rateLimiter });
+</code></pre>
+<p>The <code>RateLimiter</code> class can be used for all use-cases: debouncing network info updates, throttling search updates while typing, throttling storage writes, throttling UI updates in mouse move events, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<p>Obviously, not just mouse events, but also touch / pointer events (again to conserve resources/CPU on non-critical interactions on potentially low-powered devices) <a href="https://patrickhlauke.github.io/getting-touchy-presentation/#175" rel="nofollow noopener">https://patrickhlauke.github.io/getting-touchy-presentation/#175</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1495_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ivancuric</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<p>Another use case would be to debounce the <code>resize</code> event. While resizing a browser window, you’re already hammering the CPU with reflows. Any operations that depend on a new window size should only be executed once the resizing is done, as was the case on older OS-es where only the window outline was repainted.</p>
+<p>When thinking about frameworks and async updates, having a native way to throttle custom events for operation coalescing would also be beneficial.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-21</div>
+          <div class="post_content">
+<p><span class="mention">@AshleyScirra</span> In order for such a rate-limiting API to be standardized, someone would need to describe the proposal and compile use cases for it, and that necessitates creating a new discussion here on WICG or somewhere else. I would welcome that, because it would allow me compare those use cases with the ones I’m compiling for the proposal in this discussion.</p>
+<hr/>
+<aside class="quote" data-post="17" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ivancuric/40/1495_1.png" width="20"/> ivancuric:</div>
+<blockquote>
+<p>Another use case would be to debounce the resize event. While resizing a browser window, you’re already hammering the CPU with reflows. Any operations that depend on a new window size should only be executed once the resizing is done, as was the case on older OS-es where only the window outline was repainted.</p>
+</blockquote>
+</aside>
+<p>Could you give an example of such a <code>resize</code>-linked operation, i.e. what does the app need to perform after the user resizes their window? I’m trying to determine if there are alternative approaches that don’t require debouncing the <code>resize</code> event.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1495_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ivancuric</div>
+          <div class="creation_date">2017-11-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="18" data-topic="2436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Could you give an example of such a resize-linked operation, i.e. what does the app need to perform after the user resizes their window?</p>
+</blockquote>
+</aside>
+<ul>
+<li>Fetch new lazy-loaded resources if neccesary, eg new content or larger image resolutions.</li>
+<li>Resize the <code>canvas</code> element to fit the new window dimensions.</li>
+<li>Calculate new document and element dimensions for scroll-position based operations.</li>
+<li>Trigger UI changes that aren’t easily achievable with media queries, eg collapsing sidebars.</li>
+<li>Lazy loading and initializing new JS. For example, a map becomes visible at a certain breakpoint. At that time, the browser lazy-loads the required bundle and the gmaps api.</li>
+</ul>
+<p>Basically all loading / parsing / executing should be postponed until the reflow storm finishes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1506_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SylonZero</div>
+          <div class="creation_date">2017-11-26</div>
+          <div class="post_content">
+<p>First, let me state that I think these are really useful options for event handling and I think we should try and get this to the WHATWG discussion mailing list (if not already done).</p>
+<p>Second, reading through the discussion, I still think some additional behavior is warranted that could improve the setup of event handler behavior. This behavior could be considered orthogonal to this proposal though.</p>
+<p><strong>TLDR version</strong>: allow addEventListener to configure limits on parallelism of handlers (I call that <em>metering by event topic</em>) and queuing of incoming requests when the JS engine must make sure to handle other types of events.</p>
+<p>I’ve written this up in more detail here (incl a reference to this proposal): <a href="https://discourse.wicg.io/t/add-event-handler-metering-parallelism-throttling-options-to-addeventlisteneroptions/2455">Add Event Handler metering, parallelism &amp; throttling options to AddEventListenerOptions</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

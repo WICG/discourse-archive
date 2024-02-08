@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] fetch-maps</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] fetch-maps</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>Right now, we hash files so we can treat URLs as ‘immutable’, and cache them for a long time.</p>
+<p>Eg <code>styles.a74fs3.css</code> can be set to cache for a year. If the content of the CSS is changed, the URL to the CSS would change.</p>
+<p>The same would happen for resources in the CSS:</p>
+<pre><code class="lang-css">html {
+  background: url('/bg.8e3ac4.png');
+}
+</code></pre>
+<p>However, if the background image changes, the URL above will change. And that means the content of the CSS file has changed, so the URL for the CSS also needs to change.</p>
+<p>The user ends up having to redownload the CSS (a render-blocking resource) to find out about the background image change.</p>
+<p>This is also a problem with JavaScript, which imports other bits of JavaScript, and references images, CSS, fonts, etc.</p>
+<p>If the problem isn’t clear from the above, <a href="https://philipwalton.com/articles/cascading-cache-invalidation/">here’s a more detailed description</a>.</p>
+<p><a href="https://github.com/WICG/import-maps#mapping-away-hashes-in-script-filenames">Import maps solve this</a> but only for JavaScript importing JavaScript. The solution doesn’t work for CSS, or for other resources referenced in JS.</p>
+<p>There was a proposal to allow arbitrary fetches to be resolved via the import map <a href="https://github.com/WICG/import-maps#import-urls">using the <code>import:</code> scheme</a>, but the layering feels wrong to me. Why should CSS have to do through a JS module mapper just to map fetches from one URL to another?</p>
+<p>I propose that we introduce “fetch maps”, which allow URLs to be mapped from one to another.</p>
+<p>Import maps will be layered on top, but will focus on module-specific features.</p>
+<pre><code class="lang-auto">&lt;script type="fetchmap"&gt;
+{
+  "urls": {
+    "/styles.css": "/styles.a74fs3.css",
+    "/bg.png": "/bg.8e3ac4.png"
+  }
+}
+&lt;/script&gt;
+&lt;link rel="stylesheet" href="/styles.css"&gt;
+</code></pre>
+<p>And the stylesheet:</p>
+<pre><code class="lang-css">html {
+  background: url('/bg.png');
+}
+</code></pre>
+<p>Now, to change the background image, only the map needs to be changed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2791_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jkrems</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>Two high-level questions in terms of scope:</p>
+<p>(1) Would such a fetch map also support symbolic references (“bare specifiers”) or only rewrite already plausible URLs?</p>
+<p>As an example, could I have a stylesheet that includes <code>@import '&lt;ref&gt;best-fonts/comic-sans'</code> or <code>background: url('&lt;ref&gt;memes/shrug')</code>? Or would that always require mapping them to some virtual URL space like <code>@import '/deps/best-fonts/comic-sans'</code> which may then be rewritten to unpkg etc.?</p>
+<p>(2) Guy Bedford was recently digging into a preload manifest. I assume that the fetch map would be orthogonal to this?</p>
+<p>The capability to prefetch the background image in your example or any potential <code>@import</code> references before knowing the style contents seems valuable. But maybe this can be ignored for non-import cases since the depth of the dependency tree is likely more shallow?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="4259" data-username="jkrems">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jkrems/40/2791_2.png" width="20"/> jkrems:</div>
+<blockquote>
+<p>As an example, could I have a stylesheet that includes <code>@import '&lt;ref&gt;best-fonts/comic-sans'</code> or <code>background: url('&lt;ref&gt;memes/shrug')</code> ? Or would that always require mapping them to some virtual URL space like <code>@import '/deps/best-fonts/comic-sans'</code> which may then be rewritten to unpkg etc.?</p>
+</blockquote>
+</aside>
+<p>I think both sides of the map would be passed through <code>new URL(url, document.baseURI).href</code> or equivalent, so it’d be virtual URL space. However, for backwards compatibility, it makes sense to have the non-hashed-URLs be real, just <code>max-age=0</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="4259" data-username="jkrems">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jkrems/40/2791_2.png" width="20"/> jkrems:</div>
+<blockquote>
+<p>(2) Guy Bedford was recently digging into a preload manifest. I assume that the fetch map would be orthogonal to this?</p>
+</blockquote>
+</aside>
+<p>I’ll let Guy comment on that. It does feel useful though!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2791_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jkrems</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>Gotcha. I assume that any kind of fetch/policy restrictions would apply to the rewritten URL, not the virtual/source code URL. So it would be possible to use symbolic URLs like <code>bare:best-fonts/comis-sans</code> even though <code>bare:</code> isn’t a supported protocol?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>I hadn’t considered that, but yeah, that would be useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2792_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">littledan</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>Interesting idea. I’m wondering, would this support <a href="https://github.com/wicg/import-maps/#scoping-examples" rel="nofollow noopener">scoped mappings</a>? These are a pretty key feature of import-maps, but I’m not really sure how the referrer should be defined outside of the JS module concept (not that there’s no answer, there’s just multiple possible ones). OTOH I don’t have a clear idea of a use case for scoped mappings outside of JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2792_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">littledan</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>Also wondering: Is this just a single-level mapping like import maps, or is it applied recursively? (Import maps are mapping module specifiers to URLs, so they are one level, but a URL-to-URL mapping would get to make this choice.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>I’m not sure about the scoped thing. I’ll have a think.</p>
+<p>As for recursive, my gut feeling is to make it a single pass to avoid infinite loops.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2610_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ferdy_Christant</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>Maybe a silly question, but how does the import map approach compare to an etag approach?</p>
+<p>Whilst useful, import maps seem relatively complex to use and set up, requiring a sophisticated tool chain and constant dev maintenance as they add/remove resources.</p>
+<p>With etags, a developer can just push a file and leave it to the browser and server to figure out of it was changed. What would be against etags and in favor of import maps? Some things I can think of:</p>
+<ul>
+<li>Needless 304 requests</li>
+<li>Server-side tracking potential</li>
+<li>Difficult to use in multi-server/load balancer/proxy setup?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>This could be implemented by a Service Worker. I’ve done a related implementation for a slightly different case (serving local blobs for remote URLs for a game development IDE).</p>
+<p>The only problem is that on the first run, you aren’t guaranteed to have the SW running yet, so you need a fallback. Perhaps there could be a way to say “this page needs the SW running first” (although I imagine that would cause too much of a negative performance impact). Or maybe there could be a special protocol like <code>sw://bg.png</code> which means “wait until the SW is ready, and then send a fetch event for <code>bg.png</code> to it”. Or there could be server-side logic to send a default/latest version when <code>bg.png</code> is requested (presumably with caching disabled to avoid the versioning problems on that…)</p>
+<p>Another thing to work out is if fetchmaps as proposed are implemented, does the SW receive a fetch event for <code>/bg.png</code> or <code>/bg.8e3ac4.png</code>? What would be the rationale for picking one over the other?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="4259" data-username="littledan">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/littledan/40/2792_2.png" width="20"/> littledan:</div>
+<blockquote>
+<p>would this support <a href="https://github.com/wicg/import-maps/#scoping-examples">scoped mappings </a>?</p>
+</blockquote>
+</aside>
+<p>Nah, that feels like a feature that should stay with import maps. Since fetch maps cover fetches triggered by HTML, I don’t think it’s possible to determine the source script accurately.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="10" data-topic="4259" data-username="Ferdy_Christant">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ferdy_christant/40/2610_2.png" width="20"/> Ferdy_Christant:</div>
+<blockquote>
+<p>What would be against etags and in favor of import maps?</p>
+</blockquote>
+</aside>
+<p>The fastest HTTP request is the one that isn’t made <img alt=":grinning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/grinning.png?v=9" title=":grinning:"/>. To get a 304 you need to go through all the HTTP+TLS connection setup stuff, then make a request, then get a response. For smaller assets, that’s the majority of the work. More info on HTTP caching: <a href="https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching">https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="11" data-topic="4259" data-username="AshleyScirra">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>This could be implemented by a Service Worker. I’ve done a related implementation for a slightly different case (serving local blobs for remote URLs for a game development IDE).</p>
+<p>The only problem is that on the first run</p>
+</blockquote>
+</aside>
+<p>The only other problem is updates <img alt=":grinning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/grinning.png?v=9" title=":grinning:"/>. The service worker controls multiple pages at once, as such its update system is independent of any particular page. Whereas fetch maps are per context and immediately available/updated.</p>
+<p>I kinda like your idea of a ‘sw’ scheme that waits for the service worker. Will keep that in mind for other use-cases.</p>
+<aside class="quote no-group" data-post="11" data-topic="4259" data-username="AshleyScirra">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Another thing to work out is if fetchmaps as proposed are implemented, does the SW receive a fetch event for <code>/bg.png</code> or <code>/bg.8e3ac4.png</code> ? What would be the rationale for picking one over the other?</p>
+</blockquote>
+</aside>
+<p>Page-level things should happen before things that live outside the page, and fetch maps would be page-level. Other examples of page-level fetch control: CSP, MIX, client referrer policy.</p>
+<p>I’ve only taken a glance, but my feeling is this would happen before step 2.1 <a href="https://fetch.spec.whatwg.org/#main-fetch">https://fetch.spec.whatwg.org/#main-fetch</a>. This means the mapping would happen before CSP, otherwise the map could effectively bypass CSP.</p>
+<p>This means the service worker would receive a fetch for <code>/bg.8e3ac4.png</code>.</p>
+<p>If the service worker had its own fetch map, it would apply when <code>fetch()</code> is called in the service worker. However, I’m not sure how a service worker would get a fetch map (import maps looked at the worker issue in <a href="https://github.com/WICG/import-maps/issues/2">https://github.com/WICG/import-maps/issues/2</a>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<p>Open questions:</p>
+<ul>
+<li>Would a page’s fetch map apply to navigations, <code>new Worker</code>, <code>new SharedWorker</code>, <code>serviceWorker.register</code>?</li>
+<li>What happens with the query string and hash?</li>
+<li>Does this apply to all HTTP methods?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2792_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">littledan</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<p>Just to understand, we’d have both import maps and fetch maps, coexisting? Namely, the output of the import map would be fed into fetch map for a secondary mapping?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<p>Yeah. That’s the way I see it working if import maps shipped as is. Btw I originally raised this in <a href="https://github.com/WICG/import-maps/issues/211">https://github.com/WICG/import-maps/issues/211</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2794_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dcleao</div>
+          <div class="creation_date">2020-02-28</div>
+          <div class="post_content">
+<p>I don’t “feel” exactly the same way. Take the example of CSS. It does not typically result in deep dependencies and, nowadays, it is even less used, in favor of JS in CSS approaches.
+Still, for those who still use CSS in the form of “CSS in a CSS file”, it is frequently tied to the code of a certain “component” and loaded along with the code of that component. And, hence, the existing proposals to being able to directly <code>import style from "foo.css</code> and other common file types (JSON, CSS, HTML). Import maps are applied in these cases, so no real problem here. When we step into the CSS files, relative URLs can be used to refer to associated CSS files or images
+that belong to the same package, so no problem as well.</p>
+<p>However, imagine if your CSS is an “extension” to a shared theme stylesheet,
+which is provided by a dependency package, which it <code>@import</code>s.
+It may reuse some shared definitions, override others and let the remaining untouched.
+Additionally, you need to refer to a particular version of the shared theme stylesheet. In this case, the <code>@import</code> rule would greatly benefit from using scopes and the existing import map resolution.</p>
+<p>Ultimately, I think that the resolution, scoping and versioning needs are the same and I’m not seeing the conceptual benefits of a separate mechanism and specification. Quite the opposite, I identify a great possibility for confusion between the two maps.</p>
+<p>If there is a problem with the name “import maps” limiting its possible uses, it could possibly be rebranded as “fetch maps”.</p>
+<p>Concluding, I believe effort should be made in bringing back the <code>import:</code> protocol to import maps. Or, else, where am I thinking wrongly?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2020-02-28</div>
+          <div class="post_content">
+<p>I agree that CSS dependencies are less deep, but it still seems weird to invalidate a CSS file (and any JS file that references it) because a background image changes.</p>
+<p>It also seems weird to tell folks “if you want to solve this, use <code>import:</code> URLs, so your fetch goes through the system designed for JS imports”. Seems like incorrect layering.</p>
+<p>I agree that JS benefits from the scoping thing, but I just don’t see how that works outside of JS imports. If I create a <code>&lt;link rel="stylesheet"&gt;</code> and give it an href in some JS, then append it into the body of an iframe, which scope applies?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2794_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dcleao</div>
+          <div class="creation_date">2020-02-28</div>
+          <div class="post_content">
+<p>Well, if you’d want it to be relative to the JS, you’d probably need to use the being designed <code>import.meta.resolve(.)</code> API to force local resolution. Otherwise, specifying an “import:” URL in the link’s <code>href</code> attribute would make the name be resolved against the containing html document’s URL. This seems reasonable to me. I know that there are a lot of corner cases, but I believe it should be possible to decide on sensible rules plus the help of the said API for when more control is needed.</p>
+<p>More and more, I don’t see the JS’s module system as specific to the JS world. The tendency has been to start supporting other types of resources (to be consumed by JS, sure). Maybe who comes from the “HTML imports” discussions thinks otherwise. That’s why I said that maybe the name “import maps” could be changed to release it from the necessary connotation of “belongs to JS”… Generally, I don’t share the “oddness impression” of using “import:” in a CSS context. Let’s change the name so that it is less JS centric? The rest, conceptually, looks the same to me. I wouldn’t invent much differently than what has been.</p>
+<p>The  <code>import:</code> protocol (or any other suitable name) seems like an unavoidable necessity to avoid the ambiguity between plain/bare names and relative URLs. You’d need one such protocol in your proposal too, no? Or, would you not be supporting bare names?</p>
+<p>I strongly believe in building the web from “packages”, in an NPM style, and so, for me, CSSs, JSs and images, all exist in some package. Import maps make this a reality, to a great extent. It would be great if the missing pieces wouldn’t use a completely different addressing scheme (unless for good reasons, of course <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=9" title=":wink:"/> )</p>
+<p>Thanks, great discussion (for me at least)!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

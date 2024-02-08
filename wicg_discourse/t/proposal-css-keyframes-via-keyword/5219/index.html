@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] CSS keyframes: &ldquo;via&rdquo; keyword</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] CSS keyframes: &ldquo;via&rdquo; keyword</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3398_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vrugtehagel</div>
+          <div class="creation_date">2021-03-14</div>
+          <div class="post_content">
+<p>With the introduction of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/animate" rel="noopener nofollow ugc"><code>Element.animate()</code></a> method, animating things becomes a bit easier when it comes to things like “fade in this element I just added to the DOM” or “slide this element off-screen, and then remove it”.</p>
+<p>However, there is still a good amount of animations that are (and should be) in a stylesheet. I never had any issues with smaller animations, but when it comes to bigger animations, I often run into the following problem.</p>
+<p>I’m writing the animation, and let’s say it looks like</p>
+<pre><code class="lang-css">@keyframes shakeAndBlink {
+    from { opacity: 1; transform: translateX(0); }
+    25% { opacity: 0; transform: translateX(10px); }
+    50% { opacity: 1; }
+    75% { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+</code></pre>
+<p>then I test it, and realize it should shake a bit more. So, have to rewrite the animation to</p>
+<pre><code class="lang-css">@keyframes shakeAndBlink {
+    from { opacity: 1; transform: translateX(0); }
+    16.67% { opacity: 0; transform: translateX(10px); }
+    33.33% { opacity: 1; }
+    50% { opacity: 0; transform: translateX(-10px); }
+    66.67% { opacity: 1; }
+    83.33% { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+</code></pre>
+<p>This is not very developer friendly, specifically because:</p>
+<ul>
+<li>I have to change all the offsets except for <code>from</code> and <code>to</code>.</li>
+<li>I have to approximate the offsets with decimals because I cannot specify them in an exact manner.</li>
+</ul>
+<p>Hence, this is my proposal: the <code>via</code> keyword. Like <code>from</code> and <code>to</code>, these can be used as offsets in a keyframe animation and they linearly interpolate between the two nearest absolutely specified surrounding offsets. Basically, my initial animation would look like this:</p>
+<pre><code class="lang-css">@keyframes shakeAndBlink {
+    from { opacity: 1; transform: translateX(0); }
+    via { opacity: 0; transform: translateX(10px); }
+    via { opacity: 1; }
+    via { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+</code></pre>
+<p>This would make adding and removing keyframes a breeze, because you only need to think about the properties. Since it’s just linear interpolation, I could also do something like this:</p>
+<pre><code class="lang-css">@keyframes blinkWiggleAndFade {
+from { opacity: 1; transform: rotate(0deg); }
+via { opacity: 0; transform: rotate(-20deg); }
+via { opacity: 1; }
+via { opacity: 0; transform: rotate(20deg); }
+20% { opacity: 1; transform: rotate(0deg); }
+to { opacity: 0; }
+}
+</code></pre>
+<p>Where the <code>via</code> offsets would be equivalent to <code>5%</code>, <code>10%</code> and <code>15%</code>.</p>
+<p>What are your thoughts on this?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

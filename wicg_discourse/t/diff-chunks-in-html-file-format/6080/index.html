@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Diff chunks in HTML file format</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Diff chunks in HTML file format</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2022-12-20</div>
+          <div class="post_content">
+<p>When an HTML document is very large, and it’s updated often, browsers have to re-download the entire document every time. This is very inefficient. Imagine fixing a typo in a 1000-page document. Browsers are re-downloading a file that is 99.999% the same. What a waste of time and resources.</p>
+<p>What if the HTML file format supported diffs that would be prepended to the file? So if an HTML document is edited, a diff is generated (think Git) and added to the beginning of the file.</p>
+<p>The web server could then stream only the necessary diffs based on the request’s last-visited time, and the browser would reconstruct the HTML document from the received diffs and the original, cached file.</p>
+<p>In order to achieve this system today, web developers have to use a service worker. I would love if this was built into the HTML format itself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-20</div>
+          <div class="post_content">
+<p>HTTP <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests" rel="noopener nofollow ugc">has the means</a> to retrieve the part of content.</p>
+<p>The proposal for diff assumes the browser (or a resource management lib) has knowledge of the history and the update itself. While some last state of update info can be retrieved by <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS" rel="noopener nofollow ugc">OPTIONS</a>, browser has to hold the info sufficient to request diff to version. I.e. in addition to old content, the injection range in old and replacement range in new content.</p>
+<p>This “patch” kind information can be given back by content owner (CDN, server, package manager, etc.) by special request which is not in the scope of HTML by itself. Rather this is a proposal in HTTP scope.</p>
+<p>What is in HTML group scope, the pattern of “patch” as a transformation layer and part of semver support.
+Here the “patch” is a compatibility polyfill which would allow to apply the versioned patch content over existing version. This pattern is applicable as to JS modules (usual  case in current stack) as to declarative modules( part of Declarative Web Application not yet a proposal).
+When module is deployed, its descriptor along with other info( version, dependencies, etc.) could hold the set of version compatibility polyfills along with associated <code>patches</code> those polyfill could use as opposite to load the full content. It is assumed that after <code>old version + polyfill(patch)</code> the content would become identical/compatible with <code>new version full content</code>.</p>
+<p>I would be hesitant to support string level patching, rather version recovery step in the transformation pipeline. For such the "patch’ would look like a transformation script. XSLT or DeclarativeCustomElement template for example.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2022-12-21</div>
+          <div class="post_content">
+<p>See also:</p>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc3229.txt">https://www.rfc-editor.org/rfc/rfc3229.txt</a></li>
+<li><a class="inline-onebox" href="https://en.wikipedia.org/wiki/SDCH">SDCH - Wikipedia</a></li>
+</ul>
+<p>This turns out to be hard because of deployment complexity, and because it has security implications (as all data compression techniques do).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-21</div>
+          <div class="post_content">
+<p><span class="mention">@mnot</span></p>
+<blockquote>
+<p>This turns out to be hard…</p>
+</blockquote>
+<p>git has proven otherwise. The large repository update is more efficient that get the latest. Of course, there is a balance and efficient way would be computed by loader(browser). The proposal would enable such balanced loading.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2022-12-22</div>
+          <div class="post_content">
+<p>Hey there!</p>
+<p>This topic interests me a lot, I use an editor called hope.js, which has this feature that you all are talking about in the html. hope.js is inspired by an idea by ted nelson (one of the forerunners of hypertext) - <em>please, see this:</em> <a href="https://github.com/poef/hope" rel="noopener nofollow ugc">source-code</a> or <a href="https://poef.github.io/hope/" rel="noopener nofollow ugc">live on</a></p>
+<p><em>I would be happy if this idea here is a proposal - In part because there is a library that implements this feature, only the service work that uses the library would be missing</em></p>
+<aside class="quote no-group" data-full="true" data-post="1" data-topic="6080" data-username="simevidas">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/3804_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>When an HTML document is very large, and it’s updated often, browsers have to re-download the entire document every time. This is very inefficient. Imagine fixing a typo in a 1000-page document. Browsers are re-downloading a file that is 99.999% the same. What a waste of time and resources.</p>
+<p>What if the HTML file format supported diffs that would be prepended to the file? So if an HTML document is edited, a diff is generated (think Git) and added to the beginning of the file.</p>
+</blockquote>
+</aside>
+<p>With hope.js - you can map the html according to a sequence of characters of beginning and end <em>(It’s similar to git as you want, please see this example)</em>:</p>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;textarea class="halfsize" id="markup"&gt;
+0-43:h3
+45-139:p
+116-126:a href="http://en.wikipedia.org/wiki/Ted_Nelson"
+1185-1191:em
+&lt;/textarea&gt;
+</code></pre>
+<aside class="quote no-group" data-full="true" data-post="1" data-topic="6080" data-username="simevidas">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/3804_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>The web server could then stream only the necessary diffs based on the request’s last-visited time, and the browser would reconstruct the HTML document from the received diffs and the original, cached file.</p>
+<p>In order to achieve this system today, web developers have to use a service worker. I would love if this was built into the HTML format itself.</p>
+</blockquote>
+</aside>
+<p><em>Now it’s just a matter of creating a service worker with the hope.js library and transmitting the difference in the html changes.</em></p>
+<aside class="quote no-group" data-post="3" data-topic="6080" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>This turns out to be hard because of deployment complexity, and because it has security implications (as all data compression techniques do).</p>
+</blockquote>
+</aside>
+<p>It is not so complex to be done, because there is a library that implements the feature, the data security part maybe using md5 or sha1 is possible on the strings that are modified - <em>(I’m not sure what i’m talking about, but it’s something I thought about now)</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2022-12-22</div>
+          <div class="post_content">
+<p>With git, you have a backing store that’s a ‘source of truth’ for all revisions of the document. Historically, that’s been uncommon on the general web.</p>
+<p>So an important question here is whether this is a common enough pattern to make it part of the web (whether in HTML, as suggested, or HTTP, as might be more well-integrated), or whether it should remain something that you can do locally with javascript (etc.).</p>
+<p>Personally, I’m interested in the idea of an updated delta-encoding spec for HTTP; this has come up a few times, and I suspect some – especially API folks – would benefit from it. We already have PATCH; one could look at this as doing PATCH in the other direction.</p>
+<p>However, that doesn’t mean browsers will implement it; they have a pretty high bar for what they work on, and limited resources. That’s going to be the case whether it’s done in HTTP or HTML, however.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2022-12-23</div>
+          <div class="post_content">
+<p>Hi mnot.</p>
+<aside class="quote no-group" data-post="6" data-topic="6080" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>With git, you have a backing store that’s a ‘source of truth’ for all revisions of the document. Historically, that’s been uncommon on the general web.</p>
+</blockquote>
+</aside>
+<p>Network protocols such as IPFS, Hypercore, Bittorrent have content addressing, perhaps the proposal here allows for content addressing with HTML. Maybe… today this seems to be more common or no. <em>(There are sites for example on IPFS, and things working with Hypercore and linux isos being shared with torrent. Somehow it’s all on the web - just not the html.)</em></p>
+<aside class="quote no-group" data-post="6" data-topic="6080" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>So an important question here is whether this is a common enough pattern to make it part of the web (whether in HTML, as suggested, or HTTP, as might be more well-integrated), or whether it should remain something that you can do locally with javascript (etc.).</p>
+</blockquote>
+</aside>
+<p>There is an interesting proposal to transform html into hypertext: <a href="https://discourse.wicg.io/t/extending-html-as-a-hypermedia/5294">extending-html-as-a-hypermedia</a>. Maybe this proposal makes sense: Diff chunks in html file format + extending-html-as-a-hypermedia and <a href="https://discourse.wicg.io/t/alternative-to-webpackages-to-gurantee-integrity-document-hash/3026">Alternative to WebPackages to gurantee integrity (Document Hash)</a></p>
+<h5>
+<a class="anchor" href="#input-with-diff-and-htmx-and-md5-1" name="input-with-diff-and-htmx-and-md5-1"></a>(input) with diff and htmx and md5:</h5>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;div hx-get="/clicked" hx-trigger="click" diff="3f5d70219e8a2828c12572e2a48ac1d6"&gt;Click Me&lt;/div&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#input-with-diff-and-htmx-2" name="input-with-diff-and-htmx-2"></a>(input) with diff and htmx:</h5>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;div hx-get="/clicked" hx-trigger="click" diff="45-139:p"&gt;Click Me&lt;/div&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#output-with-diff-and-htmx-and-md5-3" name="output-with-diff-and-htmx-and-md5-3"></a>(output) with diff and htmx and md5:</h5>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;div hx-get="/clicked" hx-trigger="click"&gt;&lt;p&gt;Click Me again&lt;/p&gt;&lt;/div&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#output-with-diff-and-htmx-4" name="output-with-diff-and-htmx-4"></a>(output) with diff and htmx:</h5>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;div hx-get="/clicked" hx-trigger="click"&gt;&lt;p&gt;Click Me again&lt;/p&gt;&lt;/div&gt;
+</code></pre>
+<p><em>Can I make a get or post call here in hx-get to capture the modified information from diff</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-23</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="6" data-topic="6080" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>whether this is a common enough pattern to make it part of the web (whether in HTML, as suggested, or HTTP, as might be more well-integrated), or whether it should remain something that you can do locally with javascript (etc.).</p>
+</blockquote>
+</aside>
+<p>While the partial resource delivery is on HTTP protocol side, the abilities to decide should the resource retrieval use chunk or whole GET reside on browser side.</p>
+<p>Browser has sufficient info on what props cached resource has: its checksum, deployment date, etc. Browser can sniff whether resource been changed and during this OPTIONS call can provide its latest available state. The server side would provide whether patch for cached version exist. This flow fits into server-client communication layer. I.e. HTTP.</p>
+<p>If you want this proposal be implemented, it has to go to HTTP group first.</p>
+<p>Note, the resource is abstract, it is not just HTML. It can be JS, image, web archive or whatever.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2023-01-16</div>
+          <div class="post_content">
+<p>Hey there!</p>
+<p>I would like to contribute to this proposal with relevant links, there are things like I spoke of as hope.js.</p>
+<p>So I was discovering these two implementations of git on the web:  <a href="https://github.com/danvk/webdiff" rel="noopener nofollow ugc">webdiff</a> and  <a href="https://github.com/isomorphic-git/isomorphic-git" rel="noopener nofollow ugc">isomorphic-git</a>.</p>
+<p>So please see this (webdiff):</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/a80033564e8502ae40b65f2ec561b75bc6adc9fd" href="//discourse.wicg.io/uploads/default/original/2X/a/a80033564e8502ae40b65f2ec561b75bc6adc9fd.png" title="image"><img alt="image" data-base62-sha1="nYcDY9zwU2IkiNFbRUkekcm4HHD" data-dominant-color="F5F2F3" height="93" src="//discourse.wicg.io/uploads/default/optimized/2X/a/a80033564e8502ae40b65f2ec561b75bc6adc9fd_2_690x93.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/a/a80033564e8502ae40b65f2ec561b75bc6adc9fd_2_690x93.png, //discourse.wicg.io/uploads/default/optimized/2X/a/a80033564e8502ae40b65f2ec561b75bc6adc9fd_2_1035x139.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/a/a80033564e8502ae40b65f2ec561b75bc6adc9fd.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1087×148 16.9 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>So <em>would that be something relevant to what you’re all talking about, thinking about - like isomorphic-git, hope.js or webdiff here?</em></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

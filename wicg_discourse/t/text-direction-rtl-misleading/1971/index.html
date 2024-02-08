@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Text direction rtl misleading?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Text direction rtl misleading?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2312_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richarddunnebsc</div>
+          <div class="creation_date">2017-01-24</div>
+          <div class="post_content">
+<p>From a presentation and functional perspective, there is no difference between text direction ltr and rtl.  The only difference is where the cursor is placed within the input field.  If text direction right to left were taken literally, text entered using rtl would be written backwards, which would be match the attributes literal interpretation, without reading any documentation.  Is there any desire in the community to change rtl as far an the English language is concerned or is it a case of keep the status quo?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-01-24</div>
+          <div class="post_content">
+<p>It’s not intended for what you’re thinking. It is supposed to be used with right-to-left <em>languages</em> such as Arabic and Hebrew.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-01-24</div>
+          <div class="post_content">
+<p>Yes, the dir attribute (and the ‘direction’ CSS property, which it maps to) are hints to the rendering engine about the intended direction of the language in an element, to help the bi-directional rendering algorithm render things better.</p>
+<p>Check out this link: <a href="http://software.hixie.ch/utilities/js/live-dom-viewer/?%3C!DOCTYPE%20html%3E%0A%3Cbody%20dir%3Drtl%3E%0Afoo%20%26%23x05E2%3B%26%23x05D1%3B%26%23x05E8%3B%26%23x05D9%3B%26%23x05EA%3B%20123">http://software.hixie.ch/utilities/js/live-dom-viewer/?&lt;!DOCTYPE%20html&gt;
+&lt;body%20dir%3Drtl&gt;
+foo%20%26%23x05E2%3B%26%23x05D1%3B%26%23x05E8%3B%26%23x05D9%3B%26%23x05EA%3B%20123</a></p>
+<p>Try removing the dir attribute, and notice how the visual ordering of things changes - this is because digits are only “weakly LTR”, so they’ll arrange themselves in an LTR order, but they get grouped with the Hebrew (“strongly RTL” characters) as part of an “RTL run”, so they’ll always be to the left (following, in RTL) the Hebrew. The dir attribute then informs the browser what the “overall” direction is supposed to be, so you either get the “foo” first and then the RTL run to the right (following, in LTR), or you get “foo” on the right side and then the RTL run to its left.</p>
+<p>Getting your head wrapped around the bidi algorithm can be pretty confusing, so don’t worry too hard about it.  Just understand that the dir attribute’s purpose is for a page written in an RTL language (or an element that’s going to contain RTL content) to tell the browser this - it doesn’t do anything useful for pages written entirely in LTR languages like English.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2312_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richarddunnebsc</div>
+          <div class="creation_date">2017-01-24</div>
+          <div class="post_content">
+<p>Thanks for the clarification.  Years ago as part of a college project on
+numerical literacy, I had hoped to use the ‘rtl’ feature to show examples
+of addition, subtraction and division of numbers.  It was a pity the rtl
+attribute doesn’t apply itself the way I had hoped it would.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<p>If you want the behavior described in your initial post, you might still be able to get it with <code>transform</code>, as in this demo: <a href="http://s.codepen.io/tigt/debug/39925f40cb54c140c1889f2628c3bd0b" rel="nofollow noopener">http://s.codepen.io/tigt/debug/39925f40cb54c140c1889f2628c3bd0b</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>This behavior can also be achieved in HTML using the special <code>bdo</code> element with the <code>dir</code> attribute, e.g. <a href="https://software.hixie.ch/utilities/js/live-dom-viewer/?%3C!DOCTYPE%20html%3E%3Chtml%3E%3Chead%3E%3Ctitle%3EBDO%20example%3C/title%3E%3C/head%3E%3Cbody%3EAddition:%3Cbr%3E%3Cdiv%20dir=rtl%20style=%22display:inline-block%22%3E%3Cbdo%20dir=rtl%3E123%3Cbr%3E%3Cu%3E456%20+%3C/u%3E%3Cbr%3E579%3C/bdo%3E%3C/div%3E%3Cbr%3EEnd%20of%20example.%3C/body%3E%3C/html%3E" rel="nofollow noopener"><code>&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;BDO example&lt;/title&gt;&lt;/head&gt;&lt;body&gt;Addition:&lt;br&gt;&lt;div dir=rtl style="display:inline-block"&gt;&lt;bdo dir=rtl&gt;123&lt;br&gt;&lt;u&gt;456 +&lt;/u&gt;&lt;br&gt;579&lt;/bdo&gt;&lt;/div&gt;&lt;br&gt;End of example.&lt;/body&gt;&lt;/html&gt;</code></a>. In cases where that isn’t practical the Unicode RLO control character U+202E may be used instead, terminated by PDF 	U+202C - note, however, that those controls are effectively deprecated in most contexts these days in favor of markup.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2312_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richarddunnebsc</div>
+          <div class="creation_date">2017-01-30</div>
+          <div class="post_content">
+<p>I know that using rtl for mathematics is very niche in the context of HTML.  The <strong>transform</strong> attribute referred to by Tigt looks perfect for this.  However, <strong>transform</strong> it is not currently associated with the input object.  Is it or would it be possible to use the <strong>transform</strong> attribute with the input object?  If yes, would anyone be against it?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

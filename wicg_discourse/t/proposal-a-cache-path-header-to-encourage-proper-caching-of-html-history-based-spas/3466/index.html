@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: a `Cache-Path` header to encourage proper caching of HTML history-based SPAs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: a `Cache-Path` header to encourage proper caching of HTML history-based SPAs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>With modern HTML5 history navigation, you typically need server support to render the same page for a variety of routes. But browsers aren’t going to know this is the same across multiple URLs - given a web app at <code>https://example.com/app/</code>, if you first visit <code>/app</code> and then a few days later open a new tab to <code>/app/1/view</code>, the browser will see the second URL isn’t in the cache, despite it requiring basically the same set of files.</p>
+<p>For this reason, I suggest there should be a <code>Cache-Path: /path/to/parent</code> header, usable for all cacheable responses as well as 304s. This would tell the client to cache the response as if the request was to the following URL, and to read from the cache similarly. This <em>may</em> include query strings, which are considered part of the cache key. If missing, the default value is just the request path itself. This added to encourage correct caching behavior for SPAs, one that also ends up taking a lot less cache space. It would also allow better caching for other requests where query strings are not used to control server actions and responses, like with removing referrer strings and other SEO junk from the cache path so browsers don’t cache <code>https://example.com/?_ref=foo</code> differently from <code>https://example.com/</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2196_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sollyucko</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>I’m probably missing something, but can’t <code>ETag</code>s be used for this? You could probably use the conical URL as the <code>ETag</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>Not quite. ETags are about identity, but this is about names - those two are subtly different.</p>
+<p>Now that I’m thinking about it better, the <code>Cache-Path: ...</code> here should really just be a <code>Cache-As: ...</code>, with a space-separated list of paths, so it’s more flexible and the browser knows a bit better to just ignore everything. Each path is either a <code>/path/to/whatever</code> or <code>prefix /path/to/whatever</code>, with the former being absolute and latter being a path prefix. This would tell clients much better what paths a resource represents, and it could potentially read a URL it’s never even seen before straight from cache.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2196_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sollyucko</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>True. But wouldn’t we want to read it from cache iff it has identical content? And couldn’t a weak <code>ETag</code> be used if computing the content is expensive? Also, with <code>prefix</code>, what would happen with multiple matches? Use the latest?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2196_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sollyucko</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>Actually, I think I see what you’re saying. Is the goal to also save the page’s state?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>If by that you mean returning to that view as if it were a traditional, separate web page, yes. The key here is that the server itself doesn’t always care about certain portions of the URL - only the client. It’s not unlike using the hash as routing, but in this case, it ends up sent to the server anyways. This is just so the server can tell the client it should be cached for multiple URLs and not just one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2196_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sollyucko</div>
+          <div class="creation_date">2019-04-04</div>
+          <div class="post_content">
+<p>I guess the goal is too avoid extra round-trips, which <code>ETag</code> would need, which is reasonable.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Page independent Media Context API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Page independent Media Context API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2019-04-21</div>
+          <div class="post_content">
+<h1>Media Playing and SPA</h1>
+<p>there are lots of use-case which seems not necessary to make it SPA.
+(I means you can navigate page with state change)</p>
+<p>but when you playing audio/video, you should do SPA.
+because you can’t navigate other page without terminating media playing.</p>
+<p>for example, imagine playing audio with grabbing playlist.
+you can’t choice other artist/album name, without stopping current music
+if you don’t make it SPA.
+other way to make it possible is separate playlist / audio player with iframe.</p>
+<h1>Problem</h1>
+<p>If you have playlist static page and have audio/video tag in that page.
+you can do it only html and standard api, and that works fine for not navigating,
+but once you want to “continue playing while searching other music”
+suddenly you need to use tons of JS and learn SPA.</p>
+<p>can’t we make it easy for continue playing while navigating ?</p>
+<h1>Page independent Media Context API</h1>
+<p>Picture in Picture seems out of window context for playing audio/video.
+but actually not.
+if you navigate parent page (who has video/audio tag of PiP), media playing will stop.</p>
+<p>but if PinP audio player continue playing while page navigates, it seems solution.</p>
+<h1>Who playing audio/video ?</h1>
+<p>i don’t have best solution but some ideas.</p>
+<p>ex, playing media over page will stop page navigate.
+but service worker are running cross page.
+so if audio/video can play over service worker and display in PinP seems work.</p>
+<p>service worker response audio/video file to audio/video tag, and if user enables it PinP,
+that makes Page independent Context for media playing.
+and parent page navigates, PinP can return to audio/video tag which current page have.</p>
+<h1>Risk/Security Consideration</h1>
+<p>I think this API will used by Ad, so its necessary to let user disable by permission, and have UI for easy to turn off.</p>
+<h1>use case</h1>
+<p>It cover use-case like</p>
+<ul>
+<li>Audio Player (like spotify/soudcloud etc)</li>
+<li>Video Player (Youtube/Fulu etc)</li>
+<li>Video Chat</li>
+<li>Gaming</li>
+<li>etc</li>
+</ul>
+<p>and make them easy to build static page base site (SPA free)
+but continue to playing critical medias.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-21</div>
+          <div class="post_content">
+<p>I think SoundCloud solved this just by using frames: the music player and the page content are two separate top-level frames, so the content can navigate without interrupting the music player. Doesn’t that avoid the need for another API?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2019-04-22</div>
+          <div class="post_content">
+<p>I think you saying page like below</p>
+<pre><code class="lang-auto">&lt;body&gt;
+  &lt;iframe src=playlist.html&gt;&lt;/iframe&gt;
+  &lt;iframe src=player.html&gt;&lt;/iframe&gt;
+&lt;/body&gt;
+</code></pre>
+<p>or you can playlist in iframe in player page.</p>
+<pre><code class="lang-auto">&lt;body&gt;
+  &lt;!-- player page --&gt;
+  &lt;iframe src=playlist.html&gt;&lt;/iframe&gt;
+  &lt;audio src=music.mp3&gt;&lt;/audio&gt;
+&lt;/body&gt;
+</code></pre>
+<p>navigate in iframe works.</p>
+<p>but I’m saying like below if using iframe.
+page itself is playlist and have player in the page.</p>
+<pre><code class="lang-auto">&lt;body&gt;
+  &lt;h1&gt;playlist&lt;/h1&gt;
+  &lt;!-- playlists...--&gt;
+  &lt;iframe src=player.html&gt;&lt;/iframe&gt;
+&lt;/body&gt;
+</code></pre>
+<p>but this doesn’t works. playlist can’t navigate without stopping player.</p>
+<p>player is belongs to page like below.</p>
+<pre><code class="lang-auto">&lt;body&gt;
+  &lt;h1&gt;playlist&lt;/h1&gt;
+  &lt;!-- playlists...--&gt;
+  &lt;audio src=music.mp3&gt;&lt;/audio&gt;
+&lt;/body&gt;
+</code></pre>
+<p>and navigatable works fine if possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-22</div>
+          <div class="post_content">
+<p>So why not just rearrange the iframes to one of the cases that works?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-21</div>
+          <div class="post_content">
+<p>One option is to navigate the <code>&lt;iframe&gt;</code></p>
+<pre><code>  &lt;input type="text"&gt;&lt;button&gt;navigate&lt;/button&gt;
+  &lt;h1&gt;click&lt;/h1&gt; &lt;!-- requestPictureInPicture(), play playlist--&gt;
+  &lt;iframe&gt;&lt;/iframe&gt;  
+  &lt;script&gt;
+   const iframe = document.querySelector("iframe");
+   const input = document.querySelector("input");
+   const button = document.querySelector("button");
+   iframe.width = screen.width; 
+   iframe.height = screen.height - input.height;
+   button.onclick = _ =&gt; {
+    iframe.src = input.value;
+  }
+  &lt;/script&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

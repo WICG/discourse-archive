@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>IndexedDB API clean up / promises</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">IndexedDB API clean up / promises</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-10</div>
+          <div class="post_content">
+<p>From an outside perspective the IndexedDB API could be much simpler which:</p>
+<ul>
+<li>Reduces implementation errors</li>
+<li>Could be shimmed on top of the current API</li>
+<li>With a simpler API browsers might be able to do some perf magic</li>
+</ul>
+<p>As I said to <span class="mention">@annevk</span> and <span class="mention">@jonthanfielding</span> it would be nice to clear up a nicer API for IndexedDB: <a href="https://twitter.com/KingstonTime/status/606236654743994368" rel="nofollow noopener">https://twitter.com/KingstonTime/status/606236654743994368</a></p>
+<p>Joshua Bell worked on a simplified API using IndexedDB and promises:
+<aside class="onebox githubgist">
+<header class="source">
+<a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener" target="_blank">gist.github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener" target="_blank">https://gist.github.com/inexorabletash/c8069c042b734519680c</a></h4>
+<h5>@ SimpleDB.md</h5>
+<pre><code class="Markdown">SimpleDB - Like Indexed DB, but Simple
+--------------------------------------
+
+A simple asynchronous data store.
+
+&gt; STATUS: This is a thought experiment, not a serious proposal. Would basic async storage like this be useful? With this plus some locking primitive, could you build Indexed DB?
+
+Like Indexed DB:
+* rich value types - store anything you can structured clone
+* rich key types - Number, String, Date, Array (of other key types)</code></pre>
+This file has been truncated. <a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener" target="_blank">show original</a>
+<h5>simpledb.webidl</h5>
+<pre><code class="WebIDL">[NoInterfaceObject] interface GlobalSimpleDB {
+  readonly attribute SimpleDBFactory simpleDB;
+};
+Window implements GlobalSimpleDB;
+Worker implements GlobalSimpleDB;
+
+interface SimpleDBFactory {
+  Promise&lt;SimpleDB&gt; open(DOMString name);
+  Promise&lt;void&gt; delete(DOMString name);
+  // TODO: Enumerate?</code></pre>
+This file has been truncated. <a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener" target="_blank">show original</a>
+<h5>simpledb_polyfill.js</h5>
+<pre><code class="JavaScript">(function(global) {
+  var SECRET = Object.create(null);
+  var DB_PREFIX = '$SimpleDB$';
+  var STORE = 'store';
+
+  function SimpleDBFactory(secret) {
+    if (secret !== SECRET) throw TypeError('Invalid constructor');
+  }
+  SimpleDBFactory.prototype = {
+    open: function(name) {</code></pre>
+This file has been truncated. <a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener" target="_blank">show original</a>
+<p>
+  There are more than three files. <a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener" target="_blank">show original</a>
+</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>This suffers from race conditions because of the code mitigating the locking which is an issue. I have not had much time to look at this however it strikes me this can be resolved by transactions being queued before being resolved in the promise. So long as all transactions come from the same instance then the issue should not be an issue here.
+By implementing a stack of transactions that are called FIFO ordering the API of IndexedDB removes the need to manage state from the outside.</p>
+<p>As Joshua has stated this was just a thought exercise implementing schemas and indexing would also be important I feel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<p>Here is the link to the Edge Moderator which shows quite a lot of interest in this <a href="https://www.google.com/moderator/#15/e=214e4f&amp;t=214e4f.44" rel="nofollow noopener">https://www.google.com/moderator/#15/e=214e4f&amp;t=214e4f.44</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/611_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">inexorabletash</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<p>Ugh, let’s not dwell on that silly “<a href="https://gist.github.com/inexorabletash/c8069c042b734519680c" rel="nofollow noopener">SimpleDB</a>” thing :(. Truly just a thought experiment about minimal async storage so that other things could be built upon it. Given that the first commentary above is that it needs transactions, schemas, and indexes, it shows that IndexedDB’s feature set is not, in fact, too much. It’s the UX of the API that needs help. And unfortunately the current API ties the transaction model to the event loop very tightly - see <a href="https://gist.github.com/inexorabletash/8c122c84a65de65c35b3" rel="nofollow noopener">IDB+Promises</a> for the gruesome details.</p>
+<p>More realistic thoughts on evolving IDB include:</p>
+<ul>
+<li>Having requests and transactions expose promises to observe lifetimes - in <a href="https://gist.github.com/inexorabletash/8c122c84a65de65c35b3" rel="nofollow noopener">IDB+Promises</a>
+</li>
+<li>Allowing transactions to “wait” on promises to compose larger operations - also in: <a href="https://gist.github.com/inexorabletash/8c122c84a65de65c35b3" rel="nofollow noopener">IDB+Promises</a>
+</li>
+<li>Explicit commit control for transactions: <a href="https://gist.github.com/inexorabletash/d55a6669a040e92e47c6" rel="nofollow noopener">https://gist.github.com/inexorabletash/d55a6669a040e92e47c6</a>
+</li>
+<li>“transactionless” operations - I need to write this up/prollyfill it, but basically allow read/write requests that get an implicit transaction that commits immediately. These could just yield promises.</li>
+</ul>
+<p>I think those would provide the basis to experimentally evolve the API to be easier to use and compose better with other Promise-based code flows. They wouldn’t necessarily make it easier on their own, but without more explicit control over transaction lifetimes you can’t do much to improve the API in JS and create Promise-based cowpaths to pave.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/611_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">inexorabletash</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<p>Crazy “transactionless IDB” thought: <a href="https://gist.github.com/inexorabletash/280016e79188b6a28247" rel="nofollow noopener">https://gist.github.com/inexorabletash/280016e79188b6a28247</a></p>
+<p>Pros:</p>
+<ul>
+<li>One less thing to grok about when transitioning to IDB</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>bifurcates the API - sometimes <code>get()</code> returns one thing, sometimes it returns another</li>
+<li>if we had an external transaction primitive (e.g. <a href="https://gist.github.com/inexorabletash/a53c6add9fbc8b9b1191" rel="nofollow noopener">https://gist.github.com/inexorabletash/a53c6add9fbc8b9b1191</a>) you can order things, but it doesn’t let you create a batch and commit/abort as a unit</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/630_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nolanlawson</div>
+          <div class="creation_date">2015-06-28</div>
+          <div class="post_content">
+<p>I think the explicit commit control is a great idea. I also wonder if we could kill two birds with one stone and solve the issue of promises/callbacks within transactions at the same time.</p>
+<p>If you could open an IDB transaction while explicitly saying “hey, I want to control the commit,” then there’s no need for fancy Promise fixes because the transaction can just patiently wait until you <code>commit()</code>. An added benefit is that this would also work for non-promise async APIs that you might want to access inside of a transaction, such as <code>FileReader</code> or XHR.</p>
+<p>Example: <a href="https://gist.github.com/nolanlawson/c2580896749cd475fb30">https://gist.github.com/nolanlawson/c2580896749cd475fb30</a></p>
+<p>As for SimpleDB/transactionless, that sounds quite similar to the “async local storage” idea. It seems nice, but might not be such a big win as promises or transaction control.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

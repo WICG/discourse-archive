@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Specifying nonce or integrity when importing modules</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Specifying nonce or integrity when importing modules</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-25</div>
+          <div class="post_content">
+<p>Like <code>&lt;script&gt;</code> and <code>&lt;link&gt;</code> elements can specify <code>integrity="hashAlgorithm-hash"</code> and like elements can specify <code>nonce="string-specified-by-content-security-policy"</code>, ECMAScript modules should be able to leverage those authenticity mechanisms.
+I propose the following syntax -</p>
+<pre><code class="lang-auto">import * from "module" integrity "hashAlgorithm-hash" nonce "string-specified-by-content-security-policy"
+</code></pre>
+<p>Both, either and obviously neither of them can be specified.</p>
+<pre><code class="lang-auto">import * from "module" integrity "hashAlgorithm-hash"
+import * from "module" nonce "string-specified-by-content-security-policy"
+</code></pre>
+<p>Alternative syntax proposal -</p>
+<pre><code class="lang-auto">import * from "module" #"hashAlgorithm-hash"
+import * from "module" @"string-specified-by-content-security-policy"
+</code></pre>
+<p>Or anything else, basically.</p>
+<p>It would be good to add this to the (draft) specification before modules ship in stable browser versions, so shipping modules already would already have this aspect included.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-11-26</div>
+          <div class="post_content">
+<p>You mean this for ECMAScript? Not sure if the relevant people are reading here… this is more directed at W3C, but there might be some lurkers…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-26</div>
+          <div class="post_content">
+<p>Yeah, I noticed that this category is not as active as the rest of them. But I see that <span class="mention">@domenic</span> replied here, though it was a long time ago, so maybe there is hope.
+Anyway, my plan was to suggest it here and if no one really responds, move it to a TC39 issue and the like.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2016-12-02</div>
+          <div class="post_content">
+<p>Wow, this is very interesting. We’ve been aware of this problem for a while, and wanted a solution, but didn’t have any ideas on the right syntax. The important requirement is that the syntax “looks static”, so something like</p>
+<pre><code class="lang-auto">import "module" with { integrity: "hash", nonce: "nonce" };
+</code></pre>
+<p>was very bad. (It implies object literal semantics, but only the syntax matches; using e.g. <code>{ integrity: str }</code> or <code>{ [propName]: "hash" }</code> or <code>{ get nonce() { return "nonce"; } }</code> would not work.)</p>
+<p>Your proposed syntax is pretty great. It has one problem, which is that it can’t be split over multiple lines due to automatic semicolon insertion. E.g.</p>
+<pre><code class="lang-auto">import "module"
+  integrity
+    "hash"
+  nonce
+    "nonce"
+</code></pre>
+<p>is just interpreted as a series of statements. But this is fixable with only a slight tweak of mandatory commas (or a similar separator) such as</p>
+<pre><code class="lang-auto">import "module", integrity "hash", nonce "nonce";
+</code></pre>
+<blockquote>
+<p>It would be good to add this to the (draft) specification before modules ship in stable browser versions, so shipping modules already would already have this aspect included.</p>
+</blockquote>
+<p>This is certainly out of the question; modules have had their greatest failures when trying to bundle things together, and their recent success in actually getting implemented owes to adding small features one by one. The TC39 process generally takes at least 6 months to accept a feature before implementations can even begin, due to their unfortunate synchronous decision making.</p>
+<p>Thanks for the suggestion. I’ll talk this over with some others on my team and if things go well we might start on the process of making a proposal for TC39.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-12-02</div>
+          <div class="post_content">
+<p>Glad to be of help. <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

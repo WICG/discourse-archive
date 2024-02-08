@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Revocation of &ldquo;basic&rdquo; web permissions (such as internet access) or some other way to &ldquo;trust&rdquo; a webpage with your sensitive files (e.g. image editor app)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Revocation of &ldquo;basic&rdquo; web permissions (such as internet access) or some other way to &ldquo;trust&rdquo; a webpage with your sensitive files (e.g. image editor app)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2019-08-19</div>
+          <div class="post_content">
+<p>I originally posted this <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=995236" rel="nofollow noopener">here</a> in crbug under the <code>project-fugu</code> tag. I figured I’d cross post it here so more than just the Chrome people see it. This is my first post in this forum, so apologies if I’ve done anything wrong (I won’t be offended if my post gets deleted! haha).</p>
+<hr/>
+<blockquote>
+<p>This one is definitely a bit of a pipe dream, but hear me out for a second here - I think this could become especially useful when combined with the upcoming fugu file system stuff.</p>
+<p>Imagine the following situation: You’ve got a file that you need to process, and there are a bunch of web apps out there that can do it for you, but it’s a sensitive file and you don’t trust that they’re <em>not</em> going to upload your file to your server and snoop on your data. For example, you might want to:</p>
+<ul>
+<li>Crop/resize/rotate your passport scan: <a href="https://squoosh.app" rel="nofollow noopener">squoosh.app</a>
+</li>
+<li>Read a 5GB server log file: <a href="https://readfileonline.com/" rel="nofollow noopener">readfileonline.com</a>
+</li>
+<li>Read your DNA data: <a href="http://www.fastq.bio" rel="nofollow noopener">fastq.bio</a>
+</li>
+<li>etc.</li>
+</ul>
+<p>These sites (and many others like them) do all their number crunching on the client, and they assure users that all the potentially-sensitive data stays on the client. But how does the user know that they’re not lying?</p>
+<p>As a web developer I’d love to have the ability to give my users certainty that I can’t even “see” their data at all. If this were possible, it would give web apps an advantage over native apps because (of course) the native apps could be malicious too - people just tend to trust them more for whatever reason. Adding a feature like this would extend the “trustlessness” of the web platform, which is one of its best features.</p>
+<p>So what might such a feature actually look like? I have no idea. But here are some thoughts:</p>
+<ul>
+<li>I can write a CORS-protected image to a canvas and then draw a rectangle over the top, and then the user can right-click on the canvas to save the resulting image. The canvas has been tainted as soon as I’ve drawn the image, but the user can still download it once I’ve finished processing it. That’s the very beginnings of the sort of feature I’m talking about here, but it’s obviously no where near enough even for 99% of the image-processing web app use cases.</li>
+<li>This may actually just fall into the scope of the Permissions API. Websites would have the ability to revoke their own “basic” permissions, like the ability to access the internet. Undoing these revocations would cause all site data to be cleared. Some careful thought would be needed here though - for example, the “access to the internet” permission would most likely need to include within it the ability to embed iframes, otherwise users could be tricked into dragging-and-dropping their file into a frame with a different origin (one that still has the “access to the internet” permission). I imagine there are some pretty fundamental architectural considerations here.</li>
+<li>Even a very course-grained permissions revocation that occurs outside of the Permissions API might be able to solve this. It just “simulates” a lack of internet access for that specific origin, forever (and to undo the revocation all data needs to be cleared, as before).</li>
+<li>Perhaps an “opaque files” feature similar to CORs stuff could solve it. The data can be accessed, but the processed data can’t go anywhere except back to the user after the processing (like the canvas example above).</li>
+</ul>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-08-19</div>
+          <div class="post_content">
+<p>As a user I think you can improve your security guarantee by doing the following:</p>
+<ol>
+<li>Open web app in new private browsing window</li>
+<li>Get to the part of the web app that promises to process your data client-side</li>
+<li>Go offline</li>
+<li>Do the processing</li>
+</ol>
+<p>Currently step 3 can only be done by dev tools, control panel, aeroplane mode or pulling your ethernet cable out, none of which is really suitable for the average user. Maybe the least-effort solution is just to add a “go offline” button in the browser window itself? (Didn’t some browsers used to have a “work offline” option?)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-19</div>
+          <div class="post_content">
+<p>Have recovered “deleted” images from a storage device more than once.</p>
+<p>There are no guarantees that any data cannot be read by undisclosed third-parties at any time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-08-19</div>
+          <div class="post_content">
+<p>I like the idea of protecting users but its kinda odd for a user to think that a web app developer would ever “guarantee” that the user’s data wont be stored somewhere. I get that we’re in an age where businesses could do harmful things with the data they store, but thats really the issue that should be addressed. Although its unreasonable for a user to expect for the company of web app to not store your data, its seems perfectly reasonable to expect that the company doesnt use your data in a malicious way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2019-08-20</div>
+          <div class="post_content">
+<p><span class="mention">@AshleyScirra</span> I like the the incognito+offline idea as a stop-gap for my own usage (as a user, not a developer). A simple “go offline” button by itself wouldn’t solve it because (as you suggest by pointing to incognito), the site could just store you data in localStorage/indexeddb and upload it whenever it gets that chance (e.g. if the user toggles back to online-mode later to use other parts of the website).</p>
+<p><span class="mention">@mkay581</span> I do admit that your average web app (social media, news, saas, etc.) wouldn’t require this sort of feature for the most part. But there are some types of applications for which a feature like this makes a lot of sense. For example, when you edit a photo with GIMP, you really don’t expect them to be uploading your data to the sever. Same with the simple notepad application - sometimes your data is quite sensitive and you don’t want to trust the developer, or even if you do, you don’t want to trust their web/server security skills if you don’t have to (why should we need to trust them for such applications?). I have been in the situation as a <em>user</em> multiple times where I go for a native app simply because I don’t trust the website to not snoop on my data. I’ll only process my sensitive files on websites that I trust quite a bit (e.g. <a href="http://photopea.com" rel="nofollow noopener">photopea.com</a>), but even in that case the developer could be trustworthy, but could have accidentally introduced a cross-site scripting bug in their latest update, or something like that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-20</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="3826">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/joe/40/2532_2.png" width="20"/> joe:</div>
+<blockquote>
+<p>For example, when you edit a photo with GIMP, you really don’t expect them to be uploading your data to the sever.</p>
+</blockquote>
+</aside>
+<p>Since you filed a Chrome bug you might also be interested in the fact at Chrome/Chromium when <code>&lt;webkit&gt;SpeechRecognition()</code> is executed, without notice or permission being granted, the browser records the user PII biometric data (voice) and sends that recording to a remote web service. See <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=816095" rel="nofollow noopener">https://bugs.chromium.org/p/chromium/issues/detail?id=816095</a>, <a href="https://github.com/w3c/speech-api/issues/56" rel="nofollow noopener">https://github.com/w3c/speech-api/issues/56</a>.</p>
+<p>There is no rational way to “trust” a website because there is no way to “trust” either the browser or the wire or any other application, whether offline or online, see, e.g., <a href="https://github.com/whatwg/html/issues/3304" rel="nofollow noopener">https://github.com/whatwg/html/issues/3304</a>.</p>
+<p>Neither a developer nor a user can “trust” any system to debug itself, nor recognize all forms of bugs, see <a href="https://security.stackexchange.com/questions/201992/has-it-been-mathematically-proven-that-antivirus-cant-detect-all-viruses" rel="nofollow noopener">Has it been mathematically proven that antivirus can’t detect all viruses?</a>.</p>
+<p>This has been the case for some time, and was articulated by Godel nearly 100 years ago  in <em>On Formally Undecidable Propositions of “Principia Mathematica” and Related Systems</em></p>
+<ol>
+<li>
+<p><strong>If a (logical or axiomatic formal) system is consistent, it cannot be complete.</strong></p>
+</li>
+<li>
+<p><strong>The consistency of axioms cannot be proved within their own system.</strong></p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">unique</div>
+          <div class="creation_date">2019-08-25</div>
+          <div class="post_content">
+<p><span class="mention">@joe</span>
+Great idea! As a developer I too had noticed this drawback of web apps compared to native apps before and so far haven’t come up with anything better than “Dear user of my app, i promise to keep your data on your device and not upload it to my server. Just look at the minified source code after every launch of the app as a proof, have a nice day!”, but the UX is crap. The thing is, i do not even want my users to have to trust me.
+But I gave it some more thought now. I think a same origin policy based aproach would be hard to implement, as every data object would have to be tagged and the policy would have to be enforced at many places, which leaves much space for security bugs. But then again, native apps can provide that extra level of privacy and security and if web apps really want to compete with native, what you propose is ultimately a must have. So, how are native apps doing that? Quite easily and well established. Following the Gimp example, I’ll go to the official gimp download server and download the app via http port 80, which is not blocked in my downloader app (web browser). Then I install the app (operating system asks me if I am sure and stuff and i maybe see a trusted developer certificate or something but that part is solved for web apps by being sandboxed from the client system already). Next I start the Gimp app, and now my firewall either A) asks me if i want to opt-in to allow gimp to communicate over the network and I can simply not opt-in, or B) the firewall does nothing because Gimp did not try to access the network. Both ways I now can be sure that Gimp does not have network access. Great!
+Now, how can we have the same for web apps? Well, turns out something equivalent has been done before, called packaged web apps. Web app files are in a package on a download server, app has no network access unless it gets user permission. Implemented by e.g. chrome apps and microsoft UWP apps. IIRC even hosted UWP apps (hosted by the developer, not by microsoft store) can and have to request network permission from the user. IMHO, something like this should not be hard to specify or implement for the web. E.g. the developer decides to opt-in to no-network-access and declares an app download url from which the browser retrieves the file(s), while the app itself has network access blocked by default, but can ask for permission. The app’s linked resources e.g. img src=“<a href="http://app.example.com/logo.png" rel="nofollow noopener">app.example.com/logo.png</a>”, xhr, fetch, etc are redirected to the sandboxed files previously downloaded by the browser when installing (or updating) the app. And the browser could give some visual indication to the user when a web app does not have network access permission, like the green lock does for https. This aproach would avoid the data tagging and also because of being opt-in, avoid difficulties with introducing an opt-out UX, which i believe there would be some, both on the implementors and users side.
+Sorry for using too many words, and of course, these are just my quick thoughts which might be stupid. However, I seriously believe that the web platform needs that covered somehow sooner or later, and I’d rather have it sooner.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2019-09-26</div>
+          <div class="post_content">
+<p>Not too sure how relevant this is, but <span class="mention">@unique</span>’s mention of “packaged” web apps came to mind when I recently came across this proposal/spec: <a href="https://github.com/WICG/webpackage" rel="nofollow noopener">https://github.com/WICG/webpackage</a></p>
+<p>I’ve only briefly looked over it, and I’m a newb in this area, but it looks like it allows sites to be packaged for offline usage, which is a critical component needed for the feature proposed in this thread.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2588_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alancutter</div>
+          <div class="creation_date">2019-10-01</div>
+          <div class="post_content">
+<p>I’m highly inclined to support this idea, it’s an area of data security where native apps are sorely lacking and would be a carrot for enterprise environments that would like to use PWAs but don’t want to allow their internal data to be compromised. This request is a natural desire when following Principle Of Least Privilege.</p>
+<p>That being said how would this manifest as a web spec? This seems more like a feature a browser would provide to its users/IT admins rather than an API a web developer could interact with.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">9pfs1</div>
+          <div class="creation_date">2022-02-25</div>
+          <div class="post_content">
+<p>This should be implemented, so that websites such as games which do not need network access can actively remove their access and hopefully build user trust.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

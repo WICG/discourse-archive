@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&ldquo;required&rdquo; attribute and alternatives</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&ldquo;required&rdquo; attribute and alternatives</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-01-11</div>
+          <div class="post_content">
+<p>After some answers received on <a href="https://github.com/whatwg/html/issues/400" rel="nofollow noopener">the Github Issue for HTML</a> I filed, I decided to make the same proposal here, in order to see if there can be some agreeing.</p>
+<p>Form validation is not meant to natively handle complex cases, as validity methods allow authors to program complex form validations. But there’s a use-case which could easily be supported, and in a sense it <em>is</em> already supported, that is, alternative “required” controls.</p>
+<p>When the <code>required</code> attribute is specified on radio buttons, it is required that one of the alternatives in the radio button group is selected. This cannot be different, for obvious reasons.</p>
+<p>There are other cases, though, when an alternative is required. For example when a user is requested to provide either a phone number or an email (in two different fields in order to benefit from “type” constraint validation), or to subscribe a newsletter, specifying at least one interest among a series of alternative with checkboxes (the user can specify more than one).</p>
+<p>So, my proposal is to extend the “required” behavior applied to radio groups to every group of form controls sharing the same <code>name</code> attribute value. Adding square brackets to names (<code>&lt;input name="foo[]" /&gt;</code>) allows server-side script to process more values sharing the same name, so there will be no issue in submitting more than one checked box or more than one filled-in field.</p>
+<p>EDIT: looks like square brackets aren’t even necessary for all server-side script languages (that is for PHP). Of course the whole proposal remains the same.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-01-13</div>
+          <div class="post_content">
+<p>Did you consider writing a polyfill that implements that functionality? It seems doable and will enable to gauge interest in such a feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-01-13</div>
+          <div class="post_content">
+<p>Yes, a prollyfill/draft seems the best way to go… Write it, see if you can get it to work for your own use cases - share it, get it to work for others, etc.  Especially for early authors (pronounced ‘anyone who wants to use this for the next several years’) this is probably necessary anyway.  There are still a number of browsers for example - modern ones - that don’t even prevent form submission for required input.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-01-13</div>
+          <div class="post_content">
+<p>I’m going to work on it by levels. I’ll make a polyfill for handling validation as specified in my post in browsers which actually prevent form submission when required fields are empty/unchecked. Then I’ll make something broader.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2016-01-16</div>
+          <div class="post_content">
+<p>What about allowing <code>required</code> on <code>&lt;fieldset&gt;</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-01-16</div>
+          <div class="post_content">
+<p>Would that mean that <em>all</em> elements inside a fieldset are required, or that at least <em>one</em> element is?</p>
+<p>The problem is that in such case the <code>validity</code> state of each element would depend on its ancestor <code>&lt;fieldset&gt;</code> element, if any.</p>
+<p>A theoretical question regarding <code>required</code> IDL attribute: when <span class="mention">@required</span> is specified on a radio button in a group, this makes the group required, even if the other buttons aren’t specified as required (although this practice is discouraged - however I’d suggest extending this behavior to all groups of elements defined by the same <code>name</code>). However, <code>element.required</code> returns true only for the element which actually has the attribute.</p>
+<p>Shouldn’t <code>required</code> be made equal for all buttons in a radio group? Ideally, they are not required, but the group they belong to is (consider that RadioButtonList is listed among <code>form.elements</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-01-17</div>
+          <div class="post_content">
+<p>However, you can test the polyfill from here:
+<a href="https://github.com/AndySky21/AlternativeRequired" rel="nofollow noopener">https://github.com/AndySky21/AlternativeRequired</a>.</p>
+<p>When applied to a page, element.validity.valueMissing returns true if all controls sharing the same name are empty/unchecked/unselected.</p>
+<p>Radio buttons and controls not referring to a form are excluded.</p>
+<p>EDIT: now it works better and applies to controls outside a form too (even if it is just a matter of consistency).</p>
+<p>EDIT#2 <span class="mention">@yoavweiss</span> and <span class="mention">@briankardell</span> the polyfill is done and covers my original use case but I’m not completely satisfied. I’m going to try <span class="mention">@Tigt</span> 's alternative (<code>required</code> on fieldsets) because it’s more elegant and avoids the issue of multiple controls with the same name. However, polyfill or not, it remains non-native. I hope it arrives further.</p>
+<p>EDIT#3 Done. Please help me make people know about it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-10-17</div>
+          <div class="post_content">
+<p>I’d like to know what scenario is preferred by those who took part in this thread, a common <code>name</code> attribute vs. allowing <code>required</code> on fieldset elements.</p>
+<p>As a side note, I noticed an oddity in how <code>required</code> IDL attribute and <code>:required</code> pseudo-class apply to radio buttons. In short, HTML spec states that a radio button list is required (i.e. one element must be checked) when at least one element has the <code>required</code> content attribute (this led me to my original proposal about required alternatives), even if the spec text advises authors against this practice.</p>
+<p>This makes the property and the pseudo class relatively useful, because while scripts and stylesheet could generally consider only the <code>required</code> content attribute, they do not apply to radio buttons in a required radio button list which do not have the attribute set.</p>
+<p>I think that IDL property and CSS selectors should reflect the “requiredness” of an element, rather than the presence of the attribute.</p>
+<p>I hope to receive some feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2016-11-30</div>
+          <div class="post_content">
+<p>Can you provide some sample markup to illustrate the exact type of use-case this is aiming to solve. I’ve found, if you analyze the situation and re-think how you mark things up you can typically come up with a fine alternative without needing to alter the existing form element specifications.</p>
+<p>I do think the <code>element.required</code> bit of the other radios in  a group should be considered a bug, due to the way radios inherently work.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

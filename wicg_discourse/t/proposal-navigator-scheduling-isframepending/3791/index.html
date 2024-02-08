@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] navigator.scheduling.isFramePending</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] navigator.scheduling.isFramePending</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-07</div>
+          <div class="post_content">
+<p>isFramePending is similar to the proposed <a href="https://wicg.github.io/is-input-pending/" rel="nofollow noopener">isInputPending API</a>. Whereas isInputPending signals that an input event has been received but not yet dispatched, isFramePending signals that the browser intends to update the visual display – including updating animations and running requestAnimationFrame callbacks – at the next opportunity.</p>
+<p>The goal is to provide web developers with more complete information about the state of the browser. With this information, javascript code can choose to defer work and yield control back to the browser in time to meet video refresh deadlines. The net effect should be fewer missed video frames (less jank).</p>
+<p><a href="https://github.com/szager-chromium/isFramePending/blob/master/explainer.md" rel="nofollow noopener">Explainer</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>It feels like the intent here is to allow some potentially long-running JS to yield back to the event loop, allowing the render steps to run.</p>
+<p>Given that, would <code>isFramePending</code> be true for pending frames that <em>aren’t</em> dependant on the main thread? Eg, compositor-driven animations &amp; scrolling.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2517_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnordine</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>I don’t get it. Wouldn’t the isFramePending API return the estimated duration till next display refresh? Not just a bool? What would that mean exactly?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p><span class="mention">@szager</span>, did you mean to link the explainer to <a href="https://github.com/szager-chromium/isFramePending/blob/master/explainer.md" rel="nofollow noopener">isFramePending</a> instead of isInputPending?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2517_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnordine</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p><span class="mention">@briankardell</span></p>
+<p>According to this Twitter reply, seems it was intentional, although I don’t see how they are similar enough to warrant simply linking to the other?</p>
+<aside class="onebox twitterstatus">
+<header class="source">
+<a href="https://twitter.com/stubbornella/status/1159196607411183616" rel="nofollow noopener" target="_blank">twitter.com</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="60" src="https://pbs.twimg.com/profile_images/1124039654800535552/wlCUQpq5_400x400.png" width="60"/>
+<h4>
+<a href="https://twitter.com/stubbornella/status/1159196607411183616" rel="nofollow noopener" target="_blank">
+    Nicole Sullivan (stubbornella)
+  </a>
+</h4>
+<div class="tweet">
+<a href="https://twitter.com/matthewcp" rel="nofollow noopener" target="_blank">@matthewcp</a> <a href="https://twitter.com/rachelnabors" rel="nofollow noopener" target="_blank">@rachelnabors</a> <a href="https://twitter.com/sarah_edo" rel="nofollow noopener" target="_blank">@sarah_edo</a> <a href="https://twitter.com/greensock" rel="nofollow noopener" target="_blank">@greensock</a> The link was intentional because the two APIs are related
+</div>
+<div class="date">
+<a href="https://twitter.com/stubbornella/status/1159196607411183616" rel="nofollow noopener" target="_blank">8:16 PM - 7 Aug 2019</a>
+<span class="like">
+<svg aria-hidden="true" height="16px" viewbox="0 0 512 512" width="14px">
+<path d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"></path>
+</svg> 1
+    </span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Seems the developer would want to know the duration remaining until the next display refresh? If it was just a bool, what would that even mean? Display refresh is guaranteed to happen, input isn’t. I must be misunderstanding though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>No, isFramePending would not be true for compositor-only animations. Long-running javascript won’t cause those animations to jank, so there’s no need to yield the main thread.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>Whoops, fixed; thanks for the catch.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>We initially investigated returning the estimated time until the next rendering deadline, as you suggest. Unfortunately, it’s not always possible to determine that number accurately; and an inaccurate time budget is in many ways worse than no time budget at all.</p>
+<p>The return value of isFramePending indicates that the browser intends to run the update the rendering steps without delay at the next opportunity (after the currently-running javascript task finishes). Developers would presumably use it like this:</p>
+<pre><code class="lang-auto">button.onclick = evt =&gt; {
+  doSomeWork();
+  if (isFramePending()) {
+    // Schedule the rest of the work to run after the rendering update
+    setTimeout(doMoreWork);
+  } else {
+    doMoreWork();
+  }
+};
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2517_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnordine</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<blockquote>
+<p>Unfortunately, it’s not always possible to determine that number accurately</p>
+</blockquote>
+<p>Anywhere I can read as to why that’s the case?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-09</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="3791">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnordine/40/2517_2.png" width="20"/> mnordine:</div>
+<blockquote>
+<p>Anywhere I can read as to why that’s the case?</p>
+</blockquote>
+</aside>
+<p>Not that I know of. The way rendering opportunities are identified varies significantly between browsers and also between operating systems. Some use software timers to match the cadence of the display hardware’s refresh rate, some rely on a signal from the OS.</p>
+<p>In general though, it’s possible to extrapolate the time of the next rendering opportunity fairly accurately if the browser has been generating frames steadily. But if the page has been idle and hasn’t produced an animation frame recently, and then the page’s DOM is modified in a way that requires a display update, it’s impossible to predict accurately when the next rendering opportunity will happen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JamesMilner</div>
+          <div class="creation_date">2019-08-09</div>
+          <div class="post_content">
+<p>To me this feels like a scheduling API and even mentions isInputPending as a counterpart. Is there a reason this isn’t in the navigator.scheduling namespace,  alongside isInputPending, rather than directly on window?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2376_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smfr</div>
+          <div class="creation_date">2019-08-16</div>
+          <div class="post_content">
+<p>To know “time to next frame” at any arbitrary point when JS is running requires that the browser be continually running a requestAnimationFrame-like refresh loop, since it has to know the last frame time to estimate the next frame time. That would mean that all idle pages have to be constantly running an update loop, which is a huge power drain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2376_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smfr</div>
+          <div class="creation_date">2019-08-16</div>
+          <div class="post_content">
+<p>A concern I have here is that this API exposes things that trigger rendering updates, which I don’t think is currently detectable. Consider:</p>
+<pre><code>let hasFrame = window.isFramePending(); // hasFrame is false
+foo.style.color = 'red';
+let hasFrameNow = window.isFramePending(); // hasFrameNow is true
+</code></pre>
+<p>Maybe that’s OK?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-16</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="11" data-topic="3791">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/j/ccd318/40.png" width="20"/> JamesMilner:</div>
+<blockquote>
+<p>To me this feels like a scheduling API and even mentions isInputPending as a counterpart. Is there a reason this isn’t in the navigator.scheduling namespace, alongside isInputPending, rather than directly on window?</p>
+</blockquote>
+</aside>
+<p>You are quite right, this was my mistake; it is meant to be navigator.scheduling.isFramePending.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-16</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="13" data-topic="3791">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/smfr/40/2376_2.png" width="20"/> smfr:</div>
+<blockquote>
+<p>A concern I have here is that this API exposes things that trigger rendering updates, which I don’t think is currently detectable. Consider:</p>
+<pre><code class="lang-auto">let hasFrame = window.isFramePending(); // hasFrame is false
+foo.style.color = 'red';
+let hasFrameNow = window.isFramePending(); // hasFrameNow is true
+</code></pre>
+<p>Maybe that’s OK?</p>
+</blockquote>
+</aside>
+<p>That’s a good point; for example, we wouldn’t want this to be a vector for visited-link exploits:</p>
+<pre><code class="lang-auto">&lt;a id=probe href="http://not-a-real-site.com"&gt;foo&lt;/a&gt;
+&lt;script&gt;
+probe.href = "http://www.amazon.com";
+if (navigator.scheduling.isFramePending()) {
+  // Frame was scheduled to paint the link with the "visited" color
+  browser_history_contains_amazon = true;
+}
+&lt;/script&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-16</div>
+          <div class="post_content">
+<p>Another chromium-specific concern comes to mind, which is that isFramePending may enable a process-isolated iframe to detect the fact that it is process-isolated. When an iframe is same-process, and the parent document invalidates style, then an animation frame will be scheduled for the entire in-process frame tree. But for a process-isolated iframe, an invalidation in the parent document will <em>not</em> cause the iframe process to schedule an animation frame.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2430_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">emilio</div>
+          <div class="creation_date">2019-08-18</div>
+          <div class="post_content">
+<p>Yeah, agreed… Depending on different optimizations or what not it may be different between engines. For example if the above happened on a disconnected subtree or on a display: none subtree Gecko has a fast way to skip the whole rendering update. Which means it’s going to be pretty hard to implement interoperably… But I guess the whole <code>navigator.scheduling</code> proposal is sorta like that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2019-08-20</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="15" data-topic="3791">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/s/f1d935/40.png" width="20"/> szager:</div>
+<blockquote>
+<pre><code class="lang-auto">&lt;a id=probe href="http://not-a-real-site.com"&gt;foo&lt;/a&gt; 
+&lt;script&gt; 
+probe.href = "http://www.amazon.com"; 
+if (navigator.scheduling.isFramePending()) { 
+// Frame was scheduled to paint the link with the "visited" color 
+browser_history_contains_amazon = true; 
+} &lt;/script&gt;
+</code></pre>
+</blockquote>
+</aside>
+<p>As I understand your suggested <code>isFramePending</code> method this is not a concern or problem at all. If something was changed in DOM or CSSOM the browser does know that style/layout is dirty and the browser has to recalculate it. But the browser does <strong>not</strong> know at this time how those changes affect style/layout - if at all, because this information is only available after the browser has calculated it which did not happen at this time.</p>
+<p>This means even a change from <code>http://not-a-real-site.com</code> to another <code>http://not-a-real-but-different-site.com</code> will make your <code>isFramePending()</code> return <code>true</code>. This is by design and you can’t change this.</p>
+<p>If you want <code>isFramePending()</code> to really know that a DOM change also results in a style and/or layout change the browser would need to synchronously calculate it and this is basically what you want to avoid.</p>
+<p>So my main question about this API is wether your API means something like: The browser has to recalculate style/layout because of something. (DOM/CSSOM changed, the user moved his mouse into a hitbox area or whatever).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="18" data-topic="3791">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/afarkas/40/2520_2.png" width="20"/> aFarkas:</div>
+<blockquote>
+<p>As I understand your suggested <code>isFramePending</code> method this is not a concern or problem at all. If something was changed in DOM or CSSOM the browser does know that style/layout is dirty and the browser has to recalculate it. But the browser does <strong>not</strong> know at this time how those changes affect style/layout - if at all, because this information is only available after the browser has calculated it which did not happen at this time.</p>
+<p>This means even a change from <code>http://not-a-real-site.com</code> to another <code>http://not-a-real-but-different-site.com</code> will make your <code>isFramePending()</code> return <code>true</code> . This is by design and you can’t change this.</p>
+</blockquote>
+</aside>
+<p>I tried an experiment and you’re right: chromium will schedule a frame when the href attribute changes, regardless of whether the link color changed.</p>
+<p>It’s not true, though, that the browser can’t detect the style change without computing style. Chromium actually handles the href attribute as a special case and <em>always</em> schedules a frame when it changes, for the very purpose of defeating these kinds of exploits.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2019-08-22</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="19" data-topic="3791">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/s/f1d935/40.png" width="20"/> szager:</div>
+<blockquote>
+<p>I tried an experiment and you’re right: chromium will schedule a frame when the href attribute changes, regardless of whether the link color changed.</p>
+<p>It’s not true, though, that the browser can’t detect the style change without computing style. Chromium actually handles the href attribute as a special case and <em>always</em> schedules a frame when it changes, for the very purpose of defeating these kinds of exploits.</p>
+</blockquote>
+</aside>
+<p>I don’t know your test setup but saying it would be a special case that is done solely because of this exploit possibility is quite far fetched. (But of course I don’t know how you are coming to this conclusion).</p>
+<p>Of course browsers might have some performance optimizations built in which make sure that some DOM changes do not invalidate layout. But these have to be very simple and fast because they have to happen sync otherwise calculation of these would degrade performance instead.</p>
+<p>In case of the link I would assume that it is not because of the exploit but simply because there is a selector <code>:visited</code> which might match or not and calculating wether it matches is already a performance degradation.</p>
+<p>If your test setup looked something like this:</p>
+<pre><code class="lang-auto">&lt;div&gt;&lt;/div&gt;
+&lt;script&gt;
+	document.body.onclick = () =&gt; {
+		document.querySelector('div').setAttribute('data-foo', '1');
+		console.log(document.querySelector('div').getBoundingClientRect());
+	}
+&lt;/script&gt;
+</code></pre>
+<p>You can trick chrome by simply adding an empty selector matching the attribute:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+input[data-foo] {
+
+}
+&lt;/style&gt;
+&lt;div&gt;&lt;/div&gt;
+&lt;script&gt;
+	document.body.onclick = () =&gt; {
+		document.querySelector('div').setAttribute('data-foo', '1');
+		console.log(document.querySelector('div').getBoundingClientRect());
+	}
+&lt;/script&gt;
+</code></pre>
+<p>At the end my main point was that this can’t be used as an exploit.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Nascent Proposal: keyboard navigation of headings and HTML5 &lsquo;landmark&rsquo; elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Nascent Proposal: keyboard navigation of headings and HTML5 &lsquo;landmark&rsquo; elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<p><strong>Problem description:</strong> Keyboard only users get an onerous user experience when navigating content on web pages because they can only use the tab key to move through focusable elements.</p>
+<p>For example: the <a href="http://www.theguardian.com/uk" rel="nofollow noopener">guardian.com</a> home page has <a href="http://s.codepen.io/stevef/debug/VLGKvB?" rel="nofollow noopener">535 links</a>, 100 buttons and various other elements that are included in the focus order… It does provide an affordance for keyboard only users via a ‘skip to main content’ link which skips over 135 links. This leaves 400+ focusable elements to tab through. The page has 91 correctly marked up headings. It also has a mixture of ARIA landmark roles and HTML5 elements that map to landmark roles.</p>
+<p><strong>Suggestion:</strong> By implementing an interoperable keyboard navigation system in UA’s (that support keyboard input) the amount of keystrokes a user requires to navigate to and interact with page content can be significantly reduced. It will also mean that developers don’t have to bolt on navigation affordances (skip links) for users and web content will automatically conform (if headings and/or HTML5 header/main/footer elements are used) to the <a href="http://www.w3.org/TR/2007/WD-UNDERSTANDING-WCAG20-20071211/navigation-mechanisms-skip.html">WCAG 2 bypass blocks criteria</a>.</p>
+<p>Related reading:</p>
+<ul>
+<li><a href="https://docs.google.com/document/d/11yzSsHorM3mkG8fLk_etdY-jcpYjZIHAKT3qDzkuyMI/edit?usp=sharing" rel="nofollow noopener">Firefox integrated landmark navigation</a></li>
+<li>
+<a href="http://webaim.org/discussion/mail_thread?thread=7035" rel="nofollow noopener">Bypass blocks thread</a> on Webaim
+mailing list</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<p>That sounds extremely useful!
+Would such a mechanism be Web exposable in any way, or is it just something that UAs need to implement?</p>
+<p>/cc <span class="mention">@RickByers</span> <span class="mention">@jacobrossi</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="948">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>Would such a mechanism be Web exposable in any way, or is it just something that UAs need to implement?</p>
+</blockquote>
+</aside>
+<p>It can/has been done via DOM and JavaScript, also <a href="http://www.456bereastreet.com/archive/201003/heading_navigation_in_web_browsers/" rel="nofollow noopener">Opera pre blink</a> provided built in keyboard navigation. I suggest that in order to achieve a robust interoperable navigation feature UA’s need to implement.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<p>I’ll further add that users of assistive technologies (such as screen readers) who navigate with the keyboard usually have some advanced keyboard navigation mechanisms provided by the AT (e.g. navigating by heading or landmark - be it a structural element or something denoted with <code>role="..."</code>). The one user group currently left out high and dry are sighted, non-AT-using keyboard users.</p>
+<p>Additionally, worth noting that there are some extensions that try to add this functionality, but that currently they have to wastefully walk the entire page’s DOM to not only try to match specific elements (e.g. look for all instances of <code>&lt;h1&gt;</code>, <code>&lt;h2&gt;</code>, <code>&lt;nav&gt;</code> etc), but then ALSO check all elements for the possible presence of a <code>role="..."</code> that may have blessed the element with a different mapping. As browsers internally already assign the correct role to elements (i.e. they know that an element <code>&lt;nav&gt;</code> has a navigation role, same as any arbitrary <code>&lt;div role="navigation"&gt;</code>), it would at least be nice if browsers also exposed their built-in/calculated roles, so that an extension can avoid having to parse the entirety of the DOM and only select them by their role. See part of the discussion here <a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=27294">https://www.w3.org/Bugs/Public/show_bug.cgi?id=27294</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<p>What I’m trying to understand is if this is something that should be Web exposed (i.e. Web developers would have to do something with it), Extension exposed (i.e. extension developers would have to do something to help users with it) or simply a browser UI feature.</p>
+<p>From what I understand so far, it’s mostly the latter two: We want browsers to expose some UI to users that would help them skip to the “important” parts of the page (where “important” is decided by the user, based on ARIA roles and heuristics), and possibly expose the same to extensions, so that extensions devs can also do the same, creating possibly better adapted UIs to their audience.</p>
+<p>Is that correct?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="948">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>simply a browser UI feature</p>
+</blockquote>
+</aside>
+<p>Is what i suggest, as otherwise it would be too fragmented and patchy in implementation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<p>Cool! In that case, I think there’s no spec/standardization needed.</p>
+<p>Just need to bug the corresponding browser folks <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/650_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">deborahgu</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="5" data-topic="948">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>What I’m trying to understand is if this is something that should be Web exposed (i.e. Web developers would have to do something with it)</p>
+<p>…</p>
+<p>We want browsers to expose some UI to users that would help them skip to the “important” parts of the page</p>
+</blockquote>
+</aside>
+<p>+1 to this. Web developers have already done something, namely, they have marked up their HTML correctly with HTML 5 semantics and, potentially, WAI-ARIA. That’s all of the information they need to add to allow users to identify (and therefore jump to) the important parts of the page. Now there just needs to be a browser UI enabling access to those existing semantics.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="948">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>I think there’s no spec/standardization needed.</p>
+</blockquote>
+</aside>
+<p>I think that the feature would benefit from some sort of spec/standardisation/guidance doc, so we can get agreement (or not) on how the feature will work. Guess I should throw something together…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="948">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stevef/40/80_1.png" width="20"/> SteveF:</div>
+<blockquote>
+<p>I think that the feature would benefit from some sort of spec/standardisation/guidance doc, so we can get agreement (or not) on how the feature will work.</p>
+</blockquote>
+</aside>
+<p>Isn’t that what the HTML Outline and ARIA specs are?</p>
+<p>Details past that (what keys perform what operations etc) seem like UA concerns, in line with <span class="mention">@yoavweiss</span>’s <a href="https://gitter.im/WICG/admin?at=55af58feb7cc57de1d575ae3" rel="nofollow noopener">thoughts from Gitter</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1826_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sideshowbarker</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>I don’t completely understand this proposal but I do know that there’s a sort of gray area with respect to standardization of what implementations expose to AT software through platform accessibility APIs. What I mean is, it seems like there are certain behaviors that, while not exposed to Web content in a way that needs to be standardized, are exposed to AT software through platform accessibility APIs.</p>
+<p>So maybe this idea kinda falls into that gray area? I dunno in this specific case but I do know that <span class="mention">@SteveF</span> has had some success in the past at writing specs related to that stuff that has to do with that platform-accessibility-API layer.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1828_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">heydonworks</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>Thank you, Steve.</p>
+<p>Okay, so I’ve been thinking about this too and I kind of came round to a PC gaming metaphor. In games I used to play like Carmageddon, there was a screen where you could customize key combinations for certain actions. For instance, SPACE for accelerate might be the default but you could change it to ALT or whatever.</p>
+<p>What I’d like to see in browsers is a browser chrome menu option which is already keyboard accessible where you can easily set custom keyboard commands for certain actions. So maybe there’d be a field for landmarks where you could focus an input and simply press a combination of keys and those keys would be set. I think I might set ALT + TAB for going to the next landmark and ALT + SHIFT + TAB for going to the previous landmark. The UA would then apply a UA style for focusing the landmarks via these shortcuts.</p>
+<p>You could have an option for saving kbd shortcut combinations just for that web page / domain or as default for all your browsing and could specify overrides where you felt certain pages needed different shortcuts.</p>
+<p>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@heydonworks</span>, all</p>
+<p>I think this is an important question, but different from the one Steve asked.</p>
+<p>So I started a <a href="//discourse.wicg.io/t/keyboard-shortcuts-need-to-be-configurable/963">different thread</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2015-07-26</div>
+          <div class="post_content">
+<p>Related Guidance for UA implementers:</p>
+<blockquote>
+<p><strong>2.5.2 Provide Structural Navigation by Heading and within Tables:</strong><br/>
+The user agent provides at least the following types of structural navigation, where the structure types are recognized:</p>
+</blockquote>
+<ul>
+<li>By heading</li>
+<li>By content sections</li>
+<li>Within tables</li>
+</ul>
+<blockquote>
+<p><strong>Intent  of  Success Criterion 2.5.2:</strong>
+Users who find it difficult or impossible to use the mouse
+require an efficient way to jump among elements without   having to
+navigate through intervening content. Navigating by heading   is
+especially important when scanning a web page to find a pertinent  section. Navigating by table element is especially important when  building or reading tables.</p>
+</blockquote>
+<p><a class="onebox" href="http://www.w3.org/TR/2014/WD-UAAG20-Reference-20140925/#sc_252" target="_blank">http://www.w3.org/TR/2014/WD-UAAG20-Reference-20140925/#sc_252</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

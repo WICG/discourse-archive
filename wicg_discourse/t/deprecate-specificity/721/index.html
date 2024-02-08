@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Deprecate specificity?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Deprecate specificity?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/506_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wheresrhys</div>
+          <div class="creation_date">2014-12-21</div>
+          <div class="post_content">
+<p>Specicifity causes huge problems when working on large projects. Approaches such as SMACSS, BEM, &amp; OOCSS mitigate the problem somewhat, but it feels to me like a better long term solution would be to deprecate specicifity (with the exception of <code>!important</code> or inline styles) and rely purely on the source order for choosing which rule to apply.</p>
+<p>I’m not sure what mechanism could be used to deliver this deprecation. Perhaps an attribute on <code>&lt;style&gt;</code>  and <code>&lt;link&gt;</code> tags, ignored by older browsers. Or a new tag (<code>&lt;link&gt;</code> is a weird choice of tag for including styles anyway if you ask me). Or an accepts header to allow the server to send different styles to different browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-12-22</div>
+          <div class="post_content">
+<p>Allow me to explore the issue and my initial thoughts.</p>
+<p>This does cause code management issues in larger sites where multiple teams work on areas of the style and markup of a site; however I feel this is best managed by code review and testing.</p>
+<p>I question however if by simplifying specificity would reduce the issues at hand. In a big organisation when different teams are completely fragmented from another their CSS might be pushed higher up the list of compiled CSS breaking all their styles.</p>
+<p>This wouldn’t be an issue if CSS had some inherent dependency tree to manage order however I feel this would quickly become a requirement if specificity was dropped.</p>
+<p>For example:</p>
+<pre><code class="lang-auto">//Team one CSS
+.component-name strong {
+  color: blue;
+}
+
+...
+
+//Team two css
+strong {
+  color: red;
+}
+</code></pre>
+<p>Currently the ordering allows for the following thought process to styling all strong tags:</p>
+<ul>
+<li>Add strong tag rule to CSS</li>
+<li>Check results for styles</li>
+<li>See that a library has set a more specific rule, either:
+<ul>
+<li>Replace the rules</li>
+<li>Create more specific rules than the library</li>
+<li>Modify HTML to add extra anchors around the library code (New classes, id’s or wrapping html)</li>
+</ul>
+</li>
+</ul>
+<p>The appeal is the no specificity process:</p>
+<ul>
+<li>Append strong tag to end of CSS rules</li>
+</ul>
+<p>However what I feel the first gives designers is an ability to add semantic meaning to the files rather than a fight for the most important CSS.</p>
+<pre><code class="lang-auto">&lt;div class="my-component"&gt;
+  &lt;h1&gt;Heading&lt;/h1&gt;
+  &lt;p&gt;Text here&lt;/p&gt;
+&lt;/div&gt;
+&lt;h1 class="super-important"&gt;Heading&lt;/h1&gt;
+</code></pre>
+<pre><code class="lang-auto">.my-component  h1 {
+  color: red;
+}
+h1.super-important {
+  color: purple;
+}
+h1 {
+  color: blue;
+}
+</code></pre>
+<p>Rather than classifying the meaning of the h1 actually you are doing the reverse, meaning that developers won’t be promoted to add meaning. What the style based systems you mention give is adding in extra meaning to the HTML further classifying what the tags mean.</p>
+<p>If anything I would drop !important as it causes a quick line of abuse to CSS files ending in a constant struggle to becoming the most important. Rather than actually fixing the specific case of HTML that you care about at the time, you rectify this by adding !important. When further changes are required there is no way to rectify the nest of !important that has been added to just  add the styles that team needs. The same I feel applies to fighting to be the end of the CSS file.</p>
+<p>That being said for utility classes like mentioned in the following article I agree important ‘could’ be the right solution here (However I prefer to ban it in CSS):
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<a href="https://css-tricks.com/when-using-important-is-the-right-choice/" rel="nofollow noopener" target="_blank" title="09:20PM - 22 May 2011">CSS-Tricks – 22 May 11</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail" height="" src="" width=""/>
+<h3><a href="https://css-tricks.com/when-using-important-is-the-right-choice/" rel="nofollow noopener" target="_blank">When Using !important is The Right Choice | CSS-Tricks</a></h3>
+<p>Using !important rules can be a dangerous road to start going down, but they exist for a reason. There are some good use cases which we'll cover here.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<h2>Deprecation issues</h2>
+<p>In terms of deprecation it is the same issue that plagues evolving JavaScript; Its not brilliant to evolve the language this way by deprecating features.</p>
+<p>Worth reading: <a href="http://www.2ality.com/2014/12/one-javascript.html" rel="nofollow noopener">http://www.2ality.com/2014/12/one-javascript.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-12-28</div>
+          <div class="post_content">
+<p>Also another reason I think this isn’t required is the future of web components will be solving the problems I believe you are trying to address here.</p>
+<p>You mention using CSS approaches to solve specificity. However I think this is better solved by web components, shadow DOM and the related improvements to CSS given around this. All styles inserted within shadow DOM are then scoped.</p>
+<p>Preview the following example (Works in Chrome): <a href="http://jsfiddle.net/qvgyt34g/3/" rel="nofollow noopener">http://jsfiddle.net/qvgyt34g/3/</a></p>
+<pre><code class="lang-auto">  &lt;my-heading icon="user"&gt;
+    My important heading
+  &lt;/my-heading&gt;
+</code></pre>
+<p>Could use the following template:</p>
+<pre><code class="lang-auto">  &lt;template id="myheadingtemplate"&gt;
+    &lt;div&gt;
+      &lt;i class="icon"&gt;&lt;/i&gt;
+      &lt;h1&gt;
+        &lt;content&gt;&lt;/content&gt;
+      &lt;/h1&gt;
+      &lt;a href="#" &gt;#&lt;/a&gt;
+    &lt;/div&gt;
+    &lt;style&gt;
+        h1 {display: inline-block;}
+    &lt;/style&gt;
+  &lt;/template&gt;
+</code></pre>
+<p>The following JavaScript would be used to define the component:</p>
+<pre><code class="lang-auto">var myHeadingPrototype = Object.create(HTMLElement.prototype);
+
+myHeadingPrototype.createdCallback = function() {
+  var shadow = this.createShadowRoot();
+  var template = document.querySelector('#myheadingtemplate');
+  var clone = document.importNode(template.content, true);
+  shadow.appendChild(clone);
+};
+
+var MyHeading = document.registerElement('my-heading', {prototype: myHeadingPrototype});
+</code></pre>
+<p>Would be the equivalent of writing something like:</p>
+<pre><code class="lang-auto">    &lt;div class="my-heading"&gt;
+      &lt;i class="icon"&gt;&lt;/i&gt;
+      &lt;h1&gt;
+        &lt;content&gt;&lt;/content&gt;
+      &lt;/h1&gt;
+      &lt;a href="#" &gt;#&lt;/a&gt;
+    &lt;/div&gt;
+</code></pre>
+<p>With the CSS:</p>
+<pre><code class="lang-auto">.my-heading h1 {display: inline-block;}
+</code></pre>
+<p>However the Shadow DOM variant allows nesting of many of the same components within each other without CSS colliding.</p>
+<p>Further info on how this can be extended here: <a href="http://www.html5rocks.com/en/tutorials/webcomponents/shadowdom-201/" rel="nofollow noopener">http://www.html5rocks.com/en/tutorials/webcomponents/shadowdom-201/</a></p>
+<p>From what I know there isn’t a way to import CSS currently into shadow DOM (link element is an inert in the spec) besides using <span class="mention">@imports</span>.</p>
+<p>However once the browser support matures I suspect I will be combining JS,  and CSS/LESS/SASS behind the scenes into one delivery via <code>&lt;link rel="import"s</code>.</p>
+<p>In the example I threw together above: <a href="http://jsfiddle.net/qvgyt34g/3/" rel="nofollow noopener">http://jsfiddle.net/qvgyt34g/3/</a> this shows that in a short amount of code we soon will be able to abstract away code that we want to change less frequently. You can see also that we gain with reduced specificity on CSS selectors in the templates due to them being scoped.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Libertardian</div>
+          <div class="creation_date">2015-01-01</div>
+          <div class="post_content">
+<p>The way the web platform is expected to evolve precludes the idea of deprecation per se. Breaking changes are not tolerated and even non-standard things like Flash or weird proprietary IE extensions will still have corners of the internet that require them until the end of time.</p>
+<p>Modern browsers are still expected to be able to read old documents and that includes ones which rely on particular specificity rankings to generate the final styling. Likewise, if we had the ability for a modern document to claim a particular specificity ranking, it’s styling would also change in old browsers. The latter approach is at least feasible in that it’s roughly what we did with “use strict”. However, in strict-mode JS, it’s unlikely that an otherwise strict-mode and legacy compatible program will fail if run on a non-strict mode browser.</p>
+<p>With a no-specificity mode for CSS, you have to write your styling to have the same result in both cases, which increases the test matrix for cross-browser testing. The transition period will be unfavorable to progressive enhancement techniques other than ensuring that your stylesheet has all the same specificity selectors already.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

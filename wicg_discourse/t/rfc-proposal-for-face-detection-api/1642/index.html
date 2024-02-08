@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>RFC: Proposal for Face detection API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">RFC: Proposal for Face detection API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1033_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">miguelao</div>
+          <div class="creation_date">2016-08-05</div>
+          <div class="post_content">
+<p>Strawman proposal for a Face (and other objects) detection API: <a href="https://github.com/miguelao/face-detection" rel="nofollow noopener">https://github.com/miguelao/face-detection</a></p>
+<p>Photos and images constitute the largest chunk of the Web, and many include recognisable features, such as human faces. Detecting these features is computationally expensive, but would lead to interesting use cases e.g. face tagging or detection of high saliency areas. Also, users interacting with WebCams or other Video Capture Devices have become accustomed to camera-like features such as the ability to focus directly on human faces on the screen of their devices. This is particularly true in the case of mobile devices, where hardware manufacturers have long been supporting these features. Unfortunately, Web Apps do not yet have access to these hardware capabilities, which makes the use of compuationally demanding libraries necessary.</p>
+<h1>Use cases</h1>
+<ul>
+<li>Live video feeds would like to identify faces in a picture/video as highly salient areas to e.g. give hints to image or video encoders.</li>
+<li>Social network pages would like to quickly identify the human faces in a picture/video and offer the user e.g. the possibility of tagging which name corresponds to which face.</li>
+<li>Face detection is the first step before Face Recognition: detected faces are used for the recognition phase, greatly speeding the process.</li>
+<li>Fun! you can map glasses, funny hats and other overlays on top of the detected faces</li>
+</ul>
+<h1>Possible future use cases</h1>
+<ul>
+<li>Hardware vendors provide detectors for other items in widespread use, notably QR codes and text.</li>
+</ul>
+<h1>Current Workarounds</h1>
+<ul>
+<li>Some Web Apps -gasp- run Face Detection in Javascript. A performance comparison of some such libraries can be found in <a href="https://github.com/mtschirs/js-objectdetect#performance" rel="nofollow noopener">https://github.com/mtschirs/js-objectdetect#performance</a>.</li>
+</ul>
+<h1>Potential for misuse</h1>
+<ul>
+<li>Face Detection is an expensive operation due to the algorithmic complexity. Many requests, or demanding systems like a live stream feed with a certain frame rate, could slow down the whole system or greatly increase power consumption.</li>
+</ul>
+<h1>Platform specific implementation notes</h1>
+<h2>Mac OS X / iOS</h2>
+<p>CoreImage library includes a <code>CIDetector</code> class that provides not only Face Detection, but also QR, Text and Rectangles.</p>
+<ul>
+<li><a href="https://developer.apple.com/library/mac/documentation/CoreImage/Reference/CIDetector_Ref/" rel="nofollow noopener">CIDetector class, Mac OS X</a></li>
+<li><a href="https://developer.apple.com/library/ios/documentation/CoreImage/Reference/CIDetector_Ref/" rel="nofollow noopener">CIDetector class, iOS</a></li>
+</ul>
+<h2>Android</h2>
+<p>Android provides a stand alone <code>FaceDetector</code> class. It also has a built-in for detecting on the fly while capturing video or taking photos, as part of the <code>Camera2</code>s API.</p>
+<ul>
+<li><a href="https://developer.android.com/reference/android/media/FaceDetector.html" rel="nofollow noopener">Android FaceDetector</a></li>
+<li><a href="https://developer.android.com/reference/android/hardware/camera2/CaptureRequest.html#STATISTICS_FACE_DETECT_MODE" rel="nofollow noopener">Camera2 CaptureRequest</a></li>
+</ul>
+<h1>Rough sketch of a proposal</h1>
+<pre><code class="lang-auto">typedef (HTMLImageElement or
+         HTMLVideoElement or
+         HTMLCanvasElement or
+         Blob or
+         ImageData or
+         ImageBitmap) ImageBitmapSource;
+
+partial interface navigator {
+  Promise &lt;sequence&lt;DOMRect&gt;&gt; detectFaces(ImageBitmapSource);
+};
+</code></pre>
+<h1>Usage</h1>
+<p>Simple example</p>
+<pre><code class="lang-auto">navigator.detectFaces(image).then(boundingBoxes =&gt; {
+  for (const face of boundingBoxes) {
+    console.log(`Face detected at (${face.x}, ${face.y}) with size ${face.width}x${face.height}`);
+  }
+}).catch(() =&gt; {
+  console.error("Face detection failed");
+});
+</code></pre>
+<h1>Notes</h1>
+<ul>
+<li>Using a particular Face Detector does not preclude using others, in this case the hardware provided can provide seeds or weights for user-defined ones.</li>
+<li>Why does Face Detection have such terrible Complexity? The most/best typical algorithm used is the so-called Viola-Jones that uses a cascade of classifiers of different sizes and gives a horrendous O(n^4) - this <a href="https://vimeo.com/12774628" rel="nofollow noopener">video</a> exemplifies how the detection process works.</li>
+</ul>
+<h1>Open questions</h1>
+<p>template knocked off <span class="mention">@marcosc</span> <a href="https://discourse.wicg.io/t/media-controls-api/718">Media Controls API</a> <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-08-06</div>
+          <div class="post_content">
+<p>I.Love.This! And making it a promise is awesome.</p>
+<p>Just a few things that I’m thinking:</p>
+<ol>
+<li>Can this proposal be extended to incorporate video also… in maybe some other method that accepts a range of frames? For instance, it would be nice to throw it a video object and find out which frames or time ranges have which faces.</li>
+<li>
+<del>It would be nice to see this concept abstracted a bit more to detect things other than faces–like objects (ie. glasses, hats, etc as you mentioned). But detecting faces is an awesome start!</del> Probably unlikely given that this assumes some sort of registry of all possible strings that represent objects, which seems wayyy too complicated and assuming for such a low-level implementation.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-08-08</div>
+          <div class="post_content">
+<p>I’m supportive of this (so, consider a +1 from Mozilla). I’m not a huge fan of throwing it on Navigator, but that’s just a bikeshedding. Generally, the shape looks good. We should maybe build a prototype in iOS or Android using a webview?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenchris</div>
+          <div class="creation_date">2016-08-08</div>
+          <div class="post_content">
+<p>I totally agree, I would want this to work for node.js applications as well. For Crosswalk we already experimented with such APIs, so I will let my co-workers aware of this proposal</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenchris</div>
+          <div class="creation_date">2016-08-08</div>
+          <div class="post_content">
+<p>This might be of interest: <a href="https://crosswalk-project.github.io/realsense-extensions-crosswalk/spec/face.html" rel="nofollow noopener">https://crosswalk-project.github.io/realsense-extensions-crosswalk/spec/face.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-08-08</div>
+          <div class="post_content">
+<p>Speaking with <span class="mention">@marcosc</span> it appears there are low level support in the OS and hardware for this which is great.</p>
+<p>However we should gauge how similar the APIs detect faces.</p>
+<p>What other OS’s have support for this, for example Windows and Linux support?</p>
+<p>Could we extend this to take shape meta data to work on any sort of shape detection? I realise that the meta data size for this may end up making this a problem.</p>
+<p>Should realtime head tracking be something that requires additional auth from the user? (I’m going to say no purely based on the info being there from WebRTC to a server however it may make it more prevalent)</p>
+<h1>Use cases</h1>
+<ul>
+<li>Head tracking for video or VR</li>
+<li>Presence checking to stop and start video</li>
+</ul>
+<h1>Possible future use cases</h1>
+<ul>
+<li>Websites requiring users to stare at an advert for a certain length of time.</li>
+</ul>
+<h1>Potential for misuse</h1>
+<ul>
+<li>More sites to require camera to presence check the user</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenchris</div>
+          <div class="creation_date">2016-08-08</div>
+          <div class="post_content">
+<p>At least it should be supported on Windows and Linux with the Intel RealSense camera.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-08-09</div>
+          <div class="post_content">
+<p>There has been some great <a href="https://twitter.com/marcosc/status/762585697022644224">feedback on twitter</a>. Most actionable feedback, is to generalize the API to detect shapes instead: So, <code>whatevs.detect("faces", image)</code> or <code>image.detect("other-detectable-thing")</code> or some such.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2016-08-09</div>
+          <div class="post_content">
+<p>+1!</p>
+<p>I was working on the Crosswalk experimental <a href="http://crosswalk-project.github.io/realsense-extensions-crosswalk/spec/face.html" rel="nofollow noopener">Face Tracking and Recognition API</a>. I am happy to see this proposal and would like to contribute.</p>
+<p>As my understanding, current API models <a href="https://developer.android.com/reference/android/media/FaceDetector.html" rel="nofollow noopener">Android FaceDetector</a>, it works great on still image. For face detecting and tracking on live video capture, probably we need another API which models <a href="https://developer.android.com/reference/android/hardware/camera2/CaptureRequest.html#STATISTICS_FACE_DETECT_MODE" rel="nofollow noopener">Android Camera2 Face Detector</a>. It works with Media Stream and targets real-time usages.</p>
+<h2>Rough sketch of Face Detector</h2>
+<pre><code class="lang-auto">[Constructor(MediaStream stream)]
+interface FaceDetector : EventTarget {
+    readonly        attribute MediaStream       stream;
+                    attribute EventHandler      onerror;
+                    attribute EventHandler      onfacedetected;
+};
+
+[Constructor(DOMString type, FaceDetectionEventInit eventInitDict)]
+interface FaceDetectionEvent : Event {
+  readonly attribute &lt;Sequence&lt;Face&gt;&gt; faces;
+};
+
+dictionary FaceDetectionEventInit : EventInit {
+  &lt;Sequence&lt;Face&gt;&gt; faces;
+};
+</code></pre>
+<h2>Usage</h2>
+<pre><code class="lang-auto">navigator.mediaDevices.getUserMedia(constraints).then(stream =&gt; {
+  var fd = new FaceDetector(stream);
+
+  fd.onfacedetected = function(event) {
+    for (const face of event.faces) {
+      console.log(`Face detected at (${face.x}, ${face.y}) with size ${face.width}x${face.height}`);
+    }
+  }
+});
+</code></pre>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1033_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">miguelao</div>
+          <div class="creation_date">2016-08-09</div>
+          <div class="post_content">
+<p>From the POV of the algorithms behind the scenes (Haar cascade classifier), all object detection, e.g. Faces, letters, QR codes, is a similar task; I even wrote the <a href="https://github.com/miguelao/face-detection#possible-future-use-cases" rel="nofollow noopener">Possible future use cases</a> section mentioning QR codes (which AFAIK are only available in iOS -not MacOSX- AVFoundation library <a href="https://developer.apple.com/library/ios/documentation/CoreImage/Reference/CIDetector_Ref/#//apple_ref/doc/constant_group/Detector_Types" rel="nofollow noopener">here</a>). So, generalizing the API to detect any object type(s) would not be daunting.</p>
+<p>In that case, and mimicking IIRC the OpenCV classifier, we might need to extend the result so that detected objects can refer to others as “parents”, i.e. detected eyes or mouths have a face as parent etc. For completion, some APIs also have a last parameter <code>confidence</code> indicating how certain the detection result is (0.0- none, 1.0- über sure <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> ). But I’ve never seen OS/hardware implementations that sophisticated, hence I left it out of the proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<p>Again, we probably want to generalize this to shapes, one of which is “face(s)”. The shapes would be represented by DOMRects, as per the original proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<blockquote>
+<p>So, generalizing the API to detect any object type(s) would not be daunting.</p>
+</blockquote>
+<p>What about having some way of checking the supported types by the sub-system?</p>
+<pre><code class="lang-auto">Detector.canDetect(type)
+</code></pre>
+<p>Or just a <code>Detector.acceleratedTypes</code> or some such? then the developer can make a choice in their code path about falling back to a library if need be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<p><code>DOMRect</code> is good to describe the bonding box. And probably we also want other attributes of a Face, e.g. the orientation, the landmarks position, the emotion, the face ID, the recognition ID etc.,</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<blockquote>
+<p>DOMRect is good to describe the bonding box. And probably we also want other attributes of a Face, e.g. the orientation, the landmarks position, the emotion, the face ID, the recognition ID etc.,</p>
+</blockquote>
+<p>But, we need to check how interoperable all that is. My understanding is that these APIs are pretty dumb at the HW/OS platform level? Can we get that info across multiple OSs?</p>
+<p>We should only provide primitives, on which developers can build more sophisticated stuff.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<aside class="quote">
+<blockquote>
+<p>But, we need to check how interoperable all that is. My understanding is that these APIs are pretty dumb at the HW/OS platform level? Can we get that info across multiple OSs?</p>
+</blockquote>
+</aside>
+<p>I think the HW/OS platform capability is catching up. Just have a quick check of the face detection features:</p>
+<h3>Mac OS X / iOS</h3>
+<p><a href="https://developer.apple.com/library/ios/documentation/CoreImage/Reference/CIFaceFeature/index.html#//apple_ref/occ/instp/CIFaceFeature/bounds" rel="nofollow noopener">CIFaceFeature</a>: face bounds, angle, landmarks (left eye, right eye, mouth), expression (smile, eye close), tracking ID (for video)</p>
+<h3>Android</h3>
+<p><a href="https://developer.android.com/reference/android/media/FaceDetector.Face.html" rel="nofollow noopener">FaceDetector.Face</a>: face pose, left eye and right eye position (with eyes distance and middle point)
+<a href="https://developers.google.com/android/reference/com/google/android/gms/vision/face/Face" rel="nofollow noopener">com.google.android.gms.vision.face.Face</a>: face bounds (with position, width and height), rotation, landmarks (mouth, cheek, ear, eye, nose), expression (eye close, smile), face ID</p>
+<h3>RealSense SDK for Windows</h3>
+<p><a href="https://software.intel.com/sites/landingpage/realsense/camera-sdk/v1.1/documentation/html/index.html?doc_face_face_tracking_and_recognition.html" rel="nofollow noopener">Face Tracking and Recognition</a>: bounds, pose, landmarks (77 points of eye, eyebrow, nose, mouth and cheek), expression (smile, eye close and eye/eyebrow/mouse movements), face ID</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<p>Awesome, Ningxin_Hu! thanks for those links. Ok, we might indeed be able to do something a bit more sophisticated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1033_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">miguelao</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<ol>
+<li>
+<p>I’m totally +1 for making this a Shape Detector API, will update the GitHub, or I’m happy to review PRs</p>
+</li>
+<li>
+<p>I wanted to keep this API centered on Face Detection on still images as opposed to the (harder?) problem of Face Tracking on live streams, or the tangential problem of Face Recognition; I thought that would ease its implementation <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> – we could just bundle the two in a single spec with capabilities for both still and live images, SG?</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1033_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">miguelao</div>
+          <div class="creation_date">2016-08-10</div>
+          <div class="post_content">
+<p>My previous experiences with OpenCV and the “extra” results (e.g. face orientation) were somehow disappointing, but that should not prevent us/the API from offering them if they’re available, so it SGTM.</p>
+<p>Condensing the previous comments (<span class="mention">@Ningxin_Hu</span>, <span class="mention">@marcosc</span>) and for the still image case, we could have an API working in the lines of:</p>
+<pre><code class="lang-auto">navigator.detectShapes('faces', image).then(detectedShapes =&gt; {
+
+)}.catch ...
+</code></pre>
+<pre><code class="lang-auto">enum ShapeType {
+    "face",
+    "qr",
+    "letter",
+    // etc ...
+};
+
+interface DetectedShape {
+    readonly attribute DOMRect location;
+    readonly attribute ShapeType type;
+    readonly attribute ExtrasDictionary extras; // e.g. {'confidence' : 0.9} etc
+};
+</code></pre>
+<p><span class="mention">@marcosc</span> instead of having an enumerator function detailing what is supported (i.e. “face” etc), I thought better to reject the <code>detectShapes()</code> Promise, would that be enough…?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2016-08-11</div>
+          <div class="post_content">
+<aside class="quote">
+<blockquote>
+<p>I wanted to keep this API centered on Face Detection on still images as opposed to the (harder?) problem of Face Tracking on live streams, or the tangential problem of Face Recognition; I thought that would ease its implementation <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> – we could just bundle the two in a single spec with capabilities for both still and live images, SG?</p>
+</blockquote>
+</aside>
+<p>SGTM. Let’s do it step by step. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2016-08-11</div>
+          <div class="post_content">
+<p>To detect any object type(s), how about introducing the base <code>Detector</code> and <code>DetectedObject</code> interfaces and inheriting them for concrete types? e.g.:</p>
+<pre><code class="lang-auto">interface Detector {
+    Promise &lt;sequence&lt;DetectedObject&gt;&gt; detect(ImageBitmapsource image);
+    // readonly attribute boolean isAccelerated;
+};
+
+interface DetectedObject {
+    readonly attribute DOMRect boundingBox;
+};
+
+// FaceDetectorOptions to control the features and performance
+[Constructor(optional FaceDetectorOptions faceDetectorOptions)]
+interface FaceDetector : Detector {
+    // face detector specific attributes and methods
+    attribute FaceDetectorOperationMode mode;
+    attribute boolean detectLandmarks;
+};
+
+// BarcodeDetector, TextDetector ...
+
+interface DetectedFace : DetectedObject {
+    readonly attribute long id;
+    readonly attribute sequence&lt;Landmark&gt;? landmarks;
+    // other possible attributes
+}
+
+// DetectedBarcode, DetectedText ...
+
+</code></pre>
+<p>The feature detection would be:</p>
+<pre><code class="lang-auto">if (typeof FaceDetector === 'function') {
+    // detect faces ...
+}
+        
+if ('BarcodeDetector' in window) {
+    // detect barcode ...
+}
+        
+if (window.TextDetector) {
+    // detect text ...
+}
+</code></pre>
+<p>Sample of face detection would be:</p>
+<pre><code class="lang-auto">if (typeof FaceDetector === 'function') {
+    let faceDetector = new FaceDetector({mode: 'fast', detectLandmarks: false});
+    faceDetector.detect(image).then(detectedFaces =&gt; {
+        for (const face of detectedFaces) {
+            console.log('Face ${face.id} detected at (${face.boundingBox.x}, ${face.boundingBox.y}),' +
+                        ' size ${face.boundingBox.width}x${face.boundingBox.height}');
+        }
+    }).catch(() =&gt; {
+        console.error('Face detection failed');
+    });
+}
+</code></pre>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

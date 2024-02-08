@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Translation API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Translation API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2020-06-10</div>
+          <div class="post_content">
+<p>It would be useful to translate text directly in the browser. This could simply rely on existing browser capabilities.</p>
+<p>Example:</p>
+<pre><code class="lang-auto">&gt; translate('Hello!', 'en', 'it');
+'Ciao!'
+</code></pre>
+<p>This would open new possibilities to web apps, that could control <strong>how</strong>, <strong>when</strong> and <strong>what</strong> is translated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2020-06-10</div>
+          <div class="post_content">
+<p>Another, very simple, API that would be useful for translations is the ability to trigger the browser translation prompt programmatically:</p>
+<p>Example:</p>
+<pre><code class="lang-auto">// on click on a flag inside the page...
+showTranslationPrompt();
+</code></pre>
+<p>This should be straightforward in Chrome, and it’s strange that is not already available.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">paceaux</div>
+          <div class="creation_date">2020-06-18</div>
+          <div class="post_content">
+<p>I know that Google’s Chrome uses machine translations for their “auto-translate” features. But that seems a built-in feature of Chrome (Firefox doesn’t prompt me). I presume that’s because Google also has Google Translate while Firefox has not related translation service.</p>
+<p>I understand where you’re coming from, but I think it would be problematic for this to exist as a specification.</p>
+<ol>
+<li>Where does the translation engine exist? In the browser or an external service?</li>
+<li>If the translation engine lives in the browser, which languages? And how are their rules-engines and corpus loaded?</li>
+<li>If this API is just a pointer to a service, is it the end-user or developer that decides the service to use?</li>
+</ol>
+<p>I also struggle with use-case here. If an organization needs copy translated for their website, why would they risk on-the-fly machine translation where they have no oversight into what’s translated? It seems risky to entrust the browser for translating their content. This kind of API would make translation a developer’s job rather than a real human translator’s.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2020-06-18</div>
+          <div class="post_content">
+<ol>
+<li>The API is exposed by the browser. Then the browser is free to decide how to implement that (and would not be part of the spec).</li>
+<li>They can use any external translation service if they want.</li>
+<li>No, it’s not the developer that decides the service to use, otherwise it would be useless to define an API. The API is meant to access the browser capabilities (when present) and provide a better UX.</li>
+</ol>
+<blockquote>
+<p>risk on-the-fly machine translation</p>
+</blockquote>
+<p>It would be especially useful for dynamic data, like chats. Or think about the translation of user generated content (like descriptions in Instagram posts).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">paceaux</div>
+          <div class="creation_date">2020-06-19</div>
+          <div class="post_content">
+<p>I’m thinking of how the <a href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition" rel="nofollow noopener">speech recognition API</a> works in Chrome. What you’re proposing could be very similar to <a href="https://wicg.github.io/speech-api/#introduction" rel="nofollow noopener">that</a>.</p>
+<p>I could see an API that’s built very similarly:</p>
+<ul>
+<li>translate start/end events</li>
+<li>result event</li>
+<li>a <code>SpeechGrammar</code> object that includes <code>src</code> and possibly even <code>weight</code> that can help us assess accuracy of the translation</li>
+</ul>
+<p>I’d also want this to be async.</p>
+<p>Additionally, developers and possibly end-users should be able to choose translation services.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2020-07-05</div>
+          <div class="post_content">
+<p><strong>Chrome</strong> and <strong>Edge</strong> already have a translation feature and <strong>iOS Safari</strong> is going to have automatic translations (starting from iOS 14).</p>
+<p>It would be great to have more control on this.</p>
+<p><strong>Basic support:</strong> trigger the translation prompt programmatically, for example when the user clicks on a different flag or language select inside the page. This would improve the UI and would be very simple to implement.</p>
+<pre><code class="lang-auto">showTranslationPrompt();
+</code></pre>
+<p><strong>Advanced support</strong>: use Javascript to translate some specific text (or the text inside specific elements) from a language to another language.</p>
+<pre><code class="lang-auto">translate('Hello!', 'en', 'it');
+// or 
+DOMElement.translate('en', 'it');
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">paceaux</div>
+          <div class="creation_date">2020-08-14</div>
+          <div class="post_content">
+<p>I’m still iffy on automatic translations. If I were an enterprise-level company, I wouldn’t want my content being shipped off to some automatic translation service that may not get it right.</p>
+<p>That aside, I can see value in having a robust API that both the browser and I can use to control translations.</p>
+<p>I would want a localization ObjectModel. Just like how there’s one for CSS (CSSOM) and the document (DOM), I’d want one whose whole job was localizations (LOM): <code>Localization</code></p>
+<ol>
+<li>
+<p><code>Localization</code> has properties that interface with the document which indicate:</p>
+<ul>
+<li>
+<code>language</code>. String. It’s the source language of the document</li>
+<li>
+<code>textDirection</code>. String. <code>rtl | ltr</code>;</li>
+<li>hasLocalizations: boolean. Indicates if there is at least one localization for the document</li>
+<li>
+<code>localizations</code>. Map. Key is the name of the localization language, Value is a collection of <code>LocalizationNodes</code> and content.</li>
+<li>
+<code>localization</code> . String. the language name of the current translation</li>
+</ul>
+</li>
+<li>
+<p>It has an array-like collection of text nodes or content nodes (some interface that indicates this is a localizable bit of content). I’d call this property <code>LocalizationNodeList</code></p>
+</li>
+<li>
+<p>The <code>LocalizationNodeList</code> have <code>LocalizationNode</code>s that indicate:</p>
+<ul>
+<li>
+<code>language</code> : String. inherited from the document, unless it’s set as an attr on the element</li>
+<li>
+<code>textDirection</code> String. (inherited from the document, unless it’s set as an attr on the element)</li>
+<li>
+<code>content</code> String? the <code>innerText</code> of the element</li>
+<li>
+<code>localizations</code> (a <code>Map</code> where the key is a string that’s the target language, and the value is the translated text)</li>
+<li>
+<code>hasLocalization</code> . Boolean. Indicates if there’s at least one localization.</li>
+<li>
+<code>localization</code>. String, if a localization is displaying, this is that “target language”.</li>
+</ul>
+</li>
+<li>
+<p>The <code>LocalizationNode</code> have methods for translations, which are what you describe:</p>
+<ul>
+<li>
+<p><code>translate(targetLang, sourceLang, content)</code> which sends content and returns a promise which resolves to a <code>Localization</code>. When it resolves, it sets the element’s <code>hasLocalization</code> to <code>true</code> and it adds a key-value pair to the element’s <code>localizations</code> map. These are also attributes on the element: <code>&lt;button hasLocalization&gt;Click here!&lt;/button&gt;</code></p>
+<ul>
+<li>
+<code>targetLang</code> is the target language. Required.</li>
+<li>
+<code>sourceLang</code> is the source language. Optional. Can be inferred from document or element attribute</li>
+<li>
+<code>content</code> is the the text to translate. Optional. Can be inferred from <code>content</code>.</li>
+</ul>
+</li>
+<li>
+<p><code>showLocalization(localization)</code> which flips the text inside a node from the original content to the localized content. This puts a <code>localization</code> attribute on the element, and sets the value of that attribute to the value set for this parameter. e.g. <code>&lt;button localization="US-es"&gt;¡Haz click! &lt;/button&gt;</code></p>
+</li>
+<li>
+<p><code>showSource()</code> which flips back to the original content. it removes the <code>localization</code> attribute from the element: <code>&lt;button hasLocalization&gt;</code></p>
+<ul>
+<li>
+<code>localization</code> would match the <code>targetLang</code> sent into the <code>translate</code> method .</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>The Localization would also have methods that mirror the methods on each <code>LocalizationNode</code>:</p>
+<ul>
+<li>
+<p><code>translate(targetLang, sourceLang, content)</code> Returns a promise. When it resolves it sets <code>hasLocalization</code> to <code>true</code> on the <code>Localization</code> root node. so, in the HTML we’d see <code>&lt;html lang='us-en' hasLocalization&gt;</code></p>
+<ul>
+<li>
+<code>targetLang</code> is the target language. Required.</li>
+<li>
+<code>sourceLang</code> is the source language. Optional. Can be inferred from from <code>lang=</code> on document</li>
+<li>
+<code>content</code> is the the text to translate. Optional. . If not provided, then it’s an array of <code>LocalizationNode.content</code>. If it <em>is</em> provided, then … IDK… i guess it overwrites it? Not sure about this here.</li>
+</ul>
+</li>
+<li>
+<p><code>showLocalization(localization)</code> This is simple. It triggers a <code>showLocalization()</code> on every <code>LocalizationNode</code>. The HTML would look like this when triggered: <code>&lt;html lang="us-en" localization="us-es"&gt;</code></p>
+</li>
+<li>
+<p><code>setService(url, callback)</code> Not sure about this, but it’d be some sort of ability to identify if there’s a preferred API, and I guess it’d need an optional callback if the service didn’t just do a 1:1 text translation and you needed to filter something out. But all <code>localizationNode</code> would inherit this.</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>This is <strong>all</strong> super speculative and theoretical. But my TL;DR is</p>
+<ol>
+<li>
+<p>We need a Localization Object Model</p>
+</li>
+<li>
+<p>The Localization Object Model should be a wrapper for easily grabbing/converting content in the browser</p>
+</li>
+<li>
+<p>We should be able to tell the end user:</p>
+<ul>
+<li>we have an available translation</li>
+<li>you have the option to see that translation</li>
+<li>you can switch back to the source easily</li>
+</ul>
+</li>
+<li>
+<p>We need separate methods for <em>translating</em> and <em>displaying the translation</em> , so that these things can happen asynchronously</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-07-16</div>
+          <div class="post_content">
+<p>Any updates on this?</p>
+<p>Now that all major browsers support automatic translations, it would be awesome to have a standard API.</p>
+<p>It is strange that everything is exposed by browsers as an API and the translations happen automatically, without control, displaying banners and changing the content of the websites… Giving control to developers would allow more sophisticated user experiences.</p>
+<p>E.g. translate a message in a chat, translate the description of a specific social media post, give users the option to choose the language for a restaurant menu, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-10-15</div>
+          <div class="post_content">
+<p>Users are often confused by automatic translations and the different browsers offer different, inconsistent ways to trigger the translation of the page. Some users don’t even see how to translate the page…</p>
+<p>If you could give control for translation to the developer, <strong>we could integrate the language selection with the UI, and that would be easier to understand for the users</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

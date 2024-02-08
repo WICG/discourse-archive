@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Fragment-linked elements concealed by sticky headers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Fragment-linked elements concealed by sticky headers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-06-13</div>
+          <div class="post_content">
+<p>Elements that have an <code>id</code> attribute can be linked to via an URL with a fragment, as you probably know. However, there is an issue if the web page has a <code>position: fixed</code> sticky header: The browser does not take the header into account when setting the scroll position, and as a result, the top portion of the linked element (usually the element’s heading) is concealed by the sticky header.</p>
+<p><strong>Demo:</strong> <a href="http://exploringjs.com/es6/ch_callables.html#_cheat-sheet-callable-entities" rel="nofollow noopener">http://exploringjs.com/es6/ch_callables.html#_cheat-sheet-callable-entities</a></p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/cc0548399dee1e58a0a85f0cf48e251074e9eba4" href="//discourse.wicg.io/uploads/default/original/2X/c/cc0548399dee1e58a0a85f0cf48e251074e9eba4.png" title="conceal.png"><img data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/c/cc0548399dee1e58a0a85f0cf48e251074e9eba4_2_10x10.png" height="283" src="//discourse.wicg.io/uploads/default/optimized/2X/c/cc0548399dee1e58a0a85f0cf48e251074e9eba4_2_690x283.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/c/cc0548399dee1e58a0a85f0cf48e251074e9eba4_2_690x283.png, //discourse.wicg.io/uploads/default/optimized/2X/c/cc0548399dee1e58a0a85f0cf48e251074e9eba4_2_1035x424.png 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/c/cc0548399dee1e58a0a85f0cf48e251074e9eba4_2_1380x566.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">conceal.png</span><span class="informations">1694×695 249 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>I’m sure you’ve all experienced this issue before; I think it’s relatively common. How should we approach fixing this issue? A browser intervention? Maybe browsers could make sure that <code>position: sticky</code> elements never conceal fragment-linked elements. (This could also be defined in the appropriate CSS spec.) Then websites could start using <code>sticky</code> for their sticky headers as a best practice.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-06-13</div>
+          <div class="post_content">
+<p>Specs don’t define the precise scroll position for anchor scrolling.  It should be fine for browsers to intelligently adjust the scroll value to avoid things like sticky headers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-06-15</div>
+          <div class="post_content">
+<pre><code class="lang-auto">:target {margin-top: 5em;}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2016-06-17</div>
+          <div class="post_content">
+<p>Not a great solution because:</p>
+<ol>
+<li>Element may already have a margin-top, so you’d need to know the original value and add the offset length you want.</li>
+<li>It creates a strange blank in the layout. I’ve tried this solution on a project and had a project manager and client both tell me that it was not satisfying (and I tend to agree).</li>
+</ol>
+<p>Definitely a problem we have on most projects.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-06-17</div>
+          <div class="post_content">
+<p>I didn’t claim it was “a great solution”, but I also don’t quite get why an existing <code>margin-top</code> value would be a show stopper when you just want to avoid something being covered by a sticky element – at least unless you scroll up which would make the altered top margin become visible. Something similar to <code>:target:focus</code> would be needed, or <code>animate</code> the <code>5em</code> (or whatever) margin back to its original value over <code>2s</code> or so, producing some auto-scrolling.</p>
+<p>The real declarative solution would of course be something like</p>
+<pre><code class="lang-auto">.sticky {
+  visibility: occupy; /* or */
+  visibility: static; /* or */
+  z-index: all;
+}
+</code></pre>
+<p>On the other hand, it should be a non-issue (safe browser bugs) with <code>grid</code> layouts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JamesC</div>
+          <div class="creation_date">2016-06-19</div>
+          <div class="post_content">
+<p>It won’t work for everyone, but I’ve been using a modified version of the solution at the link below.</p>
+<p>Basically I use:
+<code>&lt;a name="mytarget"&gt;&lt;/a&gt;</code>
+Then:
+<code>a[name] {position: relative; top: -100px;}</code></p>
+<p>You can apply it however you want (whatever element + CSS), but I’ve found that using an anchor seems to work better for keyboard navigation anyway.</p>
+<aside class="onebox stackexchange">
+<header class="source">
+<a href="https://stackoverflow.com/questions/10732690/offsetting-an-html-anchor-to-adjust-for-fixed-header" rel="nofollow noopener" target="_blank">stackoverflow.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://stackoverflow.com/users/1245870/matt-dryden" rel="nofollow noopener" target="_blank">
+<img alt="Matt Dryden" class="thumbnail onebox-avatar" height="128" src="https://www.gravatar.com/avatar/8d2cac7eecef9a2d55a8b8f69d08c95d?s=128&amp;d=identicon&amp;r=PG" width="128"/>
+</a>
+<h4>
+<a href="https://stackoverflow.com/questions/10732690/offsetting-an-html-anchor-to-adjust-for-fixed-header" rel="nofollow noopener" target="_blank">offsetting an html anchor to adjust for fixed header</a>
+</h4>
+<div class="tags">
+<strong>javascript, html, css, anchor</strong>
+</div>
+<div class="date">
+  asked by
+  
+  <a href="https://stackoverflow.com/users/1245870/matt-dryden" rel="nofollow noopener" target="_blank">
+    Matt Dryden
+  </a>
+  on <a href="https://stackoverflow.com/questions/10732690/offsetting-an-html-anchor-to-adjust-for-fixed-header" rel="nofollow noopener" target="_blank">07:04AM - 24 May 12 UTC</a>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>I was about to propose an addition to that effect as well. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/>
+My suggestion is to add an attribute that controls this. Something like -
+<code>&lt;tagname id="anchorname" name="anchorname" anchorvisibility="auto"&gt;</code>
+(The accepted values would be “auto” or “manual”, I guess and the default is unfortunately “manual”)
+In addition, there could be a document level toggle -
+<code>&lt;meta http-equiv="Anchor-Visibility" content="auto"&gt;</code>
+And maybe also a manifest level toggle -
+<code>"anchor-visibility": "auto"</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>For the record, I would like this to be solved by browsers automatically. Chrome has recently shipped scroll anchoring (available in Canary), and it seems to work great. I don’t see why browsers couldn’t similarly solve this problem as well. Linking to page fragments should Just Work™.</p>
+<p><span class="mention">@phistuck</span> I’m curious what types of web compat issues would prevent this from defaulting to <code>auto</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>Parallax scrolling comes to mind. People do weird things.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>Also, this API should generally make sure an anchor is visible to the user, whether it is <code>position: sticky</code>, <code>fixed</code>, <code>absolute</code> or anything else that obscures it (as long as scrolling makes it visible, obviously. It does not explicitly change the layout to make an element visible).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>We can go further - <code>anchorvisibility="scroll"</code> can scroll to make it visible, <code>anchorvisibility="always"</code> can make layout changes (<code>z-index</code>, hide other elements, whatever) and <code>anchorvisibility="manual"</code> can behave as it currently behaves. But that is probably an overkill. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-12-05</div>
+          <div class="post_content">
+<p>This doesn’t belong at the HTML level; it’s a styling issue.  The Scroll Snap spec defines the <a href="https://drafts.csswg.org/css-scroll-snap/#scroll-padding">‘scroll-padding’</a> property which should be used in this case - if you put in some scroll padding for the area under the fixed/sticky header, following an anchor should automatically scroll it so that the anchor is in the visible region, PgUp/PgDn scrolls by a visible screenful, etc.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

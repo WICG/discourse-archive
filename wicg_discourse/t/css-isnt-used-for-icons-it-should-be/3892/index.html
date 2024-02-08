@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS isn&rsquo;t used for icons - it should be</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS isn&rsquo;t used for icons - it should be</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2557_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Grovkillen</div>
+          <div class="creation_date">2019-09-12</div>
+          <div class="post_content">
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/csswg-drafts/issues/4295" rel="nofollow noopener" target="_blank">github.com/w3c/csswg-drafts</a>
+</header>
+<article class="onebox-body">
+<a href="https://github.com/Grovkillen" rel="nofollow noopener">
+<img class="thumbnail onebox-avatar" height="96" src="https://avatars1.githubusercontent.com/u/26706274?v=2&amp;s=96" width="96"/>
+</a>
+<h4><a href="https://github.com/w3c/csswg-drafts/issues/4295" rel="nofollow noopener" target="_blank">Issue: [css-icon] CSS isn't used for icons - it should be</a></h4>
+<div class="date" style="margin-top:10px;">
+<div class="user" style="margin-top:10px;">
+	opened by <a href="https://github.com/Grovkillen" rel="nofollow noopener" target="_blank">Grovkillen</a>
+	on <a href="https://github.com/w3c/csswg-drafts/issues/4295" rel="nofollow noopener" target="_blank">2019-09-11</a>
+</div>
+<div class="user">
+</div>
+</div>
+<pre class="content" style="white-space: pre-wrap;">I'm developing a new front-end for the IoT OS "ESP Easy" and we really don't want to have any dependencies. Thus...</pre>
+<div class="labels">
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>This is already an issue on GitHub but I was told to gather an more open discussion here. Copy the original text below:</p>
+<hr/>
+<p>I’m developing a new front-end for the IoT OS “ESP Easy” and we really don’t want to have any dependencies. Thus I have created my own framework called “guiEasy” which consists of a plain CSS file. The idea is to have everything modular and thus all element styling depend on global and element based variables to manipulate the GUI.</p>
+<p>Font Awesome has become defacto standard for icons which seems a bit weird since we should have a standard for icons and not rely on third party aid. Font based icons are a hack, not a standard in my opinion. So… to get rid of static (but often nice looking) font based icons and hard to tweak SVG based icons I stumbled upon this page:
+<a class="onebox" href="https://cssicon.space/#/" rel="nofollow noopener" target="_blank">https://cssicon.space/#/</a></p>
+<p>It is a hackish way of creating icons using pure CSS and I have been starting to create icons this way. Not that I suggest all should create icons this way but as a proof of concept. You may see how this is done here: <a href="https://grovkillen.com/guieasy" rel="nofollow noopener">https://grovkillen.com/guieasy</a></p>
+<p>My idea is that CSS should be the main source of styling icons as well as everything else. That way the icons can adapt to not only color but form and style and even be animated. If you mess around with the radius on the above site (main tab, radius=1 for very round style, radius=2…7 for semi round, radius=100 for sharp style) and you’ll see that the icons themselves adapt to this style.</p>
+<p>So my suggestion:</p>
+<pre><code class="lang-auto">&lt;icon&gt;
+&lt;icon class=...&gt;
+&lt;icon data-attribute=...&gt;
+... etc.
+</code></pre>
+<p>The above HTML element would be able to be styled using layers:</p>
+<pre><code class="lang-auto">.classname {
+  icon-background: iconbg;
+  icon-layer-0: shadow;
+  icon-layer-1: graphics;
+  icon-layer-n: ....
+  icon-badge: roundbadge;
+
+  icon-background-color: #...;
+  icon-layer-n-color: #...;
+  icon-badge-color: #...;
+
+  icon-background-fill-color: #...;
+  icon-layer-n-fill-color: #...;
+  icon-badge-fill-color: #...;
+
+  icon-background-transform: XXXX;
+  icon-layer-n-transform: XXXX;
+  icon-badge-transform: XXXX;
+
+  ... Adding more icon related CSS stuff here...
+}
+
+@icon-layer iconbg {
+  ...CSS stuff
+  ...SVG paths
+}
+@icon-layer roundbadge {
+  contents: attr(data-badge-number);
+  ...CSS stuff
+  ...SVG paths
+}
+</code></pre>
+<p>The background is ALWAYS on bottom
+The badge is ALWAYS on top</p>
+<p>Badge = a notifying small element which could be used to show numbers of unread messages etc. It may fetch it’s value from a set attribute.</p>
+<p>You can now combine multiple “keyframes” which are defined in the <code>@icon-layer</code> part of the CSS to create icons. The badge can be set at one place and not on individual icons, the background could be round or square depending on the radius of the background element and so on. Screen readers would be helped upon reading an icon element and read out “icon” + the title of the element.</p>
+<p>The icon element is by design always NxN in size and will (if not override) obey the size (height) of the font scope it’s part of. Internal origo (for it’s own shapes etc) should be defined by default from 0,0=center-center and then you can place the different layers in arrays X&amp;Y…-X&amp;-Y and orthogonality (R&amp;Angle). Overflow is by design hidden within the NxN. By design you’re not allowed to have more than one closed figure per icon-layer. The closed area is colored by the <code>...fill-color</code> attribute and the boundary is colored by the <code>...-color</code> attribute. I.e. an open figure will not be affected by setting the fill-color attribute. <code>icon-layer</code> will not place the shape/figure, by default it will be placed symmetrical in the origo of the icon. To move it you need to use the <code>...-transform</code> attribute. Arrays of a layer is done this way as well.</p>
+<p>BAD IDEA or GREAT IDEA?</p>
+<p>PS. a battery icon (as an example) doesn’t have to have multiple icons to represent charging, battery level etc. it could just adjust a attribute value or add/remove a class etc. As an example you may add the class “one, two, three, four, or five” to have the wifi signal strength icon on my above linked site to have the bars filled in. Change the attribute for signal strength and you’ll see that the dBm is updated in the icon as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ruben</div>
+          <div class="creation_date">2019-09-12</div>
+          <div class="post_content">
+<p>Why do you consider font-based icons a hack?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2557_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Grovkillen</div>
+          <div class="creation_date">2019-09-13</div>
+          <div class="post_content">
+<p>Well, they are <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/> Consider a screen reader, how should it interpret that “text”? It’s not like all the developers of font based icons use the same font values for the same type of symbol. A proper HTML element is how it should be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ruben</div>
+          <div class="creation_date">2019-09-14</div>
+          <div class="post_content">
+<p>Icons are always a challenge for accessibility. Even when using regular images or SVG, you need to tell screen readers how to describe the icon.</p>
+<p>Can you clarify what are the benefits of your proposal over SVG? Maybe provide some example to illustrate the shortcomings of SVG that your proposal addresses.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2557_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Grovkillen</div>
+          <div class="creation_date">2019-09-14</div>
+          <div class="post_content">
+<p>My suggestion is that given the  element screen readers know that the element they’ve reached is in fact an icon. <code>&lt;span&gt;</code> or <code>&lt;i&gt;</code> which is currently the used standard is not intended to be used by icons.</p>
+<p>In regards of the <code>&lt;svg&gt;</code> element that is already an established standard I would like to point out that the svg is a generic graphical element (and good at it) but used in broad way and thus hard to use for screen readers, add to a CSS framework and combine layers etc. The icon element is by design cutting off overflow and you can always be sure that it’s a NxN size and adapted to the font size.</p>
+<p>My  element can be filled with a general background which can be defined in one <code>@icon-layer</code> and then applied to all icons. Also it’s possible to share layers between icons. Make icons animated upon hover etc. And they will also be possible to tweak using CSS variables.</p>
+<p>I could give it a try giving “real examples” but I’m not (at this point) sure how to best present my idea. I’ll get back to you on that.</p>
+<p>Thanks for your time! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1381_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SebastianZ</div>
+          <div class="creation_date">2019-09-17</div>
+          <div class="post_content">
+<p>Generally, I support the idea of making it easier and less hacky to embed and style icons into websites. But before starting to talk about the solutions, we should first clarify the issues with the current ways icons can be embedded.</p>
+<ol>
+<li>
+<p>Font-based icons / icon fonts</p>
+<p>There’s a <a href="https://cloudfour.com/thinks/seriously-dont-use-icon-fonts/" rel="nofollow noopener">great article about why icon fonts are often considered hacks written by Tyler Sticka back in 2015</a>.</p>
+<ul>
+<li>Accessibility issues</li>
+<li>Error prone (because of relying on specific Unicode characters referring to specific icons)</li>
+<li>Poor fallbacks</li>
+</ul>
+</li>
+<li>
+<p>SVG icons</p>
+<ul>
+<li>Styling only really possible when embedded in HTML (<a href="https://discourse.wicg.io/t/customizing-styles-of-a-svg-document-from-the-outside/192">discussion on the WICG</a>)</li>
+<li>Alignment within text difficult (<a href="https://github.com/w3c/csswg-drafts/issues/4116" rel="nofollow noopener">discussion on the CSSWG</a>)</li>
+</ul>
+</li>
+<li>
+<p>Pixel image icons</p>
+<ul>
+<li>No styling possible</li>
+<li>Alignment within text difficult</li>
+<li>Poor display on zooming or high dpi displays</li>
+</ul>
+</li>
+</ol>
+<p>Regarding the suggested solution, it actually consists of several parts:</p>
+<ol>
+<li>A new HTML element with the semantic meaning of an icon</li>
+<li>An at-rule to define layers. (There were multiple discussions about this in the past, e.g. <a href="https://github.com/w3c/csswg-drafts/issues/2444#issuecomment-373614770" rel="nofollow noopener">one related to the <code>z-index</code> property</a>.)</li>
+<li>New CSS properties specific to icon layout</li>
+</ol>
+<p>I suggest to split them up into individual threads so they can be discussed separately.</p>
+<p>Sebastian</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2557_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Grovkillen</div>
+          <div class="creation_date">2019-09-19</div>
+          <div class="post_content">
+<p>Thanks for this. I have now created these three topics:</p>
+<p><a href="https://discourse.wicg.io/t/icon-semantic-html-element-icon/3915">[icon] Semantic HTML element </a> HTML</p>
+<p><a href="https://discourse.wicg.io/t/icon-css-properties-relating-suggested-semantic-html-element-icon/3916">[icon] CSS properties relating suggested semantic HTML element </a> CSS</p>
+<p><a href="https://discourse.wicg.io/t/icon-layers-rule-to-create-icons-based-on-multiple-keyframes/3917">[icon] Layers @rule to create icons based on multiple “keyframes”</a> CSS</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2557_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Grovkillen</div>
+          <div class="creation_date">2019-09-19</div>
+          <div class="post_content">
+<p>Idea that just popped up: this  element should be possible to populate <code>favicon</code> if desired.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

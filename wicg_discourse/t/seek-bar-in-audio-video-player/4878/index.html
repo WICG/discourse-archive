@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&ldquo;seek bar&rdquo; in audio/video player</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&ldquo;seek bar&rdquo; in audio/video player</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2020-09-30</div>
+          <div class="post_content">
+<p>I implement audio/video player and always considering “what is the best element/role for seek bar ?”.</p>
+<p>What I said in “seek bar” is below.</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/0150777918ed05f0604aa2a1b5df2e459c9fc49a" href="//discourse.wicg.io/uploads/default/original/2X/0/0150777918ed05f0604aa2a1b5df2e459c9fc49a.png" title="Screen Shot 2020-09-30 at 19.23.47"><img alt="Screen Shot 2020-09-30 at 19.23.47" data-base62-sha1="bCSlvgAOcCdZVGydsqBd0bKEgq" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/0/0150777918ed05f0604aa2a1b5df2e459c9fc49a_2_10x10.png" height="44" src="//discourse.wicg.io/uploads/default/optimized/2X/0/0150777918ed05f0604aa2a1b5df2e459c9fc49a_2_690x44.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/0/0150777918ed05f0604aa2a1b5df2e459c9fc49a_2_690x44.png, //discourse.wicg.io/uploads/default/optimized/2X/0/0150777918ed05f0604aa2a1b5df2e459c9fc49a_2_1035x66.png 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/0/0150777918ed05f0604aa2a1b5df2e459c9fc49a_2_1380x88.png 2x" width="690"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screen Shot 2020-09-30 at 19.23.47</span><span class="informations">1522×98 33.5 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div></p>
+<p>It shows current time of playing audio/video, and use can change the playing position with dragging or clicking.</p>
+<h2>as Progressbar</h2>
+<p>You can say its a “Progress Bar” and use <code>&lt;progress&gt;</code> or <code>role=progress</code> would fit for this.
+But <code>progressbar</code> is basically a indicator and not a controller.
+in <a href="https://www.w3.org/TR/wai-aria/#progressbar">aria spec</a>, role=progressbar says that</p>
+<blockquote>
+<p>It is not possible for the user to alter the value of a progressbar because it is always readonly.</p>
+</blockquote>
+<p>So if seek bar is not draggable, it seems fine. but it basically druggable.</p>
+<h2>slider</h2>
+<p>If implement it as a controller, <code>&lt;input type=range&gt;</code> or <code>role=slider</code> seems fit for this.
+But semantically, it is an input controller <em>which value is changing dynamically</em>.
+So there are no mention about progress update to the user.
+I think part of them are complemented by aria attributes, but it’s not progressbar.</p>
+<h2>my consideration</h2>
+<p>I thinks it’s better to use <strong>slider</strong> than progressbar basically.
+but if there are a role which is kind of <strong>role=(progressbar + slider)</strong>, say its basically controller which has botton to slide to change current value but also tell the user a progress updates.</p>
+<h2>seekbar in the wild</h2>
+<h3>progressbar</h3>
+<ul>
+<li>
+<a href="https://music.youtube.com/:" rel="noopener nofollow ugc">https://music.youtube.com/:</a> <code>&lt;progress role=progressbar&gt;</code>
+</li>
+<li>
+<a href="https://soundcloud.com/:" rel="noopener nofollow ugc">https://soundcloud.com/:</a> <code>&lt;div role=progressbar&gt;</code>
+</li>
+<li>
+<a href="https://radiotalk.jp" rel="noopener nofollow ugc">https://radiotalk.jp</a>: <code>&lt;progress&gt;</code>
+</li>
+</ul>
+<h3>slider</h3>
+<ul>
+<li>
+<a href="https://youtube.com" rel="noopener nofollow ugc">https://youtube.com</a>: <code>&lt;div role=slider&gt;</code>
+</li>
+<li>amazon prime video: <code>&lt;input type=range&gt;</code>
+</li>
+<li>
+<a href="https://amp.dev/documentation/components/amp-video/?format=websites" rel="noopener nofollow ugc">amp-video</a>: <code>&lt;input type=range&gt;</code>
+</li>
+<li>
+<a href="https://vimeo.com/:" rel="noopener nofollow ugc">https://vimeo.com/:</a> <code>&lt;div role=slider&gt;</code>
+</li>
+<li>
+<a href="https://voice.ameba.jp/:" rel="noopener nofollow ugc">https://voice.ameba.jp/:</a> <code>&lt;div role=slider&gt;</code>
+</li>
+</ul>
+<h3>div</h3>
+<ul>
+<li>
+<a href="https://netflix.com" rel="noopener nofollow ugc">https://netflix.com</a>: <code>&lt;div&gt;</code>
+</li>
+<li>
+<a href="https://music.amazon.co.jp" rel="noopener nofollow ugc">https://music.amazon.co.jp</a>: <code>&lt;div&gt;</code>
+</li>
+<li>
+<a href="https://www.hulu.jp/:" rel="noopener nofollow ugc">https://www.hulu.jp/:</a> <code>&lt;div&gt;</code>
+</li>
+<li>
+<a href="https://anchor.fm" rel="noopener nofollow ugc">https://anchor.fm</a>: <code>&lt;div&gt;</code>
+</li>
+<li>
+<a href="https://stand.fm" rel="noopener nofollow ugc">https://stand.fm</a>: <code>&lt;div&gt;</code>
+</li>
+<li>
+<a href="https://voicy.jp" rel="noopener nofollow ugc">https://voicy.jp</a>: <code>&lt;div&gt;</code>
+</li>
+</ul>
+<p>any comments are welcome.</p>
+<p>Jxck</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

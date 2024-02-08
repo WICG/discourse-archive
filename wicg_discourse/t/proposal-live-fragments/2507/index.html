@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Live fragments</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Live fragments</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-01-04</div>
+          <div class="post_content">
+<p>Document fragments are great for templates, because you can just clone them and append them. They make great generic containers for reusable nodes that way. They also make for convenient batch append operations (although the perf argument isn’t as much as it used to be).</p>
+<p>Now, while they make for great management of nodes out of the main tree, they don’t make for easy management within the tree - notably, they just empty themselves.</p>
+<p>Something I’d like to see is maybe some sort of live fragment support natively. Here’s a few examples of where people have already implemented this in library code:</p>
+<ul>
+<li>React, Mithril, and friends. It’s very common for more advanced virtual DOM-based libraries and frameworks to support fragments, since they already more or less abstract over the DOM to begin with, and since all they’re doing is patching, they don’t need to worry about much beyond just iterating a bunch of nodes.</li>
+<li>Ember/Glimmer. They have to know how to add, track, and remove slices in user components, since they support components with multiple children.</li>
+<li>Angular. They use a virtual DOM-like system under the hood to implement a similar thing themselves.</li>
+</ul>
+<p>However, without the assistance of a framework, it gets almost prohibitive to manage subtrees in any significant capacity, and also, libraries have to choose to either wrap one whole element, or return one whole element. This affects CSS layout, and is consequently not that great of a thing to work with.</p>
+<p>Live fragment support should be able to cover the common case of just wanting to render a collection of elements <em>without</em> resorting to creating a new element, and that’s pretty much the crux of what I’m proposing.</p>
+<p>As for a concrete example, consider a list of <code>dt</code> + <code>dd</code> pairs within a definition list. The HTML spec mandates that definition lists only contain such pairs as direct children. However, if you could use live fragments, you could not only generate them from a list; you could isolate those fragments into a separate component <em>without</em> having to roll your own framework or heavy library to do it.</p>
+<p>Also, as a concrete example of how hard it is to work around this kind of scenario, consider the fact that relatively few frameworks implement support for such fragments without having a very significant layer of indirection (virtual DOM, Glimmer’s VM, Closure templates via incremental-dom) over the DOM that basically shifts it to a whole different paradigm. Also, Elm itself does <em>not</em> support nested fragments, Etch implicitly flattens nested arrays and requires that components render a node, and the original virtual-dom library has no support for fragments, either.</p>
+<p>So, I feel we should instead have a built-in browser primitive, basically a node proxy, that allows live fragments to be created in a way that elements can still deal with just the unit they expect, and CSS can work as if it’s not even there, but something that browsers could actually use to better optimize the case of groups of contiguous nodes manipulated via proxy rather than directly on the instance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-01-05</div>
+          <div class="post_content">
+<p>So, thoughts?</p>
+<p>Oh, and to clarify, what I mean by “isolating those fragments into a separate component without having to roll your own framework” is that you could do something like this:**</p>
+<pre><code>// Define a component
+class ChildComponent {
+    constructor() {
+        this._visible = true
+        this._internal = frag([
+            n("li", t("child 3")),
+            n("li", t("child 4")),
+        ])
+        this.body = frag(this._internal)
+    }
+
+    update(attrs) {
+        if (!!attrs.show === this.visible) return
+        if (this._visible) this.body.removeChild(this._internal)
+        else this.body.appendChild(this._internal)
+        this._visible = !this._visible
+    }
+}
+
+class ParentComponent {
+    constructor(attrs) {
+        this._child = new ChildComponent()
+        this.body = n("ul", [
+            n("li", t("child 1")),
+            n("li", t("child 2")),
+            this._child.body,
+        ])
+        // ...
+    }
+
+    update(attrs) {
+        // ...
+        this._child.update({show: attrs.showChild})
+    }
+}
+</code></pre>
+<hr/>
+<p>* Note: the following helpers are used above, to simplify the examples.</p>
+<pre><code>function t(str) { return document.createTextNode(str) }
+
+function append(elem, child) {
+    if (Array.isArray(child)) child.forEach(c =&gt; append(elem, e))
+    else if (child != null) this.appendChild(child)
+    return elem
+}
+
+function frag(children) { return append(new LiveFragment(), children) }
+
+function n(tag, attrs, children) {
+    const elem = document.createElement(tag)
+    if (children == null &amp;&amp; attrs != null &amp;&amp;
+            (typeof attrs !== "object" || Array.isArray(attrs)) {
+        return append(elem, attrs)
+    } else {
+        for (const key of Object.keys(attrs || {})) elem.setAttribute(key, attrs[key])
+        return append(elem, children)
+    }
+}
+</code></pre>
+<p>** For what it’s worth, you could already define the parent component today - you just couldn’t define the child component. Also, I know it’s a contrived example - you could factor the child component back into the parent pretty easily, even without using live fragments.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-11-14</div>
+          <div class="post_content">
+<p>Is this something worth considering?</p>
+<p>I know it’s almost a year old, but I’d rather resurrect an old post over re-proposing it with basically the same information.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-11-14</div>
+          <div class="post_content">
+<p>After quickly looking over this (I don’t remember seeing it previously), this is basically a simplistic virtual DOM?</p>
+<p>Just the other day, I was trying to find a way to reorder elements dynamically (using IDs stored in an array), and quickly came to the conclusion the only sane way to approach it was to use a virtual DOM. Is that the type of use case you’re envisioning?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-11-14</div>
+          <div class="post_content">
+<p>That’s one of the imagined use cases, but this is really a primitive. You could use it for more than virtual DOM, like:</p>
+<ul>
+<li>Making userland libraries that just return live fragments instead of DOM nodes.</li>
+<li>A Backbone-like component pattern almost like web components where every component subclasses <code>LiveDocumentFragment</code> (maybe indirectly), and you invoke methods on each instance to update them. This would make for <em>very</em> efficient DOM patching.</li>
+</ul>
+<p>These would be very similar conceptually to existing <code>DocumentFragment</code>s, but instead of emptying their contents into the new node, they turn into a subtree that can change the nodes in question.</p>
+<p>Reordering elements dynamically based on IDs is something I’d <em>prefer</em> to be implemented natively (it requires an efficient, adaptive implementation of <a href="https://en.wikipedia.org/wiki/Longest_common_subsequence_problem" rel="nofollow noopener">this algorithm</a>). This would require a way to tie elements to IDs, but I <em>don’t</em> believe it’d require a virtual DOM as its core primitive. It’d just need a way to allow patching without sacrificing performance (which complicates API design here).</p>
+<p>I’ve been currently working on narrowing down the minimum basic primitives for natively assisting frameworks’ DOM management, and so far, I’ve come down to this:</p>
+<ul>
+<li>Basic elements</li>
+<li>Basic text nodes</li>
+<li>Live unkeyed fragments (this proposal)</li>
+<li>Live keyed fragments</li>
+</ul>
+<p>We’ve already got the first two, but the last two is where most of the wins can be gained. I’m not sure what the optimal API for the last one is, though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2018-11-15</div>
+          <div class="post_content">
+<p>I like this idea but is creating a whole new live fragments necessary? Cant we just add a new <code>reorder</code> method (or similar) to the <code>HTMLCollection</code> api? perhaps make it constructable in cases where the collection needs to contain unrelated elements?</p>
+<p>UPDATE:</p>
+<p>Whoa–I must be <em>really</em> old school because I’m a little surprised to see that the latest spec states:</p>
+<blockquote>
+<p><code>HTMLCollection</code>  is a historical artifact we cannot rid the web of. While developers are of course welcome to keep using it, new API standard designers ought not to use it</p>
+</blockquote>
+<p>But why? I’ve been using HTMLCollections for forever. <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=6" title=":smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-11-15</div>
+          <div class="post_content">
+<p><span class="mention">@mkay581</span> That’s part of why I didn’t suggest extending it. Only part, though - I need whatever ends up used to be a node, too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1394_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">thysultan</div>
+          <div class="creation_date">2018-11-17</div>
+          <div class="post_content">
+<p>Related: <a href="https://discourse.wicg.io/t/proposal-fragments/2312">[Proposal] Fragments</a></p>
+<p>A <code>Fragments</code> node would be similar to a node with <code>display: contents;</code> but with the added feature of being able to use the node to hold onto multiple elements that are symbolically linked i.e an array of table rows.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2019-06-21</div>
+          <div class="post_content">
+<p>Just running across a situation where it would be quite useful to have a live fragment. A simplified case:</p>
+<pre><code class="lang-auto">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset='utf-8'&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div&gt;&lt;/div&gt;
+
+    &lt;script&gt;
+      const div = document.querySelector('div');
+
+      const frag1 = new DocumentFragment();
+      const div1 = frag1.appendChild(document.createElement('div'));
+      div1.style.backgroundColor = 'red';
+      div1.style.height = '20px';
+      div1.style.width = '100px';
+
+      const frag2 = new DocumentFragment();
+      const div2 = frag2.appendChild(document.createElement('div'));
+      div2.style.backgroundColor = 'blue';
+      div2.style.height = '100px';
+      div2.style.width = '20px';
+
+      div.appendChild(frag1);
+      setTimeout(() =&gt; frag1.replaceWith(frag2), 2000);
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>This would be used in a “framework” (though it’s entirely compile-time via Babel), where a conditional could be used as a child node of another element. Having a live fragment (specifically the <code>replaceWith</code> method) would allow me to easily hot-swap fragments, eliminating the need for a wrapper element with <code>display: contents</code>.</p>
+<p>Surely it wouldn’t be too difficult to implement a <code>HTMLFragmentElement</code> that extends <code>HTMLElement</code>, and has nothing special about it other than having <code>display: contents</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-06-23</div>
+          <div class="post_content">
+<p><a href="https://github.com/whatwg/dom/issues/736" rel="nofollow noopener">Related, perhaps?</a></p>
+<p>Never mind – that issue already links here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2019-10-22</div>
+          <div class="post_content">
+<p>BTW, I’m starting to reconsider this proposal, and I’m leaning towards dropping it for now. I’ve found a better, infinitely more useful way of doing it that I’m currently working on elaborating in a private GH repo, and I’ll link to it here and in whatwg/dom once it’s ready.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-10-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="2507">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_2.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>Surely it wouldn’t be too difficult to implement a <code>HTMLFragmentElement</code> that extends <code>HTMLElement</code> , and has nothing special about it other than having <code>display: contents</code> ?</p>
+</blockquote>
+</aside>
+<p>That’s what I thought too, but the existence of the element still gets in the way of selectors. (F.e. it impacts the <code>&gt;</code> selector. Fragments in libraries like React don’t affect selectors at all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2019-10-28</div>
+          <div class="post_content">
+<p>Hmm…that’s true. I’m not familiar with the internals of browser engines; I wonder how difficult it would be to have a certain element completely ignored by certain CSS selectors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3306_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Markus_Lall</div>
+          <div class="creation_date">2021-01-15</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@isiahmeadows</span>, is it ready? <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=9" title=":wink:"/> Just curious what the better idea was, because live fragment seems like a good way to group nodes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2021-04-06</div>
+          <div class="post_content">
+<p>I’ve gone through enough iterations to realize I was both premature and not exactly on the right track, and I ultimately trashed the proposal. So no, nothing precipitated here.</p>
+<p>Still not sure if live fragments are worth adding or not - it’d give frameworks better flexibility (we can keep a one-to-one correlation between virtual node and underlying <em>something</em>), but I’m not sure it’d <em>simplify</em> them much - perf-wise it’s honestly likely to be almost a wash compared to doing it in userland, considering we normally don’t recurse when we remove things anyways, and it only removes a small source of complexity. Plus, DOM objects are typically <em>heavy</em>, heavy enough that it might cause additional allocation pressure on startup (which would lead most high-perf framework implementers like me to just continue doing what we’ve been doing - implementing it in userland).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

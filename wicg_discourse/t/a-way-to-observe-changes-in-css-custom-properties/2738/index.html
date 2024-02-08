@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A way to observe changes in CSS custom properties</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A way to observe changes in CSS custom properties</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-05-07</div>
+          <div class="post_content">
+<p>I have <a href="https://github.com/trusktr/infamous/" rel="nofollow noopener">custom elements</a> that render with WebGL, and I’d like for them to be stylable with CSS. So what I’d like is to be able to observe changes to properties like <code>--material</code>, <code>--material-color</code>, etc.</p>
+<p>Setting properties with <code>CSSStyleDeclaration.setProperty()</code>, is easy, and for normal elements that render with CSS, no observation is needed.</p>
+<p>But because I refer with WebGL, I need to observe the properties so I can apply then to WebGL outside of CSS.</p>
+<p>How can I do this?</p>
+<hr/>
+<p>Right now I believe the only way is to monkey-patch <code>CSSStyleDeclaration.setProperty()</code> so that anytime I detect that the property being set is one that I care about, I can then find all elements that match the selector, and do what I need (update the WebGL drawing).</p>
+<p>I would also need to detect if the declaration is on an element vs in a style sheet, so I can update rendering for that element and not need to run a selector.</p>
+<p>I would have to monkey-patch <code>HTMLElement.style</code>.</p>
+<p>I will have to consider how users use <code>!important</code>.</p>
+<p>I’ll have to extract number values and convert CSS unit values.</p>
+<p>Etc…</p>
+<hr/>
+<p>It would be great if there were a built-in way to observe changes to rules of a stylesheet, or to rules of an element’s computed style.</p>
+<p>Is there an API for this being planned anywhere?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1693_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxArt</div>
+          <div class="creation_date">2018-05-14</div>
+          <div class="post_content">
+<p>Monkey-patching <code>setProperty</code> would be a very poor choice, as property values can change merely by changing a CSS class. Currently, there’s no way to detect when a custom property’s value changes because it would be not very clear or too computationally intensive (i.e. it could trigger too many events).</p>
+<p>A dirty trick would involve the <code>transitionend</code> property with a 1ms transition on any transition-able property using <code>var(--custom-property)</code>, but that would only work on transition-able values too. And it would have a 1ms delay.</p>
+<p>I think a well-targeted observer would be the optimal solution. I wonder if <code>MutationObserver</code> could be extended to support specific style properties…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-05-14</div>
+          <div class="post_content">
+<blockquote>
+<p>as property values can change merely by changing a CSS class.</p>
+</blockquote>
+<p>True. In this case, MutationOberver on the <code>class</code> attribute can be used, but then the element has to be needlessly checked just to see if some property changed. It could also be possible to watch a style element’s textContent with a MutationOberver, and detect changes all at once (use the selector to find matching elements and trigger logic on them).</p>
+<p>There’s lots of ways to do this, none of which are ideal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1956_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xzyfer</div>
+          <div class="creation_date">2018-05-15</div>
+          <div class="post_content">
+<p>Another consideration is that the value of a custom property for an element could change without modifying the class name or style directly i.e. media queries</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-05-16</div>
+          <div class="post_content">
+<p>Good observation. This thread will become a good list of all the things that we’d need a code path for.</p>
+<p>Another consideration is that custom properties (the ones <strong>not</strong> made using <code>CSS.registerProperty</code>) are always inherited, so if we want the properties to affect only elements that the properties are targetting (and if <code>CSS.registerProperty</code> is not supported) we’ll have to write even more logic to handle that case.</p>
+<p>It’s gonna get really messy, and introduce lots of surface area for edges cases and bugs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3802_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cicciosgamino</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>So actually neaar starting 2022 there is no way to detect a change in css custom vars on DOM element with MutationObserver ??</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2022-09-16</div>
+          <div class="post_content">
+<p>Yeah. A new <code>StyleObserver</code> API with similar shape as Mutation/ResizeOberver could be useful.</p>
+<p>Here is my list of things to do to be able to catch all the cases that can change an element’s style:</p>
+<aside class="onebox githubissue" data-onebox-src="https://github.com/lume/lume/issues/159#issuecomment-633836442">
+<header class="source">
+<a href="https://github.com/lume/lume/issues/159#issuecomment-633836442" rel="noopener nofollow ugc" target="_blank">github.com/lume/lume</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/lume/lume/issues/159#issuecomment-633836442" rel="noopener nofollow ugc" target="_blank">Styling 3D elements with CSS!</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2017-12-31" data-format="ll" data-time="06:04:48" data-timezone="UTC">06:04AM - 31 Dec 17 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/trusktr" rel="noopener nofollow ugc" target="_blank">
+<img alt="trusktr" class="onebox-avatar-inline" height="20" src="https://avatars.githubusercontent.com/u/297678?v=4" width="20"/>
+          trusktr
+        </a>
+</div>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">
+          enhancement
+        </span>
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">
+          API
+        </span>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-body-container">We can get values from custom properties via JS, like so: https://developer.mozi<span class="show-more-container"><a class="show-more" href="" rel="noopener">…</a></span><span class="excerpt hidden">lla.org/en-US/docs/Web/CSS/Using_CSS_variables#Values_in_JavaScript
+
+We can let attribute values have higher specificity.
+
+This means we'll be able to do something like this:
+
+```html
+&lt;style&gt;
+  i-mesh {
+    --geometry: box 20 30 40;
+    --material: phong;
+    --material-opacity: 0.5;
+    --color: rgb(255, 0, 0); /* all meshes are red ... */
+    --rotation: 30 30 30; /* give the same rotation to all meshes! */
+  }
+
+  i-mesh.brick {
+    --material-texture: url('path/to/brick.png'); /* ... but i-mesh elements with class .brick have a brick texture. */
+  }
+&lt;/style&gt;
+```
+
+This will be an interesting way to separate structure from styling, and making 3D scenes themable!!
+
+We could even apply behaviors via CSS, for example it could look like this:
+
+```html
+
+&lt;style&gt;
+  /* by default i-node elements don't have geometry/material, so let's give it to them: */
+  i-node {
+    --has: mesh normal-material torus-geometry;
+    --size: 40 40 40;
+    --material-opacity: 0.5;
+  }
+&lt;/style&gt;
+```
+
+This will be powerful!!!! We'll be able to write simple HTML where some properties we want to be per-object-specific, and other properties we want to be applied to many objects:
+
+```html
+
+&lt;i-mesh class="pine-tree" position="20 30 40"&gt;&lt;/i-mesh&gt;
+&lt;i-mesh class="pine-tree" position="30 40 50"&gt;&lt;/i-mesh&gt;
+&lt;i-mesh class="pine-tree" position="40 50 60"&gt;&lt;/i-mesh&gt;
+&lt;i-mesh class="pine-tree" position="50 60 70"&gt;&lt;/i-mesh&gt;
+&lt;i-mesh class="pine-tree" position="60 70 80"&gt;&lt;/i-mesh&gt;
+&lt;i-mesh class="pine-tree" position="70 80 90"&gt;&lt;/i-mesh&gt;
+&lt;i-mesh class="pine-tree" position="80 90 100"&gt;&lt;/i-mesh&gt;
+```
+
+then specify a geometry (that we've registered) and material, **for all the meshes at once**, using CSS:
+
+```css
+/* ... but each pine-tree mesh has some specific pine-tree styling: */
+i-mesh.pine-tree {
+  --has: pine-tree-geometry mtl-material;
+  --size: 30 40 50;
+  --material-mtl: url('path/to/pine-tree.mtl');
+  /* etc ... */
+}
+```
+
+
+OH YEASS!!!!!!!!</span></p>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Please lete know if anything is missing. Then we can polyfill a <code>StyleObserver</code> API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rajsite</div>
+          <div class="creation_date">2023-04-19</div>
+          <div class="post_content">
+<p>Interested in this as well! We have a web component that is rendered as a canvas (a plot) and would like it to be aware of the value of the CSS custom properties on the element. An observer that runs when styles have changed such that I can call <code>getComputedStyle</code> on an element without forcing style re-calc or layout would help observe the current value without a performance penalty.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

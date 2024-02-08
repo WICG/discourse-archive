@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Hash (local) script imports</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Hash (local) script imports</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2021-10-24</div>
+          <div class="post_content">
+<p>Currently to import a script you need it to have a URL, such as an HTTP url, <code>data</code> or <code>blob</code>.
+But there is no way to import modules that are local to the document inside a script tag.
+what if you could use a hash URI to import those?
+Like this:</p>
+<pre><code class="lang-auto">&lt;script type="module" id="someLocalScript"&gt;
+export function fun() { return "Hello" }
+&lt;/script&gt;
+
+&lt;script type="module"&gt;
+   import {fun} from "#someLocalScript"
+   console.log(fun())
+&lt;/script&gt;
+</code></pre>
+<p>I’ve encountered this trying to build some browser-based dev-tools, and had to resort to using blobs and <code>eval</code> to achieve something similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3914_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">idoros</div>
+          <div class="creation_date">2022-07-05</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="5662" data-username="noamr">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/noamr/40/3242_2.png" width="20"/> noamr:</div>
+<blockquote>
+<pre><code class="lang-auto">&lt;script type="module" id="someLocalScript"&gt;
+export function fun() { return "Hello" }
+&lt;/script&gt;
+</code></pre>
+</blockquote>
+</aside>
+<p>So the script if evaluated and run like a normal script, but can be accessed using import?</p>
+<p>Can a script be overridden by another script with identical id?</p>
+<p>What if it’s replaced with another script and then imported again?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2022-07-05</div>
+          <div class="post_content">
+<p>I’m imagining it would work the same as calling getElementById() at the time of importing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3914_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">idoros</div>
+          <div class="creation_date">2022-07-05</div>
+          <div class="post_content">
+<p>That means that such a script would not resolve if the script is removed from the DOM. I imagined it as registering a module that is available once loaded.</p>
+<p>Then as long as the script is evaluated and attached to the DOM, any imports to it returns the same reference, but if removed and re-appended, then it is a new script overriding the module for any future import?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2022-07-05</div>
+          <div class="post_content">
+<p>Good questions. In general yes, it sounds about right.
+It should behave similarly to SVG references in shapes.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Sync attribute for the script element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Sync attribute for the script element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/952_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adardesign</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<p>There is a cool feature on modern browsers that When the browser is blocked on a script, a second lightweight parser scans the rest of the markup looking for other resources e.g. stylesheets, scripts, images etc., that also need to be retrieved. How can I have a script block that simply blocks the lookahead/preloading of resources until this script block has finished executing.</p>
+<p>I suggest a <code>&lt;script sync&gt;</code> attribute that should do just this…</p>
+<p>See <a href="http://stackoverflow.com/questions/36481832/how-to-stop-the-browser-preload-resources-before-cookie-is-set" rel="nofollow noopener">Stack Overflow related question</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<p>Scripts are already sync by default, and making them <em>more</em> sync would require a <em>significant</em> use-case to justify, because it’s user-hostile.  (That’s why we have the <code>async</code> and <code>defer</code> attributes, to make them <em>less</em> sync, and are trying to find <em>more</em> ways we can reduce their impact on the page.)</p>
+<p>In this case, your actual problem is simple to solve - set the cookie with a response header, not a script in the page.  That way all the resources on the page will have the correct cookie set automatically.  This is pretty simple to do in any web programming framework.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/952_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adardesign</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<p>I’ll give you an example why we need to set it on the page via js, we have lots of bots who crawl our pages and we want to make sure that the resources that are requested are only for users with JS.</p>
+<p>So the (maybe only) way to do it is to set a cookie and then all resources (images, stylesheets, scripts) will be called with that cookie.</p>
+<p>Any other ideas?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/958_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vigneshh</div>
+          <div class="creation_date">2016-04-20</div>
+          <div class="post_content">
+<p>Still if you don’t want to set the cookie with response header as suggested before, You can make your script not pre loadable by adding them dynamically to the page like</p>
+<pre><code>&lt;script&gt;
+        document.cookie = 'b=p; path=/';
+&lt;/script&gt;
+&lt;script&gt; 
+    (function(){
+          var a = document.createElement('script'); a.src = 'your script here';
+          document.body.appendChild(a);
+    })()
+&lt;/script&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/952_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adardesign</div>
+          <div class="creation_date">2016-04-20</div>
+          <div class="post_content">
+<p>And what about images? <code>&lt;img src="/path/to/image/"&gt;</code> ?
+and the stylesheets files?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

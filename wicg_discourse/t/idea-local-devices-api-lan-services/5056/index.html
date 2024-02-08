@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Idea] Local devices API (LAN services)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Idea] Local devices API (LAN services)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2020-12-19</div>
+          <div class="post_content">
+<p>The local network is no longer a first class citizen of the web world. It’s easier to trust a faraway server than your NAS, TV or thermostat sitting right next to you. This is sad and could be different.</p>
+<p>Before committing to writing a full spec I want to pitch the general idea. This due to the sheer amount of seemingly stalled efforts in this space (Network Service Discovery API, FlyWeb, raw-sockets, TCP and UDP sockets and numerous threads on this forum). My goal is to gather initial insight and discuss potential security implications before continuing towards a formal spec.</p>
+<p><strong>Security</strong></p>
+<p>To ensure strict security, this effort aims to treat the LAN in the same way as the web at large. We don’t trust any devices by default and all security efforts, such as CORS and CSP, should apply.</p>
+<p><strong>Trust</strong></p>
+<p>The biggest missing piece for connecting to local devices is handling trust and doing it in a user friendly way. One can host a service on a LAN with self-signed certificates and add those to their certificate store. However, this is far outside the capabilities of a regular user. ChromeCast and similar technologies show that this can be done in both a user friendly and secure way.
+The proposed API would allow a browser to initiate a connection to a device on the LAN. The API can narrow down the devices it wants to talk to. The exact identification or filtering system can be decided later. This instructs the user agent to scan the local network and give the user an overview of compatible devices. The user makes his choice from the list. This prompts the user agent to start a handshake procedure. The first time this handshake takes place the user has to manually confirm the authentication using a ‘PIN verification’ step as used in ChromeCast or Bluetooth authentication. This is done to avoid MITM attacks. From that point forward, trust has been established between the user agent and said local network service. In practice this likely means that a self signed TLS certificate is now trusted for this device or service.
+I see this ‘trust’ or security context between the user agent and a device/service on the local network as orthogonal to the protocols that use it. Below I specify two potential uses: message passing and local HTTPS.</p>
+<p><strong>Offline-first</strong></p>
+<p>To be truly useful for IOT use-case the entire setup should work without internet access. This means, no cloud and no certificate authorities, only what is available on LAN. No-one likes it when their vacuum stops working because it can’t phone home to the cloud.</p>
+<p><strong>Known services/devices</strong></p>
+<p>If I wanted to build a WPA that serves as a remote control for my TV it would be useless if I have to go through this consent flow every time. Therefore, the user agent can remember devices on two levels. First, when the user agent has a ‘trust relation’ with a service, it can re-establish the connection without the ‘PIN verification’ step. Secondly, the user agent can track access permissions per origin, just like is done for UserMedia. Finally, the user agent may choose to synchronize these settings across devices.</p>
+<p><strong>Protocol</strong></p>
+<p>Giving access to low level protocols opens up a lot of security concerns. This proposal explicitly avoids that by letting the browser manage the trust relation with a local service or device. However, this means a new tailored protocol must be introduced. Just like ChromeCast it would use existing protocols under the hood, E.g.: SSDP/UPnP for service discovery and TLS for the handshake. Bridges can be built for backwards compatibility until devices adopt the new standard.</p>
+<p><strong>Message passing</strong></p>
+<p>For use cases in IOT I suggest a simple message passing API that allows bidirectional message passing with the LAN device. As to not reinvent the wheel, this may be the WebTransport API that uses the security context provided by this proposal.
+Use-case include: Web based IOT hubs, remote controls, …</p>
+<p><strong>[Addendum] Local HTTPS</strong></p>
+<p>This approach would allow users to securely connect to services on their local network. Once trust is established with a local service, the resulting certificate can be used for a HTTPS connection. A variation of the above approach may open up an opportunity to combine HTTPS with mDNS. Potentially allowing you to directly navigate to an HTTPS mDNS URL, e.g.: <a href="https://device.local" rel="noopener nofollow ugc">https://device.local</a> and letting the browser automatically trigger the verification and consent flow described above.
+Use-cases include: Finally being able to directly connect to a local NAS with a user friendly and secure context.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2020-12-21</div>
+          <div class="post_content">
+<p>AFAIK, WebRTC can connect two devices over a LAN that can then communicate over a DataChannel. The main problem is the signalling, i.e. how to exchange the offer and answer between devices on the LAN. Commonly this is done over the Internet, e.g. a WebSocket connection to a signalling server. There are also some interesting approaches using things like QR codes to exchange data locally. However it would be useful if the LAN itself could act as a signalling service and use the actual local network to exchange the offer and answer and establish a local connection, without having to make the user manage some kind of manual exchange.</p>
+<p>Perhaps it’s also the case that the most minimal and simple way to solve LAN networking with web technologies is a small API that solely serves as LAN signalling for WebRTC. Then apps can set up a DataChannel (and/or video/audio streams) and go from there.</p>
+<p>This would be good for us for LAN-based multiplayer with offline web games. It could also simplify deployment as you could set up local multiplayer without having to also set up a signalling service, contact STUN/TURN servers, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2020-12-21</div>
+          <div class="post_content">
+<p>Hi AshleyScirra,</p>
+<p>Yes, WebRTC signaling would be a great application as well. I like the idea of reviving LAN games. I also imagined connecting to a doorbell video feed without requiring signaling via the cloud. It could be as seamless as casting video to your TV today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3198_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bestape</div>
+          <div class="creation_date">2021-01-06</div>
+          <div class="post_content">
+<p>In the router, DHCP reservations assign a unique MAC to a IP address. Using that along with a random port is a fairly good level of security. Also possible to pass a secret along too, e.g. in the URI string.</p>
+<p>This isn’t a user-friendly process but IMO only because of paternalistic UX design. On my Telus router (Canadian telecom) for instance, DHCP options are hidden away, behind an ominous warning screen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3312_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Sean-Der</div>
+          <div class="creation_date">2021-01-24</div>
+          <div class="post_content">
+<p>This would be huge! These are the use cases that excite me.</p>
+<h3>Signaling is the most insecure part of a WebRTC connection</h3>
+<p>You put a lot of faith in the remote server to not modify your offer/answer. If an attacker could intercept your message they can MITM you. If I am transferring a file to someone in my LAN why should I have to connect up to a remote server?</p>
+<h3>I don’t want my devices connecting to the internet</h3>
+<p>To echo what <span class="mention">@backkem-gh</span> said it is a shame that my NAS, TV, Security Camera etc… needs to give access to the world. I really would prefer that my phone be able to connect directly!</p>
+<h3>I want a vendor agnostic protocol for casting</h3>
+<p>I am frustrated that I can’t cast to my smart TV from my Linux laptop. I have tried some of the stuff out there, but it is frustrating. I want something that is standardized and I can easily send Pion/ffmpeg/GStreamer/$x to it.</p>
+<h3>I want P2P in air gapped networks</h3>
+<hr/>
+<p><span class="mention">@AshleyScirra</span> you can connect two WebRTC peers without signaling in a LAN! It requires pre-configuration and exploits some undefined behavior, but it works. Check out this repo <a href="https://github.com/pion/offline-browser-communication" rel="noopener nofollow ugc">pion/offline-browser-communication</a>.</p>
+<p>I also wrote <a href="https://sean-der.github.io/webrtc-uri/draft-seaduboi-webrtc-uri.html" rel="noopener nofollow ugc">webrtc-uri</a> but not as excited about it after feedback from others. One interesting idea I heard is that instead of storing details in the URI you should broadcast them in mDNS. A WebRTC Agent could announce their ICE Details, and then we just need to have control of certificate the agent uses.</p>
+<p>I don’t know where to take any of these ideas from here. I am interested and happy to make the changes happen in multiple WebRTC implementations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1808_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tidoust</div>
+          <div class="creation_date">2021-01-26</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@backkem-gh</span> and all,</p>
+<p>I note that the W3C Second Screen Working Group currently develops the <a href="https://w3c.github.io/openscreenprotocol/">Open Screen Protocol</a>, actually a suite of network protocols, to implement the <a href="https://w3c.github.io/openscreenprotocol/#biblio-presentation-api">Presentation API</a> and the <a href="https://w3c.github.io/openscreenprotocol/#biblio-remote-playback">Remote Playback API</a> in an interoperable fashion.</p>
+<p>As the name suggests, the Open Screen Protocol is currently restricted to actual screens connected to the LAN (e.g. a TV set, a set-top box or a Chromecast key) and the Second Screen Working Group is not chartered to go beyond that. However, it should be relatively easy to extend that protocol to other types of devices (and the group is making sure that this will be doable).</p>
+<p>The suite includes protocols to handle discovery (using DNS-SD over mDNS), transport (using QUIC) authentication (using SPAKE2), and more specific application protocols for the Presentation API and the Remote Playback API. Discovery, transport and authentication should in particular be easy to reuse in other contexts.</p>
+<p>The protocol is neither finalized yet nor shipped in browsers, but I note that Google is working on an open-source <a href="https://chromium.googlesource.com/openscreen/">Open Screen Protocol library</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2021-01-26</div>
+          <div class="post_content">
+<p>This is great! I’m putting the protocol spec on my reading list.</p>
+<p>I suggest we try to write a absolutely minimal spec that opens up these protocols for use in broader context. Once we have that we can try to get broader support within the community.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2021-01-27</div>
+          <div class="post_content">
+<p>Hi all, here is my attempt at writing a proposal based on the Open Screen Protocol spec:
+</p><aside class="onebox googledocs">
+<header class="source">
+<a href="https://docs.google.com/document/d/1zETnp7guaIb3rCfgNJbCCZblBTGxlUCaNUznz65iFmA/edit?usp=sharing" rel="noopener nofollow ugc" target="_blank">docs.google.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://docs.google.com/document/d/1zETnp7guaIb3rCfgNJbCCZblBTGxlUCaNUznz65iFmA/edit?usp=sharing" rel="noopener nofollow ugc" target="_blank"><span class="googledocs-onebox-logo g-docs-logo"></span></a>
+<h3><a href="https://docs.google.com/document/d/1zETnp7guaIb3rCfgNJbCCZblBTGxlUCaNUznz65iFmA/edit?usp=sharing" rel="noopener nofollow ugc" target="_blank">WICG Proposal - Local Devices Protocol</a></h3>
+<p>WICG Proposal - Local Devices Protocol  DRAFT Editors: Michiel De Backker (Esoptra) Participate: Comment on this Google Doc. WICG thread (Announce a request for Google Doc edit rights here) Abstract The Local Devices Protocol connects browsers to...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Anyone can comment on the doc. Please do, we need your feedback!
+In addition, feel free to request write access here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2021-02-23</div>
+          <div class="post_content">
+<p>I forgot to post it here but I did a lighting talk about this proposal at the <a href="https://github.com/w3c/secondscreen-wg/issues/2" rel="noopener nofollow ugc">Second Screen WG/CG - 2021 Q1 virtual meeting</a>. You can also find my slides <a href="https://github.com/w3c/secondscreen-wg/files/6027505/Local.Devices.-.Building.Blocks.for.the.Local.Web.pdf" rel="noopener nofollow ugc">here</a>. I’d like to thank them for the fun session and great reception. The main points of feedback gathered:</p>
+<ol>
+<li>Having a generic list of local devices leads to some problems:
+<ul>
+<li>Applications are only able to list all devices since there is no obvious way to filter them. This doesn’t provide a very user friendly device overview.</li>
+<li>Users don’t have much control to limit the access of an origin to specific device types. E.g.: a game should only get access to peers or controllers. A remote control app should only have access to TVs. Neither should have access to tour NAS or a doorbell. This filter should be clear in the user consent dialog.</li>
+<li> → We may need to introduce some form of ‘device type’ to amend this.</li>
+</ul>
+</li>
+<li>Turns out there is a draft <a href="https://chromium.googlesource.com/openscreen/+/refs/heads/master/osp/go/" rel="noopener nofollow ugc">Go implementation</a> of the OSP. This may be of interest to you <span class="mention">@Sean-Der</span> .</li>
+</ol>
+<p>PS: I’d also like to attract some attention to the other lighting talks given as they embody the spirit of this discussion IMO:</p>
+<ul>
+<li>“<a href="https://github.com/pavlobu/deskreen" rel="noopener nofollow ugc">Deskreen</a> intro” (Pavlo Buidenkov <a href="https://github.com/pavlobu" rel="noopener nofollow ugc">@pavlobu</a> <a href="https://docs.google.com/presentation/d/1rihxkKNFvm16O_KVxCPzFwdmkcdsAwfFKJ1lbebdrQg/edit#slide=id.gc6f73a04f_0_0" rel="noopener nofollow ugc">Slides</a>)</li>
+<li>“Second screen use cases in webOS” (Hyojin Song <a href="https://github.com/anawhj" rel="noopener nofollow ugc">@anawhj</a> <a href="https://github.com/w3c/secondscreen-wg/files/6026997/Second.screen.use.cases.in.webOS.pdf" rel="noopener nofollow ugc">Slides</a>)</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3418_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rcombs</div>
+          <div class="creation_date">2021-03-28</div>
+          <div class="post_content">
+<p>Coming from Plex (where we’ve got quite a bit of experience building web apps that connect to LAN services), I’ve got a few thoughts here:</p>
+<ul>
+<li>TLS is a powerful tool for LAN connections</li>
+<li>At the same time, it can be a double-edged sword: with current browser tech, when DNS is unavailable (ISP outage or overzealous router filtering), TLS is useless</li>
+<li>There’s a proposal to tighten security when communicating with LAN devices at <a class="inline-onebox" href="https://github.com/WICG/private-network-access" rel="noopener nofollow ugc">GitHub - WICG/private-network-access</a>
+</li>
+<li>But that proposal does nothing to help people who want to build robust, secure LAN services actually do so, and those capabilities are badly needed; see <a class="inline-onebox" href="https://github.com/WICG/private-network-access/issues/23" rel="noopener nofollow ugc">There is still no complete replacement for LAN plaintext connections · Issue #23 · WICG/private-network-access · GitHub</a>
+</li>
+<li>While companies like Plex have the infrastructure to hand out millions of browser-trusted TLS certificates to user devices (via Let’s Encrypt), that’s not always going to be practical for everyone, so a way to communicate with devices using private PKI would greatly improve adoption for LAN cases</li>
+<li>Those capabilities are currently available via <a href="https://w3c.github.io/webrtc-pc/#rtcdtlsfingerprint" rel="noopener nofollow ugc">WebRTC</a> (which has limits as discussed in this thread, and is far too heavyweight and complex to practically expect LAN service developers to implement), and will soon be via <a href="https://w3c.github.io/webtransport/#dom-webtransportoptions-servercertificatefingerprints" rel="noopener nofollow ugc">WebTransport</a> (which is too <em>lightweight</em>, and requires the bulk of an HTTP stack to be built on top of it)</li>
+<li>The obvious solution to handle these cases is to combine the <code>private-network-access</code> spec (for server-side cross-origin secure-by-default policy) with an extension to Fetch and other core browser networking tools (e.g. media loading/playback) that allows connecting by IP address with a custom set of expected (D)TLS certificate fingerprints</li>
+</ul>
+<p>The only argument against this solution I’ve seen is the one that came up in that issue thread: “allowing custom fingerprints would allow developers to build insecure apps (by unsafely reusing keys) without triggering mixed-content restrictions”. This is, in my opinion, an extremely weak argument against an extremely useful feature.</p>
+<p>If you buy into it, you have to also acknowledge that the exact same issues exist for WebTransport and WebRTC (the latter of which is already widely deployed!); they have the same security properties while just being harder to use.</p>
+<p>I’d very much like to discuss this issue (and our experience in this area in generally) further with anyone in a position to move forward with the concept.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2021-03-29</div>
+          <div class="post_content">
+<p>Hi rcombs,</p>
+<p>Thanks for all these pointers. I didn’t come across the <code>private-network-access</code> proposal yet. If I read it correctly, they are bringing CORS to the LAN. This ‘LAN devices’ proposal is aimed at solving their ‘non-goal’:</p>
+<blockquote>
+<p>Provide a secure mechanism for initiating HTTPS connections to services running on the local network or the user’s machine.</p>
+</blockquote>
+<p>One of our design goals is to be offline-first with zero reliance on central infrastructure, including DNS or CAs. To that end we use self-signed certificates that are exchanged in the ‘pairing’ step, just like Bluetooth or Chromecast.</p>
+<p>That being said, I do see this proposal as orthogonal to any protocol running on top of TLS. If a user-agent could consider the self-signed certificates obtained during the pairing step as part of their certificate store, it may be usably by all existing protocols running over TLS: HTTPS (fetch), WebSocket, WebTransport, … From reading your references, it seems apparent that a certificate rotation strategy may be missing from the current proposal. I’d like to hear your thoughts.</p>
+<p>It would be interesting to hear your thoughts on such a pairing-based approach? Would this make sense in the Plex world? Are people used to this from other products like Chromecast?</p>
+<p>In addition, I’m definitely open to explore how we can use the offline-first foundation that we aim to provide while increasing user-friendliness using external infrastructure. Maybe we can allow the use of pre-shared keys or cloud-based signaling to make the pairing step transparent to the user. This seems feasible to me in your setup.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3418_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rcombs</div>
+          <div class="creation_date">2021-03-29</div>
+          <div class="post_content">
+<aside class="quote no-group quote-modified" data-post="11" data-topic="5056" data-username="backkem-gh">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/backkem-gh/40/3265_2.png" width="20"/> backkem-gh:</div>
+<blockquote>
+<p>If I read it correctly, they are bringing CORS to the LAN. This ‘LAN devices’ proposal is aimed at solving their ‘non-goal’:</p>
+<blockquote>
+<p>Provide a secure mechanism for initiating HTTPS connections to services running on the local network or the user’s machine.</p>
+</blockquote>
+</blockquote>
+</aside>
+<p>Right, my concern here is that if <code>private-network-access</code> goes forwards, it will block the cases where connecting to LAN devices sans-DNS/sans-CA-signed-cert <em>do</em> currently work (HTTP-loaded pages), so this case being unsolved should be a blocker on that change advancing.</p>
+<aside class="quote no-group" data-post="11" data-topic="5056" data-username="backkem-gh">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/backkem-gh/40/3265_2.png" width="20"/> backkem-gh:</div>
+<blockquote>
+<p>it may be usably by all existing protocols running over TLS: HTTPS (fetch), WebSocket, WebTransport</p>
+</blockquote>
+</aside>
+<p>This would be excellent, though note that for our use-case it’d be <em>extremely</em> helpful to also support HTTPS requests made by the browser engine itself rather than via <code>fetch</code>, e.g. audio/video.</p>
+<aside class="quote no-group" data-post="11" data-topic="5056" data-username="backkem-gh">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/backkem-gh/40/3265_2.png" width="20"/> backkem-gh:</div>
+<blockquote>
+<p>From reading your references, it seems apparent that a certificate rotation strategy may be missing from the current proposal.</p>
+</blockquote>
+</aside>
+<p>So, in Plex, we issue browser-trusted CA-signed certs and rotate them every 60 days, which works fine normally; the problem is with the client not immediately knowing about the new fingerprint during rotation. With normal DNS-name-based cert trust, this isn’t an issue, since identity is based on DNS name (which is constant across rotations) rather than e.g. a hash of the cert itself. But I recognize that that’s not a great solution for everybody, since setting up centralized public-CA-based issuance infrastructure isn’t always practical, so I imagined a couple possible solutions:</p>
+<ul>
+<li>My favorite option is to have the server hold onto older certs for some period after renewing (e.g. for Let’s Encrypt certs, keep the cert for the full 90 days of validity when renewing at 60), and having the client signal the fingerprint it’s expecting via a TLS extension (SNI-style); this is detailed in the GHI thread</li>
+<li>Alternately, the server could renew early, but wait to rotate to its new cert until expiration is imminent, giving the client enough time to find out about the new cert’s fingerprint (either directly from the server or from a centralized service) and annotate both currently-valid ones. I don’t like this approach much as it requires substantially more infrastructure work (and would be probably result in plenty of subtle implementation bugs), but it’s doable.</li>
+</ul>
+<aside class="quote no-group" data-post="11" data-topic="5056" data-username="backkem-gh">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/backkem-gh/40/3265_2.png" width="20"/> backkem-gh:</div>
+<blockquote>
+<p>It would be interesting to hear your thoughts on such a pairing-based approach</p>
+</blockquote>
+</aside>
+<p>My biggest concern is that often “pairing” ends up just meaning “trust on first use”, which is better than no authentication at all but still somewhat lacking. It can be an option for devices with absolutely no other way to authenticate (display-less bluetooth devices come to mind), but any pairing protocol should provide a safe way for the parties to confirm each other’s identities (without relying on the developer to design something secure themselves).</p>
+<aside class="quote no-group" data-post="11" data-topic="5056" data-username="backkem-gh">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/backkem-gh/40/3265_2.png" width="20"/> backkem-gh:</div>
+<blockquote>
+<p>Maybe we can allow the use of pre-shared keys or cloud-based signaling to make the pairing step transparent to the user.</p>
+</blockquote>
+</aside>
+<p>Yeah, we exchange device identities (DNS names, potentially cert fingerprints) and user auth data via a centralized HTTPS service, so the pairing concept would only apply to us in initial-setup cases; we definitely wouldn’t want to force the user through that process for every device they own.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3423_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MichaelGlennWilliams</div>
+          <div class="creation_date">2021-04-04</div>
+          <div class="post_content">
+<p>In the IEEE we made a standard for network service discovery 802.21, and the 802.11 team also made their own FYI.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2021-04-05</div>
+          <div class="post_content">
+<p>I created an initial repository for this proposal: <a class="inline-onebox" href="https://github.com/backkem/local-devices-api" rel="noopener nofollow ugc">GitHub - backkem/local-devices-api: Securely connect browsers and devices on the LAN.</a>
+I tried to capture the remarks made in this thread into issues.</p>
+<p><span class="mention">@MichaelGlennWilliams</span> IEEE 802.21 refers to “Media Independent Handoff”. I couldn’t quite figure out how that relates to service discovery. Is it a small piece of that larger spec? If so, do you have any reference material on that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3423_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MichaelGlennWilliams</div>
+          <div class="creation_date">2021-04-05</div>
+          <div class="post_content">
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/60d4184a97367300b76999dd77af8a2c46a52a21" href="//discourse.wicg.io/uploads/default/original/2X/6/60d4184a97367300b76999dd77af8a2c46a52a21.jpeg" title="MIH informtion services"><img alt="MIH informtion services" data-base62-sha1="dOAfoIoMHiGzbgEAs3Sryb3CUaR" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/6/60d4184a97367300b76999dd77af8a2c46a52a21_2_10x10.png" height="500" src="//discourse.wicg.io/uploads/default/optimized/2X/6/60d4184a97367300b76999dd77af8a2c46a52a21_2_665x500.jpeg" srcset="//discourse.wicg.io/uploads/default/optimized/2X/6/60d4184a97367300b76999dd77af8a2c46a52a21_2_665x500.jpeg, //discourse.wicg.io/uploads/default/optimized/2X/6/60d4184a97367300b76999dd77af8a2c46a52a21_2_997x750.jpeg 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/6/60d4184a97367300b76999dd77af8a2c46a52a21_2_1330x1000.jpeg 2x" width="665"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">MIH informtion services</span><span class="informations">2118×1592 266 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div>
+This is from their tutorial on the 802.21 website. It is called the MIH information service.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3265_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">backkem-gh</div>
+          <div class="creation_date">2021-05-04</div>
+          <div class="post_content">
+<p>Looks like <a href="https://w3c.github.io/webtransport/#dom-webtransportoptions-servercertificatefingerprints" rel="noopener nofollow ugc">certificate pinning</a> is being <a href="https://github.com/WICG/private-network-access/issues/23#issuecomment-831795261" rel="noopener nofollow ugc">recommended</a> to connect to HTTPS services on LAN. We may want to look into interop.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-20</div>
+          <div class="post_content">
+<p>Hi all!</p>
+<p>I’m creating an application that should work on a local network.  So, I think the idea of having an api for local devices is awesome.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

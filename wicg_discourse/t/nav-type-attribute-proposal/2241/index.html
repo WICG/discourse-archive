@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&lt;nav&gt; type attribute proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&lt;nav&gt; type attribute proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1998_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dstorey</div>
+          <div class="creation_date">2017-07-21</div>
+          <div class="post_content">
+<h2>Nav type attribute</h2>
+<p><strong>Disclaimer</strong>, I work on the Edge Web Platform team, but this proposal does not imply Microsoft’s support or lack of for this proposal, or any intent to implement. It is an individual proposal meant to start discussion on if it is a good idea or not.</p>
+<h2>Problem statement:</h2>
+<p>HTML5 added the <a href="http://w3c.github.io/html/sections.html#the-nav-element" rel="nofollow noopener">nav</a> element. One problem with this is there is author confusion (including sometimes this author) on which sets of links should use nav. The spec has changed at least once to address this and it is still not concretely clear: <a href="http://html5doctor.com/nav-element/" rel="nofollow noopener">http://html5doctor.com/nav-element/</a> .</p>
+<p>For example the spec states:</p>
+<blockquote>
+<p>The element is primarily intended for sections that consist of major navigation blocks</p>
+</blockquote>
+<p>…but <em>major</em> may mean different things to different people.</p>
+<p>Beyond developer experience, the current use of <code>&lt;nav&gt;</code> is probably inconsistent for Screen Reader users. A <a href="http://www.w3.org/TR/html-aam-1.0/#details-id-97">nav element is a landmark</a>, so if devs use it differently you get different experience for the same types of navigation. If you have a bare  element a screen reader may just announce navigation.</p>
+<p>Some devs that are more accessibility aware may label with aria-Label, such as <a href="https://archive-1_0_5.lightningdesignsystem.com/components/breadcrumbs" rel="nofollow noopener">Breadcrumbs component in the Salesforce Design System</a>,<a href="http://a11y-style-guide.com/style-guide/section-navigation.html" rel="nofollow noopener"> A11y Style Guide</a>,  or the <a href="https://edge.ms/" rel="nofollow noopener">edge.ms dev site</a>.</p>
+<p>However, this:</p>
+<ul>
+<li>requires localization</li>
+<li>different devs use different labels.</li>
+<li>in some languages the label combined with the control type might not read out ideally, such as the correct order</li>
+</ul>
+<h2>Proposed solution:</h2>
+<p>If we add the <strong>type</strong> attribute (or similar), we can:</p>
+<ul>
+<li>Explicitly define in spec correct/recommended use cases, while still allowing bare nav, or nav with aria-label for those not in spec</li>
+<li>Have localization built into the user agent so labels for same units of navigation are consistent</li>
+</ul>
+<p>Example values could be:</p>
+<ul>
+<li>
+<strong>site</strong>: Site wide navigation, usually found inside header element. Maybe this could be inferred if in header closest to root if no type.</li>
+<li>
+<strong>page</strong>: Navigation for the current page. The ones usually found in a side bar. Not sure if this would be same as TOC or should be another for that, as the whole document/article is not always on one page</li>
+<li>
+<strong>breadcrumb</strong>: Breadcrumb navigation</li>
+<li>
+<strong>pagination</strong>: Pagination controls often found at bottom of articles</li>
+</ul>
+<p>My thinking is this would do something similar to <code>&lt;input type="number"/&gt;</code>, etc. where the A11y layer sets a localised control type. “Breadcrumb navigation”, or “pagination” for example. This would probably be defined in HTML AAM.</p>
+<p>Currently all nav are part of landmark navigation. If this was included, they could be mapped differently if needed, such as if some more minor nav types shouldn’t be a landmark. Custom behaviour could also be applied if desired, and could also perhaps be used as an additional hint for content adaption such as browser reading modes, etc.</p>
+<p>In the future it could also be extended to allow different contents for different types, such as maybe restricting contents of nav type=“breadcrumbs” to a list, or introducing new markup such as the equivalent of aria-current to notate the current breadcrumb.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2017-07-22</div>
+          <div class="post_content">
+<p>I like this idea. It could offer greater consistency for users, using a
+concept/attribute that is very familiar to developers.</p>
+<blockquote>
+<p>Example values could be:</p>
+<ul>
+<li>
+<em>site</em>: Site wide navigation, usually found inside header element.
+Maybe this could be inferred if in header closest to root if no type.</li>
+<li>
+<em>page</em>: Navigation for the current page. The ones usually found in a
+side bar. Not sure if this would be same as TOC or should be another
+for that, as the whole document/article is not always on one page</li>
+<li>
+<em>breadcrumb</em>: Breadcrumb navigation</li>
+<li>
+<em>pagination</em>: Pagination controls often found at bottom of articles</li>
+</ul>
+</blockquote>
+<p>I’d suggest having different tokens for “page” and “toc”, because they
+represent different use cases. Referring to the page navigation of a
+website as its table of contents would not be a good fit IMO.</p>
+<p>A couple more token suggestions:</p>
+<p>“footer” for the navigation blocks found at the bottom of pages. The
+ones that usually contain links to terms/conditions, a11y statements etc.</p>
+<p>“social” for the navigation blocks that contain the ubiquitous social
+networking links. This one might be stretching things a bit, but the
+appeal of consistency across sites is strong!</p>
+<p>“mobile” for mobile navigation blocks. In some respects mobile isn’t a
+type of navigation (a page remains a page whichever device you look at
+it on), but it might set up expectations about the nature of the
+navigation therein (hamburger menus etc.). It might also offer a useful
+styling hook for responsive design.</p>
+<blockquote>
+<p>My thinking is this would do something similar to ||, etc. where the A11y layer sets a localised control
+type. “Breadcrumb navigation”, or “pagination” for example. This would
+probably be defined in HTML AAM.</p>
+</blockquote>
+<p>Yes, that would make sense.</p>
+<blockquote>
+<p>Currently all nav are part of landmark navigation. If this was included,
+they could be mapped differently if needed, such as if some more minor
+nav types shouldn’t be a landmark. Custom behaviour could also be
+applied if desired, and could also perhaps be used as an additional hint
+for content adaption such as browser reading modes, etc.</p>
+</blockquote>
+<p>Yes, rationalising the navigation blocks included in standard landmark
+navigation would be good. It would also mean ATs could offer different
+ways to navigate to different types of navigation block (a dialogue to
+choose between all types, or specific shortcuts for navigating to
+specific types for example).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2017-07-23</div>
+          <div class="post_content">
+<p>This might be a stupid suggestion, but maybe <code>role</code> could be used instead? Something like <code>&lt;nav role="doc-toc"&gt;</code> is <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-toc">already available</a>. We have <code>doc-toc</code> as a subclass of <code>navigation</code>, this seems like a model that could extend to other options.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1350_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aardrian</div>
+          <div class="creation_date">2017-07-23</div>
+          <div class="post_content">
+<p>(This is a reply to Robin; the UI does not make that clear to me) In concept I like this, though I think if that happens we would need to mine the ARIA DPub document for more (such as <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-index"><code>doc-index</code></a>, <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-pagelist"><code>doc-pagelist</code></a>, and <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-toc"><code>doc-toc</code></a>) and still need to generate new ones to cover some of the common scenarios on the web (such as breadcrumbs).</p>
+<p>That also means some would be pre-prended with <code>doc-</code> and some would not.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1350_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aardrian</div>
+          <div class="creation_date">2017-07-23</div>
+          <div class="post_content">
+<p>As a comment on the original proposal, I see value in this. When conducting training with people who are using <code>&lt;nav&gt;</code> and have skills around accessibility and ARIA, I am asked about how to differentiate navigation blocks. The localization aspect of <code>aria-label</code> has been cited as a frustration point because of the limitations of some of their tools.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2017-07-23</div>
+          <div class="post_content">
+<p>One of the appealing things about using the <span class="mention">@type</span> attribute as opposed
+to the <span class="mention">@role</span> attribute, is that it’s native to HTML, and as such it’s
+familiar to developers.</p>
+<p>The proliferation of ARIA roles is making it harder for authors to know
+which role to use and when/when not to use them, and we’d need to mint a
+whole bunch of new roles to cover this use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2017-07-23</div>
+          <div class="post_content">
+<p>I don’t think <code>type</code> is more native than <code>role</code>. We already have <code>role</code> available on the element, just adding a few more ARIA doesn’t strike me as particularly problematic. Besides, having two attributes serving the same purpose of refining the semantics of the holding element opens the door to conflicts: what does <code>&lt;nav type="breadcrumbs" role="doc-toc"&gt;</code> mean?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TzviyaSiegman</div>
+          <div class="creation_date">2017-07-23</div>
+          <div class="post_content">
+<p>I respond as editor of EPUB 3.1 and editor of DPUB-ARIA.</p>
+<p>EPUB requires a type attribute on <code>nav</code> (see <a href="https://www.w3.org/Submission/2017/SUBM-epub-packages-20170125/#sec-package-nav">https://www.w3.org/Submission/2017/SUBM-epub-packages-20170125/#sec-package-nav</a>). The only one that is a requirement for a valid EPUB is <code>epub:type="toc"</code>. The other type that is extremely popular is <code>pagelist</code>, to identify pagination in a publication. When we drafted <a href="https://www.w3.org/TR/dpub-aria-1.0">DPUB-ARIA 1.0</a>, we included these two as ARIA roles with the intent of the roles eventually replacing the epub:type vocabulary.  See <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-toc">https://www.w3.org/TR/dpub-aria-1.0/#doc-toc</a>, <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-pagelist">https://www.w3.org/TR/dpub-aria-1.0/#doc-pagelist</a>, and the related <a href="https://www.w3.org/TR/dpub-aria-1.0/#doc-pagebreak">https://www.w3.org/TR/dpub-aria-1.0/#doc-pagebreak</a> (which can provide visual page numbers/markers along with a list of page numbers). I can get statistics on how widely these, and other terms, such as list-of-tables, are used as well.</p>
+<p>DPUB-ARIA 1.0 was the first spec to exercise the WAI-ARIA <a href="https://www.w3.org/WAI/PF/wiki/ARIAExtensions">extension mechanism</a>, but it won’t be the last. Whether roles are prefixed should not be a reason to not make use of useful specs. Prefixing was a hot debate that went on for months. If the result of the prefix is that people won’t use the terms, I will take that back to the team.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>I think re-using <code>role</code> would end up being a much better solution for developers. They’d then be using an attribute that has wider uses to improve a11y then they currently do. Creating “yet another attribute” means it is just one more thing that eventually needs to be discovered, understood, and then remembered to get applied in the future.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>I often come across websites with broken semantics because the <span class="mention">@role</span>
+attribute has been misused. I don’t think I’ve ever come acros a website
+where the <span class="mention">@type</span> attribute was misused though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1347_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">scottaohara</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>I disagree with the idea of using role here.</p>
+<p>In all other instances of role, it’d be used to change the underlying semantics of what the element is. But here the goal is to not change the fact that this is a navigation, but to better define the purpose of a particular navigation element.</p>
+<p>I quite like the proposal of using type, especially if down the line additional controls or features are associated with a type e.g. input number, date, password types, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>I think the reason why you haven’t is that the <code>type</code> attribute usually has some effect on UI display or behaviour. The proposal does not , AFAIK, specify any different UI, it only effects the accessibility semantics.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>While there isn’t any different UI there are semantic differences between different types of navigation beyond only accessibility. A standard distinction could be useful for JS targetting and frameworks. Marking up of breadcrumbs is something that search engines already care about and <a href="http://schema.org" rel="nofollow noopener">schema.org</a> has a spec for it which shows some demand for markup of this nature and as a developer I know I’d much rather just use <code>&lt;nav type="breadcrumbs"&gt;</code>.</p>
+<p>I agree this is a new use of type but type also has another usage already (specifying MIME types) and semantically still works. Rel could possibly be used describing how to navigation relates to the site but all other uses for rel are about external resources so I don’t think is as appropriate.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TzviyaSiegman</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>The <code>epub:type</code> vocabulary affects UI as well, especially for <code>pagebreak</code> and <code>page-list</code>. These terms have been added to <a href="https://www.w3.org/TR/dpub-aria-1.0/">DPUB-ARIA</a>, and platforms that support EPUB are beginning to shift to <code>role</code> (in place of <code>epub:type</code>).  This means that <code>role</code> will help generate page numbering for all users, not just those using AT.</p>
+<p>We chose the term <code>pagebreak</code> instead of “page” because as pages are resized, the page marker should not move. Page numbering should be static even if the text reflows. This is crucial for citations and accessibility, especially in the scholarly world and for students.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1998_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dstorey</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>Thanks for all the replies <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>Personally, I feel like I’d prefer <code>type</code> over <code>role</code>, for a few reasons:</p>
+<ul>
+<li>While role is built into HTML, all of its values are defined in ARIA, so to learn about this feature you’d have to go to two places.</li>
+<li>In my experience (your mileage may vary), devs only go to ARIA if they’re interested in A11y; either retro-fitting their existing markup if they designed without a11y in mind, or to add semantics that can’t be expressed by HTML, or as a polyfill for lack of support in browsers for new HTML features (the belts and braces (en-us: belts and suspenders) technique). I’d like this to be seen by devs that are oblivious of ARIA, or that are intimidated by ARIA as there are so many roles and properties and so much to learn outside of their comfort zone.</li>
+<li>It doesn’t solve the problem of clarifying what types of navigation meant to be nav elements. In many ways it’d make it more confusing as the valid types we come up with would be roles that remove the need for the nav element (or navigation role) in the first place</li>
+<li>Related to the above, the role attribute replaces the semantics of the element it is used on (div role=“breadcrumbs” or nav role=“breadcrumbs” would be the same thing), while I feel this is augmenting the semantics (breadcrumb navigation rather than just generic navigation). They’re still navigation.</li>
+<li>Type attribute is used in a number of places in HTML already (input is the classic example, but also button (submit button, menu button, etc.)</li>
+<li>Type attribute could be easier to discover through tooling. For example Visual Studio Intellisense suggests valid attributes and values for HTML. Roles are more generic to any element so it is harder here to suggest add role=“breadcrumbs” or whatever</li>
+<li>ARIA doesn’t add any behavior, just semantics for the a11y tree. There could be use cases for these beyond a11y, but perhaps some behavior could be suggested for each type (although we’d need to be careful not to break existing content, and it’d be easier to spec if just adding extra semantics)</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/917_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">craig.francis</div>
+          <div class="creation_date">2017-07-24</div>
+          <div class="post_content">
+<p>+1 for <code>type</code>, for the reasons mentioned by dstorey… in particular <code>&lt;div role="navigation"&gt;</code>, while not ideal, it is valid equivilant to <code>&lt;nav&gt;</code> today, so adding a <span class="mention">@type</span> attribute would work with both.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1357_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iandevlin</div>
+          <div class="creation_date">2017-07-25</div>
+          <div class="post_content">
+<p>Overall I think this is a good idea, and I also think that <code>type</code> is preferred, and dstorey gives some excellent reasons as to why <code>type</code> is preferred over <code>role</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-07-25</div>
+          <div class="post_content">
+<p>+1 for <code>type</code> for reasons already stated</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1998_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dstorey</div>
+          <div class="creation_date">2017-07-25</div>
+          <div class="post_content">
+<p>Great feedback <span class="mention">@LJWatson</span>.</p>
+<p>I agree that toc and page should be different.</p>
+<p>For “footer”, the spec suggests that the <code>footer</code> element alone is sufficient. That could be changed though if there is value. If it is, I wonder if it could be similar to <code>header</code> element where the position in the DOM (in this case inside the root most footer) gives it a default mapping of whatever<code>&lt;nav type="footer"&gt;</code> would map to, so you only need to explicitly add the type if it is not in the footer or you want it to have a different type.</p>
+<p>“social” is interesting as they’re often a mix of some form of “follow me” or upvote/favourite, or post about this to your timeline/wall. Are they all a type of navigation? Or are they actions? I guess this is the button vs link (although it is kind of both as you’re performing an action like favouriting , but doing it by navigating to that site first)</p>
+<p>“mobile” is tricky as ideally you want to have one navigation block that transforms its layout depending on viewport size (although it is often difficult to transform a typical horizontal menu into a hamburger button without changing the markup a bunch). If we did this it should be something more generic than mobile (compact?) as they apply on desktop at smaller sizes (Windows apps transform to hamburgers a bunch), and could apply to other form factors (TV, AR/VR, etc.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1864_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yatil</div>
+          <div class="creation_date">2017-07-26</div>
+          <div class="post_content">
+<p>(personal opinion, this does not necessarily represent the views of W3C, WAI or Knowbility)</p>
+<p>I really like this idea, also not using the role makes sense to me – we should keep role for ARIA additions to HTML and not use it for HTML native features. Besides that, role defines what the element <em>is</em>, which in this case is <em>navigation</em>. Type says what type the element is: A navigation of the type <em>toc</em>, for example.</p>
+<p>Other types:</p>
+<ul>
+<li>prevnext – for previous and next links without the possibility to jump to a certain page, also probably interesting for sliders/carousels</li>
+<li>global or external – when your site is part of a network of sites</li>
+</ul>
+<p>I also wonder if we want to introduce a for attribute: I might have a pagination for a slider and a pagination of pages on the same page. Even with the type attribute I could not distinguish both without aria-labelling them. Having for would result in:</p>
+<pre><code>&lt;section aria-label="Image Slider" id="slider"&gt;&lt;nav for="slider" type="pagination"&gt;…&lt;/nav&gt;&lt;/section&gt;
+</code></pre>
+<p>It’s very clear what the navigation does and from everywhere inside the slider users would be able to quickly get to the pagination navigation because they are linked. (Think of it as an HTML-native aria-controls.)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Alternative to WebPackages to gurantee integrity (Document Hash)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Alternative to WebPackages to gurantee integrity (Document Hash)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OpenLocationServices</div>
+          <div class="creation_date">2018-09-10</div>
+          <div class="post_content">
+<p>Google has been promoting AMP pages. since it’s existence. It has been marketed much and developers are encouraged to develop AMP pages. This however comes with a caveat, that the url of the page is not correct in the browser and that internet gets more centralized.</p>
+<p>Google presented the community with “WebPackages” to fix the problem. However, we believe that it is not the right solution for the problem.</p>
+<p>The reason Google hosts AMP it’s self is to guarantee that it follows the AMP standards and that website does not serve different code to useragent based on wither it’s Google bot or a real user.</p>
+<p>Document Hash comes with the guarantees of integrity of WebPackages but the ability for the author’s server to distribute it’s self and integrity guarantees to the referrer.
+Document Hash is the SHA256 hash of the dom elements of the document.</p>
+<p>Higher level overview of how it works:</p>
+<p>Inside the <code>&lt;a&gt;</code> element a sha256 hash attribute is added.
+example <code>&lt;a hash="SHA256:d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa"&gt;</code></p>
+<p>This means that the page that will open once <code>&lt;a&gt;</code> element is clicked is guaranteed to have the same document hash. Once the user clicks on another link on the document, the hash limits are removed.</p>
+<p>Every hash attribute starts with the name of the hashing algorithm.</p>
+<p>How to deal with when hashes don’t match? An fail attribute to <code>&lt;a&gt;</code> can be added.
+The fail attribute will have three properties.</p>
+<ol>
+<li>return</li>
+<li>ignore</li>
+<li>inform</li>
+</ol>
+<p>example 1 and behavior.
+<code>&lt;a href="http://example.com" hash="SHA256:d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa" fail="return" &gt;</code></p>
+<p>What happens when <a href="http://example.com" rel="nofollow noopener">example.com</a> serves different element:</p>
+<ol>
+<li>User clicks on the element from <a href="http://google.com" rel="nofollow noopener">google.com</a>
+</li>
+<li>Browser attempts to download <a href="http://example.com" rel="nofollow noopener">example.com</a> document</li>
+<li>Hash are not the same hence hash check failed</li>
+<li>User automatically is redirected to <a href="http://google.com" rel="nofollow noopener">google.com</a>
+</li>
+</ol>
+<p>example 2 and behavior:
+<code>&lt;a href="http://example.com" hash="SHA256:d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa" fail="ignore" &gt;</code></p>
+<p>What happens when <a href="http://example.com" rel="nofollow noopener">example.com</a> serves different element:</p>
+<ol>
+<li>User clicks on the element from <a href="http://google.com" rel="nofollow noopener">google.com</a>
+</li>
+<li>Browser attempts to download <a href="http://example.com" rel="nofollow noopener">example.com</a> document</li>
+<li>Hash are not the same hence hash check failed</li>
+<li>User stays on <a href="http://example.com" rel="nofollow noopener">example.com</a> and nothing happens</li>
+</ol>
+<p>example 3 and behavior:
+<code>&lt;a href="http://example.com" hash="SHA256:d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa" fail="inform:https://google.com/fail?=blablabla" &gt;</code></p>
+<p>What happens when <a href="http://example.com" rel="nofollow noopener">example.com</a> serves different element:</p>
+<ol>
+<li>User clicks on the element from <a href="http://google.com" rel="nofollow noopener">google.com</a>
+</li>
+<li>Browser attempts to download <a href="http://example.com" rel="nofollow noopener">example.com</a> document</li>
+<li>Hash are not the same hence hash check failed</li>
+<li>User stays on <a href="http://example.com" rel="nofollow noopener">example.com</a> and browser informs <a href="http://google.com" rel="nofollow noopener">google.com</a> that hash did not match.</li>
+</ol>
+<p>What about canvas and iframe elements?</p>
+<p>Nothing.</p>
+<p>Document Hash means that dom nodes and document’s content is hashed. However the content of canvas and iframe are not a part of the hash and they can be dynamic even when parent document hash is same.</p>
+<p>What about external scripts?</p>
+<p>Nothing.</p>
+<p>Google can require external script element to have the integrity attribute which is part of dom hence must be part of document hash.</p>
+<p>Unexpected benefits in-case external scripts have hash attribute:
+Cache based tracking would be reduced.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-09-12</div>
+          <div class="post_content">
+<p>What you’re proposing sounds a lot like an <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity">SRI</a> equivalent for external links. That may be useful.</p>
+<p>However, for the AMP case, I believe that won’t be sufficient, as it doesn’t allow the embedder (e.g. Google Search) to privately prefetch the content without leaking potentially-private user information to the publisher.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2018-09-12</div>
+          <div class="post_content">
+<p>In addition to cryptographic hashes indicated on hyperlinks, we can (see also: .NET assembly linking and strongly named assemblies) consider the titles, versions, cultures/languages and the public keys or public key tokens, if linked-to resources are digitally signed.</p>
+<p>We can, more broadly, consider indicating the document metadata of linked-to resources in the linking resources’ hyperlinks.</p>
+<p>In <a href="https://discourse.wicg.io/t/proposal-document-element-metadata/3019">another thread</a>, we’re discussing document element metadata. Consider that we could attach to a hyperlink the expected metadata of a linked-to resource.</p>
+<pre><code class="lang-xml">&lt;metadata id="resource1"&gt;
+  &lt;meta name="title" content="Example Resource" /&gt;
+  &lt;meta name="version" content="1.0.0.0" /&gt;
+  &lt;meta name="language" content="en-US" /&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;a href="http://example.com/resource.html" metadata="resource1" /&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OpenLocationServices</div>
+          <div class="creation_date">2018-09-12</div>
+          <div class="post_content">
+<blockquote>
+<p>What you’re proposing sounds a lot like an <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity" rel="nofollow noopener">SRI </a> equivalent for external links. That may be useful.</p>
+</blockquote>
+<blockquote>
+<p>However, for the AMP case, I believe that won’t be sufficient, as it doesn’t allow the embedder (e.g. Google Search) to privately prefetch the content without leaking potentially-private user information to the publisher.</p>
+</blockquote>
+<p>If I do not want Google to host AMP but want to assure Google that content did not change, this might actually be a good idea. Yes what I am proposing is more or less SRI for external links.</p>
+<p>But a part of the problem is that Google cannot be sure if the code sent to Google bot is the same as the one sent to a user. I do not want Google to prerender or prefetch my pages/web app. This will help Google penalize slow pages without using AMP.
+AMP restricts JS. JS is not bad if used properly. AMP has proposed WorkerDOM for JS in AMP now but it is not good enough and has it’s on limit on size of JS, CSS. Devs and authors who are responsible can use standardized performance tools to make their apps. Google right now is punishing good websites with fast JS because of AMP.</p>
+<p>WebPackages is allowing Google to host the page. What if I do not want Google to host and would want it to be sure of page integrity? This is the answer.</p>
+<p>This is the midway between AMP and the open web. Most people do not want Google to host. Google want’s performance assurances. What if I don’t want Google to prefetch the content?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-09-13</div>
+          <div class="post_content">
+<p>In the case of <code>fail="return"</code> how does the browser notify the user why they were redirected back?</p>
+<p>What about sites that use routine static cacheing that change comments on the page for the cache info? The comment changes offset the hash regularly, making them constantly change.</p>
+<p>What about the case of a simple site redesign or tweak? User generated content may also change the hash of a page’s content, so how should that be handled? Having a static hash in a link then breaks that link going forward unless the resource is something that is never changing. Unless you tell the link to fail in <code>ignore</code> mode, but then what is the point of the hash?</p>
+<p><code>return</code> mode seems iffy in terms of user experience and possible to trigger way too often with dynamically generated sites.</p>
+<p><code>ignore</code> is just our current web, no issue there.</p>
+<p><code>inform</code> <em>possibly</em> useful but due to the constant dynamic changing of the web it is prone to cause more noise than solutions. <code>inform</code> mode would also have to be restricted so it can only send a report to the current origin (or white-listed ones through a header) since without that this opens up the door to DDoS attacks using un-suspecting end users.</p>
+<p>Overall, I don’t see where this fundamentally helps the web ecosystem.</p>
+<aside class="quote no-group" data-post="4" data-topic="3026">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/4af34b/40.png" width="20"/> OpenLocationServices:</div>
+<blockquote>
+<p>Google right now is punishing good websites with fast JS because of AMP.</p>
+</blockquote>
+</aside>
+<p>If you can provide clear examples of this then that would be fantastic. Because, in theory if everything between two sites is equal in terms of overall search ranking quality <em>and</em> page performance, they are equal. And if the normal site is faster than the AMP site then it should have the higher ranking. So if there is a clear example of where this is not the case, it would be useful to see so it can be forwarded along to the proper teams.</p>
+<aside class="quote no-group" data-post="4" data-topic="3026">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/4af34b/40.png" width="20"/> OpenLocationServices:</div>
+<blockquote>
+<p>What if I don’t want Google to prefetch the content?</p>
+</blockquote>
+</aside>
+<p>You need to define the context of prefetching here. If you mean Googlebot fetching it, you block Googlebot. If you mean the <em>User Agent</em> (Chrome, Firefox, etc. Anyone implementing the prefetch/prerender stuff) then that’s not your choice as a website author. Those are UA features to help improve the end user experience. End users have the control to turn that off in their settings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OpenLocationServices</div>
+          <div class="creation_date">2018-09-15</div>
+          <div class="post_content">
+<blockquote>
+<p>In the case of <code>fail="return"</code> how does the browser notify the user why they were redirected back?</p>
+</blockquote>
+<p>A “fail” event is fired.</p>
+<blockquote>
+<p>What about sites that use routine static cacheing that change comments on the page for the cache info? The comment changes offset the hash regularly, making them constantly change.</p>
+</blockquote>
+<p>It should be in an Iframe. Alternatively a website could decide they will not show comments on the page with restrictions and therefore just add a button which will take them to the next page. If they have a service worker, it should take 200ms.</p>
+<blockquote>
+<p>What about the case of a simple site redesign or tweak? User generated content may also change the hash of a page’s content, so how should that be handled? Having a static hash in a link then breaks that link going forward unless the resource is something that is never changing. Unless you tell the link to fail in <code>ignore</code> mode, but then what is the point of the hash?</p>
+</blockquote>
+<p>The point of the has is to hash the DOM nodes text. Not the CSS states or design.
+Sites with user generated content could embed an Iframe for usergenerated content, or alternatively draw it on canvas.</p>
+<p>Alternatively we can have an HTML tag like <code>&lt;dynamic&gt;</code> which will not have restrictions for content inside it.</p>
+<blockquote>
+<p><code>return</code> mode seems iffy in terms of user experience and possible to trigger way too often with dynamically generated sites.</p>
+</blockquote>
+<p>When implemented properly, this should not be the case. You also have the option to inform the referer, so Google can take action for future visitors.</p>
+<blockquote>
+<p>If you can provide clear examples of this then that would be fantastic. Because, in theory if everything between two sites is equal in terms of overall search ranking quality <em>and</em> page performance, they are equal. And if the normal site is faster than the AMP site then it should have the higher ranking. So if there is a clear example of where this is not the case, it would be useful to see so it can be forwarded along to the proper teams.</p>
+</blockquote>
+<p>News carousels are exclusive to AMP even if original site is properly optimized.</p>
+<blockquote>
+<p>You need to define the context of prefetching here. If you mean Googlebot fetching it, you block Googlebot. If you mean the <em>User Agent</em> (Chrome, Firefox, etc. Anyone implementing the prefetch/prerender stuff) then that’s not your choice as a website author. Those are UA features to help improve the end user experience. End users have the control to turn that off in their settings.</p>
+</blockquote>
+<p>I mean AMP without Google hosting it. I like to host content myself.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

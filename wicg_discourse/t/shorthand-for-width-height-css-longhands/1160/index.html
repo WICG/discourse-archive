@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Shorthand for width/height CSS longhands</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Shorthand for width/height CSS longhands</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-27</div>
+          <div class="post_content">
+<p>What if we add the <code>size</code> CSS-property as a shorthand for <code>width</code> and <code>height</code>?</p>
+<p>PostCSS has already implemented the <code>size</code> property via the <a href="https://github.com/postcss/postcss-size" rel="nofollow noopener">postcss-size</a> plugin (<a href="https://twitter.com/PostCSS/status/563380904203411456" rel="nofollow noopener">annoucement</a> in the official PostCSS twitter).</p>
+<p>For example:</p>
+<pre><code>.foo {size: 10px; }
+</code></pre>
+<p>would set both <code>width</code> and <code>height</code> properties to <code>10px</code>, so being an exact equivalent to:</p>
+<pre><code class="lang-auto">.foo {
+    width:  10px;
+    height: 10px;
+}
+</code></pre>
+<p>And:</p>
+<pre><code>.bar {size: 2em 3em; }
+</code></pre>
+<p>would set <code>width</code> and <code>height</code> to <code>2em</code> and <code>3em</code> respectively (or <code>height</code> and <code>width</code> if “first vertical then horizontal” order has been chosen in line with <code>margin</code> / <code>padding</code> instead of e.g. <code>background-position</code>).</p>
+<p>The reasoning is the same as for other shorthands like <code>margin</code> or <code>padding</code>:</p>
+<ul>
+<li>preventing from repeating yourself if longhands have the same value (that’s what I’m mostly interested in);</li>
+<li>specifying multiple values more compact way (a common feature of shorthands).</li>
+</ul>
+<p>This can be (and is) implemented via a preprocessor like SCSS:</p>
+<pre><code class="lang-auto">@mixin size($value) {
+    width:  $value;
+    height: $value;
+}
+</code></pre>
+<p>But preprocessors exist just to overcome current CSS shortcomings, while it makes sense to overcome them on CSS-itself level to make CSS itself more usable and self-contained in the long term.</p>
+<p><em>(This has originally been proposed in <a href="https://lists.w3.org/Archives/Public/www-style/2014Dec/0004.html">www-style</a> a year ago, but has been ignored by decision makers.)</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-27</div>
+          <div class="post_content">
+<p>Would this double as indicating an element’s aspect ratio? (The fact that <a href="http://alistapart.com/article/creating-intrinsic-ratios-for-video" rel="nofollow noopener">the old padding-box trick</a> is still alive is kind of sad.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-27</div>
+          <div class="post_content">
+<p>I agree that having ability to maintain aspect ratios (for example, to prevent <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=392261" rel="nofollow noopener">image distortion</a> when <code>width</code> and <code>height</code> are both specified in conjunction with <code>max-width</code>) would be a useful feature (feel free to post a separate proposal for it), but the <code>size</code> here is <em>solely</em> intended as just a <em>shorthand</em> for existing <code>width</code> and <code>height</code>.</p>
+<p>So what I propose is an exact equivalent to what is currently achieved using a preprocessor mixin.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-11-30</div>
+          <div class="post_content">
+<p>After a month, it’s obvious the proposal has been ignored by decision makers like the original one at www-style.</p>
+<p>What an exciting selective blindness of CSSWG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2015-12-03</div>
+          <div class="post_content">
+<p>Hi MT, thanks for putting together the sizes proposal. I’d like to kindly remind you that the WICG is a community-driven organization, hence there are no “decision makers” ignoring your proposal (because there are no “decision makers”!). In order to get your proposal adopted, you do need the support of browser vendors, and the community at large tho.</p>
+<p>Hang in there: if your proposal has merit, and it’s useful, then it will get traction. However, you need to also be prepared to accept that it might not get picked up for whatever reason. That’s ok, tho. Most (~95-99%) standards proposals don’t go anywhere for a number of reasons: like it might not provide enough benefit, it might be too hard to implement, etc.</p>
+<p>I know it can be frustrating to feel you are being ignored - but trust me, you are not! Lots of things are happening all the time in standards land, and it’s hard for things to bubble up. However, please refrain from using inflammatory language like accusing the CSSWG of “selective blindness” - or conjuring up conspiracy theories about “decision makers”. That won’t win you any friends or supporters for your proposal.</p>
+<p>Hope that helps!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-03</div>
+          <div class="post_content">
+<p>Hi, Marcos. Thanks for your feedback, though I believe it would generally be better to send such off-topic messages privately. But since your message is public, I’m forced to reply publicly as well.</p>
+<blockquote>
+<p>thanks for putting together the sizes proposal.</p>
+</blockquote>
+<p>The proposal has nothing to do with the <code>sizes</code> HTML attribute. The proposal is about a shorthand for <code>width</code> and <code>height</code> CSS properties.</p>
+<blockquote>
+<p>the WICG is a community-driven organization, hence there are no “decision makers”</p>
+</blockquote>
+<p>WICG is basically a discussion platform. Of course WICG itself does not have decision makers related to standards. CSSWG does (the WG members / spec editors are decision makers — some of them are here on WICG — e.g. <a href="//discourse.wicg.io/users/tabatkins">Tab Atkins</a> and <a href="//discourse.wicg.io/users/frivoal">Florian Rivoal</a>) — that’s exactly what I meant.</p>
+<p>The first proposal iteration posted at www-style had nothing to do with WICG at all.</p>
+<blockquote>
+<p>if your proposal has merit, and it’s useful, then it will get traction.</p>
+</blockquote>
+<p>This is probably not quite an accurate assumption. There are subtle, minor things that don’t get much explicit traction by non-decision-makers (especially via a specific and not yet quite popular discussion platform) while this does not mean such minor proposals are useless. BTW, <code>size</code> property is already implemented via a <a href="https://twitter.com/PostCSS/status/563380904203411456" rel="nofollow noopener">PostCSS plugin</a>.</p>
+<p>I have multiple much more (to say the least) serious ideas, but it looks not making much sense to spend time to make corresponding proposals since <strong>even</strong> much more trivial proposals are ignored by decision makers.</p>
+<blockquote>
+<p>inflammatory language like accusing the CSSWG of “selective blindness”</p>
+</blockquote>
+<p>I have not been accusing anyone. To be clear: my comment after a month is not about just the WICG iteration of the proposal, instead it’s about <strong>both</strong> iterations made via www-style and WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-12-03</div>
+          <div class="post_content">
+<p>I’ve found with my own proposals you really have to play the role of “proposal champion” yourself. Everyone’s busy with competing proposals and other spec work, so you have to take on a sort of promotional role yourself.</p>
+<p>The very best thing you can do to further your own proposal is draft the spec then ask implementers to review it. It can be quite a lot of work to get a draft spec written up with the right tools and guidelines, and sitting around waiting hoping for someone else to do it means hoping someone else will do a lot of unpaid work on your idea. It’s probably not going to happen like that. So I would encourage you to learn how the spec writing process works, start writing the specs, and bump your thread with a spec draft rather than a complaint.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-03</div>
+          <div class="post_content">
+<blockquote>
+<p>I’ve found with my own proposals you really have to play the role of “proposal champion” yourself.</p>
+</blockquote>
+<p>Hi, Ashley. I’m not sure I understand you correctly. FWIW, I have just 2 (two) proposals here on WICG for now.</p>
+<p><em>(Edit: in a private conversation, Ashley has clarified that he thought he “saw the term ‘champion’ used somewhere else in a spec context” and meant that the proposal author himself is who is responsible to “promote” the proposal; so the unclear ambiguous term ‘champion’ is apparently just accidentally used inappropriately.)</em></p>
+<blockquote>
+<p>best thing you can do to further your own proposal is draft the spec</p>
+</blockquote>
+<p>It does not make sense to write a full-fledged spec (though I’m open in general to do this once the basic idea is accepted) if its horizons are unclear and could easily be clarified on a just-an-idea stage.</p>
+<p>(BTW, we’ve already seen what <a href="https://lists.w3.org/Archives/Public/www-style/2012Jun/0468.html">happens</a> when someone writes a spec after being encouraged by a WG member, and then no WG members give attention to the spec.)</p>
+<p>I absolutely don’t expect that someone would write a spec for the feature I’ve proposed. What would be enough is just a short <em>explicit</em> yes/no/why opinion by a CSSWG member.</p>
+<p>P.S. Please consider using the private-message feature (or the <a href="http://tanalin.com/en/contact/" rel="nofollow noopener">contact form</a> on my site) to send off-topic comments, so that the relevant information didn’t get lost among irrelevant text. Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>Tab and I are here, most other CSSWG people are not. www-style is probably the right place for this. I am sorry you got ignore the first time. Tagging your mail with the spec that this proposal belongs to might have helped it getting noticed. Maybe you could try resending or responding to it, adding [css-sizing] in the title.</p>
+<p>www-style is a busy mailing list, and it is nobody’s job in particular to make sure that nothing falls between the cracks. It’s bad when it happens, but it does.</p>
+<p>Most people including seasoned “decision makers” regularly send mails that don’t get answers, due the randomness of other participants calendar. Just go at it again, and eventually you should get feedback.</p>
+<p>As to this proposal in particular, I don’t think there’s anything problematic about it. It sounds like a neat convenience to have. At the same time, it does not introduce any new capability, and while it saves some typing, it’s not a lot. And you can roll your own equivalent using custom properties. So while I wouldn’t oppose it, I would also not be surprised if browser vendors considered it (very) low priority.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>Hi, Florian. Thank you for the constructive comment and the tip about the <code>[css-sizing]</code> prefix (unfortunately, it’s not always obvious what spec module the feature belongs to, while a wrong prefix would probably be even worse than no prefix).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-12-05</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>while a wrong prefix would probably be even worse than no prefix</p>
+</blockquote>
+</aside>
+<p>Note sure about that. Very few people read all mails to www-style. Most regulars have filters to prioritize reading mails that are relevant to their specs. So a mail without a tag might be seen by nobody. A mail with the wrong tag might be seen by someone who can point out it’s the wrong tag and suggest a better one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-05</div>
+          <div class="post_content">
+<p>Good point, thanks Florian.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>I like this idea. Pairing that with <a href="//discourse.wicg.io/t/animating-width-without-performance-loss-from-reflow/1225/6">hardware acceleration when possible</a> would be nice too!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/612_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michiel</div>
+          <div class="creation_date">2015-12-18</div>
+          <div class="post_content">
+<p>+1</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-02-05</div>
+          <div class="post_content">
+<p>As a mere shorthand to level 1 <code>width</code> and <code>height</code> properties, a new property <code>size</code> would probably not be worth the effort, because it would induce a lot of backwards-compatibility friction, i.e. future authors will rely on <code>size</code> (or <code>dimensions</code>)  but current and older UAs won’t understand it albeit still being in use.</p>
+<p>It would have slightly larger benefits, hence chances, if it (optionally) included more functionality. The three things first springing to my mind are <a href="http://www.xanthir.com/blog/b4810" rel="nofollow noopener" title="Tab Atkins’ proposal"><code>aspect-ratio</code></a>, <a href="https://www.w3.org/TR/css3-ui/#box-sizing" title="CSS Basic User Interface Module Level 3"><code>box-sizing</code></a> and related <code>min-</code> and <code>max-</code> properties (which are different from proposed <a href="https://www.w3.org/Style/CSS/Tracker/issues/203"><code>min()</code> and <code>max()</code></a> pseudo functions).</p>
+<pre><code class="lang-auto">size: 300px; /* shorthand setting
+    width = height = 300px
+    min-width = min-height = 0? or 300px?
+    max-width = max-height = 300px? or auto
+    aspect-ratio = 1
+    box-sizing = content-box */
+
+size: 400px 300px border-box;  /* shorthand setting, among others,
+    width = 400px, height = 300px
+    aspect-ratio = 1.333… 
+    box-sizing = border-box */
+
+size: 400px/30em/600px 4:3; /* shorthand setting
+    min-width = 400px, min-height = 300px
+    width = 30em, height = 22.5em
+    max-width = 600px, max-height = 450px
+    aspect-ratio = 1.333… */
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-02-05</div>
+          <div class="post_content">
+<aside class="quote" data-post="15" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>As a mere shorthand to level 1 width and height properties, a new property size would probably not be worth the effort</p>
+</blockquote>
+</aside>
+<p>“Mere shorthand” is the most easy thing that could be done with almost <em>no effort</em>.</p>
+<aside class="quote" data-post="15" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>current and older UAs won’t understand it albeit still being in use.</p>
+</blockquote>
+</aside>
+<p>Given that browsers are currently <a href="https://wiki.mozilla.org/RapidRelease" rel="nofollow noopener">often updated</a>, this does not matter much. Moreover, any new feature could be considered undesired just due to its “backward incompatibility”, but this would mean we should not add new features at all which is impossible and absolutely not what backward compatibility is about.</p>
+<aside class="quote" data-post="15" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>It would have slightly larger benefits, hence chances, if it (optionally) included more functionality.</p>
+</blockquote>
+</aside>
+<p>In practice, overcomplicating a feature actually <em>decreases</em> chances of standardizing it. Additional subfeatures could be introduced later, once the basic shorthand is specced and implemented.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-02-05</div>
+          <div class="post_content">
+<aside class="quote" data-post="16" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Given that browsers are currently often updated, this does not matter much. Moreover, any new feature could be considered undesired just due to its “backward incompatibility”, but this would mean we should not add new features at all which is impossible and absolutely not what backward compatibility is about.</p>
+</blockquote>
+</aside>
+<p>A shorthand on its own is <strong>not a new feature</strong>! Forget it, without further benefits for authors or users or implementers – preferably more than one of these – it ain’t gonna happen, because it would be too harmful, even if people agreed that it would have been the right thing to do in level 1.</p>
+<p>Also, the big screen on my desk at home doesn’t get any OS or default browser updates any more, yet is still perfectly sufficient as a write, read, watch, listen and browse machine unless intentionally broken – and I’m not an extreme case by all means.
+In many (even large) companies and institutions, browsers don’t get updated as regularly as you’d think (or want).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-02-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>A shorthand on its own is not a new feature</p>
+</blockquote>
+</aside>
+<p>It’s surely a <em>syntax-level</em> feature.</p>
+<aside class="quote" data-post="17" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>Forget it</p>
+</blockquote>
+</aside>
+<p>As long as you are not a WG member nor a browser vendor, it’s out of your responsibility to state such things for sure.</p>
+<p>To be clear, my purpose with this proposal was <em>exactly</em> to propose a thing that’s <em>as simple as possible</em> (I wouldn’t actually be too emotional over whether <em>this specific idea</em> itself would draw any attention by WG members) just because more complicated things are typically unfortunately ignored by those responsible for speccing and/or implementing as long as the proposals are not by WG members or implementors. (But as I’ve figured out some time ago, WICG itself is currently not a too appropriate place to expect too much (if any) feedback by decision makers. www-style mailing list and/or W3C’s bug tracker are currently probably a better choice. Of course as long as you have some unneeded time which I currently don’t.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-02-06</div>
+          <div class="post_content">
+<p>“Forget it [unless …]” is a word of advice coming from someone who participated in www-style for years (though currently inactive) and thus saw many good ideas and objections being shot down on grounds of practicability, compatibility or just eloquent stubbornness – and sometimes picked up again 5 or 10 years later (but usually dead is dead). You’re of course free to choose to ignore my expertise/experience, but then don’t whine about the WG ignoring your ideas as you did <a href="https://discourse.wicg.io/t/shorthand-for-width-height-css-longhands/1160/4?u=crissov">above</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-02-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="19" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>someone who participated in www-style for years</p>
+</blockquote>
+</aside>
+<p>FWIW, I did participate/spectate in www-style and public-html for years as well.</p>
+<aside class="quote" data-post="19" data-topic="1160">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/355_1.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>don’t whine</p>
+</blockquote>
+</aside>
+<p>It’s unlikely appropriate (and moreso helpful) to use such unfriendly terminology here. As I said, after (but not before) Florian’s comment, I’ve already figured out that WICG is as dead place compared with W3C’s official discussion/proposal ways (mailing lists and bug tracker) like WebPlatform was dead as a documentation source compared with MDN. I had no plans to up this topic (nor posting other proposals) again here, so your another attempt to mentor is unneeded. But looks like you haven’t read all the comments and just hurried to comment to show your “expertise”. Please stop.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

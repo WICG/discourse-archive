@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Media timed events API for MPEG DASH MPD and emsg events</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Media timed events API for MPEG DASH MPD and emsg events</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2642_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrisn</div>
+          <div class="creation_date">2018-10-15</div>
+          <div class="post_content">
+<p>There is a need in the media industry for an API to support metadata events synchronized to audio or video media, specifically for both out-of-band event streams and in-band discrete events (e.g., <code>MPD</code> -carriage and <code>emsg</code> events in MPEG DASH:  <a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/c065274_ISO_IEC_23009-1_2014.zip" rel="nofollow noopener">http://standards.iso.org/ittf/PubliclyAvailableStandards/c065274_ISO_IEC_23009-1_2014.zip</a>).</p>
+<p>These media timed events can be used to support use cases such as ad insertion or presentation of supplemental content alongside the audio or video.</p>
+<p>On resource constrained devices such as smart TVs and streaming sticks, parsing media segments to extract event information leads to a significant performance penalty, which can have an impact on UI rendering updates if this is done on the UI thread. There can also be an impact on the battery life of mobile devices. Given that the media segments will be parsed anyway by the user agent, parsing in JavaScript is an expensive overhead that could be avoided.</p>
+<p>The <a href="https://www.w3.org/TR/2018/WD-html53-20180426/semantics-embedded-content.html#text-tracks-exposing-inband-metadata"><code>DataCue</code> API</a> has been previously discussed as a means to deliver in-band event data to Web applications, but this is not implemented in mainstream browser engines and is therefore not reflected in the WHATWG living HTML specification. There is previous discussion <a href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/U06zrT2N-Xk" rel="nofollow noopener">here</a>, and an earlier liaison statement from HbbTV <a href="https://lists.w3.org/Archives/Public/public-html/2013Dec/0015.html">here</a>. Whether <code>DataCue</code> should be taken up again or another API should be developed, we believe there is a recognized need for extending the existing HTML specification to assist web applications in being able to properly process and render media-timed events.</p>
+<p>The Media &amp; Entertainment Interest Group has a draft use case and requirements document <a href="https://w3c.github.io/me-media-timed-events/" rel="nofollow noopener">here</a>. Please note that this document describes a broader range of topics, and we only propose to work on MPEG DASH MPD and <code>emsg</code> events at WICG at this stage.</p>
+<p>We ask for your support in progressing this, and look forward to working with you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2088_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eric_carlson</div>
+          <div class="creation_date">2018-10-17</div>
+          <div class="post_content">
+<blockquote>
+<p>The <a href="https://www.w3.org/TR/2018/WD-html53-20180426/semantics-embedded-content.html#text-tracks-exposing-inband-metadata"> <code>DataCue</code>  API</a> has been previously discussed as a means to deliver in-band event data to Web applications, but this is not implemented in mainstream browser engines and is therefore not reflected in the WHATWG living HTML specification.</p>
+</blockquote>
+<p>WebKit supports <code>DataCue</code>.</p>
+<p>The original interface was extended with two attributes to support non-text metadata, <code>type</code> and <code>value</code>:</p>
+<pre><code> interface DataCue : TextTrackCue {
+    attribute ArrayBuffer data; // Always empty
+
+    // Proposed extensions.
+    attribute any value;
+    readonly attribute DOMString type;
+};
+</code></pre>
+<p><a class="onebox" href="https://trac.webkit.org/browser/webkit/trunk/Source/WebCore/html/track/DataCue.idl" rel="nofollow noopener" target="_blank">https://trac.webkit.org/browser/webkit/trunk/Source/WebCore/html/track/DataCue.idl</a></p>
+<p><code>type</code>: A string identifying the type of metadata:</p>
+<pre><code>"com.apple.quicktime.udta" - QuickTime User Data
+"com.apple.quicktime.mdta" - QuickTime Metadata
+"com.apple.itunes" - iTunes metadata
+"org.mp4ra" - MPEG-4 metadata
+"org.id3" - ID3 metadata
+</code></pre>
+<p><code>value</code>: An object with the metadata item key, data, and optionally a locale:</p>
+<pre><code>value = {
+    key: String
+    data: String | Number | Array | ArrayBuffer | Object
+    locale: String
+}
+</code></pre>
+<p><a href="https://trac.webkit.org/browser/webkit/trunk/LayoutTests/http/tests/media/track-in-band-hls-metadata.html" rel="nofollow noopener">This</a> simple WebKit layout tests loads various types of ID3 metadata from an HLS stream.</p>
+<p>For more information, see <a href="https://developer.apple.com/videos/play/wwdc2014/504/" rel="nofollow noopener">this session</a> from WWDC 2014.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2642_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrisn</div>
+          <div class="creation_date">2018-12-07</div>
+          <div class="post_content">
+<p>At the WICG meeting at TPAC in Lyon we were approved to start an incubation. Is there anything more needed from me in order to set up a repository? I suggest we use the name ‘data-cue’. Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2018-12-13</div>
+          <div class="post_content">
+<p>I’ve requested for a Mozilla position on this proposal <a href="https://github.com/mozilla/standards-positions/issues/122" rel="nofollow noopener">https://github.com/mozilla/standards-positions/issues/122</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2642_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrisn</div>
+          <div class="creation_date">2018-12-17</div>
+          <div class="post_content">
+<p>An initial draft explainer is here: <a href="https://github.com/chrisn/datacue/blob/master/explainer.md" rel="nofollow noopener">https://github.com/chrisn/datacue/blob/master/explainer.md</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2642_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrisn</div>
+          <div class="creation_date">2019-03-12</div>
+          <div class="post_content">
+<p>I have updated the explainer, PTAL: <a href="https://github.com/chrisn/datacue/blob/master/explainer.md" rel="nofollow noopener">https://github.com/chrisn/datacue/blob/master/explainer.md</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-06</div>
+          <div class="post_content">
+<p>This is contained in the Explainer referring to <code>VTTCue()</code></p>
+<blockquote>
+<p>It also does not directly support in-band timed metadata.</p>
+</blockquote>
+<p><code>VTTCue()</code> can be created at any point, correct?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2642_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrisn</div>
+          <div class="creation_date">2020-02-14</div>
+          <div class="post_content">
+<p><span class="mention">@guest271314</span> Sorry for the late reply. Yes, <code>VTTCue</code> can be created at any point. As this is currently the only cue type with a constructor, it’s the only way for web apps to create cues at the moment.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

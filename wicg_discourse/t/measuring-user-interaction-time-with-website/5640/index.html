@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Measuring user interaction time with website</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Measuring user interaction time with website</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-10-10</div>
+          <div class="post_content">
+<p>With current APIs, is there any way to measure how long a user has been interacting with the website (not just with a single page)?</p>
+<p>That would be useful to decide when to trigger a push notification prompt, a newsletter signup prompt, etc. That would increase the likelihood that a website display the prompt at the right moment, after some interaction, and not as soon as a user lands on a website.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-10-17</div>
+          <div class="post_content">
+<p>I guess you could store a timestamp of the visitor’s arrival in <code>sessionStorage</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-10-18</div>
+          <div class="post_content">
+<blockquote>
+<p>you could store a timestamp of the visitor’s arrival in <code>sessionStorage</code></p>
+</blockquote>
+<p>That would not measure the actual interaction time with your website… Idle, not using the PC or the browser, visiting other sites on other tabs, etc.</p>
+<p>That’s why we need an API to measure the actual interaction time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-10-18</div>
+          <div class="post_content">
+<p>Chrome recently shipped <a href="https://www.chromestatus.com/feature/4590256452009984" rel="noopener nofollow ugc">Idle Detection</a>.</p>
+<p>As far as I know, there is no single API that would directly tell you how long the user has interacted with a website as a whole, but there are different APIs that can be used together to enable a library that can answer that question more or less reliably.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jackyjoy123</div>
+          <div class="creation_date">2022-02-20</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="5640" data-username="simevidas">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/3804_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>As far as I know, there is no single API that would directly tell you how long the user has interacted with a website as a whole, but there are different APIs that can be used together to enable a library that can answer that question more or less reliably.</p>
+</blockquote>
+</aside>
+<p>thanks my issue has been fixed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-05-17</div>
+          <div class="post_content">
+<p>I still think that an API would be really useful.</p>
+<p>Also note that the Idle Detection requires a permission, so it’s not suited for my use case: for example one of the use cases would be to ask the permission for notifications only once the user has interacted with the website for some time.</p>
+<p>If you have privacy concern, the API could round the “interaction time” value… For example instead of saying that the user has interacted with a domain for 123.45 seconds, it could say &gt; 1 minute.</p>
+<p>The API would be really simple:</p>
+<ul>
+<li>
+<code>window.getDomainInteractionTime</code> =&gt; number</li>
+<li>or alternatively, <code>window.getDomainEngagementLevel</code> =&gt; ‘new’, ‘low’, ‘medium’, ‘high’, etc.</li>
+</ul>
+<p>Then, based on the level of engagement, you can display personalized messages, push notification prompt, a newsletter signup prompt, etc…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p>Hi all!</p>
+<h4>
+<a class="anchor" href="#h-1-what-is-time-on-site-1" name="h-1-what-is-time-on-site-1"></a>1. What is “Time on Site”?</h4>
+<p>“This is an average of the amount of time all visitors to a page spend on that particular page. This can be misleading as some people might leave the page open and go to lunch. But it is a pretty good reflection on how people are engaging with your content.”</p>
+<h4>
+<a class="anchor" href="#h-2-concept-2" name="h-2-concept-2"></a>2. Concept</h4>
+<p><img alt="image" data-base62-sha1="4sA7ARdMjMchUlkjtvcN85XiMks" height="293" src="//discourse.wicg.io/uploads/default/original/2X/1/1f43d3fa808e2c09669b8be0be5b4007ce4dbdb4.png" width="553"/></p>
+<h4>
+<a class="anchor" href="#h-3-what-are-we-trying-to-measure-3" name="h-3-what-are-we-trying-to-measure-3"></a>3. What are we trying to measure?</h4>
+<ol>
+<li>The user has confirmation that loading has started.</li>
+<li>The user has enough information in front of them to think that they can interact with the page.</li>
+<li>The user can interact with the page (this particular moment being dependant of the type of the interaction).</li>
+<li>The user’s interaction with the page is effortless and intuitive, with no delays and jank.</li>
+<li>User Interaction With Forms</li>
+</ol>
+<h4>
+<a class="anchor" href="#h-4-how-long-do-users-stay-on-web-pages-4" name="h-4-how-long-do-users-stay-on-web-pages-4"></a>4. How Long Do Users Stay on Web Pages?</h4>
+<p><strong>Summary:</strong> Users often leave Web pages in 10–20 seconds, but pages with a clear value proposition can hold people’s attention for much longer. To gain several minutes of user attention, you must clearly communicate your value proposition within 10 seconds.</p>
+<h4>
+<a class="anchor" href="#h-5-my-ideaalgorithm-5" name="h-5-my-ideaalgorithm-5"></a>5. My idea/Algorithm</h4>
+<ol>
+<li>Users often leave Web pages in 10–20 seconds</li>
+<li>This statistical information should not be made with cookies, only localstorage</li>
+<li>“One analysis of 5 million desktop and mobile pages found that the average time it takes to fully load a webpage is <strong>10.3 seconds on desktop, and 27.3 seconds on mobile</strong> .” - this should be the maximum or minimum time for the function to measure user interaction time</li>
+<li>It is necessary to specify the type of interaction that the user will make on the site</li>
+</ol>
+<h5>
+<a class="anchor" href="#h-6-source-code-of-the-my-ideaalgorithm-6" name="h-6-source-code-of-the-my-ideaalgorithm-6"></a>6. Source code of the my idea/algorithm</h5>
+<pre data-code-wrap="js"><code class="lang-nohighlight">var info = userLeaveWebpage(); // website//mobile
+localstorage.saveData(info)
+
+// or
+var website = userLeaveWebpage.mobile(); 
+var mobile = userLeaveWebpage.website();
+
+if website == 10 or website == 20:
+   userInteractTimeWebsite.form(10) // evaluate every 10 seconds if the user used the form or not in website
+    window.getDomainInteractionTime =&gt; number
+    //window.getDomainEngagementLevel =&gt; ‘new’, ‘low’, ‘medium’, ‘high
+  return localstorage.statusPage('true', '[10, 20]');
+
+if website == 10 or website == 20:
+    window.getDomainInteractionTime =&gt; number
+    //window.getDomainEngagementLevel =&gt; ‘new’, ‘low’, ‘medium’, ‘high
+     userInteractTimeMobile.form(10) // evaluate every 10 seconds if the user used the form or not in mobile
+  return localstorage.statusPage('true', '[10, 20]');
+
+</code></pre>
+<h5>
+<a class="anchor" href="#h-7-references-7" name="h-7-references-7"></a>7. References</h5>
+<ul>
+<li><a class="inline-onebox" href="https://divvyhq.com/content-analytics/how-to-measure-user-interaction-with-content-and-what-to-do-next/" rel="noopener nofollow ugc">How to Measure User Interaction with Content (And What to Do Next)</a></li>
+<li><a href="https://towardsdatascience.com/how-to-measure-user-interactions-in-google-analytics-cc5f5a32b02b" rel="noopener nofollow ugc">https://towardsdatascience.com/how-to-measure-user-interactions-in-google-analytics-cc5f5a32b02b</a></li>
+<li><a class="inline-onebox" href="https://github.com/saleemkce/timeonsite" rel="noopener nofollow ugc">GitHub - saleemkce/timeonsite: Timeonsitetracker.js - Accurate Time on site tracking for web and mobile browsers</a></li>
+<li><a class="inline-onebox" href="https://github.com/atlassian/browser-interaction-time" rel="noopener nofollow ugc">GitHub - atlassian/browser-interaction-time: ⏰ A JavaScript library (written in TypeScript) to measure the time a user is active on a website</a></li>
+<li><a class="inline-onebox" href="https://github.com/WICG/time-to-interactive" rel="noopener nofollow ugc">GitHub - WICG/time-to-interactive: Repository for hosting TTI specification and discussions around it.</a></li>
+<li><a class="inline-onebox" href="https://web.dev/interactive/" rel="noopener nofollow ugc">Time to Interactive</a></li>
+<li><a class="inline-onebox" href="https://salt.agency/blog/how-to-measure-web-page-interactivity-using-time-to-interactive-tti-2/" rel="noopener nofollow ugc">How to Measure Web Page Interactivity Using Time to Interactive (TTI) - SALT.agency®</a></li>
+<li><a class="inline-onebox" href="https://blog.dareboost.com/en/2019/05/time-to-interactive-tti-measure-interactivity/" rel="noopener nofollow ugc">TTI: Time To (consistently) Interactive, how to measure web page interactivity | Dareboost Blog</a></li>
+<li><a class="inline-onebox" href="https://neilpatel.com/blog/measure-website-ux/" rel="noopener nofollow ugc">7 Ways to Measure Your Website’s UX</a></li>
+<li><a class="inline-onebox" href="https://buchanan-solutions.com/time-site-measure-user-interaction-website/" rel="noopener nofollow ugc">Time on Site: measure user interaction on your website - Buchanan Solutions</a></li>
+<li><a class="inline-onebox" href="https://www.nngroup.com/articles/how-long-do-users-stay-on-web-pages/" rel="noopener nofollow ugc">How Long Do Users Stay on Web Pages?</a></li>
+<li><a class="inline-onebox" href="https://www.crazyegg.com/blog/why-users-leave-a-website/" rel="noopener nofollow ugc">The 15 Second Rule: 3 Reasons Why Users Leave a Website</a></li>
+<li><a class="inline-onebox" href="https://blog.hubspot.com/marketing/chartbeat-website-engagement-data-nj" rel="noopener nofollow ugc">What Is the Average Time Spent On a Website? [+ How to Improve It]</a></li>
+<li><a class="inline-onebox" href="https://www.sweor.com/firstimpressions" rel="noopener nofollow ugc">27 Eye-Opening Website Statistics [Updated for 2022]</a></li>
+<li><a class="inline-onebox" href="https://www.klipfolio.com/metrics/marketing/average-time-on-page" rel="noopener nofollow ugc">Average Time on Page | MetricHQ</a></li>
+<li><a class="inline-onebox" href="https://www.websitebuilderexpert.com/building-websites/website-load-time-statistics" rel="noopener nofollow ugc">Website Load Time Statistics: Why Speed Matters in 2022</a></li>
+<li><a class="inline-onebox" href="https://discourse.wicg.io/t/integrating-websites-with-the-browser/2512">Integrating websites with the browser</a></li>
+<li><a class="inline-onebox" href="https://discourse.wicg.io/t/user-interaction-with-web-apps/1177">User interaction with web apps</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p><span class="mention">@collimarco</span> <span class="mention">@simevidas</span> <span class="mention">@jackyjoy123</span> Hi all! What do you think of this code?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p><span class="mention">@raphaellouis</span> It’s nice to see that you are also interested in this proposal. However I really don’t understand your idea / code.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p><span class="mention">@collimarco</span>  thank you for feedback ;D</p>
+<h5>
+<a class="anchor" href="#h-1-concept-1" name="h-1-concept-1"></a>1. Concept</h5>
+<ol>
+<li>User waits for page to load</li>
+<li>After the page is loaded</li>
+<li>The user will interact with some element of the page</li>
+<li>For each element that the user interacts with the page, that element that was interacted with is evaluated for a time and the information of that time is saved in the information in localstorage or it can be sent to the server directly through a fetch</li>
+</ol>
+<h4>
+<a class="anchor" href="#h-2-in-short-2" name="h-2-in-short-2"></a>2. In short</h4>
+<ol>
+<li>My idea is to specify the form of user interaction at a time defined by the page</li>
+<li>we can have user interaction in an email field or on page scrolling - this has to be set</li>
+<li>In my code I do a time evaluation which is based on most page stats  - with this I define which element I want to analyze in that time interval</li>
+<li>For me to evaluate which element I need to analyze, it is necessary for the api to establish which elements should be evaluated</li>
+<li>I made a suggestion like this: user interaction on the form, interaction waiting for the page to load etc.</li>
+<li>Is a pseudo code to demonstrate my idea</li>
+</ol>
+<h4>
+<a class="anchor" href="#h-3-code-3" name="h-3-code-3"></a>3. Code</h4>
+<p><img alt="image" data-base62-sha1="1tYHsLPQMkPY3XFOMcYnLnny3a7" height="233" src="//discourse.wicg.io/uploads/default/original/2X/0/0a65b7645c9debbca9985dee0442815922e9eb3f.png" width="426"/></p>
+<h4>
+<a class="anchor" href="#h-31-source-code-4" name="h-31-source-code-4"></a>3.1 Source-code</h4>
+<pre><code class="lang-auto">//// -- LEVEL 1
+//// -- Tables and References
+
+Table UserInteractionWays {
+  InteractionByForm timestamp
+  WaitForPageToLoad timestamp
+  TimeThatUserWaitPage timestamp
+  ClickingAButtonForASetTime timestamp
+ }
+</code></pre>
+<h4>
+<a class="anchor" href="#h-32-screenshot-5" name="h-32-screenshot-5"></a>3.2 Screenshot</h4>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/0ae2e27798d99c6db29b56596b3e6483881a502c" href="//discourse.wicg.io/uploads/default/original/2X/0/0ae2e27798d99c6db29b56596b3e6483881a502c.png" title="image"><img alt="image" data-base62-sha1="1yiS72gy6z324QxjxG3zTy66VJO" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/0/0ae2e27798d99c6db29b56596b3e6483881a502c_2_10x10.png" height="144" src="//discourse.wicg.io/uploads/default/optimized/2X/0/0ae2e27798d99c6db29b56596b3e6483881a502c_2_690x144.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/0/0ae2e27798d99c6db29b56596b3e6483881a502c_2_690x144.png, //discourse.wicg.io/uploads/default/optimized/2X/0/0ae2e27798d99c6db29b56596b3e6483881a502c_2_1035x216.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/0/0ae2e27798d99c6db29b56596b3e6483881a502c.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1364×286 21.9 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<h4>
+<a class="anchor" href="#h-33-source-code-real-6" name="h-33-source-code-real-6"></a>3.3 Source-code real</h4>
+<pre><code class="lang-auto">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;h1&gt;The Window Object&lt;/h1&gt;
+&lt;h2&gt;The localStorage Property&lt;/h2&gt;
+&lt;p&gt;Saved name is:&lt;/p&gt;
+&lt;p id="demo"&gt;&lt;/p&gt;
+&lt;script&gt;
+// Set Item
+var loadTime = window.performance.timing.domContentLoadedEventEnd- window.performance.timing.navigationStart;
+localStorage.setItem("WaitForPageToLoad", loadTime);
+document.getElementById("demo").innerHTML = localStorage.getItem("WaitForPageToLoad");
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#api-measuring-user-interaction-time-with-websitehttpsdiscoursewicgiotmeasuring-user-interaction-time-with-website5640-7" name="api-measuring-user-interaction-time-with-websitehttpsdiscoursewicgiotmeasuring-user-interaction-time-with-website5640-7"></a>API - <a href="https://discourse.wicg.io/t/measuring-user-interaction-time-with-website/5640">Measuring user interaction time with website</a>
+</h4>
+<ol>
+<li>loadTime is window.performance.timing.domContentLoadedEventEnd- window.performance.timing.navigationStart</li>
+<li>WaitForPageToLoad with localStorage.setItem(“WaitForPageToLoad”, loadTime),</li>
+<li>UserInteractionTime.WaitForPageToLoad(): return timestamp(save in localstorage)</li>
+</ol>
+<h4>
+<a class="anchor" href="#other-supports-8" name="other-supports-8"></a>Other supports</h4>
+<ol>
+<li>UserInteractionTime.InteractionByForm(): return  timestamp(save in localstorage)</li>
+<li>UserInteractionTime.TimeThatUserWaitPage(): return  timestamp(save in localstorage)</li>
+<li>UserInteractionTime.ClickingAButtonForASetTime(): return  timestamp(save in localstorage)</li>
+<li>UserInteractionTime.PageScroll(): return  timestamp(save in localstorage)</li>
+</ol>
+<h4>
+<a class="anchor" href="#proof-of-concept-9" name="proof-of-concept-9"></a>proof of concept</h4>
+<p><img alt="image" data-base62-sha1="jj1NdkYx78pYfIKJSzI0FjCpK9p" height="248" src="//discourse.wicg.io/uploads/default/original/2X/8/874ff85c89356b7ac90f10d44fbf870b72ea7b77.png" width="381"/></p>
+<h5>
+<a class="anchor" href="#notes-10" name="notes-10"></a>Notes</h5>
+<p>the time the user waits on the page was -1653750874358 or 2022-05-24 16:18:56.</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/df1580784dc0579149669648576de329c166b093" href="//discourse.wicg.io/uploads/default/original/2X/d/df1580784dc0579149669648576de329c166b093.png" title="image"><img alt="image" data-base62-sha1="vPuxGKOW4Lw3izqfWuOg4xjFKNR" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/d/df1580784dc0579149669648576de329c166b093_2_10x10.png" height="67" src="//discourse.wicg.io/uploads/default/optimized/2X/d/df1580784dc0579149669648576de329c166b093_2_690x67.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/d/df1580784dc0579149669648576de329c166b093_2_690x67.png, //discourse.wicg.io/uploads/default/optimized/2X/d/df1580784dc0579149669648576de329c166b093_2_1035x100.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/d/df1580784dc0579149669648576de329c166b093.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1131×110 7.73 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<h4>
+<a class="anchor" href="#references-11" name="references-11"></a>References</h4>
+<ul>
+<li><a class="inline-onebox" href="https://dbdiagram.io/d" rel="noopener nofollow ugc">dbdiagram.io - Database Relationship Diagrams Design Tool</a></li>
+<li><a class="inline-onebox" href="https://www.w3schools.com/jsref/prop_win_localstorage.asp" rel="noopener nofollow ugc">Window localStorage Property</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/14341156/calculating-page-load-time-in-javascript" rel="noopener nofollow ugc">Calculating Page Load Time In JavaScript - Stack Overflow</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p><span class="mention">@collimarco</span> If you have any questions, I explain in another way, I really want to help with this proposal</p>
+<h4>
+<a class="anchor" href="#summarizing-the-api-it-should-be-like-this-1" name="summarizing-the-api-it-should-be-like-this-1"></a>Summarizing the api It should be like this</h4>
+<ol>
+<li>UserInteractionTime.WaitForPageToLoad(): return timestamp</li>
+<li>UserInteractionTime.InteractionByForm(): return timestamp</li>
+<li>UserInteractionTime.TimeThatUserWaitPage(): return timestamp</li>
+<li>UserInteractionTime.ClickingAButtonForASetTime(): return timestamp</li>
+<li>UserInteractionTime.PageScroll(): return timestamp(save in localstorage</li>
+</ol>
+<h5>
+<a class="anchor" href="#reasons-2" name="reasons-2"></a>Reasons</h5>
+<ol>
+<li>The types of user interactions are specified</li>
+<li>Any type of user interaction is returned an expected or awaited time</li>
+<li>My inspiration would be something like selenium</li>
+</ol>
+<pre><code class="lang-auto">try:
+    element = UserInteractionTime(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "myDynamicElement"))
+    )
+finally:
+    UserInteractionTime.quit()
+</code></pre>
+<h4>
+<a class="anchor" href="#references-3" name="references-3"></a>References</h4>
+<ul>
+<li><a class="inline-onebox" href="https://selenium-python.readthedocs.io/waits.html" rel="noopener nofollow ugc">5. Waits — Selenium Python Bindings 2 documentation</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-29</div>
+          <div class="post_content">
+<h5>
+<a class="anchor" href="#how-to-measure-user-interaction-time-with-the-website-1" name="how-to-measure-user-interaction-time-with-the-website-1"></a>How to measure user interaction time with the website?</h5>
+<ol>
+<li>Compare the page load response time with the time the page element is viewed, clicked, filled, or waited and waited.</li>
+<li>The comparison will give you an average, a central value.</li>
+<li>Frameworks like selenium do exactly what I said.</li>
+<li>For you compare the page load response time with the time the page element is viewed, clicked, filled, or waited and waited. You need this: “Summary: Users often leave Web pages in 10–20 seconds, but pages with a clear value proposition can hold people’s attention for much longer. To gain several minutes of user attention, you must clearly communicate your value proposition within 10 seconds.”</li>
+<li>To create our api to create an API that is made to interact in Dom - Document Object Model.</li>
+<li>My api has everything you need.</li>
+</ol>
+<h5>
+<a class="anchor" href="#my-apiuserinteractiontimejs-2" name="my-apiuserinteractiontimejs-2"></a>My api:UserInteractionTime.js</h5>
+<pre><code class="lang-auto">var start=0, end;
+
+function UserInteraction(nameDef, value){
+    localStorage.setItem(nameDef, value);
+    return localStorage.getItem(nameDef);
+}
+
+function UserInteractionForm(){
+  $('.eform input').on('focus', function(e){
+   start=Date.now()
+ })
+$(document).on('submit','.eform', function(e){
+   end=Date.now()-start;
+   let number = start+end;
+   console.log("Seconds filling the form", parseFloat(end/1000).toFixed(2) )
+   UserInteraction("InteractionByForm", number)   
+});
+}
+
+function  loadTime(){
+   return window.performance.timing.domContentLoadedEventEnd- window.performance.timing.navigationStart;
+}
+</code></pre>
+<h4>
+<a class="anchor" href="#api-3" name="api-3"></a>Api</h4>
+<ul>
+<li>UserInteraction(“WaitForPageToLoad”, loadTime()); // return timestamp</li>
+<li>UserInteractionForm(); // return timestamp</li>
+</ul>
+<h4>
+<a class="anchor" href="#references-4" name="references-4"></a>References</h4>
+<ul>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/50113957/accurately-measure-user-interaction-time" rel="noopener nofollow ugc">javascript - Accurately measure user interaction time - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/5525071/how-to-wait-until-an-element-exists" rel="noopener nofollow ugc">javascript - How to wait until an element exists? - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/39841317/wait-for-element-to-be-displayed-to-user" rel="noopener nofollow ugc">javascript - Wait for element to be displayed to user - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/57391677/how-to-wait-until-an-element-exists-with-javascript" rel="noopener nofollow ugc">jquery - How to wait until an element exists with JavaScript? - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/23337719/time-to-interact-metric-in-web-performance-measurements" rel="noopener nofollow ugc">"Time to Interact" metric in web performance measurements - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/23523256/check-if-button-has-been-clicked-within-time" rel="noopener nofollow ugc">javascript - Check if button has been clicked within time - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom?noredirect=1&amp;lq=1" rel="noopener nofollow ugc">javascript - Check if element is visible in DOM - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/4667068/how-to-measure-a-time-spent-on-a-page" rel="noopener nofollow ugc">javascript - How to measure a time spent on a page? - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/8774089/detect-if-an-element-is-visible-with-jquery?noredirect=1&amp;lq=1" rel="noopener nofollow ugc">javascript - Detect if an element is visible with jQuery - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/5525071/how-to-wait-until-an-element-exists" rel="noopener nofollow ugc">javascript - How to wait until an element exists? - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/67422922/do-action-if-button-clicked-3-times-javascript" rel="noopener nofollow ugc">html - Do action if button clicked 3 times [javascript] - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/69601372/click-the-button-only-when-the-time-is-zero-in-jquery-html" rel="noopener nofollow ugc">javascript - Click the button only when the time is zero in Jquery html? - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/12081359/check-if-a-button-hasnt-been-clicked-within-a-certain-amount-of-time-jquery" rel="noopener nofollow ugc">javascript - Check if a button "hasn't" been clicked within a certain amount of time (jQuery) - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/67422922/do-action-if-button-clicked-3-times-javascript" rel="noopener nofollow ugc">html - Do action if button clicked 3 times [javascript] - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/47637114/how-to-check-if-a-button-hasnt-been-clicked-in-a-certain-amount-of-time-javasc" rel="noopener nofollow ugc">html - How to check if a button hasn't been clicked in a certain amount of time (Javascript) - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/16873323/javascript-sleep-wait-before-continuing" rel="noopener nofollow ugc">jquery - JavaScript sleep/wait before continuing - Stack Overflow</a></li>
+<li><a class="inline-onebox" href="https://stackoverflow.com/questions/66516146/waiting-for-a-page-to-load-cypress" rel="noopener nofollow ugc">javascript - Waiting for a page to load - Cypress - Stack Overflow</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

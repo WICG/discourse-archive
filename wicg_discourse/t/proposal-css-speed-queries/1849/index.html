@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] CSS @speed Queries</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] CSS @speed Queries</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1141_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">malchata</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<h1>CSS <code>@speed</code> Queries</h1>
+<h2>A theoretical CSS query type for querying connection speed</h2>
+<p>One thing I feel that’s missing in CSS is knowing how fast a connection is. When we talk about connection speed, we’re usually referring to three things:</p>
+<ol>
+<li>
+<strong>Latency:</strong> The time it takes for requests to reach the server, and for the server to respond to them with content.</li>
+<li>
+<strong>Throughput:</strong> How fast your connection can receive and send data.</li>
+<li>
+<strong>Protocol:</strong> The current protocol being used. Could be <code>h1</code>, <code>h2,</code>. A value of <code>h2</code> could be all encompassing for SPDY and QUIC (though SPDY is deprecated now.)</li>
+</ol>
+<p>These all influence how fast websites load for us. What if we could query aspects of this in CSS? Let’s take a look at some quick use cases.</p>
+<h2>Querying latency</h2>
+<p>What if we could query connection latency? Here’s example of a theoretical <code>min-latency</code> media query:</p>
+<pre><code class="lang-css">/* Loading a retina image */
+@media (min-resolution: 2dppx), (min-resolution: 192dpi), (-webkit-min-device-pixel-ratio: 2){
+    .masthead{
+        background: url("masthead-2x.jpg");
+    }
+}
+
+/* Querying a slow RTT */
+@speed (min-latency: 200ms){
+    .masthead{
+        background: url("masthead.jpg");
+    }
+}
+</code></pre>
+<p>Of course, you could always have a <code>max-latency</code> rule that would allow you do the inverse of this, but this feels a bit more intuitive to me, at least. The idea is that in high latency environments, the user agent could decide to sacrifice quality for high-DPI screens and download the smaller image.</p>
+<h2>Querying throughput</h2>
+<p>Latency isn’t the only environmental pressure on performance (though it is very important). Throughput matters, too. What if we had a <code>max-downstream</code> property we could query?</p>
+<pre><code class="lang-css">/* Loading a retina image */
+@media (min-resolution: 2dppx), (min-resolution: 192dpi), (-webkit-min-device-pixel-ratio: 2){
+    .masthead{
+        background: url("masthead-2x.jpg");
+    }
+}
+
+/* Querying a slow connection (in Kbps) */
+@speed (max-downstream: 10000){
+    .masthead{
+        background: url("masthead.jpg");
+    }
+}
+</code></pre>
+<p>In the above example, <code>masthead-2x.jpg</code> would only download if the connection downstream was greater than 10 megabits. You could theoretically have a related upstream property, or <code>min-</code> variations of each, of course. You could use throughput and latency querying together:</p>
+<pre><code class="lang-css">/* Querying for either high latency or a slow connection */
+@speed (min-latency: 200ms), (max-downstream: 10000){
+    .masthead{
+        background: url("masthead.jpg");
+    }
+}
+</code></pre>
+<p>Here we’re querying for <em>either</em> a high latency scenario or a connection with a low download speed. If either scenario occurs, the lower quality image would be transferred. You could use the <code>and</code> keyword to query for both conditions, but that would be far less flexible.</p>
+<h2>Querying the protocol version</h2>
+<p>This one is probably strays into the realm of esoterica, but it’s something I’ve done some writing on. HTTP/2 is great, but there’s a lot of browsers out there that may not support it, and some browsers like Opera Mini haven’t signaled their intent to implement support. When these users visit HTTP/2-capable web servers, the connection downgrades to HTTP/1. Since HTTP/2-specific optimization practices encourage <em>less</em> bundling/concatenation of files, this unduly increases the number of requests specifically for users that would be most affected by them. <a href="https://jeremywagner.me/blog/http2-in-developing-nations" rel="nofollow noopener">The size of this audience could be larger than you think</a>.</p>
+<p>So what if we had a <code>protocol</code> value we could query?</p>
+<pre><code class="lang-css">/* Serve individual icons by default (assuming the web server is HTTP/2) */
+.icon.github{
+    background: url("github-icon.svg");
+}
+
+.icon.email{
+    background: url("email-icon.svg");
+}
+
+.icon.twitter{
+    background: url("twitter-icon.svg");
+}
+
+/* Serve an image sprite if the protocol has downgraded to HTTP/1 */
+@speed (protocol: h1){
+    .icon.github,
+    .icon.email,
+    .icon.twitter{
+        background: url("sprite.svg");
+    }
+
+    .icon.github{
+        background-position: 0 0;
+    }
+
+    .icon.email{
+        background-position: -2rem -2rem;
+    }
+
+    .icon.twitter{
+        background-position: -4rem -4rem;
+    }
+}
+</code></pre>
+<p><code>protocol</code> would probably be going too far, but could still be quite useful.</p>
+<h2>Why not just do this in JavaScript?</h2>
+<p>I have yet to speak authoritatively on the resource timing API, but I imagine one could tag the <code>html</code> element with a class in some of these instances, but the problem with this is that not everyone has access to JavaScript in all scenarios. Speed queries would admittedly reduce the scope of what could be controlled to only CSS, but the syntax would feel familiar and allow us enough control to change how we serve assets in different scenarios.</p>
+<h2>Questions? Feedback? Scorn?</h2>
+<p>Reply below. I have this mirrored at <a href="https://github.com/malchata/css-speed-query" rel="nofollow noopener">a Github repo</a> as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1077_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">huijing</div>
+          <div class="creation_date">2016-11-23</div>
+          <div class="post_content">
+<p>This is definitely an proposal that I’ve wished existed but always thought somehow was unfeasible for browser vendors to implement. It would really help with the responsive image loading use case as you mentioned. I find the latency and throughput queries to be most useful for this purpose.</p>
+<p>I just wonder how connection information would be conveyed to the browser. This topic has been discussed before by Peter-Paul Koch in <a href="http://www.quirksmode.org/blog/archives/2012/10/measuring_conne_1.html" rel="nofollow noopener">Measuring connection speed, ctd.</a>, and I find the closest feature we have today is probably client hints. Found some links to the topic, though they are dated a couple years ago. Even the W3C working group note on the <a href="https://dvcs.w3.org/hg/dap/raw-file/tip/network-api/Overview.html">The Network Information API</a> was dated 2014.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-11-23</div>
+          <div class="post_content">
+<p>As I wrote a few years ago, <a href="http://www.xanthir.com/blog/b4Hv0">Media Queries can’t be used for resolution negotiation</a>. We invented <code>&lt;picture&gt;</code> to solve this problem properly, and that’s been implemented by all browsers for a while now.  Just use that.</p>
+<p>Deciding between sprite sheets and individual images is a different sort of beast that might be more reasonable. I don’t think you want to actually select based on transport type itself, tho; you instead want something that talks about the actual feature you’re caring about, which is how expensive multiple requests to a server are.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1141_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">malchata</div>
+          <div class="creation_date">2016-11-23</div>
+          <div class="post_content">
+<p>Thank you for lending your expertise in response to this proposal. I understand your assertion that one should “just use” <code>&lt;picture&gt;</code> to solve the problem of responsive images for inline images (which is a fine answer), but it doesn’t address background images as CSS does, which necessitates a media query to serve the correct imagery according to a device’s pixel density.</p>
+<p>Furthermore, this proposal aims to give the developer control of how these assets can be used (or not used) in specific performance scenarios. Perhaps a separate type of query isn’t the answer, and maybe it isn’t even reasonably possible-- but I do see that Chrome handles font rendering differently on slower connections with no intervention on the part of the developer. Perhaps it wouldn’t be such a stretch for the user agent to accept a lower quality background image and ignore <code>background-image</code> references encapsulated in high-DPI <code>@media</code> rules on slow connections?</p>
+<p>The only problem with this is getting all browser makers on board with such a change, but I think this issue merits some consideration.</p>
+<p>Afterthought edit: Isn’t it also possible to avoid caching issues by detecting what images already exist in the cache? For example, say the user visits the site on a high speed connection and downloads all of the high-resolution images on the first go. Those are placed in the cache. Then let’s say the same user visits the site again on a slow mobile connection. Couldn’t the bandwidth-detection logic be abandoned in this instance and the image could be pulled from the cache?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-11-23</div>
+          <div class="post_content">
+<p>The point <span class="mention">@tabatkins</span> was making in his article is that we cannot (and should not) define media queries for conditions that constantly change. And network conditions do constantly change. Hanging media queries off them will end up annoying users (constantly changing styles) and result in double downloading of resources.</p>
+<p>I believe Tab mentioned <code>&lt;picture&gt;</code> as a reference to the general responsive images spec, within which <code>srcset</code> makes a better precedent here. <code>srcset</code> enables you to define multiple image resources (in varying densities or dimensions) and the browser can pick the one it sees fit in case of bandwidth stress. (It should be noted that no browser currently does, but the spec enables that)</p>
+<p>In CSS, <a href="https://drafts.csswg.org/css-images/#image-set-notation">image-set</a> enables us to do the same. Currently, only densities are defined but we can extend it to include dimensions as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1141_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">malchata</div>
+          <div class="creation_date">2016-11-23</div>
+          <div class="post_content">
+<p><code>image-set</code> sounds like it largely solves what I was looking for then, so long as the browser internals determine that a connection is slow and considers using the least burdensome of options. Thanks to both you and <span class="mention">@tabatkins</span> for chiming in and giving me some guidance. I really appreciate it.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

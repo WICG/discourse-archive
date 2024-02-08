@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Disable SVG tooltips with `title { pointer-events: none }`</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Disable SVG tooltips with `title { pointer-events: none }`</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p>Part of SVG’s accessibility importance is the ability to label and describe with <code>&lt;title&gt;</code> and <code>&lt;desc&gt;</code>. The problem with <code>&lt;title&gt;</code> is that it doubles as an accessible name and a hover tooltip.</p>
+<p>This is the problem that made early Internet Explorer and <code>alt</code> an accessibility disaster; authors started writing alternate text specifically for the tooltips, or avoided it altogether to prevent confusing sighted mouse-users, so I’m sad it happened again.</p>
+<p>Later SVG specifications stated that <code>&lt;title&gt;</code> should only be used for hover text if it had <code>role="tooltip"</code>, but this was never implemented.</p>
+<p>It’s not perfect, but it would be an improvement if we could disable the tooltip behavior with CSS/SVG presentation attributes, to avoid breaking existing content that relies on the old behavior:</p>
+<pre><code class="lang-css">svg|title {
+  pointer-events: none;
+}
+</code></pre>
+<p>or</p>
+<pre><code class="lang-xml">&lt;title pointer-events="none"&gt;A yellow shining sun.&lt;/title&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p>Moreover, it would be nice to be able to control showing tooltips for any element regardless of whether it’s inside SVG.</p>
+<p>This could be done with a CSS property like <code>show-tooltip</code> (with <code>auto</code> value by default, and <code>none</code> to disable tooltip).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-08-11</div>
+          <div class="post_content">
+<p>Oh, that’s a much better idea! We could do things like this, then:</p>
+<pre><code class="lang-auto">&lt;button title="Publish the current document to your front page"&gt;Publish&lt;/button&gt;
+</code></pre>
+<pre><code class="lang-css">button {
+  show-tooltip: none;
+  position: relative;
+}
+
+button::after {
+  content: attr(title);
+  position: absolute;
+  /* etc. */
+}
+</code></pre>
+<p>…to make our own tooltips while still exposing the correct semantic attribute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenny-evitt</div>
+          <div class="creation_date">2016-05-12</div>
+          <div class="post_content">
+<p>This would be fantastic. As-of now, the only way to disable tooltips is to set the <code>title</code> to an empty string.</p>
+<p>What’s the next step to make this a reality?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1260_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">prlbr</div>
+          <div class="creation_date">2016-05-13</div>
+          <div class="post_content">
+<p>It’s a very useful idea to be able to switch off the tooltip behaviour indeed.</p>
+<p>I’m developer of a lightweight markup language to HTML converter and the lightweight markup language has one syntax for annotating words or runs of text. It’s usually prefered to show these annotations as tooltip and hence they are converted to title attributes on span elements in HTML. But there are situations where they are better displayed differently, e.g. as ruby annotation for east asian text. CSS already makes it possible to display the title as ruby annotation, which is great. The only aspect that is a little irritating then is that the annotation is also shown as tooltip. It would be nice to be able to switch that off with CSS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">justsomeguy</div>
+          <div class="creation_date">2017-10-08</div>
+          <div class="post_content">
+<p>IMO, a better model would be a tooltip version of the <code>content</code> property. For example: <code>tooltip: attr(title)</code> and <code>tooltip: none</code>.</p>
+<p>This would accommodate cases like <code>td::before { content: "ISBN"; tooltip: "International Standard Book Number"; }</code> where the column heading has been hidden.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2017-10-09</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1054">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/k/e47774/40.png" width="20"/> kenny-evitt:</div>
+<blockquote>
+<p>What’s the next step to make this a reality?</p>
+</blockquote>
+</aside>
+<p>I’m definitely in favor of this. Hopefully a browser vendor picks this up I guess? It’s interesting… I’ve noticed that tooltip ideas/suggestions don’t seem to get much interest here. <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-10-15</div>
+          <div class="post_content">
+<p>No. Browser vendors don’t just pick up ideas from the WICG forum. The next step needs to be a proposal in the form of a WICG spec, and that requires a champion, a person who is willing to spend time on creating the initial spec—there is a <a href="https://github.com/WICG/starter-kit/" rel="nofollow noopener">starter kit</a>*—and post it here, then process the feeback and update the spec until the group is in agreement, and only then does it make sense to file the relevant browser bugs, which is how you actually make vendors implement stuff. <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+<p>* I wanted to test it but couldn’t because my Node version isn’t supported (updating Node on Windows is a major task; you basically have to re-install everything <img alt=":pensive:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/pensive.png?v=5" title=":pensive:"/>). It needs at least v7.5, I think.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

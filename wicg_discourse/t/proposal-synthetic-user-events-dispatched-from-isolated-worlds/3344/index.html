@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Synthetic user events dispatched from isolated worlds</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Synthetic user events dispatched from isolated worlds</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1054_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shekyan</div>
+          <div class="creation_date">2019-02-04</div>
+          <div class="post_content">
+<h2>How things are right now</h2>
+<p>The webdriver specification defines the webdriver-active flag through the <a href="https://w3c.github.io/webdriver/#dom-navigatorautomationinformation" rel="nofollow noopener">NavigatorAutomationInformation</a> interface as follows:</p>
+<blockquote>
+<p>The webdriver-active flag is set to true when the user agent is under remote control.</p>
+</blockquote>
+<p>Most modern browsers set the value of this flag to true only when it is being automated using the WebDriver protocol.</p>
+<p>Chrome diverts from the specification and declares the normally undeclared <code>webdriver</code> property and sets the value of this flag to true.</p>
+<h2>Proposed changes</h2>
+<p>The definition of the webdriver-active flag could be generously interpreted to indicate not only that a user agent is under remote control using something like WebDriver but that a user agent is receiving inputs that both originate outside of the document and are not user-agent initiated. We propose that UI events dispatched from a browser extension context cause the webdriver-active flag to be set to true.</p>
+<h2>Implementation details</h2>
+<p>In <a href="https://chromium-review.googlesource.com/c/chromium/src/+/1452760" rel="nofollow noopener">our proof-of-concept</a> patch to Chrome, we look at the UIEvent constructor call context, and if <code>script_state-&gt;World().IsIsolatedWorld()</code> is set, we set a global flag for automation control globally for current renderer. In our patch, we also align Chrome’s implementation of <code>navigator.webdriver</code> with the specification. Note that events can be dispatched by <code>EventTarget.dispatchEvent</code>, as well as through <code>HTMLElement.click</code> and <code>HTMLForm.submit</code> APIs.</p>
+<h2>Caveats</h2>
+<p>Extensions operating by injecting script elements into the controlled document will continue to not set the webdriver-active flag. Arguably, this kind of remote control should be treated no differently than the types of usage we are affecting with this proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-02-18</div>
+          <div class="post_content">
+<p>This seems like a very browser-extension specific proposal (instead of general web browser proposal). It might be best to propose this to either Mozilla or Chrome directly?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1054_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shekyan</div>
+          <div class="creation_date">2019-02-27</div>
+          <div class="post_content">
+<p>We actually would like this proposal to be more general. We used extensions as an example of a place where UIEvents could originate, but we hope that UIEvents that come from any source other than human interface devices would enable the webdriver-active flag.
+If you know of a better way of describing this category of inputs or another notification mechanism that would be more appropriate, we would love your help with this proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-02-27</div>
+          <div class="post_content">
+<p>Definitely not an expert, but I would suggest maybe posting an issue in the web driver spec repo:
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="16" src="https://github.githubassets.com/favicon.ico" width="16"/>
+<a href="https://github.com/w3c/webdriver/issues/" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="60" src="https://avatars3.githubusercontent.com/u/379216?s=400&amp;v=4" width="60"/>
+<h3><a href="https://github.com/w3c/webdriver/issues/" rel="nofollow noopener" target="_blank">w3c/webdriver</a></h3>
+<p>Remote control interface that enables introspection and control of user agents. - w3c/webdriver</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>At least, it will allow you to get useful feedback from folks that know this area well and might have suggestion about how to best proceed.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Content Indexing API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Content Indexing API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rayankans</div>
+          <div class="creation_date">2020-03-16</div>
+          <div class="post_content">
+<h1>Content Indexing</h1>
+<p><strong>Repo</strong>: <a href="https://github.com/rayankans/content-index" rel="nofollow noopener">https://github.com/rayankans/content-index</a></p>
+<p><strong>Spec</strong>: <a href="https://rayankans.github.io/content-index/spec/" rel="nofollow noopener">Draft</a></p>
+<p>High quality offline-enabled web content is not easily discoverable by users right now. They would have to know which
+websites work offline or install a PWA to be able to browse through content while offline. This is not a great user
+experience as there is no central point to discover available content. To address this, we propose a new API to allow
+developers to tell the browser about their specific content.</p>
+<p>The <strong>content index</strong> allows websites to register their offline enabled content in the browser. This allows the browser
+to improve their offline capabilities and offer content to users to browse through while offline. This data could also
+be used to improve on-device search and augment browsing history.</p>
+<h2>Why do we need this?</h2>
+<p>Unrealiable or even unavailable network connections are very common on mobile devices. Even in connected cities like
+London, people have very limited connectivity while travelling underground. This API would allow browsers to show
+meaningful content to users in these situations and sites to increase user engagement.</p>
+<p>Browser vendors are already looking for content relevant to the user, based on their browsing history, and make it
+available to be consumed offline. This is not ideal as it ignores the entity with the most knowledge of that content -
+the providers themselves. With this API they can highlight user specific, high quality content through the browser.
+Grouping content by a category (e.g. ‘article’, ‘video’, ‘audio’) allows an even richer experience as the browser is
+able to understand what kind of content is available and show a relevant UI.</p>
+<h3>Usage scenario 1</h3>
+<p>A news publisher has a website that uses service workers to allow its users to read news articles offline. Highly
+engaged users of this website may see a link to the site in their browsers home screen, but have no way of knowing if
+there are any new articles available to read beforehand. The news site can leverage web notifications for high priority
+breaking news articles, but should not use them for less important ones. By using this API, the news site can simply
+expose its content to the browser which can then surface that content to the user. Users can then browse available
+content in a central location, even while offline.</p>
+<h3>Usage scenario 2</h3>
+<p>A blog publishes regular podcasts to its users. It is available as a PWA and uses background fetch to download the audio
+files. An embedded media player then allows users to listen to these podcasts. With this API, these podcasts can be
+surfaced in the OS, allowing users to search for their downloaded content through native UI surfaces. This integration
+is only available with native apps at the moment.</p>
+<h2>Goals</h2>
+<ul>
+<li>Allow users to easily find content even while <strong>offline</strong>
+</li>
+<li>Surface high quality content in native spaces (example: <a href="https://developer.android.com/guide/slices" rel="nofollow noopener">Android Slices</a>)</li>
+</ul>
+<h2>Non-goals</h2>
+<ul>
+<li>Storage of the offline content itself<br/>
+<em>We expect developers to use more specialized APIs to store content (see
+<a href="https://w3c.github.io/ServiceWorker/#cache-objects" rel="nofollow noopener">Service Worker Caches</a> or
+<a href="https://www.w3.org/TR/webstorage/">Web Storage</a>).</em>
+</li>
+</ul>
+<h2>Broader API landscape</h2>
+<h3>Service Worker</h3>
+<p>We propose to add this API as an extension to <a href="https://w3c.github.io/ServiceWorker/" rel="nofollow noopener">Service Workers</a>. This allows
+browsers to check if the given content is actually available offline. This also makes it easier for developers, as the
+entries get removed automatically if the service worker is unregistered (and therefore can not provide the offline
+content anymore).</p>
+<h3>CacheStorage API</h3>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/API/Cache" rel="nofollow noopener">CacheStorage API</a> allows websites to cache requests and,
+for example, use the cached content in the <code>fetch</code> event of a service worker. This makes it easy to ensure that some
+content is available offline, and is one of the steps to create high quality
+<a href="https://codelabs.developers.google.com/codelabs/your-first-pwapp/#5" rel="nofollow noopener">Progressive Web Apps</a>.</p>
+<h3>Web Packaging</h3>
+<p><a href="https://github.com/WICG/webpackage" rel="nofollow noopener">Web Packaging</a> is a proposed API to bundle resources of a website together, so they
+can be shared offline. This also allows them to be securely distributed as a bundle. This API plays nicely together with
+<strong>Content Indexing</strong>, making it easier to ensure all necessary content is available offline.</p>
+<h2>Security and Privacy</h2>
+<p>Developers have control over which content they want to make available to the browser. The lifetime of an entry in the
+<strong>content index</strong> is comparable to that of Notifications, but with a less intrusive UX and more structured content. When
+adding personalized content, websites can simply remove entries on logout (and close all open Notifications). The
+storage required to store the entries of the index itself count towards the quota of the origin.</p>
+<h2>IDL</h2>
+<p>Please see <a href="https://github.com/rayankans/content-index/blob/master/IDL.md" rel="nofollow noopener">this separate document</a> for the proposed WebIDL additions.</p>
+<h3>General usage</h3>
+<pre><code class="lang-javascript">// Add an article to the content index
+await swRegistration.index.add({
+  id: 'article-123',
+  title: 'Article title',
+  description: 'Amazing article about things!',
+  category: 'article',
+  icons: [
+    {
+      src: 'https://website.dev/img/article-123.png',
+      sizes: '64x64',
+      type: 'image/png',
+    },
+  ],
+  launchUrl: 'https://website.dev/articles/123',
+});
+
+// Delete an entry from the content index
+await swRegistration.index.delete('article-123');
+
+// List all entries in the content index
+const entries = await swRegistration.index.getAll();
+</code></pre>
+<h3>Combined with other APIs</h3>
+<p>Sending breaking news articles via Push API allows websites to keep their users up to date. Adding these articles to the
+<strong>content index</strong> allows the browser to highlight them and make them discoverable later on. In this example we make use
+of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Cache" rel="nofollow noopener">CacheStorage API</a> to cache content resources, and the
+<a href="https://w3c.github.io/IndexedDB/" rel="nofollow noopener">Indexed Database</a> to store the structured content.</p>
+<pre><code class="lang-javascript">async function handlePush(data) {
+  // Fetch additional data about pushed content
+  const news = await fetch(`/api/news/${data.id}`);
+
+  // Store content in database and cache resources
+  await Promise.all([db.add(news), cache.add(news.icons[0].src)]);
+
+  // Add content to content index
+  if ('index' in self.registration) {
+    await self.registration.index.add({
+      id: news.id,
+      title: news.title,
+      description: news.description,
+      category: 'article',
+      icons: news.icons,
+      launchUrl: `/news/${news.id}`,
+    });
+  }
+
+  // Display a notification
+  return self.registration.showNotification(news.title, {
+    tag: news.id,
+    body: news.description,
+    icon: news.icons[0].src,
+  });
+}
+
+// Handle web push event in service worker
+self.addEventListener('push', event =&gt; event.waitUntil(handlePush(event.data.json())));
+
+// Handle content deletion event in service worker.
+// This is called when a user (or useragent) has deleted the content.
+self.addEventListener('contentdelete', event =&gt; {
+  event.waitUntil(Promise.all([
+    // Delete cache &amp; DB entries using `event.id`.
+  ]));
+});
+</code></pre>
+<p>When used together with the proposed
+<a href="https://github.com/beverloo/periodic-background-sync" rel="nofollow noopener">Periodic Background Sync API</a>, this allows websites to
+automatically sync fresh content and make it available to users.</p>
+<pre><code class="lang-javascript">// Add an article to the content index
+function addArticleToIndex(article) {
+  return self.registration.index.add({
+    id: article.id,
+    title: article.title,
+    description: article.description,
+    category: 'article',
+    icons: article.icons,
+    launchUrl: '/articles/' + article.id,
+  });
+}
+
+// Fetch new content, cache it and add it to the content index
+async function updateLatestNews() {
+  const latestNews = await fetch('/latest-news');
+  // TODO: cache content
+  if ('index' in self.registration) {
+    await Promise.all(latestNews.map(addArticleToIndex));
+  }
+}
+
+// Handle periodic sync event in service worker
+self.addEventListener('periodicsync', event =&gt; {
+  if (event.registration.tag === 'get-latest-news') {
+    event.waitUntil(updateLatestNews());
+  }
+});
+</code></pre>
+<h2>Alternatives considered</h2>
+<h3>Extending the Cache interface</h3>
+<p>One of the requirements for this API is that the exposed content is available offline. In the case of an article this
+could be implemented by simply adding the response to the
+<a href="https://developers.google.com/web/ilt/pwa/caching-files-with-service-worker" rel="nofollow noopener">Service Worker Cache</a>. We could extend
+this API to specify that specific cached entries can be exposed to the user.</p>
+<p>This would limit some use cases as new content would have to be served from a server. When using the <strong>content index</strong>,
+developers could generate and store content offline and then add it to the index, making it available without any
+network connection.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1233_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rektide</div>
+          <div class="creation_date">2020-03-27</div>
+          <div class="post_content">
+<p>This is an interesting proposal. I’m gonna think this over some. I’m tentatively excited?</p>
+<p>It might be convenient to have a <code>oncontentadded</code> capability. Certainly users who need to could monkey-patch or use a wrapper around <code>swRegistration.index.add(...)</code> but there might also be a temptation to <code>getAll()</code> and then <code>getAll()</code> again latter &amp; diff, as an api-less way to get notice of new content. I feel like we could jump to a better end with <code>oncontentadded</code>.</p>
+<p>I’m very interested in the Web Package idea. If someone “gives” me a Web Package with some articles for a web page while I already have the main web page, I’m wondering how Content Indexing API could work. How would this Web Package of additional new content, say, new articles for a news site, get itself indexed? At the moment the only scenario I could imagine is that each bundle would need it’s own “index” page specifically for that bundle that can index the content bundle, then redirect to the main page.</p>
+<p>I have similar longstanding concerns &amp; questions about HTTP Push, which I desperately wish had some way to let content get indexed. At the moment we need to use out of band channels &amp; user-land protocols to tell the page, hey, there is new HTTP content that I’ve pushed to you, that you can’t see, that you don’t know about: hey web page, wake up, and fetch() it and cache it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/954_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AaronGustafson</div>
+          <div class="creation_date">2020-04-01</div>
+          <div class="post_content">
+<p>This feels similar to what a number of us have been doing currently with <code>localStorage</code> (e.g., <a href="https://github.com/aarongustafson/aaron-gustafson.com/blob/master/_javascript/post/save-offline.js#L35-L39" rel="nofollow noopener">my implementation</a>, which was based on <span class="mention">@adactio</span>’s work). Of course the limitation there is that the Service Worker can’t touch <code>localStorage</code> (it’s not async), so this approach makes a lot of sense to me.</p>
+<p>It seems like this API would be available in the main thread as well, is that right? Or are you proposing that it only be exposed in the context of the SW?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rayankans</div>
+          <div class="creation_date">2020-04-02</div>
+          <div class="post_content">
+<p>The API is tied to the Service Worker Registration, but is available on the main thread.</p>
+<p>You can do something like:</p>
+<pre><code class="lang-auto">const sw = await navigator.serviceWorker.ready;
+sw.index.add({...});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2844_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jungkees</div>
+          <div class="creation_date">2020-04-07</div>
+          <div class="post_content">
+<p>We (Microsoft) are interested in discussing and implementing this proposal. We support moving the spec to WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-04-08</div>
+          <div class="post_content">
+<p>The repo is now at <a href="https://github.com/WICG/content-index">https://github.com/WICG/content-index</a></p>
+<p>Happy incubating!!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

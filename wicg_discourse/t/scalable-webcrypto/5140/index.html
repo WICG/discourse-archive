@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Scalable WebCrypto</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Scalable WebCrypto</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">septs</div>
+          <div class="creation_date">2021-01-30</div>
+          <div class="post_content">
+<p>see <a class="inline-onebox" href="https://github.com/w3c/webcrypto/issues/248" rel="noopener nofollow ugc">Allow add external algorithm bridge · Issue #248 · w3c/webcrypto · GitHub</a></p>
+<pre><code class="lang-auto">class Ed25519SubtleBridge extends CryptoSubtleBridge {
+    constructor() {
+        Object.freeze(this)
+    }
+
+    sign(/* ... */) { /* ... */ }
+    verify(/* ... */) { /* ... */ }
+
+    deriveKey(/* ... */) { /* ... */ }
+    deriveBits(/* ... */) { /* ... */ }
+
+    generateKey(/* ... */) { /* ... */ }
+    importKey(/* ... */) { /* ... */ }
+    exportKey(/* ... */) { /* ... */ }
+
+    get [Symbol.toStringTag]() {
+         return '@Ed25519' // e.g: external algorithm name need fixed prefix, `@`
+    }
+}
+
+crypto.addSubtleBridge(Ed25519SubtleBridge)
+</code></pre>
+<pre><code class="lang-auto">class SHA3SubtleBridge extends CryptoSubtleBridge {
+    constructor() {
+        Object.freeze(this)
+    }
+
+    digest(algorithm/*: string */, data/*: BufferSource */) {/* ... */}
+
+    get [Symbol.toStringTag]() {
+         return '@SHA-3'
+    }
+}
+
+crypto.addSubtleBridge(SHA3SubtleBridge)
+</code></pre>
+<p>Motive:</p>
+<ol>
+<li>allow polyfill non-standard algorithm use unified interface on crypto operation</li>
+<li>make different libraries have the <strong>same api style</strong>
+</li>
+<li>unified web-side and nodejs-side<sup>*</sup> use same code</li>
+</ol>
+<p>* nodejs 15 starts provide <a class="inline-onebox" href="https://nodejs.org/api/webcrypto.html" rel="noopener nofollow ugc">Web Crypto API | Node.js v15.7.0 Documentation</a> implementation</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2466_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rumkin</div>
+          <div class="creation_date">2021-02-07</div>
+          <div class="post_content">
+<p>I extremely like the idea to standardize algorithm interfaces.</p>
+<p>IMO proposed interface should be modified:</p>
+<ol>
+<li>It should allow to set algorithm ID on registration. Explicit ID better than implicit.</li>
+<li>It should be renamed to “registerAlgorithm”. Due to a) “register” better describes action, b) “algorithm” describes what it actually is.</li>
+</ol>
+<pre><code class="lang-auto">subtleCrypto.registerAlgorithm('ed25519', Ed25519Algorithm)
+</code></pre>
+<p>As a result registered algorithm ID should be passed into constructor as one of parameters.</p>
+<p>Also I’d suggest to refuse from using prefixes due to the next reasons:</p>
+<ol>
+<li>Crypto algorithms sometimes produce crypto containers which should contain these IDs, so there could be a confusion to read such container somewhere else or to debug it. Instead it’s better to specify such algorithm as external when it’s listed and/or initialized.</li>
+<li>It allows to replace custom algorithm with built-in version in the future seamlessly.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

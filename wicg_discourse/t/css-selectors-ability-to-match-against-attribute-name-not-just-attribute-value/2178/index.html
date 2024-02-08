@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS selectors: Ability to match against attribute name, not just attribute value</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS selectors: Ability to match against attribute name, not just attribute value</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-06-01</div>
+          <div class="post_content">
+<p>For example, we can match value of an attribute given we know the <em>entire</em> attribute name. For example, if I know there are elements with the <code>foo</code> attribute, then I can find elements that have a <code>foo</code> attribute starting with <code>bar</code>:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [foo|=bar] { /* ... */ }
+&lt;/style&gt;
+</code></pre>
+<p>But what if I want to find element that have attribute starting with <code>some</code>, so that I can match two of the following elements:</p>
+<pre><code class="lang-auto">&lt;div something="foo"&gt;&lt;/div&gt; &lt;!-- select this --&gt;
+&lt;div some="bar"&gt;&lt;/div&gt; &lt;!-- select this --&gt;
+&lt;div awesome="bar"&gt;&lt;/div&gt; &lt;!-- but not this --&gt;
+</code></pre>
+<p>I would like to select both divs with the attributes starting with <code>some</code>, but there’s no way to specify this.</p>
+<p>Assume that we don’t know what the attribute values will be, they might be different depending on what the user is specifying via the attribute.</p>
+<p>It would be neat if there was a way to match expressions against attribute names, not just values. Unless I missed it, I haven’t seen any way to do that, but I think it is a legitimate desire because all of HTML is just text, so why not be able to match more of it, not just attribute values?</p>
+<p>One thing that Angular does is autogenerate attribute names from CSS classes, for example, something like compiling from</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  .component-name { /* ... */ }
+&lt;/style&gt;
+&lt;div class="component-name"&gt;&lt;/div&gt;
+</code></pre>
+<p>to</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [component-name-1234] { /* ... */ }
+&lt;/style&gt;
+&lt;div component-name-1234&gt;&lt;/div&gt;
+</code></pre>
+<p>where <code>1234</code> is a collision-free generated identifier to ensure that the style matching is unique.</p>
+<p>If you know the component’s name is <code>component-name</code>, it is literally impossible for a parent component to style a child component because it is impossible to guess what the random ID is.</p>
+<p>However, if attribute names were matchable against patterns, then a parent component could override child styles.</p>
+<p>When using <a href="https://github.com/cssinjs/jss" rel="nofollow noopener">JSS</a>, it mostly provides encapsulation by generating class names similarly to Angular, but it applies to class names (which are attribute values) rather than attribute names, so it is possible to override styling if absolutely needed.</p>
+<p>For example, here’s how class names are generated with JSS:</p>
+<pre><code class="lang-auto">const {classes} = jss.createStyleSheet({
+  fancyButton: {
+    background: "blue";
+  }
+}).attach()
+
+document.querySelector('.some-container').innerHTML = `
+  &lt;button class="${classes.fancyButton}"&gt;&lt;/button&gt;
+`
+</code></pre>
+<p>then the class name given to the <code>&lt;button&gt;</code> matches the generated clash-free class name that is inside the <code>&lt;style&gt;</code> that is appended into the <code>&lt;head&gt;</code> by JSS.</p>
+<p>However, we can still override the style if necessary because we have the power of matching patterns against attribute values, and given that I know <code>fancyButton</code> is converted into something like <code>fancy-button-1234</code> in the output <code>&lt;style&gt;</code>, I can write</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [class|=fancy-button] { /* ... */ }
+&lt;/style&gt;
+</code></pre>
+<p>and I can override styles in there without having to know what the generated ID of the class name is.</p>
+<p>There’s also other possible uses. Suppose I want to style all elements that have <code>on*</code> attributes to define event handlers. If we had attribute name matching, then it would be easy. Suppose attribute name matching works similarly to value matching:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [^=on] { outlined: 1px solid red }
+&lt;/style&gt;
+</code></pre>
+<p>The <code>^=</code> symbol is leading, which means it is matching the following attribute name, and now I’ve outlined all elements that have inline event handlers.</p>
+<p>It would be possible to also match the attribute value besides matching the attribute name. For example, I want to style all elements that have an inline event handler that calls the <code>foo()</code> function</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [^=on^="foo("] { outlined: 1px solid red }
+&lt;/style&gt;
+</code></pre>
+<p>And boom, they are all outlined!</p>
+<p>Maybe <code>^=on</code> is not specific enough, or clashes with something else; we could select elements with mouse handlers of any sort:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [^=onmouse] { outlined: 1px solid red }
+&lt;/style&gt;
+</code></pre>
+<p>Let’s pick any element with data attributes:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  [^="data-"] { outlined: 1px solid red }
+&lt;/style&gt;
+</code></pre>
+<p>Etc, I’m sure there’d be more interesting uses.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-06-01</div>
+          <div class="post_content">
+<p>A related proposal and discussion in <a href="mailto:www-style@w3.org">www-style@w3.org</a> mailing list (2016-04-05):</p>
+<p><a href="https://lists.w3.org/Archives/Public/www-style/2016Apr/0069.html">[css-selectors] Tagname based substrings</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2017-06-05</div>
+          <div class="post_content">
+<p>So there are a few different tools that would let you make use of functionality like this from CSS by leveraging JavaScript, or XPath while you’re writing CSS.</p>
+<p>Personally, I think this isn’t a new idea and the reason we don’t see it in CSS already is because (my guess) there’s no way to make it perform as fast/well as what the rest of CSS does. I bet if they could figure out how to make it perform better, it would be something we would see.</p>
+<p>CSS selectors (and <code>document.querySelector()</code>) let you select elements by matching the names and values of their attributes. It’s possible to match <a href="https://drafts.csswg.org/selectors/#attribute-representation" rel="nofollow noopener">part of an attribute’s value</a> using <code>[attribute*=]</code>, <code>[attribute^=]</code>, <code>[attribute$=]</code>, but there’s no way to select an element based on matching only part of an attribute name.</p>
+<p>Thankfully this is something we can do via XPath in all modern browsers (excluding IE11) like this:</p>
+<pre><code class="lang-javascript">document.evaluate(
+  '//*[@*[starts-with(name(), "data-custom-")]]',
+  document, 
+  null, 
+  XPathResult.UNORDERED_NODE_ITERATOR_TYPE, 
+  null
+)
+</code></pre>
+<p>This XPath selector, <code>//*[@*[starts-with(name(), "data-custom-")]]</code>, returns all nodes with an attribute name that starts with <code>data-custom-</code>, so it would match elements with <code>data-custom-name</code> and <code>data-custom-example</code>, but not <code>data-customizer</code>.</p>
+<p>For those wishing to select elements with this ability while authoring CSS, here are a few workarounds that can help:</p>
+<ul>
+<li><a href="https://codepen.io/tomhodgins/pen/eWarWa" rel="nofollow noopener">Partial attribute name match with EQCSS</a></li>
+</ul>
+<pre><code class="lang-css">@element * {
+  eval("/^.*data-item-/.test(outerHTML) &amp;&amp; '$this'") {
+    background: lime;
+  }
+}
+</code></pre>
+<ul>
+<li><a href="http://codepen.io/tomhodgins/pen/MmQbWv" rel="nofollow noopener">Partial attribute name match with Selectory</a></li>
+</ul>
+<pre><code class="lang-css">[test="/^.*data-item-/.test(this.outerHTML)"] {
+  background: lime;
+}
+</code></pre>
+<ul>
+<li><a href="https://codepen.io/tomhodgins/pen/RgNNOw" rel="nofollow noopener">Partial attribute name match with XPathy</a></li>
+</ul>
+<pre><code class="lang-css">[xpath="//*[@*[starts-with(name(), 'data-item-')]]"] {
+  background: lime;
+}
+</code></pre>
+<p>Another thing CSS can’t do is select a tag by partial tag name match, and again, thankfully this is something we can do via <a href="https://developer.mozilla.org/en-US/docs/Web/XPath" rel="nofollow noopener">XPath</a> in modern browsers (&gt;IE11) like this:</p>
+<pre><code class="lang-javascript">document.evaluate(
+  '//*[starts-with(name(), "custom-")]',
+  document, 
+  null, 
+  XPathResult.UNORDERED_NODE_ITERATOR_TYPE, 
+  null
+)
+</code></pre>
+<p>This XPath selector, <code>//*[starts-with(name(), "custom-")]</code>, returns all nodes with a tag name that starts with <code>custom-</code>, so it would match <code>&lt;custom-tag&gt;</code> and <code>&lt;custom-example&gt;</code>, but not a tag named <code>&lt;customizer-panel&gt;</code>.</p>
+<p>For those wishing to select elements in a similar way while authoring CSS, here are a few workarounds that can help:</p>
+<ul>
+<li><a href="https://codepen.io/tomhodgins/pen/xdNjdG" rel="nofollow noopener">Partial tag name match with EQCSS</a></li>
+</ul>
+<pre><code class="lang-css">@element * {
+  eval("/^&lt;custom-/.test(outerHTML) &amp;&amp; '$this'") {
+    border: 1px solid lime;
+  }
+}
+</code></pre>
+<ul>
+<li>[Partial tag name match with Selectory]</li>
+</ul>
+<pre><code class="lang-css">[test="/^custom-/.test(this.outerHTML)"] {
+  border: 1px solid lime;
+}
+</code></pre>
+<ul>
+<li><a href="https://codepen.io/tomhodgins/pen/JJodPz" rel="nofollow noopener">Partial tag name match with XPathy</a></li>
+</ul>
+<pre><code class="lang-css">[xpath="//*[starts-with(name(), 'custom-')]"] {
+  border: 1px solid lime;
+}
+</code></pre>
+<ul>
+<li><a href="https://codepen.io/tomhodgins/pen/RVQGXz" rel="nofollow noopener">Selecting H1-H6 with Selectory</a></li>
+</ul>
+<pre><code class="lang-css">[test="/^&lt;h[\d]/.test(this.outerHTML)"] {
+  color: lime;
+}
+</code></pre>
+<ul>
+<li><a href="https://codepen.io/tomhodgins/pen/EXaaBd" rel="nofollow noopener">Selecting H1-H6 with XPathy</a></li>
+</ul>
+<pre><code class="lang-css">[xpath="//div/*[starts-with(name(),'h')][substring(name(),2) &gt; 0]"] {
+  background: red;
+}
+</code></pre>
+<p>Hopefully that helps give you some extra power as you’re looking to select elements in a more flexible way <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="2178">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>A related proposal and discussion in <a href="mailto:www-style@w3.org">www-style@w3.org</a> mailing list (2016-04-05):</p>
+</blockquote>
+</aside>
+<p>Indeed, that is the same exact feature request.</p>
+<p>In light of WebComponents, and people namespacing them due to the dash-in-name requirement, selecting something like</p>
+<pre><code class="lang-css">project-* {
+  color: red;
+}
+</code></pre>
+<p>might make sense with some collections of elements. But it can also just be useful. For example, suppose we just want to count how many A-Frame elements are in the page:</p>
+<pre><code class="lang-auto">console.log(document.querySelector('a-*').length )
+</code></pre>
+<p>where <code>project-*</code> and <code>a-*</code> are just example of the possible syntax, but syntax similar to the email thread you linked could work.</p>
+<aside class="quote" data-post="3" data-topic="2178">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tomhodgins/40/840_1.png" width="20"/> tomhodgins:</div>
+<blockquote>
+<p>XPath selector</p>
+</blockquote>
+</aside>
+<p>That’s interesting about XPath, I never really knew about it. Looks useful! I guess it’d be easy to implement a CSS selector in the browser engine based off of it.</p>
+<hr/>
+<p>On a sidenote, the CSS selector polyfill stuff is interesting. It parses the CSS, then it basically turns into a CSS-in-JS solution inside of the implementation, if you will.</p>
+<p>I’ve been making custom elements, and I’m wondering how I might be able to add custom CSS properties for them. Do you know of any frameworks that make this easy? I’m imagining a framework that abstracts away the parsing, etc, and lets the end user specify new properties.</p>
+<p>I am aware of CSS Custom Properties, but from what I can tell, these are just shortcuts to map values from the custom properties to values of real CSS properties.</p>
+<p>In my case, I’d like to map custom properties to properties of WebGL objects.</p>
+<p><span class="mention">@MT</span> <span class="mention">@tomhodgins</span> Do you guys know of a generic library designed to let one easily experiment with CSS polyfills (or basically implement new CSS properties that can apply to any element generically)?</p>
+<p>For example, here’s a scene written with my custom elements:</p>
+<iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_rpaQqK" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/trusktr/embed/preview/rpaQqK?height=300&amp;slug-hash=rpaQqK&amp;default-tabs=html,result&amp;host=https://codepen.io&amp;embed-version=2" title="Infamous Mixed Mode 2" width="695"></iframe>
+<p>I’d like to be able to “polyfill” certain CSS properties that so I can configure light intensity, mesh color, etc. Even mapping CSS <code>transform</code> to WebGL would be interesting. Making CSS animations work with it, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2017-12-14</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@trusktr</span></p>
+<p>So funny you replied to this when you did - I just featured a XPath selector mixin today on twitter as part of <span class="hashtag">#merryCSSmas</span>! <a href="https://twitter.com/innovati/status/941307794120232962" rel="nofollow noopener">https://twitter.com/innovati/status/941307794120232962</a></p>
+<blockquote>
+<p><span class="mention">@MT</span> <span class="mention">@tomhodgins</span> Do you guys know of a generic library designed to let one easily experiment with CSS polyfills (or basically implement new CSS properties that can apply to any element generically)?</p>
+</blockquote>
+<p>Yes! I’ve been writing about this lately as well. It’s not so much a library as it is a pattern, or a way of doing things. I’ve found the easiest way to experiment with extending CSS using JavaScript to experiment with custom at-rules, custom selectors, custom properties, and custom property values is using a file like this:</p>
+<ul>
+<li>a CSS stylesheet</li>
+<li>that includes JS anywhere via <code>${}</code>
+</li>
+<li>read as a JS template string</li>
+<li>output as CSS</li>
+</ul>
+<p>As I’ve been developing plugins, ever since I created reproCSS I’ve been making all of my plugins read the same JS-in-CSS stylesheet format, and because of that all of the ‘mixins’ I make, the little plugins that you can use from your JIC stylesheets, all of the mixins will work with any JIC-processing plugin <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<p>Here’s a little thing I wrote about extending CSS with JS-in-CSS stylesheets: <a href="https://gist.github.com/tomhodgins/5ae2d520152009f78558b6e32951f77e" rel="nofollow noopener">https://gist.github.com/tomhodgins/5ae2d520152009f78558b6e32951f77e</a></p>
+<p>In it, I show how you can polyfill something like:</p>
+<pre><code class="lang-auto">@time (day: 'monday') {
+  html {
+    background: lime;
+  }
+}
+</code></pre>
+<p>Instead with a tiny JS function and something like this in your stylesheet:</p>
+<pre><code class="lang-auto">${time (day: 'monday', `
+  html {
+    background: lime;
+  }
+`)}
+</code></pre>
+<p>So far I’ve created around a dozen mixins, here’s all of them in one file: <a href="http://staticresource.com/mixins.js" rel="nofollow noopener">http://staticresource.com/mixins.js</a></p>
+<p>And if you’re looking for a playground where you can test it immediately, check out: <a href="http://staticresource.com/jicrepl.html" rel="nofollow noopener">http://staticresource.com/jicrepl.html</a> which is an HTML scratchpad with HTML, JS-in-CSS, and JS, and a full-page live preview below. It also has the mixins.js file loaded in so you can test out the <code>${xpath()}</code> here easily <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<p>If you want another example of how JS-in-CSS makes it easy to extend CSS consider what I’m doing today, I have an audio file and I want to target different CSS rules depending on the current playback time of the audio file. I wish CSS had something like this:</p>
+<pre><code class="lang-auto">@audio [src$=example.m4a] (60 &lt; currentTime &lt; 120) {
+  .slide2 { opacity: 1 }
+}
+</code></pre>
+<p>But there is no <code>@audio</code> at-rule in CSS, there are no at-rules that accept a selector to watch one element, and there definitely isn’t a <code>currentTime</code> media feature.</p>
+<p>So instead, we can use JS-in-CSS and extend this with a teeny tiny JS function. We’ll need something like <code>audio(selector, test, stylesheet)</code> so we can give it a CSS <code>selector</code> for 1 element to watch (our audio file), we can supply a JavaScript function as a <code>test</code>, and then if the test is true, the <code>stylesheet</code> gets output to the page, otherwise it doesn’t. Here’s the function I ended up with:</p>
+<pre><code class="lang-auto">function audio(selector, test, stylesheet) {
+
+  var tag = document.querySelector(selector)
+
+  return test(tag) ? stylesheet : ''
+
+}
+</code></pre>
+<p>And the live demo of that: <a href="https://codepen.io/tomhodgins/pen/ppvxBb" rel="nofollow noopener">https://codepen.io/tomhodgins/pen/ppvxBb</a></p>
+<p>So hopefully that’s a good example of extending CSS via JS-in-CSS in a way that doesn’t depend on your CSS being parsed at any point (you evaluate JS, but CSS only gets evaluated by the browser once you’re finished with it) and also doesn’t depend on any particular tech stack or that you’re using JS to assemble your HTML or anything (like many CSS-in-JS libs require).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-31</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="2178">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tomhodgins/40/840_1.png" width="20"/> tomhodgins:</div>
+<blockquote>
+<p><span class="mention">@audio</span> [src$=example.m4a] (60 &lt; currentTime &lt; 120) {
+.slide2 { opacity: 1 }
+}</p>
+</blockquote>
+</aside>
+<p>That’s cool stuff!!</p>
+<p>So how would I write</p>
+<pre><code class="lang-css">@audio [src$=example.m4a] (60 &lt; currentTime &lt; 120) {
+  .slide2 { opacity: 1 }
+}
+</code></pre>
+<p>instead of JIC? That would require parsing obviously. It’d be cool to have some sort of parser API that makes it really easy to add these features without worrying about how the parsing is done.</p>
+<p>f.e.</p>
+<pre><code class="lang-auto">CSS.defineMixin('audio', function(selector, test, style) {
+  // ...
+})
+</code></pre>
+<p>then that wires it all up so that the page can simply have</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  @audio [src$=example.m4a] (60 &lt; currentTime &lt; 120) {
+    .slide2 { opacity: 1 }
+  }
+&lt;style&gt;
+</code></pre>
+<p>and also something like</p>
+<pre><code class="lang-auto">  // lightyear unit, to blow out the memory:
+  CSS.defineUnit('ly', function(value, el) {
+    return /* a pixel value here I suppose */
+  })
+</code></pre>
+<p>then just</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  div {
+    height: 1ly; /* REALLY tall div */
+  }
+&lt;/style&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2017-12-31</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@trusktr</span>! If you were looking to write a custom syntax like:</p>
+<pre><code class="lang-css">@audio [src$=example.m4a] (60 &lt; currentTime &lt; 120) {
+  .slide2 { opacity: 1 }
+}
+</code></pre>
+<p>I think the easiest way to add support for this might be using <a href="https://github.com/postcss/postcss" rel="nofollow noopener">PostCSS</a>. PostCSS would allow you to write a plugin that parsed and read this custom syntax, and then allow you to transform it using JavaScript.</p>
+<p>For most of the things PostCSS does, it is outputting CSS, so most of the plugins that work for it are CSS preprocessors. Unfortunately for us, our <code>@audio</code> example can’t be expressed as CSS alone, so whatever PostCSS plugin you wrote to transform it would likely have to result in outputting both CSS and JavaScript that would make it work.</p>
+<p>I believe this is possible, but it’s a big undertaking just to be able to use non-standard syntax by adding additional steps to your build process, when at the end you still require the JS runtime <img alt=":thinking:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/thinking.png?v=5" title=":thinking:"/></p>
+<hr/>
+<p>As for the custom CSS unit example - I have an idea! I’ve written a function that defined element-based units: <code>EW</code>, <code>EH</code>, <code>EMIN</code>, and <code>EMAX</code>. I want these to be ‘element-percentage’ units relative to an element’s width and height in a similar way to how ‘viewport-percentage’ units measure the viewport’s width and height.</p>
+<p>The JS code for my units is this:</p>
+<pre><code class="lang-javascript">// Element-based units
+function eunit(selector, rule) {
+
+  let styles = ''
+  let count = 0
+
+  document.querySelectorAll(selector).forEach(tag =&gt; {
+
+    const attr = selector.replace(/\W/g, '')
+
+    rule = rule.replace(/(\d*\.?\d+)(?:\s*)(ew|eh|emin|emax)/gi,
+      (match, number, unit) =&gt; {
+
+        switch(unit) {
+
+          case 'ew':
+            return tag.offsetWidth / 100 * number + 'px'
+
+          case 'eh':
+            return tag.offsetHeight / 100 * number + 'px'
+
+          case 'emin':
+            return Math.min(tag.offsetWidth, tag.offsetHeight) / 100 * number + 'px'
+
+          case 'emax':
+            return Math.max(tag.offsetWidth, tag.offsetHeight) / 100 * number + 'px'
+
+        }
+
+      })
+
+    tag.setAttribute(`data-eunit-${attr}`, count)
+    styles += `[data-eunit-${attr}="${count}"] { ${rule} }\n`
+    count++
+
+  })
+
+  return styles
+
+}
+</code></pre>
+<p>And you could use it in a demo with JS-in-CSS like this:</p>
+<pre><code class="lang-auto">&lt;h2&gt;Element Based Units&lt;/h2&gt;
+
+&lt;div class=ew&gt;EW Units&lt;/div&gt;
+&lt;div class=eh&gt;EH Units&lt;/div&gt;
+&lt;div class=emin&gt;EMIN Units&lt;/div&gt;
+&lt;div class=emax&gt;EMAX Units&lt;/div&gt;
+
+&lt;style&gt;
+  div {
+    margin: 15px;
+    width: 100px;
+    height: 100px;
+    background: #ccc;
+    border: 1px solid;
+    overflow: auto;
+    resize: both;
+    line-height: 1;
+  }
+&lt;/style&gt;
+
+&lt;script src=http://staticresource.com/helpers/eunit.js&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  // Reprocess on load, resize, input, and click
+  window.addEventListener('load', JSinCSS)
+  window.addEventListener('resize', JSinCSS)
+  window.addEventListener('input', JSinCSS)
+  window.addEventListener('click', JSinCSS)
+
+  // Reprocess on mouse drag
+  var click = false
+  window.addEventListener('mousedown', e =&gt; click = true)
+  window.addEventListener('mousemove', e =&gt; click &amp;&amp; JSinCSS())
+  window.addEventListener('mouseup', e =&gt; click = false)
+
+
+  function JSinCSS() {
+
+    var tag = document.querySelector('#JSinCSS')
+
+    if (!tag) {
+
+      tag = document.createElement('style')
+      tag.id = 'JSinCSS'
+      document.head.appendChild(tag)
+
+    }
+
+    tag.innerHTML = `
+
+      ${eunit('.ew', `
+        font-size: 15ew;
+      `)}
+
+      ${eunit('.eh', `
+        font-size: 15eh;
+      `)}
+
+      ${eunit('.emin', `
+        font-size: 15emin;
+      `)}
+
+      ${eunit('.emax', `
+        font-size: 15emax;
+      `)}
+
+    `
+
+  }
+&lt;/script&gt;
+</code></pre>
+<p>So you should be able to define new units in a similar way <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-31</div>
+          <div class="post_content">
+<p>This is all great for proof of concepts, but setting <code>innerHTML</code> on every change seems a bit expensive. Will Houdini supply ways to update thing programmatically (if ever)?</p>
+<p>There’s also scenarios like "I’ve got Custom Elements that when composed render a 3D scene. How do I make <code>visibility: hidden;</code> hide one of those objects? The need there is not to add a new feature to CSS, but to make an existing feature do what it should to a new sort of element that renders with WebGL rather than regular DOM rendering.</p>
+<p>For example,</p>
+<pre><code class="lang-auto">&lt;i-scene&gt;
+  &lt;i-sphere size="30" has="phong-material" color="#ff6600" position="..."&gt;&lt;/i-sphere&gt;
+  &lt;i-point-light color="white" position="..."&gt;&lt;/i-point-light&gt;
+&lt;/i-scene&gt;
+</code></pre>
+<p>How can I polyfill new behavior for <code>visibility: hidden</code> or <code>display: none</code> so that the Sphere will be invisible or not rendered if I write</p>
+<pre><code class="lang-css">i-sphere {
+  visibility: hidden;
+  /*or*/
+  display: none;
+}
+</code></pre>
+<p>I wish there was some sort of high level API to easily polyfill functionality. f.e.</p>
+<pre><code class="lang-auto">// this is the class for the `i-sphere` element
+class Sphere extends HTMLElement { ... }
+
+CSS.definePropertyForElement('display', Sphere, {
+  none: function() { /* define how Sphere elements behave with display: none */ },
+  // etc
+})
+
+CSS.definePropertyForElement('visibility', Sphere, {
+  hidden: function() { /* define how Sphere elements behave with visibility: hidden */ },
+  // etc
+})
+</code></pre>
+<p>and this would take care of parsing, using MutationObserver to detect changes to styles in stylesheets as well as element style attributes, and whatever else may be necessary. An easy API. That’s just a rough suggestion, maybe the API would be different.  But the main point is that the API would make it super easy to polyfill stuff.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-01-01</div>
+          <div class="post_content">
+<p>If you’re going to do this far you might as well use XPath selectors
+and not have to invent a custom syntax.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

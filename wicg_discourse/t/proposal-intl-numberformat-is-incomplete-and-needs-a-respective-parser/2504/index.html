@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Intl.NumberFormat is incomplete and needs a respective Parser</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Intl.NumberFormat is incomplete and needs a respective Parser</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-03</div>
+          <div class="post_content">
+<p>The internationalization API is a very simple way to convert numbers to a string format including comma/period placement and even currencies around the world. However, there is no way to reverse that API. This renders the <code>Intl.numberFormat</code> function fairly unusable, especially when converting back and forth between an integer, server format and a string, display format for input fields.</p>
+<p>This can be solved using a number parser that involves the i18n info, such as locale and/or currency code. We could use the format patterns already associated with the locales, currencies, etc. to match floats in the given number string.</p>
+<p>As this is my first post, I am looking for feedback on:</p>
+<ul>
+<li>How do I obtain the number formats baked into the spec?</li>
+<li>What additional information / investigations do I need to provide to make this proposal?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-05</div>
+          <div class="post_content">
+<p>I wrote up a generic example, but I don’t think this will work for all locales:</p>
+<pre><code class="lang-javascript">/**
+ * @param {Array} locale Would be used to find the regex associated with the locale to be filtered out of the price 
+ * @param {String} price
+ * @returns {Number}
+ */
+function NumberParse(locale, price) {
+  let reSym = /\d|\.|\,|\-/gi;
+  let numArray = price.match(reSym);
+  let initSweep numArray.join('')
+  initSweep = initSweep.replace(/\,/g, '.')
+  if (initSweep[0] === '-') {
+    initSweep = initSweep.replace(/\-/g, '')
+    initSweep = '-'.concat(initSweep)
+  }
+  else {
+    initSweep = initSweep.replace(/\-/g, '')
+  }
+  numArray = initSweep.split('.')
+  let tempDec = '00'
+  if (numArray.length &gt; 1) {
+    tempDec = numArray.pop();
+  }
+  initSweep = numArray.join('')
+  initSweep = initSweep.concat('.', tempDec)
+  return parseFloat(initSweep)
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-08</div>
+          <div class="post_content">
+<p>The above code doesn’t work for currencies without decimal denominations, but I hope you understand it’s for demonstration purposes only and this could be resolved <strong>if I could use the locale information</strong> <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-10</div>
+          <div class="post_content">
+<p>This handles negatives as well. If someone puts “-69.900,00 US-Dollar” it’ll be “-69900.00” after the initial sweep.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-16</div>
+          <div class="post_content">
+<p>Anyone have suggestions on how to format the proposal?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-18</div>
+          <div class="post_content">
+<p>What are the next steps for the proposal? <span class="mention">@domenic</span></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

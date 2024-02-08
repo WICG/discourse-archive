@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] А standard for physical measurements (enabling machine-read/convert)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] А standard for physical measurements (enabling machine-read/convert)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3320_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">futekov</div>
+          <div class="creation_date">2021-02-13</div>
+          <div class="post_content">
+<p>Currently no standard has been established for physical measurements such as dimensions, volume, mass, speed, temperature, etc.</p>
+<p>This image shows a sample UI that will be made possible if such a standard existed:</p>
+<p><img alt="" height="114" src="https://user-images.githubusercontent.com/1493690/105397349-9e0d0500-5c29-11eb-8dd9-904bd94a7dd5.png" width="440"/></p>
+<h3>The Problem</h3>
+<p>The measuring systems in modern use are the <a href="https://en.wikipedia.org/wiki/Unit_of_measurement#Systems_of_units" rel="noopener nofollow ugc">metric, imperial, and US customary systems</a> and web users are forced to interrupt their browsing journey to convert units that are not native to them.</p>
+<p>Google Search has been answering conversion queries for <a href="https://arxiv.org/abs/physics/0411198" rel="noopener nofollow ugc">at least 16 years</a> so we can infer that the demand for unit conversion is indeed huge.</p>
+<p>A standard like that would provide <strong>hooks</strong> for measurements, which would make client-side conversion of units between measurement systems much easier to accomplish. Any site would then be able write a script to convert it, browsers extensions could be easily created to convert units across the web, and browsers themselves could offer it as built-in function similar to page translation (available in Chrome and Safari).</p>
+<h3>Idea with a new HTML element</h3>
+<p>I’ve written a <a href="https://github.com/futekov/measure-element" rel="noopener nofollow ugc">short essay proposing a <code>&lt;m&gt;</code> element</a>, but the same applies to also using <code>&lt;data&gt;</code> or something else. A basic structure would look like this:</p>
+<pre><code class="lang-auto">&lt;m unit="mi" value="20"&gt;twenty miles&lt;/m&gt;
+</code></pre>
+<h3>Challenges</h3>
+<p>The main problem that needs solving is establishing a standard for the markup:</p>
+<ul>
+<li>which semantic element(s) to use</li>
+<li>what unit code standard to use in attributes</li>
+</ul>
+<p>All these have to make physical measurements machine-readable and easy to implement at the same time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1597_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomayac</div>
+          <div class="creation_date">2021-02-19</div>
+          <div class="post_content">
+<p>I think this could just be implemented as a custom element similar to GitHub’s <a href="https://github.com/github/time-elements" rel="noopener nofollow ugc">time elements</a>.</p>
+<p>As you write in your <a href="https://github.com/futekov/measure-element" rel="noopener nofollow ugc">Explainer</a>, the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl" rel="noopener nofollow ugc"><code>Intl</code></a> interface sounds like a good place for this if you aim for having it as a browser API, to be used similar to, for example, <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat/RelativeTimeFormat" rel="noopener nofollow ugc"><code>RelativeTimeFormat</code></a>.</p>
+<p>For machine-readability, there’s <a href="https://schema.org/Distance" rel="noopener nofollow ugc"><code>Distance</code></a> as a type in <a href="http://schmema.org" rel="noopener nofollow ugc">schmema.org</a> markup.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ghobona-ogc</div>
+          <div class="creation_date">2021-02-22</div>
+          <div class="post_content">
+<p>The Observations and Measurements (O&amp;M) standard could address your requirements. The conceptual model is an <a href="https://www.iso.org/obp/ui/#iso:std:iso:19156:ed-1:v1:en" rel="noopener nofollow ugc">ISO standard</a>. Version 2 of the XML encoding is an <a href="https://www.ogc.org/standards/om" rel="noopener nofollow ugc">OGC standard</a>. The O&amp;M Standards Working Group (SWG) is working on Version 3, which will include JSON and XML encodings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3320_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">futekov</div>
+          <div class="creation_date">2021-03-21</div>
+          <div class="post_content">
+<p>My intention isn’t to just implement some sort of a solution.
+I want to probe the opinion of the people here whether such a <strong>standard</strong> is viable and useful.</p>
+<p><span class="mention">@tomayac</span> - RelativeTimeFormat is something that very much resembles my idea, I even saw that recently more localisation ideas have gotten into <a href="https://402.ecma-international.org/7.0/#locales-currencies-tz" rel="noopener nofollow ugc">ECMAScript 2020</a> and it seems to be moving in a similar direction.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal]: Symbol namespacing of attributes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal]: Symbol namespacing of attributes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-21</div>
+          <div class="post_content">
+<p>XML has a way of namespacing tags.  The idea was applied, somewhat unsuccessfully, to html.  HTML5 kind of nixed it (I think).  I’m not aware of why it was nixed, so perhaps I’m missing some of the lessons learned.  But I think we should give it another try:</p>
+<p>Proposal:</p>
+<p>Just like with import maps, be able to place a script tag in the head part of an html document:</p>
+<pre><code class="lang-auto">&lt;html&gt;
+   &lt;head&gt;
+   &lt;script type="module"&gt;
+     import {mySymbol} from 'my-library/myLib.js';
+     window.registerAttributePrefix('foo', mySymbol);
+   &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+      &lt;button id="myButton" foo-bar="hello"&gt;My Button&lt;/button&gt;
+     &lt;script type="module"&gt;
+        import {mySymbol} from 'my-library/myLib.js';
+        console.log(myButton.getAttribute(mySymbol, "bar")); 
+        // "hello"
+        myButton.setAttribute(mySymbol, "bar", "goodbye");
+     &lt;/script&gt;
+  &lt;/body&gt;
+
+&lt;/html&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-27</div>
+          <div class="post_content">
+<p>Could you describe what’s going on in the code example? Can the <code>foo-bar</code> attribute only be read/set from JavaScript if you have access to <code>mySymbol</code>? What’s the use case for this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-28</div>
+          <div class="post_content">
+<p>Yes, that’s correct, <span class="mention">@simevidas</span>.  It allows for “private” attributes, which can only be accessed if you know the symbol.  I realized after posting, that there are a number of other functions that would need to change, including mutation observers, and observedAttributes with custom elements.  How styling would work is another question (I guess styling would need to ignore these attributes, unless css could reference symbols somehow?).</p>
+<p>This proposal is meant to provide a way of reconciling the reality that many widely used libraries (angular and AMP, for example) are using non standard attributes, and that data-* is a bit clunky and won’t by itself resolve name spacing conflicts if different libraries used together (it just guarantees no conflicts with future browser supported attributes).</p>
+<p>Other discussion can be found <a href="https://github.com/whatwg/html/issues/2271" rel="nofollow noopener">here</a> and <a href="https://github.com/facebook/react/issues/11347" rel="nofollow noopener">here</a> and <a href="https://github.com/w3c/webcomponents/issues/654" rel="nofollow noopener">here</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-28</div>
+          <div class="post_content">
+<p>This may be a stupid question, but how private is it? A web page’s JavaScript code is public. Anyone can find the line</p>
+<p><code>import {mySymbol} from 'my-library/myLib.js';</code></p>
+<p>and copy-paste it into their own code to read/write a library’s attributes.</p>
+<hr/>
+<p>Also, what happens if a library registers the <code>foo</code> prefix, but then another library tries to use the same prefix without providing the correct symbol? In other words, what happens in the case of a name collision?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2019-04-28</div>
+          <div class="post_content">
+<p>Definitely not a stupid question – my wording was sloppy – private is too strong  a word.  And I think actually a better analogy would be the way you can do this in JavaScript:</p>
+<pre><code class="lang-auto">import { export as alias } from "module-name";
+</code></pre>
+<p>I guess I have enough faith in library authors that if they go out of their way to use the same symbol, that they want to convey that they  are adding a plug-in (or whatever) into the ecosystem of the library that created the symbol.</p>
+<p>If two libraries happen to crash upon the same default prefix of “foo”, that is precisely the problem this hopes to fix.</p>
+<p>If a web application is consuming both libraries, this would allow the web application to distinguish between the two by giving them different prefix aliases in the header.  I.e.</p>
+<pre><code class="lang-auto">&lt;html&gt;
+   &lt;head&gt;
+   &lt;script type="module"&gt;
+     import {mySymbol} from 'my-library/myLib.js';
+     import {yourSymbol} from 'your-library/yourLib.js';
+     window.registerAttributePrefix('foo-mylib', mySymbol);
+     window.registerAttributePrefix('foo-yourib', yourSymbol);
+   &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+   &lt;button foo-mylib-bar="hello" foo-yourlib-bar="goodbye"&gt;My button is your button&lt;/button&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>One addendum I’m thinking is that libraries could provide their default prefix (‘foo’), which would be ignored if the symbol was previously registered with a different prefix).  So you would only need this when there <em>is</em> a conflict between libraries.</p>
+<p>Another addendum would be to allow ShadowDOM realms to define their own symbol-attribute mapping, somehow.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] EXIF / image-resolution: (auto?) and from-image</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] EXIF / image-resolution: (auto?) and from-image</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>I want to open a discussion about <a href="https://en.wikipedia.org/wiki/Exif" rel="nofollow noopener">EXIF</a> and resolutions.</p>
+<p>The use case - changing the image-resolution in servers/CDN. Some CDN providers like Cloudinary do this today, and use an HTTP header that hasn’t reached consensus with implementors (<a href="https://github.com/eeeps/content-dpr-explainer" rel="nofollow noopener">Content-DPR</a>).</p>
+<p>The idea is to use existing EXIF attributes to hint the user agent that an image has an intrinsic size different from its pixel data dimensions, something like a pixel-ratio-multiplier.</p>
+<p>The relevant EXIF attributes would be <code>Resolution-X</code> and <code>Resolution-Y</code>, and the idea is to have them work hand in hand with the <a href="https://www.w3.org/TR/css-images-4/#the-image-resolution">image-resolution</a> CSS attribute.</p>
+<p>My initial concrete proposal would be:</p>
+<ul>
+<li>If <code>image-resolution</code> is <code>from-image</code>:
+<ul>
+<li>If EXIF Resolution-X/Resolution-Y are defined:
+<ul>
+<li>If EXIF <code>Resolution-Unit</code> is <code>Inch</code>: compute intrinsic size based on 96dpi</li>
+<li>If EXIF <code>Resolution-Unit</code> is <code>Pixel</code>: compute intrinsic size based on the x/y units</li>
+<li>Otherwise, use the image srcset value or 1dppx.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>If <code>image-resolution</code> is <code>auto</code> (which would be the default value, and a new value):
+<ul>
+<li>If EXIF Resolution-X/Resolution-Y are defined and <code>Resolution Unit</code> is <code>Pixel</code>:
+<ul>
+<li>compute intrinsic size based on the x/y units</li>
+</ul>
+</li>
+<li>Otherwise, use the image srcset value or 1dppx.</li>
+</ul>
+</li>
+</ul>
+<p>There are probably alternative ways to express it in CSS, the main idea is to allow that EXIF to be respected without breaking current images on the web.</p>
+<p>Some alternative would be:</p>
+<ul>
+<li>Use the <code>Pixel-X-Dimension</code> and <code>Pixel-Y-Dimension</code> EXIF attributes</li>
+<li>Only respect <code>Pixel</code> resolution-unit, and avoid adding the new <code>auto</code> value</li>
+<li>Use the existing <code>Inch</code> resolution units (usually 72 is the default though while the web’s DPI is 96…)</li>
+<li>Create a new attribute for this purpose (pixel-density? Preffered-Display-Dimension?).</li>
+</ul>
+<p>Thoughts please!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>I like the general idea. I wonder about the compatibility of setting a default of <code>auto</code> with current web images:</p>
+<ul>
+<li>How many images on the web today have their EXIF data include <code>Resolution-{X-Y}</code> or <code>Pixel-{X,Y}-Dimension</code> attributes?</li>
+<li>How many of those contain values that would result in breakage if <code>auto</code> is applied?</li>
+</ul>
+<p>Another concern is that many image optimizers blindly strip EXIF data today. That’s fine, but becomes less fine once browsers start to rely on EXIF data for the image’s rendering.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>I don’t think anybody uses <code>Pixel</code> as a <code>Resolution-Unit</code>, it’s common to use <code>Inch</code>. So <code>auto</code> as it is in my proposal would not affect current images, but <code>from-image</code> might.</p>
+<p>Regarding optimizers - this is also the case for <code>image-orientation</code>… If the standard about how user-agents do this is clearer, the image optimizer can also adjust.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="4326" data-username="noamr">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/noamr/40/2822_2.png" width="20"/> noamr:</div>
+<blockquote>
+<p>I don’t think anybody uses <code>Pixel</code> as a <code>Resolution-Unit</code> , it’s common to use <code>Inch</code> . So <code>auto</code> as it is in my proposal would not affect current images, but <code>from-image</code> might.</p>
+</blockquote>
+</aside>
+<p>I’d naively expect <code>from-image</code> to be sparsely used. Would be great to gather data both on <code>from-image</code> usage as well as on EXIF attributes used in the wild.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="4326" data-username="noamr">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/noamr/40/2822_2.png" width="20"/> noamr:</div>
+<blockquote>
+<p>Regarding optimizers - this is also the case for <code>image-orientation</code> … If the standard about how user-agents do this is clearer, the image optimizer can also adjust.</p>
+</blockquote>
+</aside>
+<p>I agree this shouldn’t be a blocker, and didn’t seem to cause a lot of breakage in the orientation case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p><code>from-image</code> is not used yet because the <code>image-resolution</code> property is not yet implemented in user agents <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+<p>I will try to gather information regarding EXIF attributes, I think such research was done for <code>image-orientation</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>A new unit type sounds promising. What does it represent, though? My guess is CSS <code>ddpx</code>, e.g.:</p>
+<pre><code>800x600@2x.jpg
+Resolution-Unit: Pixel
+Resolution-X: 2
+</code></pre>
+<p>(…then <code>Resolution-Y</code>, if undefined, defaults to the same as <code>Resolution-X</code>)</p>
+<p>Also, if we used <code>Pixel-X/Y-Dimension</code>, those would be CSS pixels? e.g.,</p>
+<pre><code>800x600@2x.jpg
+Pixel-X-Dimension: 400
+Pixel-Y-Dimension: 300</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="4326" data-username="eeeps">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/eeeps/40/662_2.png" width="20"/> eeeps:</div>
+<blockquote>
+<p>A new unit type sounds promising. What does it represent, though? My guess is CSS <code>ddpx</code>, e.g.:</p>
+<pre><code>800x600@2x.jpg
+Resolution-Unit: Pixel
+Resolution-X: 2
+</code></pre>
+</blockquote>
+</aside>
+<p>Yes, exactly - since <code>Inch</code> stands for <code>DPI</code>, it would make sense that <code>Pixel</code> would stand for <code>dppx</code>. I believe there is no current use for <code>Pixel</code> as an EXIF <code>Resolution Unit</code>.</p>
+<aside class="quote no-group" data-post="7" data-topic="4326" data-username="eeeps">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/eeeps/40/662_2.png" width="20"/> eeeps:</div>
+<blockquote>
+<p>Also, if we used <code>Pixel-X/Y-Dimension</code>, those would be CSS pixels? e.g.,</p>
+<pre><code>800x600@2x.jpg
+Pixel-X-Dimension: 400
+Pixel-Y-Dimension: 300
+</code></pre>
+</blockquote>
+</aside>
+<p>Yes. I tend to like the second one because it doesn’t have float rounding issues; However the first one might introduce fewer backward compatibility issues (maybe non at all). A study of current existence of EXIF in web-exposed image is probably a good next step <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-21</div>
+          <div class="post_content">
+<p>Continuing my research, I’m thinking that adding an XMP attribute might work better than EXIF… EXIF is less extensible and is more photography-oriented, also the mentioned EXIF attributes are used by image viewers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-22</div>
+          <div class="post_content">
+<p>Some more info and more detailed alternatives after some research:</p>
+<h2>Potential metadata formats</h2>
+<ul>
+<li>
+<a href="https://en.wikipedia.org/wiki/Exif" rel="nofollow noopener">EXIF</a>: used mainly for photography data. Very concise and in wide use. Browsers today recognize it for image-orientation.</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Extensible_Metadata_Platform" rel="nofollow noopener">XMP</a>: very extensible, used for things like photo-tagging. Verbose.</li>
+<li>
+<a href="https://iptc.org/standards/photo-metadata/" rel="nofollow noopener">IPTC</a>: used mainly for rights management, not very relevant.</li>
+</ul>
+<h2>Current resolution metadata identifiers:</h2>
+<p>See <a href="https://www.exiv2.org/tags.html?utm_source=twitterfeed&amp;utm_medium=twitter" rel="nofollow noopener">definitions</a></p>
+<ul>
+<li>
+<strong>ImageWidth/ImageHeight</strong>: usually refer to the original size of the image when it was taken, before it was scaled by any program. Many photos on the web have different ImageWidth/ImageHeight values from their actual pixel dimensions.</li>
+<li>
+<strong>XResolution/YResolution/ResolutionUnit</strong>: used almost exclusively for DPI, as a printing directive,. The default is 72dpi. The different resolution units are defined in the EXIF standard.</li>
+<li>
+<strong>PixelXDimension/PixelYDimension</strong>: intended for a different use, padding of compressed image data.</li>
+</ul>
+<h2>Proposed alternatives</h2>
+<ol>
+<li>
+<h3>Use <code>ImageWidth</code> / <code>ImageHeight</code> EXIF to override intrinsic dimensions</h3>
+These attributes are quite common in the wild, and are often different from the image pixel dimensions. That’s because they don’t change when a program changes the image. See <a href="https://openphotographyforums.com/forums/threads/exif-metadata-image-dimensions.11744/" rel="nofollow noopener">explanation</a>.
+Using them to compute intrinsic dimension as an override of the pixel data dimensions would make a lot of sense, but is also likely to modify the presentation of a small amount of existing images on the web.</li>
+<li>
+<h3>Use <code>ImageResolution</code> EXIF with <code>Pixel</code> as <code>ResolutionUnit</code>
+</h3>
+This maybe makes the most sense spec-wise, and would not break any existing web site, but would require a revision to the <code>Exif</code> standard, as the different values for <code>ResolutionUnit</code> are defined in that spec.</li>
+<li>
+<h3>Use <code>ImageResolution</code> EXIF with <code>Inch</code> as <code>ResolutionUnit</code>, and treat <code>72dpi</code> as <code>1dppx</code>
+</h3>
+This would not require any spec change, as <code>Inch</code> is already a defined <code>ImageResolution</code> value. However, it would change intrinsic size for some images currently on the web, where the <code>dpi</code> is defined with a value other than 72. That is not uncommon in the web today.</li>
+<li>
+<h3>Use <code>ImageResolution</code> or <code>ImageWidth/Height</code> EXIF, with CSS <code>image-resolution</code>
+</h3>
+Either (1) or (3) can work without “breaking the web”, by allowing it as a non-default value for <a href="https://www.w3.org/TR/css-images-4/#the-image-resolution"><code>image-resolution</code></a> CSS attribute.</li>
+<li>
+<h3>Add a new EXIF attribute</h3>
+Maybe <code>PreferredPixelDensity</code> or <code>DisplayWidth/DisplayHeight</code>. Will require changing the <code>EXIF</code> spec, but would not introduce any backwards compatibility issues.</li>
+<li>
+<h3>Define an <a>XMP</a> property for this</h3>
+This can be done without too much standardization overhead, as it can be done in an XMP  namespace. However, it would require user agents to incur the overhead of parsing inline XMP in image data, which they currently ignore.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2020-03-23</div>
+          <div class="post_content">
+<p>I see no reason to restrict this to still image formats. It appears to apply to video as well. Hence other container and tagging formats would need to be considered.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-23</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="11" data-topic="4326" data-username="Crissov">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/1990_2.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>I see no reason to restrict this to still image formats. It appears to apply to video as well. Hence other container and tagging formats would need to be considered.</p>
+</blockquote>
+</aside>
+<p>XMP is supported in video files, and it can be used to embed EXIF properties. So I believe that what we come up with here can be translated to video without a big effort.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-25</div>
+          <div class="post_content">
+<p>Some details from the research:</p>
+<ul>
+<li>Created a crawler that goes to many websites (starting the crawl from <a href="https://en.wikipedia.org/wiki/List_of_most_popular_websites" rel="nofollow noopener">here</a>, downloads the images, and parses their EXIF. The source code for it is <a href="https://github.com/noamr/exif-research" rel="nofollow noopener">here</a>.</li>
+<li>Ran the crawler on my computer, capped at 3000. The results are <a href="https://gist.github.com/noamr/608259314bc64f2f06263cbc3e31cb51" rel="nofollow noopener">here</a>.</li>
+<li>The analysis:
+<ul>
+<li>Out of <code>3000</code> images sampled, <code>189</code> have any <code>EXIF</code> info (6.3%).</li>
+<li>Out of those <code>189</code> images, <code>55</code> (29%) are displayed with their natural width &amp; height.</li>
+<li>Out of those <code>55</code> images, <code>10</code> (18%) have a resolution other than <code>72dpi</code>, and <code>16</code> (29%) have <code>EXIF</code> width/height different from their pixel width/height.</li>
+</ul>
+</li>
+</ul>
+<p>So the effect on current images in the wild of using existing EXIF properties, (considering that the sample is representing of the wild) would be on less than 0.3% of images in the case of <code>resolution</code>, and on less than 0.5% in the case of <code>ImageWidth</code>/<code>ImageHeight</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2020-03-25</div>
+          <div class="post_content">
+<p>Well, 0.3% &gt;&gt; 0.01% <img alt=":thinking:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/thinking.png?v=9" title=":thinking:"/> <a href="https://github.com/whatwg/html/issues/4495#issuecomment-484084805" rel="nofollow noopener">https://github.com/whatwg/html/issues/4495#issuecomment-484084805</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-26</div>
+          <div class="post_content">
+<p>A more rigorous check, of 5000 images from 1190 site URLs, also testing whether an image explicitly sets width/height and manual examination of automatically-found affected sites, found around 5 images out of 5000 to be effected. That’s ~0.1% of images, but ~0.4% of sites. Note that “affected” in all of these case would mean that the image would shrink by a ratio 1.2-4.</p>
+<p>Examples found by the crawler and verified manually:
+<a href="https://www.e-unwto.org/doi/book/10.18111/9789284421084" rel="nofollow noopener">https://www.e-unwto.org/doi/book/10.18111/9789284421084</a> (the picture with the houses)
+<a href="https://www.accountingfoundation.org/jsp/Foundation/Page/FAFSectionPage&amp;cid=1176164598953" rel="nofollow noopener">https://www.accountingfoundation.org/jsp/Foundation/Page/FAFSectionPage&amp;cid=1176164598953</a> (the picture of the meeting)
+<a href="http://bellschool.anu.edu.au/regions-countries/australia-new-zealand" rel="nofollow noopener">http://bellschool.anu.edu.au/regions-countries/australia-new-zealand</a> (the picture of the magnifying glass).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-26</div>
+          <div class="post_content">
+<p>Raw data: <a href="https://gist.github.com/noamr/ec771e4f5d0fbb5abe8a68297adaa41d" rel="nofollow noopener">https://gist.github.com/noamr/ec771e4f5d0fbb5abe8a68297adaa41d</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2020-03-26</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@noamr</span>! 0.4% of sites seems pretty high to change image density by default. 1190 sites is a small data set, though, so the percentage is a bit uncertain.</p>
+<p>So if I understand your analysis correctly, the 5 images found are using EXIF ImageWidth / ImageHeight / XResolution / YResolution, and those would change the rendered dimensions of the image if they were honored by default. Correct?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-26</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="17" data-topic="4326" data-username="zcorpan">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/zcorpan/40/2409_2.png" width="20"/> zcorpan:</div>
+<blockquote>
+<p>Thanks <span class="mention">@noamr</span>! 0.4% of sites seems pretty high to change image density by default. 1190 sites is a small data set, though, so the percentage is a bit uncertain.</p>
+</blockquote>
+</aside>
+<p>Yea, it’s a bit high. It’s a pretty random dataset built from the list of most used sites. Creating a bigger sample set (or a better crawler <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/>) would take some effort.</p>
+<aside class="quote no-group" data-full="true" data-post="17" data-topic="4326" data-username="zcorpan">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/zcorpan/40/2409_2.png" width="20"/> zcorpan:</div>
+<blockquote>
+<p>So if I understand your analysis correctly, the 5 images found are using EXIF ImageWidth / ImageHeight / XResolution / YResolution, and those would change the rendered dimensions of the image if they were honored by default. Correct?</p>
+</blockquote>
+</aside>
+<p>The 0.4% is for sites with images that have <code>XResolution</code> / <code>YResolution</code> and rely on intrinsic size for layout.
+The percentage for <code>ImageWidth</code> &amp; <code>ImageHeight</code> is higher - a lot of photos mark those properties when taken, and then don’t modify them when e.g. the image is cropped or scaled. It’s like “original image dimensions”</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2020-03-26</div>
+          <div class="post_content">
+<p>Have you considered adding a custom metric to HTTP Archive? That should give you data for ~5 million pages, next time it runs a crawl (twice a month). See e.g. <a href="https://github.com/HTTPArchive/legacy.httparchive.org/commit/9939498e07a1190720cb082d44e1a7090c3d931c">https://github.com/HTTPArchive/legacy.httparchive.org/commit/9939498e07a1190720cb082d44e1a7090c3d931c</a>
+and
+<a href="https://almanac.httparchive.org/en/2019/media">https://almanac.httparchive.org/en/2019/media</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-03-26</div>
+          <div class="post_content">
+<p>nice! but the aforementioned github repo is said to be deprecated <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=9" title=":confused:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Directory download API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Directory download API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-06-28</div>
+          <div class="post_content">
+<p>More info at <a href="https://github.com/drufball/directory-download" rel="nofollow noopener">https://github.com/drufball/directory-download</a></p>
+<h1>Proposal</h1>
+<p>Directory download functionality could be added using existing primitives with relatively little additional API surface area.</p>
+<h1><code>webkitRelativePath</code></h1>
+<p><code>File.webkitRelativePath</code> is supported by most major browsers and enables a flattened view of directory structure. Currently, though, this path can only be populated when the user uploads a directory. Adding a <code>path</code> property to the <code>File</code> constructor would allow sites to create their own directory structure without introducing any new primitives to the web platform.</p>
+<h1><code>DirectoryEntry</code></h1>
+<p><code>DirectoryEntry</code> recently has been supported by all major browsers. This primitive already enables construction of a tree-view directory structure.</p>
+<h1><code>Navigator.saveDirectory()</code></h1>
+<p>The primary missing piece is a way to save the constructed directory objects. Calling <code>Navigator.saveDirectory()</code> would behave the same way as saving a file does in browsers today. A “Save as…” dialog could be opened, the directory could be automatically saved to Downloads, the user could rename the directory, etc.</p>
+<p><code>Navigator.saveDirectory()</code> could accept a list of <code>File</code> objects, a <code>DirectoryEntry</code>, or both.</p>
+<h1>Example code</h1>
+<p><strong>Using webkitRelativePath</strong></p>
+<pre><code class="lang-javascript">file1 = new File([contents1], 'myFile.txt');
+file2 = new File([contents2], 'pic.jpg', { path: 'images' });
+navigator.saveDirectory([file1, file2], 'dirName');
+</code></pre>
+<p><strong>Using <code>DirectoryEntry</code></strong></p>
+<pre><code class="lang-javascript">let myDir = fs.root.getDirectory('dirName', {create:true}, dir =&gt; {
+    dir.getDirectory('images', {create:true}, subDir =&gt; {
+        subDir.getFile('pic.jpg', {create:true}, file =&gt; {
+            myDir.getFile('myFile.txt', {create:true} otherFile =&gt; {
+                navigator.saveDirectory(myDir, 'dirName');
+            });
+        });
+    });
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-06-29</div>
+          <div class="post_content">
+<p>Actually, DirectoryEntry is only supported by Chrome and Opera. <a href="http://caniuse.com/#feat=filesystem" rel="nofollow noopener">http://caniuse.com/#feat=filesystem</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-07-04</div>
+          <div class="post_content">
+<p>This only lets you get write access to a directory. If the user wants to work with a folder of files in a web app, this means repeated import and export steps using directory drag-and-drop followed by directory download to the same place. So what if instead of this the user could simply grant read-write access to a folder on their system? Then you could automatically read the files without user input, and write updated versions back automatically (like this suggestion but without user intervention). However for security reasons browsers would probably want to sandbox these folders… and then it sounds pretty much like we’ve reinvented the filesystem API (which never took off).</p>
+<p>There are still serious security concerns with this suggestion - what if a page nags them to choose <code>C:\Windows</code>? Or their documents folder? Is the web app allowed to overwrite files? If not what happens? Must they choose a new folder? If so can they not choose the same folder they used last time?</p>
+<p>Also, what about mobile devices where the file system isn’t used like desktop systems traditionally have? If you bring up a “save to directory” dialog on iOS, what should it show? How would the user access files after writing them?</p>
+<p>TBH, I think simply writing everything to browser storage (IndexedDB) and then allowing the user to manually download a .zip from time to time neatly avoids all these problems…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-07-05</div>
+          <div class="post_content">
+<p>I tend to agree that IDB might be the way to go. With the Storage API, it should also be possible to indicate that those “files” should be persistent.</p>
+<p>“Sharing” them with other applications, or simply exporting those things out, will then become a separate concern.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p><span class="mention">@DanielHerr</span> - Good catch! Updated.</p>
+<p><span class="mention">@AshleyScirra</span> - We’re investigating that use case with <a href="https://github.com/WICG/writable-files" rel="nofollow noopener">writable-files</a>. Does that look like it covers your use cases?</p>
+<p>I believe <span class="mention">@sicking</span> has expressed interest in this API from Mozilla as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>If the function accepts files and folders, perhaps it should be renamed to <code>self.save()</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p><span class="mention">@DanielHerr</span> that’s an interesting idea! You should open an issue for it <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

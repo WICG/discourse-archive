@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Writable file API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Writable file API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-04-06</div>
+          <div class="post_content">
+<h1>Writable files</h1>
+<p><a href="https://github.com/drufball/writable-files/" rel="nofollow noopener">https://github.com/drufball/writable-files/</a> explores solutions to this problem.</p>
+<h2>Problem</h2>
+<p>Today, if a web site wants to create experiences involving local files (document editor, image compressor, etc.) they are at a disadvantage to native apps. A web site must ask the user to reopen a file every time they want to edit it. After opening, the site can only save changes by re downloading the file to the Downloads folder. A native app, by comparison, can maintain a most recently used list, auto save, and save files anywhere the user wants.</p>
+<h2>Use cases</h2>
+<ul>
+<li>Open local file to read</li>
+<li>Open local file to edit and then save</li>
+<li>Open local file to edit with auto save</li>
+<li>Create and save a new file</li>
+<li>Delete an existing file</li>
+<li>Read meta data about files</li>
+</ul>
+<h2>Workarounds</h2>
+<ul>
+<li>FileSaver.js polyfills <code>saveAs()</code> from the [W3C File API], but files open in a new window instead of downloading on Safari 6.1+ and iOS.</li>
+<li>In Edge, Firefox, and Chrome developers can:
+<ul>
+<li>Create a fake anchor element</li>
+<li>Set the <code>download</code> attribute to the desired filename</li>
+<li>Set <code>href:</code> to a data URI</li>
+<li>Faking a click on the anchor element</li>
+</ul>
+</li>
+<li>Setting <code>window.location</code> to <code>'data:application/octet-stream' + data_stream</code>
+</li>
+<li>Hidden Flash controls to display a “save as” dialog</li>
+</ul>
+<p>These methods are clunky and only support “save as”. They do not support most recently used lists, auto save, save, or deleting a file.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-07</div>
+          <div class="post_content">
+<p>It’d be nice to be able to request the user pick a file for editing, and that the file can be maintained open for reading and writing. It would be similar to what apps for Google Docs can do with documents in Drive, but on the local machine instead of in the cloud.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3385_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">anssik</div>
+          <div class="creation_date">2016-04-07</div>
+          <div class="post_content">
+<p>How does this proposal compare with <a href="https://w3c.github.io/filesystem-api/">https://w3c.github.io/filesystem-api/</a>? The use cases seem similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-11</div>
+          <div class="post_content">
+<p>That link says</p>
+<blockquote>
+<p>agents are responsible for allocating space for the creation of a sandboxed file system and for imposing storage quotas on that virtual file system</p>
+</blockquote>
+<p>It seems the difference in mine is that we’d be accessing actual files anywhere in the user’s file system, as allowed by the user, not in a virtual file system that is sandboxed in the browser.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-04-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1433">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_1.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>…we’d be accessing actual files anywhere in the user’s file system, as allowed by the user, not in a virtual file system that is sandboxed</p>
+</blockquote>
+</aside>
+<p>Yes, but that use case has been looked at often, is known to be one of the features that would be very useful, and has had several proposals fora  way to do it as part of the work item, dating back most of a decade.</p>
+<p>It’s also one that worries security people a lot in particular, which is one reason it hasn’t made it to an accepted standard yet, I think.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1433">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/bc8723/40.png" width="20"/> chaals:</div>
+<blockquote>
+<p>It’s also one that worries security people a lot in particular,</p>
+</blockquote>
+</aside>
+<p>That’s probably the reason, and it’s a lame one. I bet the first implementation would be more secure than what most average non-tech people get out of just having Windows (f.e. click here, download screensaver, boom, virus galore).</p>
+<p>Android already let’s apps do this; android apps can access files limited to a specific folder by default. I’m sure it’s not difficult to let Chromium do it, but Google probably hasn’t prioritized it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>What trusktr says is right - the FileSystem API is about sandboxed files owned by the browser. This proposal is meant to provide access to files on the device. We’ve run the proposal by some security folks here on the Chromium team and they think the model proposed should work.</p>
+<p>The basic idea is that sites would only have access to files/directories that the user explicitly opened. Further, if the file changed outside of the site, it would need to reacquire the permission. User agents could decide whether they want to automatically grant any of these permissions or to show the user a permission dialog every time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p><span class="mention">@dknox</span> Exactly! And, the user could tell the browser to remember the permission. Or, the browser could raise a prompt like “File XXX was modified externally, reload?” or similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>I agree that it is possible to deal with the security issues, and I really would like the functionality - when Opera had it, I could do lots of really useful stuff, albeit only for Opera users.</p>
+<p>Yes, it needs to be restricted to files the user explicitly named. Allowing the app to <em>suggest</em> filenames like autorun.inf or .bashrc, to put files in dodgy places, or look for someone’s inbox, are the sort of phishing attacks that concern people who have looked at this. There’s also a supercookie-type fingerprinting vector, but I’m not sure that’s new and there are easier ways to do the same thing.</p>
+<p>In reality I think a lot of this comes down to getting the security right in the UI - which means presenting risky actions to users in ways where they understand the risk. We are better at this than we were a decade ago, but we also understand the risks much better and I think that too makes us more cautious, as an industry.</p>
+<p>The fact that native app platforms allow things that frighten the security daylights out of me doesn’t seem like a good reason for doing the same thing on the Web. But as I said, the functionality is very valuable, so I hope we can figure out a secure enough way to make it available that browsers do this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-06-29</div>
+          <div class="post_content">
+<p>A permission prompt like “Allow this site to write to files and folders you open with it?” would be sufficient.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-07-03</div>
+          <div class="post_content">
+<p>Probably not.</p>
+<p>In theory, it should be fine, but in practice permission prompts train people to click “yes” to everything, whether that is reasonable or not. Given the almost insatiable desire of the Web for tracking mechanisms, and the fact that any such permission given by the user could be reasonably argue to have been consent to recording information on the user’s machine in the same way as the EU now insists people do for cookies, it’s not unlikely that so many sites will ask for this permission that it becomes as meaningless as the fine print on a contract. Which leads to people clicking to agree to it without ever having read it - even if they have to scroll down pages of stuff before they are allowed to click. For example did you read this sentence? There is quite a lot of practical research on this, and it’s pretty clear that permission dialogs do not amount to getting informed consent for any interpretation of the term that assumes the person knows what they actually agreed to.</p>
+<p>Further, there are parts of the file tree that are far more sensitive than others. It’s one thing to ask permission to read mbox files for an email application, another to read and write files that typically contain password information - even hashed, because given time those hashes are insecure - or set user preferences in ways that can be exploited for identity theft or the like.</p>
+<p>That said, I don’t think people have come up with a very clear better answer, so the issue is about how to make sure the question asked is as focused as possible and the user gets as clear as possible a message that they should be thinking hard before offering this permission, or that it should be tightly circumscribed and relatively annoying to get into things that are sensitive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-03</div>
+          <div class="post_content">
+<p>I find it hard to believe many sites will be asking users for the ability to write to files without apparent reason, and even if they do, they cannot do anything unless the user chooses a file. It seems like you are implying a way to arbitrarily access any files on the user’s computer.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>Currently, the proposal suggests that we may allow some method to save a new file to the device, which might allow the kind of tracking that <span class="mention">@chaals</span> mentions. <span class="mention">@DanielHerr</span> makes a good point that most of the other use cases would already require a specific user action. So maybe if we only showed a permission prompt to save a file that the user hadn’t already explicitly chosen?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1621_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ajedi32</div>
+          <div class="creation_date">2018-11-12</div>
+          <div class="post_content">
+<p>(Responding to the recent <a href="https://github.com/WICG/writable-files/" rel="nofollow noopener">WICG proposal</a>)</p>
+<p>This is certainly an interesting problem from a security UX standpoint. There are a lot of potential ways for users to shoot themselves in the foot with a feature like this.</p>
+<p>One thing I’d like to point out about the existing proposal is that preventing “executable” files from being written would make this API useless for many fields of software software development, as <code>.js</code>, <code>.py</code>, <code>.rb</code>, etc are all technically executable files (depending on what interpreters you have installed). An IDE that can’t edit source code files isn’t very useful.</p>
+<p>And even <em>with</em> onerous restrictions like that, I think it’s going to be <em>very</em> hard if not impossible to prevent an app that has full write access to a software project directory from getting full user privileges on the user’s system. There are hundreds of different files where executable code (or equivalent) could potentially be sourced from in a typical software project (Makefiles, config files, dependency list files, etc) and I don’t think it’s practical to blacklist them all.</p>
+<p>This API could indeed be useful for other domains, like photo editing. But I’m really struggling to see how we’d make it capable enough to build an IDE on top of without having to make unacceptable security trade-offs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2109_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">KevinSimper</div>
+          <div class="creation_date">2018-11-12</div>
+          <div class="post_content">
+<p>I have some proposals on how to keep this a great feature but allow it to be flexible and solve all the goals:</p>
+<h2>Confirm data written to files</h2>
+<p>When a website wants to write to a file that you have selected the browser asks if you want to write this data to that specific file and you have to confirm. This to prevent the website from doing anything you don’t want it to, but still, allow the website to try.</p>
+<h2>By default create a new folder for each website</h2>
+<p>Like the Dropbox app way, there were two kinds of apps, one that would access your whole dropbox or one that would only be allowed to access a newly created folder for that specific app.</p>
+<h2>Confirm the magnitude of data giving to the website</h2>
+<p>I don’t believe we can prevent all things for happing, this kind of API’s already exist in Google Drive and Dropbox and so far we haven’t seen abuse of these systems to get all the users data. One solution would be to notify the user about how data is given to the website.</p>
+<pre><code>       "You are giving access to 10 folders and 7000 files, is that your intend?"</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2109_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">KevinSimper</div>
+          <div class="creation_date">2018-11-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="1433">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ajedi32/40/1621_1.png" width="20"/> Ajedi32:</div>
+<blockquote>
+<p>This API could indeed be useful for other domains, like photo editing. But I’m really struggling to see how we’d make it capable enough to build an IDE on top of without having to make unacceptable security trade-offs.</p>
+</blockquote>
+</aside>
+<p>I think if you limit the scope and confirm data written at the start, you can solve these problems, even better than current editors where people are installing extensions left and right <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rkagerer</div>
+          <div class="creation_date">2018-11-12</div>
+          <div class="post_content">
+<p>Is this single thread the right place to comment on the proposal?  I anticipate it will generate a lot of controversy and it would be handy to have a place to debate issues by topic rather than all lumped together in sequence.</p>
+<p>My first concern is whether <strong>full paths</strong> will be shared with the app provider.  I consider paths sensitive metadata - they contain things like my username and, when well-organized, suggest what other information may be found alongside the files(s) I’m granting the website access to.  e.g. A real estate agent might group files in subfolders named by property address or a medical practitioner by patient name.  They might want to legitimately allow access to some content (e.g. annotate an x-ray using an image editor) without exposing information the site has no business knowing (like who’s x-ray it is).  These are contrived examples but you get the idea.</p>
+<p>One thing I like about the existing HTML file-picker is that all the website gets is the data I intend to give it; nothing more.  I don’t want this new API leaking my pathnames or directory listings to the website (unless I give it access to an entire particular subdirectory tree).</p>
+<p>Also how will permissions be maintained on an ongoing basis?  i.e. How do I easily identify what files an app has access to, or conversely for a particular set of files, what apps have rights?  Do you intend to integrate with the client OS file properties tabs, or are you going to duplicate something akin to those efforts in the browser?</p>
+<p>Regarding <span class="mention">@KevinSimper</span>’s suggestion of giving each website its own folder - that’s great from a security perspective, but terrible from a useability / organizational perspective as it forces me to hierarchize by application rather than by content relevance or meaning.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rkagerer</div>
+          <div class="creation_date">2018-11-12</div>
+          <div class="post_content">
+<p>Here’s an idea to avoid leaking path and file names:</p>
+<pre><code>var file = window.promptSelectFile(..., access:read)
+document.getElementById('filename').style.secureRender = file.token
+
+&lt;div id='status'&gt;
+  Editing: &lt;span id='filename' style='path-format:title'&gt;
+&lt;/div&gt;
+</code></pre>
+<p>The <code>file</code> object supports everything you’d expect (read, write, etc), but doesn’t reveal local paths to the website. Instead it provides an obfuscated token derived by the user agent (e.g. perhaps by encrypting the original full pathname with a site-specific key, or associating each file with a persisted ID).</p>
+<p>A new <code>secure-render</code> attribute lets the designer create placeholders for the sensitive data anywhere in the HTML content. The browser converts the given token to its corresponding value when the page is rendered, but in such a way that if the site tries to inspect the content all it gets back is the obfuscated tag.</p>
+<p>Mechanisms are provided to control how the value is formatted and localize it into the semantics of the native OS.  <code>path-format</code> could be:</p>
+<pre><code>full       // C:\Users\Alice\Documents\Patients\JohnSmith\XRay.png
+directory  // C:\Users\Alice\Documents\Patients\JohnSmith
+name       // XRay.png
+title      // XRay
+extension  // png
+</code></pre>
+<p>I can now build a full-fledged, browser-based file manager without needing to know any pathnames.</p>
+<p>Do browsers today have any sort of “placeholder” mechanism like this for websites to display sensitive local data without having to know its content?  Can you think of additional use cases where this might be helpful?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2018-11-13</div>
+          <div class="post_content">
+<p>It may make sense to have a dialog for every file or folder the user chooses containing options such as whether to allow writable, persistent, and full path access.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rajegannathan</div>
+          <div class="creation_date">2018-11-13</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="1433">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/d/49beb7/40.png" width="20"/> dknox:</div>
+<blockquote>
+<p>.</p>
+</blockquote>
+</aside>
+<p>We have a slightly tangential usecase.  We encrypt files and convert them to .html files where the original encrypted content is saved as comment blocks.  A .docx file becomes .docx.html.  Users typically double click to open this file in browser and we can allow them editing by transferring the contents to an iframe within the file itself.  We would like to have an ability to save back to the parent file location from within the iframe or from within the js running in the parent file:// context.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

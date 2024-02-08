@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Browser Display Server Mode protocol</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Browser Display Server Mode protocol</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SoniEx2</div>
+          <div class="creation_date">2020-12-29</div>
+          <div class="post_content">
+<p>Electron is great, because it ships a whole separate browser with your app.</p>
+<p>Why not integrate electron into the browser then? You still get to have your separate app, but you can just use a tab in the existing browser.</p>
+<p>Easy way to do this is to bind on localhost port 0, and then <code>xdg-open</code> (or platform equivalent) the resulting address. (e.g. <code>xdg-open http://localhost:1234/?secureKey=some-key-that-needs-to-be-sent-over-CORS-enabled-HTTP-authentication</code>) This can also be trivially SSH-forwarded. In other words, it’s better than X11 already. You can then interact over websockets with this.</p>
+<p>There are a few minor issues with the http-to-localhost approach that can be fixed by introducing a new protocol tho. Mainly, the CORS/secureKey workaround. It shouldn’t <em>need</em> to exist. Additionally there’s the issue of port numbers and the interaction between port numbers and push notifications. (the interaction with protocol handlers is a non-issue because you <em>should</em> just use the OS-level protocol handlers for that one. altho arguably one should just use the platform-specific notification APIs because they’re rather limited in what they let you do unlike what GUIs let you do? (like, you can’t run OpenGL in a desktop notification.)) Oh, and copying buffers over websockets, such as when displaying OpenGL-rendered content, is slow. (Arguably should be using WebGL, but ehh…)</p>
+<p>A small benefit of a new protocol would be that the browser could act like a proper display server when using said protocol - setting the window icon, removing browser-specific decorations, etc. While still allowing browser extensions (and thus themes and content blockers) to apply somehow.</p>
+<p>Does this seem like something worth specifying?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

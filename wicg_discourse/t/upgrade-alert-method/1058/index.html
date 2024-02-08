@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Upgrade alert() method</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Upgrade alert() method</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-11</div>
+          <div class="post_content">
+<p>We all know the good ol <code>alert()</code> method <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<p>Yet could use some improvements so devs don’t have to create their own, dialog to show a simple alert message or import a library just to have different styling.</p>
+<h1>Proposal</h1>
+<p>There’s only so much <code>alert()</code> could do, so not much to style</p>
+<p>Have <code>alert()</code> take a second argument:</p>
+<pre><code class="lang-auto">alert('This is the message', {
+  // Title
+  title: {
+    // All styling
+    color: 'black'
+  },
+  // The box where the message displays
+  messageBox: {
+    // All Styling
+    color: 'white',
+    background: 'lightblue'
+    fontSize: '15px'
+  },
+  // There could be added buttons, which ONLY have a title and onclick handler and styles
+  buttons: [
+   {
+    title: 'Yes',
+    onclick: function() {...},
+    style: {
+      color: 'White',
+      background: 'lightblue'
+    }
+   },
+   {
+    title: 'No',
+    onclick: function() {...},
+    style: {
+      color: 'White',
+      background: 'lightblue'
+    }
+   }
+ ]
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-11</div>
+          <div class="post_content">
+<p>Why not just use <code>&lt;dialog&gt;</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-11</div>
+          <div class="post_content">
+<p>Not Widely supported, and way easier to change a method then to implement <code>&lt;dialog&gt;</code> even though it would eventually be.</p>
+<p>Aside from that, this is browser’s native UI:</p>
+<p>Could be made easier (No styling) but can add buttons.</p>
+<p>or for styling only:</p>
+<ul>
+<li>fontSize</li>
+<li>boldness</li>
+<li>italics</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>It seems odd to propose a new feature with no support and cite that an alternative is not widely supported as a reason to make the alternative.</p>
+<p>Also all the styling options look like a slow, painful way of reinventing CSS. <code>&lt;dialog&gt;</code> already lets you do any styling that HTML is capable of, making it far, far more powerful and flexible. If you want <code>&lt;dialog&gt;</code> to look more like the browser’s native UI, perhaps there are features which could help with that instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/697_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ato</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>It’s my impression that alert- and confirmation dialogues are features there is popular agreement should be purged with fire.  But due to backwards compatibility concerns and their wide adoption in the wild, no vendors are likely to commit to that.</p>
+<p>Incentivising more use through adding more features is not the right way to go about it, I think.</p>
+<p>I want to second what <span class="mention">@AshleyScirra</span> says, and add that <code>&lt;dialog&gt;</code> is a more pregnant alternative since it uses regular web primitives.  <code>alert()</code> has a range of issues to do with how it’s implemented:</p>
+<ul>
+<li>They lock up the main JS thread, preventing scripting</li>
+<li>Commonly implemented as a native toolkit dialogue</li>
+<li>Locks up the UI when present (in some browsers)</li>
+<li>Implementation varies greatly between UAs, no clear interop except that they put the browser into an unrecoverable state (seen from content’s point of view) until the user performs an action that resumes the web runtime</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>What I meant by being the browser’s UI is that it belongs to the browser, part of the browser instead of the page. With <code>&lt;dialog&gt;</code> it’s the page’s UI.</p>
+<p>With <code>alert()</code> if I’m focused on another tab, the tab gets focused, and also can be disabled. Whenever the user wants to.</p>
+<p>Also I just realize what I have above would be slow so and annoying to set each time a message wants to be shown, so a method part of <code>alert.setUI</code> or something else would be best:</p>
+<pre><code class="lang-auto">alert.setUI({
+  // same thing as above
+});
+</code></pre>
+<p>That’s done before calling alert, and now I can call <code>alert(message)</code> in the future with the above applied styling/buttons.</p>
+<p><span class="mention">@ato</span> Also I’d disagree the only thing I’ve ever read about <code>alert()</code> is being bad for debugging, to use <code>console.log()</code> instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>Forcing the browser to switch to the tab, and locking up the page by forcing browser UI on top of it, are user-hostile features. These are not benefits of <code>alert()</code>, they are disadvantages. I agree with <span class="mention">@ato</span> that they should be purged with fire <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> In fact, <code>alert()</code> is so annoying most browsers add a “Prevent this page from showing any more alerts” option so that users don’t have to deal with them any more. I think it is more likely that <code>alert()</code> will be removed entirely than anything will get added to it, especially given you can do absolutely anything you like with <code>&lt;dialog&gt;</code> and without any of the pains of <code>alert()</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>I mentioned</p>
+<blockquote>
+<p>and can be disabled</p>
+</blockquote>
+<p>Well we all know its not going anywhere because there are sites that depend on it, and still could be useful, I think most new sites don’t use it because there’s not much use of it, you can’t customize it the way you want to. And its an <code>alert()</code> it should lock up the page, and be synchrounous. Part of the browser UI, so you probably also don’t like the browser’s UI box for permissions?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>The browsers UI box for permissions is necessary: since the connection can’t be established (and therefore the page not even loaded) until the correct authentication is given, a modal browser popup is warranted. A normal web page should not make use of any synchronous stop-the-world UI features, it’s an out-of-date UI paradigm from the 90s that needs to die.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-12</div>
+          <div class="post_content">
+<p>By stop the world you mean switch focus? to the tab. Browsers could change the <code>alert()</code> to only show up on the tab and not switch.</p>
+<p>And its an <strong>Alert</strong> the alert should be the main focus, that’s kind of the point of the word <strong>alert</strong>.</p>
+<p>Not sure what you mean by:</p>
+<aside class="quote" data-post="9" data-topic="1058">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>since the connection can’t be established (and therefore the page not even loaded) until the correct authentication is given</p>
+</blockquote>
+</aside>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<p>Adding tonnes of functionality to fix alerts is counter intuitive when <code>&lt;dialog&gt;</code> exists. Certainly the support is not good however the behaviour is shimmable.</p>
+<p>If your motivation is that you want a JS api that builds a native <code>&lt;dialog&gt;</code> that behaves like a good web citizen then perhaps there is time for that. Render blocking and adding functionality to something that is basically only used for debug is going to lead only to bad issues.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<p>Alright this idea is dead, no biggie just wanted to see thoughts, I’m not capable of closing this, but it’s over.</p>
+<p>Thanks for the feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/697_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ato</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<p>Whenever <code>&lt;dialog&gt;</code> gets enough traction in browser, I’d be interested to discuss the possibility of marking <code>Window#alert</code> and <code>Window#confirm</code> as deprecated features.</p>
+<p>As with synchronous XHR it’s obviously not possible to remove these features, but we can similarly emit a warning in the web console saying we discourage its use in favour of some replacement technology.</p>
+<p><span class="mention">@Edwin_Reynoso</span> What do you think?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<p><span class="mention">@ato</span> <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" rel="nofollow noopener"><code>fetch</code></a> is the replacement of <code>XHR</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-16</div>
+          <div class="post_content">
+
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[withdrawn] API for &lsquo;tagless&rsquo; text formatting</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[withdrawn] API for &lsquo;tagless&rsquo; text formatting</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-07-15</div>
+          <div class="post_content">
+<p>This is inspired by Markdown proposals, and by multitude of code highlighters.</p>
+<p>Currently there are multiple situations when when you want to apply styling to the text according to a its syntax. Code highlighters use pretty insane markup, often having something like <code>&lt;span class="punctuation"&gt;,&lt;/span&gt;</code>, which is really inefficient for huge code documents (e.g. <a href="http://source.roslyn.codeplex.com/#Microsoft.CodeAnalysis.CSharp/obj/Debug/Syntax.xml.Generated.cs" rel="nofollow noopener">Syntax.xml.Generated.cs</a> which seems to have most of its highlighting disabled because of that). Markdown is more sane, but still requires rewriting to be displayed, obscuring author’s intent.</p>
+<p>I think those cases can be solved by an API that would attach a JavaScript formatting rule to an element, which browser would then use to generate formatting on the fly (maybe even in a lazy way, as new parts of the text become visible). This is similar to the current behavior of JS highlighters/formatters, but does not require new elements to be created.</p>
+<p>Preliminary potential API (similar to what CodeMirror editor does):</p>
+<pre><code class="lang-auto">element.textClassifier = function(textStream, state) {
+    if (textStream.match(/if/))
+        return 'keyword';
+    // etc
+};
+</code></pre>
+<p>where the returned value is applied as a virtual class to the text that stream moved over. This would behave similar to an element, but might be much more lightweight (e.g. inaccessible through DOM) and wouldn’t require any parsing. Kind of similar to canvas-for-text. This can be called asynchronously and on any part of text (though for the correct state it should go through all preceding text before calling it on new part). Until call is finished the text can just be shown as plain text, which prevents slow formatter from completely blocking the rendering (but may cause relayouts as the text is processed).</p>
+<p>The <em>text</em> term above applies to text content within the element (but not its sub-elements).</p>
+<p>There are some problems with this API (e.g. links, tables, effects on layout), but before considering improvements it would be interesting to see whether the goal/approach itself makes sense to anyone, or whether its pure madness on my part.</p>
+<p>Note that it can also be used for e.g. creating a table from CSV, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-07-15</div>
+          <div class="post_content">
+<p>At minimum, you’d have to be able to return a prefix of the text stream along with its desired class; you don’t know ahead of time how much of the text stream you’ll need to consume to get a keyword, say.</p>
+<p>You really need to be able to nest things, though, which means you need something more complicated; a simple stream of (text, class) pairs won’t do the job any more.  Instead, you’d have to return a full formatting structure (each element as an array of class and children, where children are either strings or more arrays).</p>
+<p>This can be constructed in a lighter-weight manner than the full DOM , but that won’t save you much, if any, once the browser does anything with it.  Most of the weight of an element is in setting up the data structures for style resolving, rendering, and similar things, all of which are still needed here.  Plus, making them inaccessible to DOM won’t actually help very much; there’s plenty of useful stuff you can do by having real DOM elements around (like responding to events, for example), and gimping them in this regard just means it’ll be less used.</p>
+<p>I think the right thing to do for things like this is to just lean on custom elements.  You can make a <code>&lt;markdown-&gt;</code> element that builds a Shadow DOM structure from its light-dom text contents pretty easily, and it doesn’t add any new complications beyond what we’re already absorbing as part of Web Components.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-07-15</div>
+          <div class="post_content">
+<p>Thank you for the detailed reply. It seems I have misjudged the performance benefit here, and, in absence of that, the complexity is definitely not worth it.</p>
+<p>I agree that custom element+shadow DOM could do the same thing without any additional browser-level complexity and so seem better for this case.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Class based API for Custom Elements?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Class based API for Custom Elements?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-02-06</div>
+          <div class="post_content">
+<p>It might be nice if we could use ES2015 classes for defining Custom Elements with <code>document.registerElement</code>, as an alternative to having to define the prototype of the new element explicitly. For example, this is the current way:</p>
+<pre><code class="lang-auto">const div = document.registerElement('something-awesome', {
+    prototype: Object.assign(Object.create(HTMLElement.prototype), {
+        createdCallback() {
+            console.log('created')
+        },
+        attachedCallback() {
+            console.log('attached')
+        },
+        detachedCallback() {
+            console.log('detahced')
+        },
+        attributeChangedCallback() {
+            console.log('attr changed')
+        },
+    })
+})
+</code></pre>
+<p>And this would be the new way:</p>
+<pre><code class="lang-auto">class SomethingAwesome extends HTMLElement {
+    createdCallback() {
+        console.log('created')
+    }
+    attachedCallback() {
+        console.log('attached')
+    }
+    detachedCallback() {
+        console.log('detahced')
+    }
+    attributeChangedCallback() {
+        console.log('attr changed')
+    }
+}
+
+const div = document.registerElement('something-awesome', SomethingAwesome)
+</code></pre>
+<p>Perhaps the name of the element can be inferred from the class name if the class is the first arg as a bonus:</p>
+<pre><code class="lang-auto">const div = document.registerElement(SomethingAwesome)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-02-10</div>
+          <div class="post_content">
+<p>Seems shimmable from the syntax given there.however class based construction is already being considered:
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/webcomponents/issues/140" rel="nofollow noopener" target="_blank">github.com/w3c/webcomponents</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/w3c/webcomponents/issues/140" rel="nofollow noopener" target="_blank">[Custom]: Rename document.registerElement to document.define or document.defineElement (bugzilla: 24087)</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2015-07-06" data-format="ll" data-time="07:35:05" data-timezone="UTC">07:35AM - 06 Jul 15 UTC</span>
+</div>
+<div class="date">
+          closed <span class="discourse-local-date" data-date="2016-03-01" data-format="ll" data-time="02:20:13" data-timezone="UTC">02:20AM - 01 Mar 16 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/hayatoito" rel="nofollow noopener" target="_blank">
+<img alt="hayatoito" class="onebox-avatar-inline" height="20" src="https://avatars2.githubusercontent.com/u/160288?v=4" width="20"/>
+          hayatoito
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">Title: [Custom]: Rename document.registerElement to document.define or document.defineElement (bugzilla: 24087)
+Migrated from: https://www.w3.org/Bugs/Public/show_bug.cgi?id=24087
+comment: 0
+comment_url: https://www.w3.org/Bugs/Public/show_bug.cgi?id=24087#c0
+Dominic Cooney wrote on 2013-12-13 06:03:08 +0000.
+Based on...</p>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">custom-elements</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>I would say that the tag name is better not being inferred by the <code>class.name</code>. it leaves the ability to change the element from the class code based upon tag name rather than bind a whole class definition to an element.</p>
+<p>so:</p>
+<pre><code class="lang-auto">class MyTime extends HTMLElement {
+  constructor() {
+    if (this.tagName === 'trump-time') {
+      this.makeElementGreatAgain()
+    }
+  }
+}
+document.registerElement('trump-time', MyTime);
+document.registerElement('bernie-time', MyTIme);
+</code></pre>
+<p>It also means the element can be purely usage differences etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-02-13</div>
+          <div class="post_content">
+<p>Last I heard, it’s going to be <code>document.defineElement</code>, which is I think based on Apple’s prototype. That prototype does use ES6 classes. Let’s wait for the next announcement from the browser vendors. Shouldn’t be long.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

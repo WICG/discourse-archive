@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>API to get list of available fonts</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">API to get list of available fonts</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-11-15</div>
+          <div class="post_content">
+<p>Some web apps, e.g. word processors or any app that uses customisable text, may want to let the user choose from a list of pre-installed fonts on the system. It would be convenient to have an API to provide a list of the available font names.</p>
+<p>The first objection is probably about the privacy/tracking implications of this. However this information is already available via the canvas2d API. Simply by running through a hard-coded list of possible font names, calling fillText(), then comparing the resulting pixel data, it’s possible to find out this information anyway. Here is a proof of concept that works in Chrome, Firefox and Edge: <a href="https://dl.dropboxusercontent.com/u/15217362/getfontlist.html" rel="nofollow noopener">https://dl.dropboxusercontent.com/u/15217362/getfontlist.html</a></p>
+<p>I’ve seen similar other workarounds based on text metrics, CSS and measuring DOM element sizes. AFAIK previously this list was also available via Java or Flash, but the move away from plugins has made them less viable. Note however that they meant for a lot of users for a long time, this information was also available anyway.</p>
+<p>The proof-of-concept works, but is a pretty obnoxious solution, requiring a very long list of all the possible font names that are in use, and then consuming a lot of CPU to test them all. On mobile this can take a few seconds. The list I’ve used is certainly not exhaustive, and the CPU usage/delay increases as the list becomes more comprehensive.</p>
+<p>Arguably a browser-provided list could improve tracking by including rare fonts that the hard-coded list does not include. However to mitigate this the solution is to make an ever more gigantic list of every possible font name that can be dug up from archives and font listing services, making the workaround even more obnoxious.</p>
+<p>Some might suggest that web apps ought to use web fonts anyway. Web fonts are definitely worth considering. However for some web apps with locally-rendered content, access to the user’s local fonts allows them to use custom fonts they’ve pre-installed to their system, and helps bring parity with native apps, allowing both web apps and native apps to let the user access the same list of fonts. For example a user may want to pick a font they had previously used in Microsoft Word, but this may not be available in a web app if it is either missing from the hard-coded list, or a web font equivalent is not available.</p>
+<p>I think the main argument in favour of this is that the information is already available as demonstrated by the proof-of-concept. A browser API to list available fonts therefore is not providing any previously unavailable information, and makes legitimate use of the font list much easier. It could even improve privacy by allowing browsers to control the list returned in some circumstances, e.g. by returning only one or two universal fonts in “tracking protection” mode, although browsers would have to do the same for the set of fonts allowed to be used via CSS, canvas2d, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-11-15</div>
+          <div class="post_content">
+<p>Indeed, inability to get the list of installed fonts is one of major drawbacks of web applications compared with native applications.</p>
+<p>As long as the web platform is not just about web <em>sites</em> anymore, but also about web <em>applications</em> pretending to compete seriously with native applications, the web platform should get less limited and provide more direct access to lower-level things like installed fonts and <a href="//discourse.wicg.io/t/display-an-image-at-device-s-physical-resolution/1150">physical resolution</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mek</div>
+          <div class="creation_date">2015-11-16</div>
+          <div class="post_content">
+<p>There has been some work on a Local Font Access API in blink/chromium in this <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/G-hC66MRTso/uVrmHV0NAwAJ" rel="nofollow noopener">intent to implement</a>. I don’t think it’s quite worked out yet what the best shape for a local font API would be, but there are definitely people working in this area.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-11-16</div>
+          <div class="post_content">
+<p>Thanks, I hadn’t seen that Chromium was already looking in to this. Will follow the related bug, and hopefully other vendors get on board too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3179_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oyiptong</div>
+          <div class="creation_date">2020-10-15</div>
+          <div class="post_content">
+<p>We’ve made some progress!</p>
+<p>The spec draft can be found here: <a href="https://wicg.github.io/local-font-access/" rel="noopener nofollow ugc">https://wicg.github.io/local-font-access/</a>
+The explainer is here: <a href="https://github.com/WICG/local-font-access/blob/main/README.md" rel="noopener nofollow ugc">https://github.com/WICG/local-font-access/blob/main/README.md</a></p>
+<p>There’s a rough demo at: <a href="https://glitch.com/~font-access-demo" rel="noopener nofollow ugc">https://glitch.com/~font-access-demo</a></p>
+<p>Here’s a blog post: <a href="https://web.dev/local-fonts/" rel="noopener nofollow ugc">https://web.dev/local-fonts/</a> and a more polished demo: <a href="https://glitch.com/~local-font-access" rel="noopener nofollow ugc">https://glitch.com/~local-font-access</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

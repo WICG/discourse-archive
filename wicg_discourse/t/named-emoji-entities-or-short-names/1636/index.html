@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Named Emoji Entities (or Short Names)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Named Emoji Entities (or Short Names)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-08-03</div>
+          <div class="post_content">
+<p>There has been some discussion previously about allowing generic access to Unicode character names from entity references.</p>
+<aside class="quote" data-post="1" data-topic="770">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/>
+<a href="//discourse.wicg.io/t/unicode-named-character-entities/770?source_topic_id=1636" rel="nofollow noopener">Unicode Named Character Entities</a> <a class="badge-wrapper bullet" href="/c/html"><span class="badge-category-bg" style="background-color: #fc0;"></span><span class="badge-category clear-badge" title="For all HTML-related discussions. Not just the HTML standard (though that">HTML</span></a>
+</div>
+<blockquote>
+    Continuing the discussion from <a href="//discourse.wicg.io/t/add-new-character-entity-references-like-power-to-match-new-unicode-specs/373/2" rel="nofollow noopener">Add new character entity references like &amp;power; - to match new Unicode specs</a>: 
+
+
+
+Rather than inventing yet more named entities (with arbitrary names) to HTML, I think this would be a great forward-facing way to allow for semantic referencing of Unicode characters using plain ASCII source - just drop all the Unicode character names into the routine for looking up a named entity (after comparing against the "legacy" entity names). As an alternative to quotes in the…
+  </blockquote>
+</aside>
+<p>Emojis are popular and most of them seem to have a single unambiguous canonic “short name” which is often different from its Unicode name. The syntax convention, also supported here in Discourse, is different, though: instead of a mandatory ampersand prefix and sometimes optional semicolon suffix as in SGML / XML / HTML <code>&amp;foo;</code>, they are used with colons on both sides <code>:foo:</code>.</p>
+<p>I wonder whether browsers should support the colon syntax out of the box and they should hence be added to HTML or if it would be better to use the “short name” with the established …ML syntax.
+So I merged two JSON files, expecting a lot of clashes:</p>
+<ul>
+<li><a href="https://html.spec.whatwg.org/entities.json">https://html.spec.whatwg.org/entities.json</a></li>
+<li>
+<a href="https://github.com/iamcal/emoji-data/blob/master/emoji.json" rel="nofollow noopener">https://github.com/iamcal/emoji-data/blob/master/emoji.json</a> (<a href="https://github.com/Crissov/unicode-proposals/blob/master/emoji_entities.json" rel="nofollow noopener" title="Format of the WHATWG file with decimal codepoints missing. I removed ZWJ sequences and skin tone combinators. The emoji-data does not cover Unicode 9 yet.">edited version</a>)</li>
+<li>→ <a href="https://github.com/Crissov/unicode-proposals/blob/master/entities.json" rel="nofollow noopener">https://github.com/Crissov/unicode-proposals/blob/master/entities.json</a>
+</li>
+</ul>
+<p>There were only few.</p>
+<h2><a href="https://github.com/Crissov/unicode-proposals/blob/master/emoji-entities.md" rel="nofollow noopener">Clashes</a></h2>
+<ul>
+<li>
+<strong>Card suits</strong> <code>&amp;clubs;</code>  (U+2663 <img alt=":clubs:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/clubs.png?v=5" title=":clubs:"/> <img alt=":clubs:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/clubs.png?v=5" title=":clubs:"/>), <code>&amp;hearts;</code> (U+2665 <img alt=":heart:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/heart.png?v=5" title=":heart:"/> <img alt=":hearts:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/hearts.png?v=5" title=":hearts:"/>) and <code>&amp;spades;</code> (U+2660 <img alt=":spades:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/spades.png?v=5" title=":spades:"/> <img alt=":spades:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/spades.png?v=5" title=":spades:"/>) are actually equivalent except for an explicit VS-16 (U+FE0F). There are also variants <code>&amp;clubsuit;</code>, <code>&amp;heartsuit;</code> and <code>&amp;spadesuit;</code>, and, in case anyone wonders, the fourth card suit is currently available as <code>&amp;diams;</code>  and <code>&amp;diamondsuit;</code> or as <code>:diamonds:</code>.</li>
+<li>The same applies to the <strong>telephone symbol</strong> <code>&amp;phone;</code>  (U+260E <img alt=":phone:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/phone.png?v=5" title=":phone:"/> <img alt=":telephone:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/telephone.png?v=5" title=":telephone:"/>) except that it also has a <em>preferred</em> alias short name and thus <code>&amp;telephone;</code> can be used unambiguously for the emoji character.</li>
+<li>
+<strong>Bank note emojis</strong>, on the other hand, have separate code points from the currency symbols. Since the fallback is good, the emoji short codes could be altered, e.g. to use an uppercase initial letter or a verbose suffix like <code>emoji</code> or <code>symbol</code>.
+<ul>
+<li>
+<code>&amp;yen;</code> U+00A5 ¥ vs. emoji U+1F4B4 <img alt=":yen:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/yen.png?v=5" title=":yen:"/> <img alt=":yen:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/yen.png?v=5" title=":yen:"/>
+</li>
+<li>
+<code>&amp;dollar;</code> U+0024 $ vs. emoji U+1F4B5 <img alt=":dollar:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/dollar.png?v=5" title=":dollar:"/> <img alt=":dollar:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/dollar.png?v=5" title=":dollar:"/>
+</li>
+<li>
+<code>&amp;euro;</code> U+20AC € vs. emoji U+1F4B6  <img alt=":euro:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/euro.png?v=5" title=":euro:"/> <img alt=":euro:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/euro.png?v=5" title=":euro:"/>
+</li>
+<li>
+<code>&amp;pound;</code> U+00A3 £ vs. emoji U+1F4B7  <img alt=":pound:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/pound.png?v=5" title=":pound:"/> <img alt=":pound:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/pound.png?v=5" title=":pound:"/>
+</li>
+</ul>
+</li>
+<li>A single two-letter shortname for a <strong>flag</strong> or regional indicator sequence clashes with existing named entities: <code>&amp;it;</code> for Italy (U+1F1EE+1F1F9 <img alt=":it:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/it.png?v=5" title=":it:"/> <img alt=":flag_it:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/flag_it.png?v=5" title=":flag_it:"/>) is already occupied by MathML’s Invisible Times (U+2062). However, there already is the systematic alias <code>&amp;flag_it;</code> and one could decide to not support the two-letter flag names for those that had existed in Japanese telcos implementations prior to Unicode standardization (like Discourse does as well for instance) at all, e.g. <code>&amp;us;</code> and <code>&amp;de;</code>.</li>
+</ul>
+<p>There are four clashes left, three of which have borderline acceptable fallback from emoji to HTML, but one is completely off. They would probably need a new designator that should also be back-ported to short-names.</p>
+<ul>
+<li>
+<code>&amp;ring;</code> U+02DA ˚ vs. U+1F48D <img alt=":ring:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/ring.png?v=5" title=":ring:"/> <img alt=":ring:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/ring.png?v=5" title=":ring:"/>
+</li>
+<li>
+<code>&amp;smile;</code> U+2323 ⌣ vs. U+1F604 <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/> <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/>
+</li>
+<li>
+<code>&amp;top;</code> U+22A4 ⊤ vs. U+1F51D <img alt=":top:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/top.png?v=5" title=":top:"/> <img alt=":top:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/top.png?v=5" title=":top:"/>
+</li>
+<li>
+<code>&amp;dash;</code> U+2010 ‐ vs. U+1F4A8 <img alt=":dash:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/dash.png?v=5" title=":dash:"/> <img alt=":dash:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/dash.png?v=5" title=":dash:"/>
+</li>
+</ul>
+<p>PS: A couple of “short names” result in entity references that would perhaps be malformed according to SGML and XML rules (not sure about the underscore <code>_</code>), but that probably doesn’t concern WHATWG HTML:</p>
+<ul>
+<li>
+<code>&amp;-1;</code>: U+1F44E <img alt=":-1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/-1.png?v=5" title=":-1:"/> <img alt=":-1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/-1.png?v=5" title=":-1:"/>
+</li>
+<li>
+<code>&amp;+1;</code>: U+1F44D <img alt=":+1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/+1.png?v=5" title=":+1:"/> <img alt=":+1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/+1.png?v=5" title=":+1:"/>
+</li>
+<li>
+<code>&amp;100;</code>: U+1F4AF <img alt=":100:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/100.png?v=5" title=":100:"/> <img alt=":100:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/100.png?v=5" title=":100:"/>
+</li>
+<li>
+<code>&amp;1234;</code>: U+1F522 <img alt=":1234:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/1234.png?v=5" title=":1234:"/> <img alt=":1234:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/1234.png?v=5" title=":1234:"/>
+</li>
+<li>
+<code>&amp;8ball;</code>: U+1F3B1 <img alt=":8ball:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/8ball.png?v=5" title=":8ball:"/> <img alt=":8ball:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/8ball.png?v=5" title=":8ball:"/>
+</li>
+</ul>
+<p>PPS: I also wonder whether variation selectors (at least U+FE0x) and Fitzpatrick scale emoji skin tone modifiers should be available as named entities, e.g. <code>&amp;emoji;</code> = U+FE0F so <code>&amp;phone;&amp;emoji;</code> gave the same result as <code>:telephone:</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-05</div>
+          <div class="post_content">
+<p>I looked back at the past threads. They make good points on why this feature isn’t needed and i don’t see anything as having changed since.</p>
+<p>There already exists 2 perfectly good methods to insert any given unicode character (directly as a character or using the escaped character code). This will add a whole browser generation of incompatibility and the only gain will be saving a lookup or copy and paste for a handful of developers that are handcoding HTML that needs to use them who have also memorized the specific emoji names. The cost/benefit ratio is completely skewed for this feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>I don’t really disagree, but this seems just like an argument against specifying <code>&amp;smile;</code>, not against <code>:smile:</code>.</p>
+<p>I also think that invisible characters like variation selectors are a different thing, so <code>&amp;emoji;</code> for VS-16 could still make sense.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>As an argument against specifying <code>:smile:</code> there’s the fact that you’re specifying an escape sequence that never previously existed but as you yourself has said is one that has been used before, you’re going to break a lot of pages by parsing text that was meant to just be text. As a simple example pages that just explain the allowed emoji on a forum will go from:</p>
+<p>Use <code>:smile:</code> to show a <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+<p>To</p>
+<p>Use <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/> to show a <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+<p>I think this is something that should be handled on a site-by-site basis.</p>
+<p>I can however see the benefit of providing some improvements for developers but i think directly in HTML is the wrong place. Perhaps instead a built in javascript method that allows unicode lookup on short names like <code>unicode.lookup('smile')</code> which can be used to easily build up custom parser functions or have such parser functions built in too allowing a developer to call <code>unicode.parse(inputtext)</code> which will use the <code>:smile:</code> syntax. There could also be an overload to only parse or lookup ranges rather than arbitrary charecters like <code>unicode.parse(inputtext, 'emoji')</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>No “colon entity” substitution in <code>code</code>, <code>kbd</code> and <code>pre</code> then.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>That doesn’t solve the problem though. You are adding in a whole class of character escaping that never previously existed. Content has been written without the need to consider this substitution and a change like this will retroactively alter content across the web. If I want the character string <code>:smile:</code> just in my text I would have to wrap it in tags for non-semantic reasons, as well as giving these tags a class as i will need to undo any styles I may have given them.</p>
+<p>At the very least if something like this was going to be brought in it would have to be an opt-in feature. But again I really don’t see any argument in its favour that significantly impacts the cost/benefit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-08-16</div>
+          <div class="post_content">
+<p>Does anyone <em>actually</em> put <code>:smile:</code> in their texts expecting anything other than <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/> (except in the “type <code>:smile:</code> to get <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/>” case)? If deemed necessary, the permissible character classes next to the colons could be restricted.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-16</div>
+          <div class="post_content">
+<p>I don’t know, I don’t have a representative data sample I can search for <code>:\w+:</code> through (and yes you would need the general case not just comparing against a list of emoji short names as the number of emoji is increasing) but that’s part of the problem with adding an entirely new but off the top of my head it could include any of the following</p>
+<ul>
+<li>Any chat logs from before emoji were everywhere and parsed into icons by default (in which case they may well have meant a very similar thing but did not mean that actually have a picture).</li>
+<li>Typos</li>
+<li>All sorts of generated strings where colons are used as delimiters</li>
+<li>As above but especially pointing out server generated errors for these instances where I really don’t want my exceptions to be full of emoji</li>
+<li>IPv6 use colons and both 1234 and abcd are valid current emoji and valid address segments abcd:1234:abcd:1234 which could easily be typoed to an emoji (eg on discourse starting with a colon or doubling a colon in the middle will do it) <code>:abcd:1234:abcd::1234:</code> is <img alt=":abcd:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/abcd.png?v=5" title=":abcd:"/>1234:abcd:<img alt=":1234:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/1234.png?v=5" title=":1234:"/>
+</li>
+<li>The fact that any such parsing needs an escape sequence and something better than doing this on an element level is needed</li>
+</ul>
+<p>Yes some are more niche than others but the point is that without too much effort it’s possible to list several situations it could be an issue. You could start going through all the edge cases and start adding rules in but then you’re going to have a much more fragile parsing, with a much more complicated set of rules. Arguing in favour of extending the <code>&amp;entity;</code> syntax would be a far easier position.</p>
+<p>You also still fail to argue in favour of the feature on a cost/benefit ratio for the feature. The only benefits I can see are:</p>
+<ul>
+<li>Minor simplification to developers hand ending HTML</li>
+<li>Might remove the need for developers to hook in an emoji parsing library server or client side (key word is might, see below)</li>
+</ul>
+<p>As well as the issues above you also need to include the fact that:</p>
+<ul>
+<li>There will be a period of browser incompatibility on a fundamental feature of how HTML handles strings (so polyfills and parsing libraries will need to be in place for quite a while)</li>
+<li>Developers may well want to override handling of emoji (to give their own versions of the glyphs via fonts or images) so they are going to need a parsing library anyway</li>
+<li>It adds complexity to the spec</li>
+<li>Time and effort on the part of the vendors will be needed to far more fully spec out the specific handling of when and where to parse (see above)</li>
+<li>Speccing needs to also consider feature detection, whether it is opt in/opt out/always on (and if opt in/out then how to do this without JS)</li>
+<li>Time and effort to implement compared to any other browser priorities (the idea that “all new features start at -100”)</li>
+<li>Anyone that writes an HTML parser is going to need to add all this complexity too</li>
+</ul>
+<p>So currently we are at very little benefit to a huge amount of cost and you need to give good reasons why parsing libraries and preprocessors aren’t the appropriate place (especially as said libraries are improving and that many comment systems need a parser pipeline for other things anyway).</p>
+<p>If this is something that you feel should be added then you <strong>need to present strong compelling arguments</strong> for it to overcome those costs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-16</div>
+          <div class="post_content">
+<p>Doing this as a separate reply to split the issue. As mentioned previously I do think improving unicode lookup functions in JavaScript to including looking up via shortnames and to limit the unicode ranges would be a good idea, they would complement <code>String.fromCharPoint</code> in a useful manner and as a low level function could improve the base of any number of emoji libraries. This approach would also be consistent with the Extensible Web manifesto approach of opening up low level functions and letting developers choose how to move forward with them.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-08-16</div>
+          <div class="post_content">
+<p>These are indeed niches and neither very likely nor unsolvable, IP6 addresses for instance would be mostly covered if there needed to be no character, a whitespace character or another colon-entity at both sides of a colon-entity. I’m not at all sure whether <code>&amp;emoji;</code>, <code>:emoji:</code> or even something like <code>&amp;:emoji;</code> would be a good idea to include in HTML. I asked here to inform an opinion, so thanks for helping with that. I believe parsing colon-sequences in browsers could improve accessibility and the user experience in some cases. Anyhow, I thought about it again:</p>
+<ul>
+<li>If HTML ever wanted to introduce named entity references for emoji characters (<code>&amp;foo;</code>), they should be based upon existing short-codes and I’ve shown that it would pose fewer problems than might be expected, although I probably should have used <a href="https://github.com/Ranks/emojione/blob/master/emoji.json" rel="nofollow noopener">Emoji One’s EAC</a>, <a href="https://github.com/github/gemoji/blob/master/db/emoji.json" rel="nofollow noopener">Github’s Gemoji</a> or <a href="https://github.com/muan/emojilib/blob/master/emojis.json" rel="nofollow noopener">Muan.co’s Emojilib</a> – there’s a lack of authority for the standardization of short-names.</li>
+<li>Short codes are primarily used in user-generated content. They’ll either be input directly (maybe with the help of auto-completion) or via an emoji picker GUI (using images or a native font). If they’re used in the canonic backend encoding, they need to be transformed to either embedded images (and their <code>alt</code> text) or Unicode characters for the frontend. If the browser knew whether the backend expected <code>:smile:</code>, <code>1f600.png</code>, <code>\u1F600</code> or <code>😀</code> it could do the conversion, but in almost every case that’ll already involve scripting, so I tend to agree that ECMA-Script would be the right place to specify conversion functions and maps.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Improved default parameters/values - with an additional null check</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Improved default parameters/values - with an additional null check</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>Default parameters (and default destructuring values) are pretty strong features, however, they only work if the value is otherwise not defined (either omitted, or is <code>undefined</code>).
+Most of the uses of default values never distinguish between <code>null</code> and <code>undefined</code> (or 0 and false, for that matter, but I think it does not make sense to add those to the semantics of default parameters).
+I remember a V8 post that introduced default parameters and the even that author got the example wrong. It showed code that uses something like -
+<code>var foo = fooArg || someDefaultValue</code>
+Or -</p>
+<pre><code class="lang-auto">if (foo === undefined || foo === null)
+{
+ foo = someDefaultValue;
+}
+</code></pre>
+<p>And suggested that it can be changed to use default parameters as equivalent code -</p>
+<pre><code class="lang-auto">function (foo = someDefaultValue)
+{
+ /*... */
+}
+</code></pre>
+<p>Which obviously is not the case (it will not be the case in this proposal as well for other falsy values, but that makes more sense).</p>
+<p>I propose the default parameters/values with an additional null check syntax - <code>?=</code>.</p>
+<pre><code class="lang-auto">function callMe(argument1 ?= "string")
+{
+ return argument1;
+}
+callMe(null); // Returns "string", not null
+</code></pre>
+<p>Likewise, it can be used in destructuring -</p>
+<pre><code class="lang-auto">const object = {foo: null};
+const {foo ?= "string"} = someObject;
+foo; // "string", not null
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-26</div>
+          <div class="post_content">
+<p>I think this is a great idea. It’s present in other languages, and is quite useful in keeping file size down in many libraries.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

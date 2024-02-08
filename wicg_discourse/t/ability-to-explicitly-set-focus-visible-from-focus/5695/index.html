@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Ability to explicitly set :focus-visible from focus()</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Ability to explicitly set :focus-visible from focus()</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3781_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brandonkelly</div>
+          <div class="creation_date">2021-11-24</div>
+          <div class="post_content">
+<p>Currently when setting focus programmatically to an element with <code>focus()</code>, there is no way to instruct the browser to apply <code>:focus-visible</code> styling to it.</p>
+<p>This can be problematic when using HTML-over-the-wire technologies like <a href="https://hotwired.dev/" rel="noopener nofollow ugc">Hotwire</a> or <a href="https://htmx.org/" rel="noopener nofollow ugc">Htmx</a>, where the focused element may be replaced with a new one, and the new one is given focus. If the initial element was showing a focus ring via <code>:focus-visible</code> styles, that styling will go away for the new element, because the browser has decided that it wasn’t necessary.</p>
+<p><code>focus()</code> currently supports passing an object with <code>preventScroll:true</code> to prevent the browser from scrolling to the focused element. I propose that the object should support an additional <code>forceVisible</code> key, which can be set to <code>true</code> to force <code>:focus-visible</code> styling on the element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3781_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brandonkelly</div>
+          <div class="creation_date">2021-11-24</div>
+          <div class="post_content">
+<p>Here’s a related discussion from the <code>:focus-visible</code> polyfill: <a class="inline-onebox" href="https://github.com/WICG/focus-visible/issues/88" rel="noopener nofollow ugc">Should :focus-visible match when returning focus or programmatically focusing? · Issue #88 · WICG/focus-visible · GitHub</a></p>
+<p>I think it kinda shows that it’s not possible for the browser/polyfill to always know the right answer on what to do about <code>:focus-visible</code>, and there are cases where we need to be able to explicitly enable it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-11-24</div>
+          <div class="post_content">
+<p>This would be a great addition to the <code>focus()</code> API.</p>
+<p>Since a commonly desired behavior in the thread you linked to was to match <code>:focus-visible</code> only if the last user action was <strong>not</strong> a pointer event, what would you think about adding an easy option for that? Like <code>propagateVisibility: true</code> or changing the new option to <code>visible: 'force'|'propagate'</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3781_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brandonkelly</div>
+          <div class="creation_date">2021-11-24</div>
+          <div class="post_content">
+<p>By the time <code>focus()</code> needs to be called, the prior element probably doesn’t exist in the DOM anymore so its focus has been lost. So ideally there should also be a way to detect whether <code>:focus-visible</code> is active on the <code>activeElement</code> <em>before</em> the swap takes place. Then apply it to <code>focus()</code> later.</p>
+<pre><code class="lang-javascript">const activeElement = document.activeElement;
+const focusVisible = document.focusVisible; // (something like this maybe?)
+
+// do the swap
+// ...
+
+// if the active element is no longer in the DOM and a new one exists with the same ID, set focus to it
+if (activeElement &amp;&amp; activeElement.id &amp;&amp; !document.body.contains(activeElement)) {
+  const newElement = document.getElementById(activeElement.id);
+  if (newElement) {
+    newElement.focus({forceVisible: focusVisible});
+  }
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-11-27</div>
+          <div class="post_content">
+<p>Hm, when I focus an input via the <code>focus</code> method, the <code>:focus-visible</code> style applies. <a href="https://jsbin.com/neviret/edit?html,css,js,output" rel="noopener nofollow ugc">Try my demo</a>.</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/e45e1d9d77c55ac72c58c76d29d8037b7f16474a" href="//discourse.wicg.io/uploads/default/original/2X/e/e45e1d9d77c55ac72c58c76d29d8037b7f16474a.png" title="Screenshot 2021-11-27 at 09.39.41"><img alt="Screenshot 2021-11-27 at 09.39.41" data-base62-sha1="wAevjVPGfXu2Ttkyk7bA2YSZLBw" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/e/e45e1d9d77c55ac72c58c76d29d8037b7f16474a_2_10x10.png" height="145" src="//discourse.wicg.io/uploads/default/optimized/2X/e/e45e1d9d77c55ac72c58c76d29d8037b7f16474a_2_690x145.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/e/e45e1d9d77c55ac72c58c76d29d8037b7f16474a_2_690x145.png, //discourse.wicg.io/uploads/default/optimized/2X/e/e45e1d9d77c55ac72c58c76d29d8037b7f16474a_2_1035x217.png 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/e/e45e1d9d77c55ac72c58c76d29d8037b7f16474a_2_1380x290.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screenshot 2021-11-27 at 09.39.41</span><span class="informations">1950×412 30.3 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2021-11-28</div>
+          <div class="post_content">
+<p>unless i’m mistaken, text entry <code>&lt;input&gt;</code> elements always show their focus even if you activate them with mouse or touch (i.e. focus-visible always evaluates to true for them regardless). to be more representative, you probably want to use a link or button (where the browser’s focus-visible heuristic kicks in).</p>
+<p>just checking in Chrome at least, <code>:focus-visible</code> kicks in for a <code>&lt;button&gt;</code> when focused programmatically.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-11-28</div>
+          <div class="post_content">
+<p>For links as well: <a href="https://jsbin.com/ruledey/edit?html,css,js,output" rel="noopener nofollow ugc">demo</a></p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea" href="//discourse.wicg.io/uploads/default/original/2X/b/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea.jpeg" title="Screenshot 2021-11-28 at 04.40.39"><img alt="Screenshot 2021-11-28 at 04.40.39" data-base62-sha1="rnvTHs8beP8jn0nUPQNvUxThj9E" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/b/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea_2_10x10.png" height="404" src="//discourse.wicg.io/uploads/default/optimized/2X/b/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea_2_690x404.jpeg" srcset="//discourse.wicg.io/uploads/default/optimized/2X/b/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea_2_690x404.jpeg, //discourse.wicg.io/uploads/default/optimized/2X/b/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea_2_1035x606.jpeg 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/b/bfe32a9265f45f9a6f777b3cb6b488a04fc5e0ea_2_1380x808.jpeg 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screenshot 2021-11-28 at 04.40.39</span><span class="informations">1498×878 113 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3781_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brandonkelly</div>
+          <div class="creation_date">2021-11-28</div>
+          <div class="post_content">
+<p>Huh, yeah I’m seeing that too. I’ll need to investigate why it’s not happening in my case…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3983_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bastienmoulia</div>
+          <div class="creation_date">2022-11-14</div>
+          <div class="post_content">
+<p>It’s working on the init of the page, but not with an action:</p>
+<aside class="onebox allowlistedgeneric" data-onebox-src="https://jsbin.com/vebedegeka/edit?html,css,js,output">
+<header class="source">
+<img class="site-icon" height="64" src="https://static.jsbin.com/images/favicon.png" width="64"/>
+<a href="https://jsbin.com/vebedegeka/edit?html,css,js,output" rel="noopener nofollow ugc" target="_blank">jsbin.com</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="256" src="https://static.jsbin.com/images/logo.png" width="256"/>
+<h3><a href="https://jsbin.com/vebedegeka/edit?html,css,js,output" rel="noopener nofollow ugc" target="_blank">JS Bin</a></h3>
+<p>A live pastebin for HTML, CSS &amp; JavaScript and a range of processors, including SCSS, CoffeeScript, Jade and more...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2430_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">emilio</div>
+          <div class="creation_date">2022-11-14</div>
+          <div class="post_content">
+<p>In the spec and Firefox, there’s a FocusOptions.focusVisible to control this, see:</p>
+<ul>
+<li><a class="inline-onebox" href="https://github.com/whatwg/html/issues/7830" rel="noopener nofollow ugc">Proposal: extend FocusOptions to allow specifying `:focus-visible` behavior. · Issue #7830 · whatwg/html · GitHub</a></li>
+<li><a class="inline-onebox" href="https://github.com/whatwg/html/pull/8087" rel="noopener nofollow ugc">Introduce FocusOptions.focusVisible. by emilio · Pull Request #8087 · whatwg/html · GitHub</a></li>
+<li>Firefox: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1765083" rel="noopener nofollow ugc">https://bugzilla.mozilla.org/show_bug.cgi?id=1765083</a>
+</li>
+<li>Safari: <a class="inline-onebox" href="https://bugs.webkit.org/show_bug.cgi?id=242456" rel="noopener nofollow ugc">242456 – Implement FocusOptions.focusVisible</a>
+</li>
+<li>Chrome: <a class="inline-onebox" href="https://bugs.chromium.org/p/chromium/issues/detail?id=1317039" rel="noopener nofollow ugc">1317039 - chromium - An open-source project to help move the web forward. - Monorail</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Why is vdom/diffing a necessary requirement for JavaScript frameworks? Is there a better long term solution?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Why is vdom/diffing a necessary requirement for JavaScript frameworks? Is there a better long term solution?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1572_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michael_Lewis</div>
+          <div class="creation_date">2018-02-07</div>
+          <div class="post_content">
+<p>So many JS frameworks utilize a vdom/diffing technique.  I know very little about how it actually works, other than the goal of minimizing repaints.  It doesn’t feel right.  Has there been a discussion regarding a better long term solution?</p>
+<p>For example, you could buffer (delay/queue) DOM changes:  <code>document.buffer()</code>.  All DOM operations are then delayed until they are flushed?  Couldn’t the browser do most of this automatically?</p>
+<p>I suppose it’s the requirement that when you “addClass()”, then traditionally you’d expect the DOM/layout to reflect the change immediately, on the next line of code.  So it is a bit of a paradigm shift.</p>
+<p>Behind the scenes, it might be something similar to vdom/diffing.  But instead of building it with JavaScript, it would be baked into the system.  That seems like a better long term solution.</p>
+<p>Alternatively, I’ve wondered if you could use a DOM placeholder:</p>
+<ol>
+<li>Replace a DOM node with a dummy clone (temporary placeholder that lasts a matter of milliseconds)</li>
+<li>Make all operations on the original DOM, that is now in-memory, removed from the document, and does not trigger repaints</li>
+<li>When you’re done, swap them back</li>
+</ol>
+<p>In fact, maybe using a placeholder (the clone and swap operations) just slows it down, and you might be able to remove/replace the dom fast enough that the user doesn’t notice?  This might be risky if the process slows down too much, and you can see a flicker.</p>
+<p>Anyway, by removing the DOM, you can do direct manipulations without worrying about jank.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-02-08</div>
+          <div class="post_content">
+<p>We built an entire game development IDE in the browser. We don’t use any VDOM or diffing. DOM call overhead is not a significant problem. Layout performance is a far bigger problem. I wrote about this in more detail here: <a href="https://www.scirra.com/blog/ashley/35/layout-is-the-next-frontier-of-web-app-performance" rel="nofollow noopener">https://www.scirra.com/blog/ashley/35/layout-is-the-next-frontier-of-web-app-performance</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-02-09</div>
+          <div class="post_content">
+<p>There’s other techniques, for example mapping object changes directly to DOM mutation rather than diffing (off top of my head I know <a href="http://aurelia.io/" rel="nofollow noopener">Aurelia</a> and <a href="https://github.com/funkia/turbine" rel="nofollow noopener">Turbine</a> do this, without diffing). I’ve compiled a fairly exhaustive list of <a href="https://forums.meteor.com/t/alternative-view-layer-libraries-alternatives-to-blaze-angular-react/38092" rel="nofollow noopener">view-layer alternatives</a>, but that was a while back. There may be even more of them now.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1546_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jschoi</div>
+          <div class="creation_date">2018-02-09</div>
+          <div class="post_content">
+<p><a href="https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Template-Instantiation.md" rel="nofollow noopener">Apple’s recent proposal for standard template instantiation and updating</a> does not use a virtual-DOM method. It is being discussed in the <a href="https://github.com/w3c/webcomponents/labels/templates" rel="nofollow noopener"><code>template</code>-tagged GitHub issues of the Web Components’ GitHub repository</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2018-02-12</div>
+          <div class="post_content">
+<p>Have a look at this library:
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://assets-cdn.github.com/favicon.ico" width="32"/>
+<a href="https://github.com/WebReflection/hyperHTML" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars3.githubusercontent.com/u/85749?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/WebReflection/hyperHTML" rel="nofollow noopener" target="_blank">WebReflection/hyperHTML</a></h3>
+<p>hyperHTML - A Fast &amp; Light Virtual DOM Alternative</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>A Fast &amp; Light Virtual DOM Alternative</p>
+<p>Polymer plays with this approach</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

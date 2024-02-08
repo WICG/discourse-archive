@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Ability to style summary element arrow</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Ability to style summary element arrow</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-23</div>
+          <div class="post_content">
+<p>The <code>summary</code> element has an arrow to display to the user whether the contents are being displayed or not. This is good for a quick mock of an idea, however a lot of projects may wish to modify the styling of the arrow to fit their design. As things are now, only Chrome (possibly Safari) via <code>summary::-webkit-details-marker</code> exposes a way to touch the styling.</p>
+<p>We should have a specification for how to target the details marker. This way developers can use standard CSS to change its color, or hide it in order to do their own styling. Could we possibly use <code>::details-marker</code> as a new pseudo element for this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smaug</div>
+          <div class="creation_date">2017-01-23</div>
+          <div class="post_content">
+<p>So list-* , from <a href="https://html.spec.whatwg.org/multipage/rendering.html#the-details-and-summary-elements">https://html.spec.whatwg.org/multipage/rendering.html#the-details-and-summary-elements</a> isn’t enough?
+list-style-image works (at least in browsers using list-*) for changing the image.</p>
+<p>Doesn’t seem to work in Chrome though. Can’t test Safari.
+File implementation bugs? The spec is there (even if a bit vague).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-24</div>
+          <div class="post_content">
+<p>Ah, good catch in the spec! I’ll file a bug with Blink to see if we can’t get that added there. I’m unable to test Safari myself either so if someone that is capable of doing that would test and create a bug report if they don’t support <code>list-style: none</code> on the <code>summary</code> element then that would be fantastic.</p>
+<p><a href="https://bugs.chromium.org/p/chromium/issues/detail?id=590014" rel="nofollow noopener">Existing bug</a> for Chromium which has some interesting discussion links within it as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-01-29</div>
+          <div class="post_content">
+<p><span class="mention">@Garbee</span> - I just checked Safari (using BrowserStack) and <code>list-style: none</code> does not change a thing.</p>
+<p>Test code -</p>
+<pre><code class="lang-auto">data:text/html,&lt;!doctype html&gt;&lt;summary style="list-style: none"&gt;Summary&lt;details style="list-style: none"&gt;Crap&lt;/details&gt;&lt;/summary&gt; &lt;details style="list-style: none"&gt;&lt;summary \style="list-style: none"&gt;Wow&lt;/summary&gt;Wowing&lt;/details&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-29</div>
+          <div class="post_content">
+<p>Yah, they use the same method Blink does currently with a pseudo element. I can tell that looking at their Layout Tests. I saw those a few days after this and forgot to come update, so thanks for testing that <span class="mention">@phistuck</span>.</p>
+<p>So between all the vendors <code>list-style:none</code> and the pseudo selector for the arrow with <code>display:none</code> will get the default stuff hidden so developers have full control on custom elements internally to indicate open/closed state.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

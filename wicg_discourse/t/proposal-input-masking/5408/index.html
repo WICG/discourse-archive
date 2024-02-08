@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Input Masking</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Input Masking</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1597_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomayac</div>
+          <div class="creation_date">2021-06-29</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#input-masking-1" name="input-masking-1"></a>Input Masking</h1>
+<p><strong>Author:</strong> Thomas Steiner (<a href="mailto:tomac@google.com">tomac@google.com</a>,
+<a href="https://twitter.com/tomayac" rel="noopener nofollow ugc">@tomayac</a>)</p>
+<p><strong>Last updated:</strong> 2021-06-29</p>
+<h2>
+<a class="anchor" href="#the-problem-2" name="the-problem-2"></a>The problem</h2>
+<p>By <em>“restricting input using preformatted input masks (telephone number,
+birthday, Social Security number), or even auto-correcting input by appending or
+removing unnecessary characters”</em> [<em>cf.</em>
+<a href="https://books.google.es/books?id=xMJOm4ppCkYC&amp;printsec=frontcover&amp;dq=editions:OTpjPvHq_7MC&amp;hl=en&amp;sa=X&amp;redir_esc=y#v=onepage&amp;q=input%20masks&amp;f=false" rel="noopener nofollow ugc">Klimczak</a>],
+<strong>input masking</strong> helps users enter information in forms more correctly, and
+existing data can be formatted adequately. Many implementations of input masking
+<a href="https://bashooka.com/coding/javascript-input-mask-libraries/" rel="noopener nofollow ugc">exist in user land</a>,
+proving that there is a true need for this feature.</p>
+<h2>
+<a class="anchor" href="#a-beginning-of-a-proposal-3" name="a-beginning-of-a-proposal-3"></a>A beginning of a proposal</h2>
+<p>This proposal is to gauge interest in making input masking part of the language,
+maybe as a new interface of <code>Intl</code>. Here’re some code snippets that show how
+this could look like in practice:</p>
+<ul>
+<li>
+<p><strong>Globally agreed-on</strong> input mask:</p>
+<pre><code class="lang-auto">new Intl.InputMask("credit-card-number").format("4012888888881881");
+// "4012 8888 8888 1881"
+</code></pre>
+</li>
+<li>
+<p><strong>Locale-aware input mask</strong> with customization options:</p>
+<pre><code class="lang-auto">new Intl.InputMask("phone-number", {
+  locale: "de-DE",
+  countryCode: "leadingPlus",
+  areaCode: "leadingZero",
+  groupSize: 2,
+}).format("00494012345678");
+// "+49 (0)40 12 34 56 78"
+</code></pre>
+</li>
+<li>
+<p>Fully <strong>custom input mask</strong> with a mask function:</p>
+<pre><code class="lang-auto">new Intl.InputMask("custom", {
+  maskFunction: (input) =&gt; input.toLowerCase().replaceAll(" ", ""),
+}).format("No Spaces No Uppercase");
+// "nospacesnouppercase"
+</code></pre>
+</li>
+</ul>
+<h2>
+<a class="anchor" href="#isomporhic-js-4" name="isomporhic-js-4"></a>Isomporhic JS™</h2>
+<p>The idea of making this part of the language would allow people to use this on
+the <strong>client</strong> and the <strong>server</strong>.</p>
+<h3>
+<a class="anchor" href="#on-the-client-5" name="on-the-client-5"></a>On the client</h3>
+<p>For example, a <strong>client-side implementation</strong> could use this as follows (note
+that the <code>type="tel"</code> of the <code>&lt;input&gt;</code> does not mean <em>“the value is actually the
+input value is not automatically validated to a particular format before the
+form can be submitted, because formats for telephone numbers vary so much around
+the world”</em> [<em>cf.</em>
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/tel#:~:text=the%20input%20value%20is%20not%20automatically%20validated%20to%20a%20particular%20format%20before%20the%20form%20can%20be%20submitted%2C%20because%20formats%20for%20telephone%20numbers%20vary%20so%20much%20around%20the%20world." rel="noopener nofollow ugc">MDN</a>]):</p>
+<pre><code class="lang-auto">&lt;label for="phone"&gt;Enter your phone number:&lt;/label&gt;
+&lt;input type="tel" id="phone" name="phone" /&gt;
+</code></pre>
+<pre><code class="lang-auto">const formatPhoneNumber = (value) =&gt; {
+  return new Intl.InputMask("phone-number", {
+    locale: "de-DE",
+    countryCode: "leadingPlus",
+    areaCode: "leadingZero",
+    groupSize: 2,
+  }).format(value);
+};
+
+const input = document
+  .querySelector("#phone")
+  .addEventListener("input", (e) =&gt; {
+    e.target.value = formatPhoneNumber(e.target.value);
+  });
+</code></pre>
+<h3>
+<a class="anchor" href="#on-the-server-6" name="on-the-server-6"></a>On the server</h3>
+<p>For a <strong>server-side implementation</strong>, this could look as follows:</p>
+<pre><code class="lang-bash">SELECT phone FROM users_legacy;
+# Returns a mix of formats from a legacy dataset:
+# 00494012345678\n+494012345678\n04012345678
+</code></pre>
+<pre><code class="lang-auto">const formatPhoneNumber = (value) =&gt; {
+  return new Intl.InputMask("phone-number", {
+    locale: "de-DE",
+    countryCode: "leadingPlus",
+    areaCode: "leadingZero",
+    groupSize: 2,
+  }).format(value);
+};
+
+// Express.js YOLO example.
+app.get("/phones", (req, res) =&gt; {
+  const rawPhones = getPhoneNumbersFromLegacyDB();
+  const formattedPhonesHTML = rawPhones
+    .map((rawPhone) =&gt; {
+      return formatPhoneNumber(rawPhone);
+    })
+    .join("&lt;br&gt;");
+  res.send(formattedPhonesHTML);
+});
+</code></pre>
+<h2>
+<a class="anchor" href="#alternatives-7" name="alternatives-7"></a>Alternatives</h2>
+<p>Just leaving this to the user land is an obvious alternative. The ecosystem of
+input masking libraries is alive, and great implementations exist. Pulling any
+of those in comes at a cost for each locale that’s needed, and the weight of the
+library itself.</p>
+<p>Another alternative would be to add new (and smarter) input types. A recent
+example is the
+<a href="https://discourse.wicg.io/t/proposal-input-type-currency/5398"><code>input[type=currency]</code></a>
+proposal. The declarative burden for advanced formatting needs is not to be
+underestimated, though (see the above <code>countryCode</code> and <code>areaCode</code> examples).
+This also does not solve the issue on the server side.</p>
+<h2>
+<a class="anchor" href="#feedback-8" name="feedback-8"></a>Feedback</h2>
+<p>Feedback on this early-stage idea is welcome. Please
+<a href="https://github.com/tomayac/js-input-masking/issues" rel="noopener nofollow ugc">open a new Issue</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

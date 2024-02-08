@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Set origin-wide policies via a manifest</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Set origin-wide policies via a manifest</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p><strong>Strawman Draft</strong>: <a href="https://mikewest.github.io/origin-policy/">https://mikewest.github.io/origin-policy/</a></p>
+<p><strong>TL;DR</strong>: Developers can jam all 23k of their <code>Content-Security-Policy</code> into a manifest file at <code>/.well-known/origin-policy/[name-goes-here]</code>, along with a number of other headers and configuration options, and instruct user agents to apply the metadata contained within to every response served from the origin.</p>
+<h1>Overview</h1>
+<p>Developers set a number of properties associated with resources on an origin by delivering resource-specific HTTP response headers and meta elements. This is becoming more common over time, and it’s quite normal these days to see multiple kilobytes at the beginning of every response dedicated to such metadata. Setting this metadata is valuable indeed, as it can have a large impact on performance, security, and privacy.</p>
+<p>However, the existing delivery mechanism is ill-suited to the task, suffering from a clear mismatch between the resource-specific nature of the metadata declarations on the one hand, and the origin-wide intent of the metadata on the other. Take <code>Strict-Transport-Security</code> [RFC6797] and <code>Public-Key-Pins</code> [RFC7469], for example. These headers explicitly alters the state of an entire Moreover, many headers are deployed in such a way as to be practically static across all resources that an origin serves. <code>Content-Security-Policy</code> [CSP3], for instance, can be very granular indeed, but is commonly implemented by setting a single policy which is delivered for an entire application.</p>
+<p>A number of implications follow:</p>
+<ol>
+<li>
+<p>Servers are required to repeat themselves. At length. <code>Content-Security-Policy</code> alone can easily eat multiple kilobytes of each navigational response, bandwidth which could instead be dedicated to content a user might care about. This has obvious and direct impact on the delay a user experiences when navigating, but has less obvious knock-on effects that reduce performance further. HTTP/2’s HPACK [RFC7541] header compression is limited to ~4k of state for processing, for instance, meaning that these verbose headers can greatly reduce its effectiveness</p>
+</li>
+<li>
+<p>Servers are required to repeat themselves. Unerringly. When policy applies strictly to a resource, and not to the origin, then a server must send that policy down with every response. If the developer forgets a page (which is actually a very common occurrence: when’s the last time you thought about your 404 error page? How about your 417? Or 505?), then the policy’s protections don’t apply to that resource, leaving an exploitable hole.</p>
+</li>
+</ol>
+<p>Origin Policy introduces a new delivery mechanism for policies which are meant to apply to an entire origin. In short, a server will provide an Origin Policy Manifest file at a well-known location. This file contains all of the metadata the server would like to set for each response. User agents can be instructed to synchronously download and process this manifest before completing a navigation to an origin’s resources, ensuring that the policy contained therin will be safely applied to each resource, and allowing the server to skip the overhead of including the relevant headers with each response. Typically, the server can speed things up even more by using HTTP/2 Server Push ([RFC7540], section 8.2) to proactively send the manifest file along with the response to the user agent’s first request.</p>
+<h2>Example</h2>
+<p>MegaCorp, Inc. wishes to ensure that a baseline content security policy is applied to each of the pages on <code>https://example.com</code>, while avoiding the overhead associated with large response headers, and the uncertainty that they’ve really covered everything that lives on the origin.</p>
+<p>When they see a request come in that contains a <code>Origin-Policy</code> header, they can respond in kind, pointing the client to a manifest file in a well-known location on their server. That is, given the following request:</p>
+<pre><code class="lang-auto">GET / HTTP/1.1
+Host: example.com
+Connection: keep-alive
+...
+Origin-Policy: 0
+...
+</code></pre>
+<p>MegaCorp, Inc. can respond with:</p>
+<pre><code class="lang-auto">HTTP/1.1 200 OK
+Content-Encoding: gzip
+Accept-Ranges: bytes
+Cache-Control: max-age=604800
+Content-Type: text/html
+...
+Origin-Policy: "policy-1"
+...
+</code></pre>
+<p>The client will parse the response headers, and synchronously request <code>https://example.com/.well-known/origin-policy/policy-1</code> before completing the navigation. The policies contained in that file will be cached according to the normal HTTP caching rules, and applied to pages on <code>https://example.com/</code> (including the current navigation).</p>
+<pre><code class="lang-auto">{
+  "headers": {
+    "fallback": [
+      {
+        "name": "Content-Security-Policy",
+        "value": "script-src 'self' https://cdn.example.com"
+      },
+      {
+        "name": "Referrer-Policy",
+        "value": "origin-when-cross-origin"
+      }
+    ],
+    "baseline": [
+      {
+        "name": "Content-Security-Policy",
+        "value": "object-src 'none'; frame-ancestors 'none'"
+      },
+      {
+        "name": "Strict-Transport-Security",
+        "value": "max-age=10886400; includeSubDomains; preload"
+      },
+      {
+        "name": "X-Content-Type-Options",
+        "value": "nosniff"
+      }
+    ]
+  },
+  "cors-preflight": { /* TODO(mkwst): Syntax? */ },
+}
+</code></pre>
+<p>Subsequent requests from the same client will contain the version of the policy currently cached for the origin. In this case:</p>
+<pre><code class="lang-auto">GET / HTTP/1.1
+Host: example.com
+Connection: keep-alive
+...
+Origin-Policy: "policy-1"
+...
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/958_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vigneshh</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>Love the idea overall. This will result in huge savings on headers size.</p>
+<p>But curious to know about the debugging experience and how browser/cli tools might show the metadata about the headers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-07-28</div>
+          <div class="post_content">
+<p>I like the idea, though wondering if rather than origin-policy it uses the domain and path rules as applied to cookies rather than a blanket origin. This allows a bit more fine grained control, particularly where an application lives at the path rather than subdomain level.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-07-28</div>
+          <div class="post_content">
+<blockquote>
+<p>But curious to know about the debugging experience and how browser/cli tools might show the metadata about the headers.</p>
+</blockquote>
+<p>What would you like to see in devtools? I could imagine this being rendered as a separate resource (similarly to the way Chrome treats Service Workers), or perhaps the injected headers being tagged in some way. What would you care about when debugging?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-07-28</div>
+          <div class="post_content">
+<blockquote>
+<p>I like the idea, though wondering if rather than origin-policy it uses the domain and path rules as applied to cookies rather than a blanket origin. This allows a bit more fine grained control, particularly where an application lives at the path rather than subdomain level.</p>
+</blockquote>
+<p>I’m a little wary of doing this for two reasons:</p>
+<ol>
+<li>
+<p>The origin is the security boundary that matters. The fact that cookies and service workers support path-level distinctions is, in my opinion, a historical mistake. In short, <code>/path1</code> and <code>/path2</code> have exactly the same capabilities. Supporting developers’ tendency to treat them distinctly seems like a footgun.</p>
+</li>
+<li>
+<p>Adding paths to the manifest syntax (as is being discussed in <a href="https://lists.w3.org/Archives/Public/public-webappsec/2016Jul/0061.html">https://lists.w3.org/Archives/Public/public-webappsec/2016Jul/0061.html</a>) is potentially valuable, but it would be a huge increase in complexity, and it’s not really clear to me that we can do <em>any</em> of this yet. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> I’d like to get a minimal manifest out the door to prove that the concept works before we get too deep into the configuration weeds.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2016-08-02</div>
+          <div class="post_content">
+<blockquote>
+<p>The fact that cookies and service workers support path-level distinctions is, in my opinion, a historical mistake</p>
+</blockquote>
+<p>The distinction in service worker isn’t a security boundary aside from the location of the service worker script somewhat determining the scope of the SW. We weren’t really happy with this, here’s the discussion <a href="https://github.com/slightlyoff/ServiceWorker/issues/468">https://github.com/slightlyoff/ServiceWorker/issues/468</a></p>
+<p>We can lift this restriction if you don’t think it’s a security concern.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-08-02</div>
+          <div class="post_content">
+<blockquote>
+<p>The distinction in service worker isn’t a security boundary aside from the location of the service worker script somewhat determining the scope of the SW.</p>
+</blockquote>
+<p>I agree, and I’m glad you do too, though I think the folks who wanted the change wished to treat it as such. As Alex noted in the first comment on that bug “There has been quite a lot of further discussion on this point. Looks like we’re going to sacrifice this goat to accommodate sites which, frankly, are already broken. Le sigh.” That’s pretty accurate.</p>
+<p>If we were doing everything over again, I’d prefer the strict MIME-type checking and origin-wide scoping. Since we’re not, I’m not sure it makes sense to tilt against this particular windmill.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2016-08-22</div>
+          <div class="post_content">
+<p>Hey Mike,</p>
+<p>It’s really good to see your proposal here. As you know, I have a similar spec that I’d been working on (not realising you were as well!).</p>
+<p>I gave you some feedback in e-mail and never heard back, I imagine you’re busy. So I’m putting a slightly modified version here for wider discussion.</p>
+<p>For others’ benefit, my proposal is <a href="https://mnot.github.io/I-D/site-wide-headers/">this spec</a>. With that as context:</p>
+<ul>
+<li>
+<p>Using JSON means that encoding / decoding needs to happen, which means that errors (especially authoring errors) are more likely. My inclination is to just reuse HTTP headers’ textual format; it’s the lowest-friction way to do this, rather than having to worry about converting UTF-8 to ASCII, etc.</p>
+</li>
+<li>
+<p>Your spec adds origin-wide flags (<code>cors-preflight</code> and <code>unsafe-cors-preflight-with-credentials</code>) that are specific to this format. I’m not crazy about having yet another configuration mechanism that people need to understand; one of the big benefits of relating the well-known location’s contents to headers was that It’s Just Headers.</p>
+</li>
+<li>
+<p>It’s important to consider what happens when responses that omit headers are cached; that probably involves requirements to emit <code>Vary</code> appropriately.</p>
+</li>
+<li>
+<p>How does this interacts with intermediaries? Either it’s end-to-end (in which case, the omitted headers are effectively hidden from proxies, reverse proxies, CDNs, server-side frameworks, etc., unless they also implement this spec), or it’s hop-by-hop (in which case it’s harder to deploy, and tricky to get right; different in H1 vs H2). I went for the former. In your spec, this is probably just some advisory text.</p>
+</li>
+<li>
+<p>I <em>think</em> you’re using different resources (e.g., <code>/.well-known/origin-policy/policy-1</code>) for versioning, not to allow multiple policies to be active for a site at the same time - correct? If so, isn’t this just re-inventing ETags? Using ETags will Just Work, and allows you to avoid an RT in some scenarios.</p>
+</li>
+<li>
+<p>You use the same header field name (<code>Sec-Origin-Policy</code>) both as a request and a response header, with different semantics and syntax. Doing that has been confusing for developers and admins in the past; please consider using two header field names.</p>
+</li>
+</ul>
+<p>From a WICG perspective, I’d love to hear feedback from folks about my spec too, of course. I’m not too fussed about venue, but because this touches HTTP so closely, it’d be good to at least coordinate with the HTTP WG.</p>
+<p>Cheers,</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2016-08-22</div>
+          <div class="post_content">
+<p>A perhaps ignorant question, but how does this play with the existing <a href="https://www.w3.org/TR/appmanifest/">manifest proposal</a>?</p>
+<p>It feels like there is no consistency in how boundaries (security or application) are being defined for applications on the Web and for developers it’s hard to know what tool to use in what context.</p>
+<p>ServiceWorkers, cookies, apps defined by a manifest, good ol’ fashioned websites.</p>
+<p>Is there a high level architecture somewhere that defines a desired end state we are aiming for that is driving all of this?</p>
+<p>My concern is that the tribal knowledge around web security is getting deeper and harder to grasp and that in itself is bad for security.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-08-31</div>
+          <div class="post_content">
+<blockquote>
+<p>I gave you some feedback in e-mail and never heard back, I imagine you’re busy</p>
+</blockquote>
+<p>Sorry for the delay, <span class="mention">@mnot</span>. As it happens, I have been <em>the opposite</em> of busy! Beaches are nice. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<blockquote>
+<p>Using JSON means that encoding / decoding needs to happen, which means that errors (especially authoring errors) are more likely. My inclination is to just reuse HTTP headers’ textual format; it’s the lowest-friction way to do this, rather than having to worry about converting UTF-8 to ASCII, etc.</p>
+</blockquote>
+<p>I agree that plaintext ASCII is simpler to parse than JSON. I think I disagree that that complexity would introduce authoring errors, simply because JSON is very well-understood by the developer audience I’m targeting. There’s good tooling available for the format in itself, validators could be written, etc. From an authoring perspective, the difference between:</p>
+<pre>
+# foo
+Header-Name: Header-Value
+</pre>
+<p>and</p>
+<pre>
+{
+  "headers": [
+    {
+      "name": "Header-Name",
+      "value": "Header-Value"
+    }
+  ]
+}
+</pre>
+<p>is pretty trivial. It’s not nothing, certainly, but it doesn’t seem fatal.</p>
+<p>This more structured format also enables the <code>fallback</code>/<code>baseline</code> distinction on a per-header basis, which seems pretty valuable in terms of allowing per-resource overrides of origin-level defaults. This could, of course, be added to your proposal via some structure. I don’t think the format is really the major difference in approach.</p>
+<blockquote>
+<p>Your spec adds origin-wide flags (<code>cors-preflight</code> and <code>unsafe-cors-preflight-with-credentials</code>) that are specific to this format. I’m not crazy about having yet another configuration mechanism that people need to understand; one of the big benefits of relating the well-known location’s contents to headers was that It’s Just Headers.</p>
+</blockquote>
+<p>This is the big difference, and as it turns out, this is actually the thing I like most about my proposal. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>I agree that “It’s Just Headers” is super-appealing. However, I don’t think we can/should build features like the CORS bits with headers. Headers are resource-specific, and allowing them to assert origin-wide properties is problematic.</p>
+<p>If we want to create a mechanism for setting site-wide policy, I think we ought to do it explicitly by divorcing those policies from resource-specific headers. That is, I’d prefer to deprecate existing origin-wide headers like <code>Strict-Transport-Security</code> by moving them to this kind of inherently origin-wide policy declaration.</p>
+<blockquote>
+<p>It’s important to consider what happens when responses that omit headers are cached; that probably involves requirements to emit <code>Vary</code> appropriately.</p>
+</blockquote>
+<p>Very true. I didn’t think about that at all. I added a tiny note in <a href="https://github.com/mikewest/origin-policy/commit/6ad70deeb2bd3ea428d9b3f6711a60e3d23e274d#diff-117d6498d2aa8019cc0abf5eeb87a9fa">https://github.com/mikewest/origin-policy/commit/6ad70deeb2bd3ea428d9b3f6711a60e3d23e274d#diff-117d6498d2aa8019cc0abf5eeb87a9fa</a>, and I’ll expand upon it going forward.</p>
+<blockquote>
+<p>How does this interacts with intermediaries? Either it’s end-to-end (in which case, the omitted headers are effectively hidden from proxies, reverse proxies, CDNs, server-side frameworks, etc., unless they also implement this spec), or it’s hop-by-hop (in which case it’s harder to deploy, and tricky to get right; different in H1 vs H2). I went for the former. In your spec, this is probably just some advisory text.</p>
+</blockquote>
+<p>I’d envisioned this as end-to-end, and really only looked at it from the perspective of the server and the browser. I suspect you have some opinions about what this would mean for intermediaries that need to understand things like the omitted headers? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<blockquote>
+<p>I think you’re using different resources (e.g., /.well-known/origin-policy/policy-1) for versioning, not to allow multiple policies to be active for a site at the same time - correct?</p>
+</blockquote>
+<p>Correct. One policy is set for the origin, and it’s just a resource like any other, with the same request semantics and caching rules as any other resource. That means that <code>ETag</code> would certainly be one way of versioning the policy, and it might work really well for lots of users.</p>
+<p>I’m not sure it would be the only mechanism that works, however, given the tight binding between the manifest’s effects and the application-layer logic that determines the headers sent by the origin. My understanding here might be outdated, but my understanding is that infinite-lifetime, unique URLs are best practice for a site’s resources (images, etc). This feels like a pretty good model to support with the manifest as well.</p>
+<blockquote>
+<p>You use the same header field name (<code>Sec-Origin-Policy</code>) both as a request and a response header, with different semantics and syntax. Doing that has been confusing for developers and admins in the past; please consider using two header field names.</p>
+</blockquote>
+<p>Hrm. Ok. Inventing more headers seems more complicated, but I’m open to distinctions between the request and response if that’s helpful.</p>
+<blockquote>
+<p>I’m not too fussed about venue, but because this touches HTTP so closely, it’d be good to at least coordinate with the HTTP WG.</p>
+</blockquote>
+<p>Very happy to!</p>
+<p>Thanks again for your feedback! I look forward to more conversation, especially about the origin-wide vs resource-specific distinction raised above.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-08-31</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1617">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>A perhaps ignorant question, but how does this play with the existing manifest proposal?</p>
+</blockquote>
+</aside>
+<p>I tried to address this in <a href="https://mikewest.github.io/origin-policy/#app-manifest;">https://mikewest.github.io/origin-policy/#app-manifest;</a> it’s pretty much an open question. I could certainly see the rules defined here merging in one way or another with the properties defined in an application manifest. I’ll paste it here just so you don’t have to hop and we can have the whole conversation here:</p>
+<aside class="quote">
+<blockquote>
+<p>It might make sense to combine this mechanism with the manifest notion defined in [APPMANIFEST]. There are a few distinctions, however, which lead to the current design:</p>
+<ol>
+<li>
+<p>The Security Policy Manifest is delivered synchronously during navigation, which gives it a number of valuable security properties. The web app manifest, on the other hand, is delivered inline via a link element, which makes it less valuable from that perspective.</p>
+</li>
+<li>
+<p>Web app manifests can live anywhere on an origin, and anywhere on any other origin, for that matter. This might make sense for the feature set it wishes to expose, but it would expose an origin to unnecessary risk to be quite so loose with security policy manifest files.</p>
+</li>
+</ol>
+<p>Nevertheless, we should consider ways to merge this policy with [APPMANIFEST]. Perhaps we could accept a certain set of attributes was parsed iff certain properties of the request are true (same-origin, specific path, etc). Something to look into. For now, we’ve done the simple thing as a strawman.</p>
+</blockquote>
+</aside>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2016-08-31</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1617">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mikewest/40/438_1.png" width="20"/> mikewest:</div>
+<blockquote>
+<p>I tried to address this in <a href="https://mikewest.github.io/origin-policy/#app-manifest;" rel="nofollow noopener">https://mikewest.github.io/origin-policy/#app-manifest;</a> it’s pretty much an open question.</p>
+</blockquote>
+</aside>
+<p>Right! Sorry for being lazy.</p>
+<p>This was perhaps an ambiguous question but what I am really trying to understand is how the boundaries of a “Web application” are defined and what type of boundaries these are. Also, what tools exist to manage the meta-data of this application vs the origin in which it exists and how these interact.</p>
+<p>This is my understanding…</p>
+<p>A web application exists at an <strong>origin</strong> and a has <strong>path</strong>. This application boundary is respected by cookies, ServiceWorkers and the appmanifest which can all be “scoped” by a <strong>path</strong>.</p>
+<p>Therefor one can theoretically have multiple applications at an <strong>origin</strong> differentiated by <strong>path</strong>.</p>
+<p>Further, the application would now inherit other properties from the origin-wide manifest.</p>
+<p>What is not clear to me is how these all interact because, as you state, the app manifest has a declarative registration/installation mechanism so developers can’t depend on it being applied which I think severely impacts it’s usefulness.</p>
+<p>On the other hand, as an app developer I can manage cookies and ServiceWorkers with much more granular control.</p>
+<p>Shouldn’t the installation/registration of the origin wide and app manifests be consistent? Would that make resolving issues like <a href="https://github.com/w3c/manifest/issues/161" rel="nofollow noopener">https://github.com/w3c/manifest/issues/161</a> easier?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-08-31</div>
+          <div class="post_content">
+<blockquote>
+<p>A web application exists at an origin and a has path. This application boundary is respected by cookies, ServiceWorkers and the appmanifest which can all be “scoped” by a path.</p>
+<p>Therefor one can theoretically have multiple applications at an origin differentiated by path.</p>
+<p>Further, the application would now inherit other properties from the origin-wide manifest.</p>
+</blockquote>
+<p>My claim is that the path-based scoping was a bad idea, and I don’t think it’s at all compatible with security decisions. If you want separation between two applications, you simply must put them into separate origins (subdomains, for instance: <code>mail.google.com</code> vs <code>plus.google.com</code>)^.</p>
+<p>That is, App1 at <code>/path1</code> cannot protect itself from a cross-site scripting attack that targets App2 at <code>/path2</code>. Those applications are same-origin (modulo the Suborigin proposal at <a href="https://w3c.github.io/webappsec-suborigins/">https://w3c.github.io/webappsec-suborigins/</a>), have access to the same client- and server-side resources. There is no relevant security boundary between them that can’t be overcome by a clever attacker. Defining policy for a particular path only is ~the same as not defining a policy.</p>
+<p>^ Smart folks are working on <a href="https://w3c.github.io/webappsec-suborigins/">https://w3c.github.io/webappsec-suborigins/</a>, which mitigates some of these risks, but it’s opt-in on a per-resource basis, and it’s not clear to me that it can solve this problem entirely.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-09-07</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1617">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mikewest/40/438_1.png" width="20"/> mikewest:</div>
+<blockquote>
+<p>It’s important to consider what happens when responses that omit headers are cached; that probably involves requirements to emit Vary appropriately.</p>
+<p>Very true. I didn’t think about that at all. I added a tiny note in <a href="https://github.com/mikewest/origin-policy/commit/6ad70deeb2bd3ea428d9b3f6711a60e3d23e274d#diff-117d6498d2aa8019cc0abf5eeb87a9fa">https://github.com/mikewest/origin-policy/commit/6ad70deeb2bd3ea428d9b3f6711a60e3d23e274d#diff-117d6498d2aa8019cc0abf5eeb87a9fa</a>, and I’ll expand upon it going forward.</p>
+</blockquote>
+</aside>
+<p>IIUC that would mean that <em>any</em> change in origin policy would require (at least) revalidation of <em>all</em> resources in that origin. Is that correct? Would that be something that happens often?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-09-07</div>
+          <div class="post_content">
+<blockquote>
+<p>IIUC that would mean that any change in origin policy would require (at least) revalidation of all resources in that origin. Is that correct?</p>
+</blockquote>
+<p>For every resource which asserted the <code>Vary</code>, yes. There’s probably no need to do so for static resources, for example.</p>
+<p>It’s probably a bit more complicated than that (in both models) because it’s also possible for <code>Vary</code> to target one of the headers controlled by the origin policy manifest. <em>shrug</em> These are things we need to think about together before moving much further.</p>
+<blockquote>
+<p>Would that be something that happens often?</p>
+</blockquote>
+<p>For most folks, probably not? For some folks, every build could be a new policy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1089_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">neilstuartcraig</div>
+          <div class="creation_date">2016-09-23</div>
+          <div class="post_content">
+<p>Hi all</p>
+<p>I have just had my first read through Mike’s draft and wanted to chime in briefly with some hopefully useful input.</p>
+<p>I work in the UK at the BBC and WRT <span class="mention">@ahopebailie</span>’s points/concerns, we have a single (well 2, <a href="http://www.bbc.co.uk" rel="nofollow noopener">www.bbc.co.uk</a> and <a href="http://www.bbc.com" rel="nofollow noopener">www.bbc.com</a>) origin, with many (i think we’re in the high 10’s or possibly 100’s) of separate websites (e.g. home page, news, sport, weather, travel, childrens, …), developed, managed and hosted independently by our various teams. This structure has lead to a showstopper on HSTS as we currently have some but not all websites available on HTTPS - this is a real shame and I am very keen to add our input/help wherever possible to try to ensure future specs don’t cause us the same issues. FWIW, I believe that quite a number of other media-type organisations also have path-based (rather than domain/hostname-based) inter-website boundaries so I would imagine they’d have the same issues/concerns.</p>
+<p>The added complication we (and i am sure others) have is the distributed nature of our organisation, teams do talk to each other of course but getting absolute, failsafe synchonisation between them and also security (in terms of segregation of access) means that shared configuration files which demand such constant attention as something like CSP would be really problematic so it’d be ideal from our org’s perspective to be able to deploy policies independently, per team/website.</p>
+<p>It seems to me, after an admittedly relatively brief initial read, that this draft could accommodate path-based boundaries by defining the scope of application/caching a little more granularly. Either that or perhaps by explicitly stating which path(s) a policy document applies to, though the latter could get unwieldy quite quickly.</p>
+<p>If i can be of any use in giving any further info or in any other way, please let me know.</p>
+<p>Cheers
+Neil</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>Hey Neil! I appreciate the feedback. Google has similar problems with regard to multiple applications living on a single origin, so I’m super-sympathetic to the general problem.</p>
+<p>That said, I think there are a set of configuration options which only make sense at the origin level, as the origin is the only security boundary we have.</p>
+<p>For better or worse, HSTS is a good example of such a policy: if you wish to ensure that a network attacker can’t downgrade your users to insecure transport, then making that assertion on anything other than an origin level doesn’t sound like it would be an effective strategy. I understand that this increases the difficulty of deployment.</p>
+<p>Likewise, if your goal is to prevent XSS on your origin, pinning a CSP to a specific path is helpful for resources under that path, but also means that you don’t get the benefit of a site-wide policy for resources you’ve forgotten about (error pages are a good example). Given that every page on an origin has the same privilege to act on the origin with the user’s credentials, you’re still in trouble.</p>
+<p>It might very well be the case that there’s enough need for path-based categorizations that we’ll want to add that in the future. For the moment, though, I’m interested in ensuring that the concept itself works. Limiting ourselves to the simple case of an app on an origin seems like a reasonable way to get over that hill.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>After reviewing this proposal, I really like it, especially the aspect of being able to set some policies across an entire origin rather then worrying about covering every potential future request.</p>
+<p>I really like the significant perf advantage upon connection establishment, where you don’t have to blow your init CWND TCP budget on security headers. (at least for non-first navigations)</p>
+<blockquote>
+<p>HTTP/2’s HPACK [RFC7541] header compression is limited to ~4k of state for processing, for instance, meaning that these verbose headers can greatly reduce its effectiveness</p>
+</blockquote>
+<p>Slight tangent, but why is HPACK’s window limited to 4K? Could we fix that for things that actually need to be on a per resource basis?</p>
+<blockquote>
+<p>User agents can be instructed to synchronously download and process this manifest before completing a navigation to an origin’s resources</p>
+</blockquote>
+<p>This requirement is making me slightly nervous… Is there a way to avoid it? H2 push can significantly mitigate it, and the advertisement of the current policy with the request headers makes this significantly easier to pull off, but I suspect that many sites wouldn’t push the manifest, adding an extra blocking resource. It’s also not clear to me what “completing a navigation” is? Can the UA send a request for the HTML resource in parallel?</p>
+<p>The <code>Vary</code> situation also worries me as I suspect policy changes will result in ignoring unaffected cached resources. Due to the fact that <code>Key</code> is applicable to header values, it won’t be able to save us here and add granularity.</p>
+<p>Can you give examples of policy changes that prevent cache reuse?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<blockquote>
+<p>Slight tangent, but why is HPACK’s window limited to 4K? Could we fix that for things that actually need to be on a per resource basis?</p>
+</blockquote>
+<p>Talk to the HTTP WG. I don’t understand the constraints they’ve placed on various bits of the protocol. I’m sure there’s a reason, but I don’t know what it is.</p>
+<blockquote>
+<blockquote>
+<p>User agents can be instructed to synchronously download and process this manifest before completing a navigation to an origin’s resources</p>
+</blockquote>
+<p>This requirement is making me slightly nervous… Is there a way to avoid it? H2 push can significantly mitigate it, and the advertisement of the current policy with the request headers makes this significantly easier to pull off, but I suspect that many sites wouldn’t push the manifest, adding an extra blocking resource.</p>
+</blockquote>
+<p>If you don’t care about the initial load (or you see that the request has an outdated-but-not-too-outdated manifest, Brad’s proposal in <a href="https://github.com/WICG/origin-policy/issues/10">https://github.com/WICG/origin-policy/issues/10</a> will address your concern. I haven’t merged that basically because I’m waiting for us all to collectively decide if we want JSON headers or not. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<blockquote>
+<p>It’s also not clear to me what “completing a navigation” is? Can the UA send a request for the HTML resource in parallel?</p>
+</blockquote>
+<p>Yes. Basically we’d end up with a nested fetch, as spelled out in <a href="https://wicg.github.io/origin-policy/#monkey-patching-fetch">https://wicg.github.io/origin-policy/#monkey-patching-fetch</a>. We’d fetch the resource, see the header, fetch the manifest, and <em>then</em> return the initial response. The requests are more or less serialized. “Synchronous” is probably the wrong word… it scared Boris at TPAC as well.</p>
+<blockquote>
+<p>Can you give examples of policy changes that prevent cache reuse?</p>
+</blockquote>
+<p>Mark has some examples of things that might effect cached resources in his <a href="https://tools.ietf.org/html/draft-nottingham-site-wide-headers-00">https://tools.ietf.org/html/draft-nottingham-site-wide-headers-00</a>, and recommends avoiding them in a site-wide policy. Similar language in this spec might be enough?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="19" data-topic="1617">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mikewest/40/438_1.png" width="20"/> mikewest:</div>
+<blockquote>
+<p>Mark has some examples of things that might effect cached resources in his <a href="https://tools.ietf.org/html/draft-nottingham-site-wide-headers-00">https://tools.ietf.org/html/draft-nottingham-site-wide-headers-00</a>, and recommends avoiding them in a site-wide policy. Similar language in this spec might be enough?</p>
+</blockquote>
+</aside>
+<p>Yeah, adding some form of “don’t send resource-specific headers to the entire origin” language will probably do the trick.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

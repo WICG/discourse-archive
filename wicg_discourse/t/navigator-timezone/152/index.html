@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Navigator.timeZone</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Navigator.timeZone</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p><code>navigator.language</code> is becoming more widely supported. Could we get a <code>navigator.timeZone</code> as well?</p>
+<p>Recently I discovered that the default time zone is leaked in Chrome by the ECMAScript Internationalization API.</p>
+<pre><code>Intl.DateTimeFormat().resolvedOptions().timeZone
+// =&gt; "America/Chicago"
+</code></pre>
+<p>Though, this seems to only be the draft behavior of the ECMAScript Internationalization API and not reliable yet.</p>
+<p>On GitHub, we’re using this jsTimezoneDetect library (<a href="http://pellepim.bitbucket.org/jstz/" rel="nofollow noopener">http://pellepim.bitbucket.org/jstz/</a>). Its scary accurate. The clever hack for DST detection is just checking the TZ offset between January and June. That also helps you guess the hemisphere as well.</p>
+<p>So in regard to privacy and fingerprinting, the data leakage already exists.</p>
+<p>I’d also love to see the proposed Timezone header revisited (<a href="http://tools.ietf.org/html/draft-sharhalakis-httptz-05" rel="nofollow noopener">http://tools.ietf.org/html/draft-sharhalakis-httptz-05</a>). We emulate this by basically setting a cookie named tz in the browser. A real header would be wonderful since its available on the first request, rather than having to wait to send the response, evaluate JS then set the cookie for the next request. Also, you could do Vary based HTTP caching based on the header.</p>
+<p>Addressing fingerprinting concerns.</p>
+<p>Leaving it up to UAs, navigator.timeZone could be stubbed to always return UTC (or even null) in private browsing modes. The same could be considered for new Date() if that entropy leak needs to be plugged as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>Let me also make a case for server side time zone knowledge. Everything can’t simply solved by a client side <code>&lt;time&gt;</code> formatting element as mentioned in many old mailing threads. Though, I want localized time formatting natively in the browser, its not a complete solution.</p>
+<p>At GitHub, we rely on server side tz for date grouping calculations.</p>
+<p><img height="275" src="//discourse.wicg.io/uploads/default/103/f7269532bf19ddc4.png" width="690"/> </p>
+<p>Contribution dates are grouped by the clients TZ.</p>
+<p><img height="201" src="//discourse.wicg.io/uploads/default/104/723c5b0f42651627.png" width="690"/> </p>
+<p>Traffic hits group by day in the clients TZ.</p>
+<p><img height="153" src="//discourse.wicg.io/uploads/default/105/99ee6813d7b513cd.png" width="690"/> </p>
+<p>Commit listings are group by the clients date.</p>
+<p>In all these cases we can’t simply send down every possible piece of day and have the client compute which date they fall under. Its way easier for the client to tell the server the TZ and have it query the database with the current date range based on the TZ.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>I entirely agree that timezone and timezone changes is something we need to have in the Web platform. It is one of those low hanging fruits that we could solve quickly.</p>
+<p>However, I am not sure that we want to add something in navigator if ES gives the same information. Why should we expose <code>navigator.timezone</code> if <code>Intl.DateTimeFormat().resolvedOptions().timeZone</code> would return the same value? Is the ES i20n API not a sure thing yet?</p>
+<p>Something that might not be possible with the i20n API is to know when the timezone changes. If we can’t get that added to the JS API, we might want to add an event for this.</p>
+<p>I guess <span class="mention">@domenic</span> could give us some insights here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1369_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">addyosmani</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>Totally agree we need something like this in the platform. That said, I have similar concerns as Mounir about the introduction of <code>navigator.timezone</code> if it’s possible for us to standardize on <code>Intl.DateTimeFormat().resolvedOptions().timeZone</code> returning the value you’re after. Yes - it’s verbose, which is unfortunate but if this worked cross-browser, that would serve your use-case, right?. The only compelling argument for <code>.timezone</code> I can see would be developer ergonomics and you could always wrap the current hack into something more useable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>As of the current 1.0 spec</p>
+<blockquote>
+<p>In this version of the ECMAScript Internationalization API, the timeZone property will remain undefined if no timeZone property was provided in the options object provided to the Intl.DateTimeFormat constructor. However, applications should not rely on this, as future versions may return a String value identifying the host environment’s current time zone instead.</p>
+</blockquote>
+<p><a class="onebox" href="http://www.ecma-international.org/ecma-402/1.0/#sec-12.3.3" rel="nofollow noopener" target="_blank">http://www.ecma-international.org/ecma-402/1.0/#sec-12.3.3</a></p>
+<p>It doesn’t seem to be standardized yet. Seeing strange behavior in the wild where it returns <code>""</code> or a non IANA zone like <code>"CET"</code> instead of <code>"Europe/Amsterdam"</code>.</p>
+<p><code>Intl.DateTimeFormat().resolvedOptions().locale</code> should default to <code>navigator.language</code>.</p>
+<p>What are your thoughts about the server side negotiation <code>Time-Zone</code> request header?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1835_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sindresorhus</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="152">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/addyosmani/40/1369_1.png" width="20"/> addyosmani:</div>
+<blockquote>
+<p>but if this worked cross-browser</p>
+</blockquote>
+</aside>
+<p>The benefit of the language native is that <code>cross-browsers</code> =&gt; <code>cross-platform</code> (eg. Node).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-04</div>
+          <div class="post_content">
+<p>I agree with you that fingerprinting is not the concern here. Fingerprinting is pretty hopeless across the platform and I no longer believe that it can be mitigated through feature limitations. The line of defence should be the browser detecting that an origin is looking at many know fingerprinting pieces of information at once and reporting it to the SafeBrowsing DB for verification.</p>
+<p>Regarding using an HTTP header the usual concern is that it adds bytes to every request, and in doing so may break packet boundaries, damaging performance. I suspect that this is not used often enough that including it for every request is an optimisation compared to the back and forth you describe having to do. That said, it may be the case that HTTP2 helps enough here that this could be included?</p>
+<p>We need to get feedback to TC39 that the TZ should be reliable and not something applications shouldn’t rely on. <span class="mention">@domenic</span>? <span class="mention">@slightlyoff</span>? <span class="mention">@dherman</span>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-04</div>
+          <div class="post_content">
+<p>I think the Ruby on Rails community would love server-side automatic timezone configuration. All the infrastructure is in place to format dates in the current timezone and even annotate timestamps being inserted in a database with the current actors zone. The missing piece is actually knowing the actors TZ. Thats basically left as an exercise to the developer to implement some sort of user settings timezone picker or do client side sniffing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1838_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dherman</div>
+          <div class="creation_date">2014-06-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="152">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/robin/40/64_1.png" width="20"/> robin:</div>
+<blockquote>
+<p>We need to get feedback to TC39 that the TZ should be reliable and not something applications shouldn’t rely on.</p>
+</blockquote>
+</aside>
+<p>I don’t know if there were interesting reasons why the time zone was left out of the first version of the Intl API or if it was just scoped out for v1. I’ve <a href="http://esdiscuss.org/topic/exposing-system-time-zone">asked on es-discuss</a>.</p>
+<p>Dave</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/288_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">edent</div>
+          <div class="creation_date">2014-06-18</div>
+          <div class="post_content">
+<p>Is there a privacy aspect to this?  If the returned value is <code>Europe/London</code> then you’ve got a fairly narrow geolocation window.</p>
+<p>If the timezone is <code>UTC-09:30</code> then you have a virtually certain chance of knowing someone is on the <a href="https://en.wikipedia.org/wiki/UTC%E2%88%9209:30" rel="nofollow noopener">Marquesas Islands</a></p>
+<p>Is this yet another privacy pop-up that the user will have to accept or dismiss?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2792_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">littledan</div>
+          <div class="creation_date">2017-03-20</div>
+          <div class="post_content">
+<p>At this point, <code>Intl.DateTimeFormat().resolvedOptions().timeZone</code> is well-supported across new versions of browsers. Would a new <code>navigator.timeZone</code> still provide additional value?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

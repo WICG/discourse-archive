@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Validation styling</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Validation styling</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-07</div>
+          <div class="post_content">
+<p>Constraint validation rules are widely supported in browsers with the default behaviour to show an error form submission.</p>
+<p>There was prefixed rules in Mozilla and Chrome to impact these however there appears to be no approach to standardise the appearance of these validation messages.
+I’m struggling to find enough resource to suggest how browsers should actually show the messages, perhaps it is just a convention.</p>
+<p>Would it make sense to allow the CSS author to use the newly resurrected appearance property to remove user agent styles and mint a new pseudo element?</p>
+<pre><code class="lang-auto">input::validation-message {
+  appearance: none;
+  border: 1px solid orange;
+  border-radius: 50%;
+  padding: 1rem;
+  font-weight: bold;
+}
+</code></pre>
+<p>Further resources:</p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation" rel="nofollow noopener">MDN constraint validation overview</a></li>
+<li><a href="http://dev.w3.org/html5/spec-preview/constraints.html#constraints">Constraint validation spec</a></li>
+<li><a href="http://dev.w3.org/csswg/css-ui-4/#appearance-switching">Appearance property</a></li>
+<li><a href="https://code.google.com/p/chromium/issues/detail?id=293209&amp;q=label%3ACr-Blink-Forms-Validation&amp;colspec=ID%20Pri%20M%20Week%20ReleaseBlock%20Cr%20Status%20Owner%20Summary%20OS%20Modified" rel="nofollow noopener">Validation message blink improvement bug</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2015-04-12</div>
+          <div class="post_content">
+<p>In general styling of form controls is not standardized since nobody is super clear on how it should be solved. It is one of the bigger recurring problems. <a href="http://dev.w3.org/csswg/css-forms/">http://dev.w3.org/csswg/css-forms/</a> has some thoughts on the matter.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-12</div>
+          <div class="post_content">
+<p>Yeah certainly my feeling is that other form features are a lot more complex to standardise.</p>
+<p>My other thought is that the browser could expose the native elements under native shadow DOM which would be browser specific but would give the ability to style until the standards catch up.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-12</div>
+          <div class="post_content">
+<p>As replaced elements can’t take advantage of <code>::after</code> users really need this so that they can style error messages whilst using native browser validation. Adoption of pattern and other HTML5 validation is very low and I think it is because of this.</p>
+<p>So <code>:user-error</code> is useful however it doesn’t really help us with getting the error message into the label element for use with <code>::after</code>, if that were the case then it would be only required to provide a way to hide native errors rather than change their appearance.</p>
+<pre><code class="lang-auto">label:has(:user-error) {
+  background-color: red;
+}
+
+input:user-error::validation-message {
+  appearance: none;
+  border: 1px solid red;
+  content: attr(validationMessage) "\n" attr(title);
+}
+</code></pre>
+<p>This pseudo element just needs to have a <code>z-index</code> higher than other elements which is similar to a dialog element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>I made some quick code to mimic this experience in the DOM for browsers that support the validationMessage API:
+<aside class="onebox githubgist">
+<header class="source">
+<a href="https://gist.github.com/jonathanKingston/7d74530772eb4b9c4617" rel="nofollow noopener" target="_blank">gist.github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://gist.github.com/jonathanKingston/7d74530772eb4b9c4617" rel="nofollow noopener" target="_blank">https://gist.github.com/jonathanKingston/7d74530772eb4b9c4617</a></h4>
+<h5>gistfile1.txt</h5>
+<pre><code class="Text">var forms = nodeListToArray(document.querySelectorAll('form'));
+var customErrorClass = 'custom-error-message-style';
+
+forms.forEach(function (formElement) {
+  var formFields = nodeListToArray(formElement.querySelectorAll('input, select'));
+
+  formElement.addEventListener('submit', function (e) {
+    var hasError = false;
+    removeErrorMessages(formElement);
+</code></pre>
+This file has been truncated. <a href="https://gist.github.com/jonathanKingston/7d74530772eb4b9c4617" rel="nofollow noopener" target="_blank">show original</a>
+<p>
+</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>I plan to neaten this over the next few days and also turn it into a polyfill for new selectors but logging it here so it doesn’t get lost.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

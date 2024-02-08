@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Style checkboxes with appearance</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Style checkboxes with appearance</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-10</div>
+          <div class="post_content">
+<p>Would be nice to style checkboxes without tricks.
+Right now to create a custom checkbox you need to hide the checkbox, use another element to replace the checkbox itself and handling some accessibility edge cases like avoiding to hide the input completely from screen reader…</p>
+<p>Would not be simpler if we can define an svg to replace our checkbox with appearance property?
+As part of the proposal would nice we can change colors of the svg and use animations.</p>
+<h2>example of current situation</h2>
+<pre><code class="lang-css">&lt;label&gt;
+  &lt;span class="checkbox"&gt;
+    &lt;input type="checkbox" class="checkbox-input"/&gt;
+    &lt;span class="checkbox-icon"&gt;&lt;/span&gt;
+  &lt;/span&gt;
+   label
+&lt;/label&gt;
+
+.checkbox {}
+.checkbox-input { visibility: hidden; height:0; width:0; }
+.checkbox-icon:before {
+  content: "[]";
+  display: inline-block;
+}
+.checkbox-input:checked ~ .checkbox-icon:before {
+  content: "[x]";
+}
+</code></pre>
+<h2>Example proposal</h2>
+<pre><code class="lang-auto">&lt;label&gt;
+  &lt;input type="checkbox" class="checkbox-3"/&gt;
+  label
+&lt;/label&gt;
+
+.checkbox-2 {
+  appearance: url(input.svg#checkbox);
+  transition: fill .5s;
+}
+.checkbox-2:checked {
+  appearance: url(input.svg#checkbox-checked);
+}
+
+.checkbox-2:checked .checkbox-2-tick {
+  fill: tomato;
+}
+
+.checkbox-2:disabled {
+  opacity: .4;
+}
+.checkbox-2:disabled .checkbox-2-tick {
+  fill: gray;
+}
+
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2017-03-11</div>
+          <div class="post_content">
+<p>Opera’s old Presto engine let us do exactly this with the <code>content</code> property. Unfortunately, no other browser seems interested.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-03-12</div>
+          <div class="post_content">
+<p>Forms in general need a standardized way of styling.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-12</div>
+          <div class="post_content">
+<p>I see three options:</p>
+<ol>
+<li>
+<p>use specific property to replace the visual like “list-style-image” does</p>
+<p><strong>pros:</strong>
+complete freedom to use the checkbox/forms you wish to use with svg or image
+<strong>cons:</strong>
+hard to theme, I do not think we could select the svg elements, if it’s an image you definitely cannot theme it</p>
+<pre><code class="lang-css">.input[type="checkbox"] {
+  appearance: url(ui.svg#checkbox);
+}
+
+/* tick class is inside the svg, not sure if it is possible, looks like a bit awkward */
+.input[type="checkbox"] .tick { 
+  appearance: url(ui.svg#checkbox);
+}
+</code></pre>
+</li>
+<li>
+<p>define a set of specific properties or pseudo classes to style checkbox/forms</p>
+<p><strong>pros:</strong>
+you have some kind of standard way to style the checkbox across browsers
+<strong>cons:</strong>
+you need to create an appearance: web-checkbox to avoid to use the OS input
+you have some limitation on what you can style it</p>
+<pre><code class="lang-css">.input[type="checkbox"] {
+	appearance: web-checkbox;
+	checkbox-size: 40px;
+	checkbox-color: blue;
+}
+
+.input[type="checkbox"]:checked {
+	checkbox-color: red;
+}
+
+/* or */
+
+.input[type="checkbox"] {
+	appearance: web-checkbox;
+}
+
+.input[type="checkbox"]::tick {
+	checkbox-size: 40px;
+	checkbox-color:  blue;
+}
+
+.input[type="checkbox"]:checked::tick {
+	checkbox-color:  red;
+}
+</code></pre>
+</li>
+<li>
+<p>use CSS Paint API to create your visual</p>
+<p><strong>pros:</strong>
+complete freedom to use the checkbox/forms you wish
+ability to theme as you wish
+<strong>cons:</strong>
+this option is powerfull but I think styling form are a common problem and should be solved by the platform and use paint to solve edge cases or more complex cases</p>
+<pre><code class="lang-css">.input[type="checkbox"] {
+	--checkbox-color: blue;
+	appearance: paint(checkbox);
+}
+
+.input[type="checkbox"]:checked {
+	--checkbox-color: red;
+}
+</code></pre>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

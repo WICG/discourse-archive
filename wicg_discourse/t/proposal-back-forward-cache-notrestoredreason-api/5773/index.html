@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Back/forward cache NotRestoredReason API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Back/forward cache NotRestoredReason API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3823_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rubberyuzu</div>
+          <div class="creation_date">2022-02-28</div>
+          <div class="post_content">
+<aside class="onebox githubblob" data-onebox-src="https://github.com/rubberyuzu/bfcache-not-retored-reason/blob/main/NotRestoredReason.md">
+<header class="source">
+<a href="https://github.com/rubberyuzu/bfcache-not-retored-reason/blob/main/NotRestoredReason.md" rel="noopener nofollow ugc" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/rubberyuzu/bfcache-not-retored-reason/blob/main/NotRestoredReason.md" rel="noopener nofollow ugc" target="_blank">rubberyuzu/bfcache-not-retored-reason/blob/main/NotRestoredReason.md</a></h4>
+<pre><code class="lang-md"># **NotRestoredReason API Explainer Draft**
+
+
+## Authors:
+
+
+
+*   yuzus@chromium.org
+*   bfcache-dev@chromium.org
+
+
+## Participate
+
+
+
+*   [Discussion](https://github.com/whatwg/html/issues/7094)
+
+
+## Motivation
+
+</code></pre>
+
+
+
+  This file has been truncated. <a href="https://github.com/rubberyuzu/bfcache-not-retored-reason/blob/main/NotRestoredReason.md" rel="noopener nofollow ugc" target="_blank">show original</a>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<h3>
+<a class="anchor" href="#summary-1" name="summary-1"></a><strong>Summary</strong>
+</h3>
+<p><a href="https://developers.google.com/web/updates/2018/07/page-lifecycle-api#back-forward-cache" rel="noopener nofollow ugc">Back/forward cache</a>(BFCache) is cache optimization that some browser implement to make back/forward button navigation instant.</p>
+<p>Today pages can be blocked from BFCache for different reasons, such as reasons required by spec and reasons specific to the browser implementation.</p>
+<p>Developers can gather the hit-rate of BFCache on their site by using <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#dom-pagetransitionevent-persisted-dev">the pageshow handler persisted parameter</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigation/type" rel="noopener nofollow ugc">PerformanceNavigationTiming.type(back-forward)</a>. However, there is no way for developers to tell what reasons are blocking their pages from BFCache in the wild.</p>
+<p>We would like to expand Reporting API and Performance Navigation Timing API to make it possible for sites to collect information on why BFCache is not used on a history navigation, so that they can take actions on each reason and make their page BFCache compatible.</p>
+<h3>
+<a class="anchor" href="#example-2" name="example-2"></a><strong>Example</strong>
+</h3>
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Reporting_API" rel="noopener nofollow ugc">Reporting API</a> lets you observe a deprecated feature usage / browser request intervention / crashes.  We would like to have another category “bfcache” here.</p>
+<pre><code class="lang-auto">Report-To: {
+             "max_age": 10886400,
+             "endpoints": [{
+               "url": "a.com"
+             }]
+           }
+// -&gt; [{URL:"a.com", Id: "x", blocked: True, reasons:["broadcast channel"], children:[]}]
+</code></pre>
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming" rel="noopener nofollow ugc">Performance Navigation Timing API </a>tells you the type of navigation (BFCache, prerender). We could also extend this API to report the not-restored reasons.</p>
+<pre><code class="lang-auto">var perfEntries = performance.getEntriesByType("navigation");
+for (var i=0; i &lt; perfEntries.length; i++) {
+	console.log("= Navigation entry[" + i + "]");
+	var p = perfEntries[i];
+	// p.notRestoredReason == [{URL:"a.com", Id: "x", blocked: True, reasons:["broadcast channel"], children:[]}]
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2022-03-07</div>
+          <div class="post_content">
+<p>Hi rubberyuzu,</p>
+<p>Thank you for your post. I’m interested to learn what sort of reasons appear only in the field and not on the developer’s test device. Perhaps a list of example reasons would be informative.</p>
+<p>Best regards,</p>
+<p>Brian</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3823_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rubberyuzu</div>
+          <div class="creation_date">2022-03-07</div>
+          <div class="post_content">
+<p>Thanks Brian for the comment!</p>
+<p>Here is the list of the reasons that could appear:
+<a href="https://docs.google.com/spreadsheets/d/1li0po_ETJAIybpaSX5rW_lUN62upQhY0tH4pR5UPt60/edit#gid=0" rel="noopener nofollow ugc">spreadsheet</a></p>
+<p>My proposal is to mask the reasons when they are from cross origin frames, no matter what reasons they are. So any of the reasons above can be reported or masked depending on which frame in the page caused it.</p>
+<p>Please let me know if you have further suggestions, thanks!
+Yuzu</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2022-03-14</div>
+          <div class="post_content">
+<p>Thank you, that’s very helpful. I was concerned that if the reasons are mostly reproducible locally then it might be preferable to simply produce console/DevTools warnings rather than introduce a new API which could lead to compatibility issues.</p>
+<p>However, looking at the spreadsheet, I can see that reasons like Timeout and CacheLimit will be specific to the user’s device so this API seems helpful for such cases.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3823_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rubberyuzu</div>
+          <div class="creation_date">2022-03-14</div>
+          <div class="post_content">
+<p>Thanks for looking!</p>
+<p>We actually already have DevTools Application Panel that reports bfcache not-restored reason (<a href="https://web.dev/bfcache/" rel="noopener nofollow ugc">web.dev article</a>). By adding the API, we would like to enable data gathering from the wild in addition to locally reproducing and testing bfcache.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

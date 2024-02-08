@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Exposing a user&rsquo;s input modality</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Exposing a user&rsquo;s input modality</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>For the past few weeks Alice Boxhall and I have been discussing/working out details of a <a href="https://github.com/alice/modality/blob/master/docs/modality-mq.md">proposal</a>, creating a <a href="https://github.com/alice/modality/blob/master/src/keyboard-modality.js">prollyfill for it</a> and testing it (I’m using this on some projects) and putting together a <a href="http://radar.oreilly.com/2015/08/proposing-css-input-modailty.html">post which was published this morning explaining the need for exposing a concept that we call “input modality”.</a>.  The proposal itself proposes that this be exposed through a Media Query like</p>
+<p><span class="mention">@media</span> (modality: keyboard) {
+:focus {
+outline: 2px solid blue;
+}
+}</p>
+<p>The best way to understand the need and use is probably the article linked above which will walk you into the other two, but effectively we show that the browser itself is privy to information that about how the user is currently using the interface and has been using this for years in various ways that are shut off from authors creating a kind of accessibility footgun for things like the focus ring as authors try to use standards that are currently provided.  In my own testing I’ve received overwhelmingly positive responses from users as our focus rings all of the sudden make sense and work appropriately for everyone based on how they are actually using the interface, not capabilities of their browser or machine or globally being present at inappropriate seeming times.</p>
+<p>The concept of modality is essentially this: If the user starts interacting with the keyboard, that is their current context - combined with what they are interacting <em>with</em> we can determine the appropriate modality - if the user starts using a mouse, that might change.  Some users, like me, switch modalities all the time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>Would make sense. Currently, <code>outline: none</code> is often (undesirably, but quite widely) used to prevent from appearing outline on clicks which also affects keyboard navigation making the latter much less usable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>This is a great idea, and we absolutely need a solution to this. I often find myself calling .blur() after a click to avoid “sticky” buttons, and I know this is harmful to a11y, but the alternative is so complicated.</p>
+<p>This could also be a pseudo-class such as <code>:tab-focus</code>, which would be a shorter way to represent key-focused elements (using tab to be consistent with tabindex).</p>
+<p>Talking to Brian, the reason for using a media query is for JS events when modality changes, although I think the media query is misleading. If I stop typing and put my hand on the mouse, my modality is technically “mouse”, but there’s no way to detect that. If I play a FPS, what would the mouse do? If I hold command and click, what’s the modality?</p>
+<p>In terms of events, what does the media query switching give you over keydown, mousedown &amp; touchstart?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>It’s true I like the idea of a MQ here because focus ring is not the only case where I think this is useful as a concept, but the same could be achieved with a real event that the pseudo-class was associated with to (just like :focus).  What I’m trying to drive at here is what is the lowest practical level at which we can define this before we start getting too crazy (extensible web wise).</p>
+<p>You’ll note though that our proposal is actually quite limited on purpose - it’s only technically proposed a method and keyboard as the modality that can be defined now - in part because we have like a decade’s worth of data on this bit… Over time, if we have more though, there’s room for it to grow.  In your above, if you stop typing and move the mouse you’re not (in spec terms) interacting (interactive elements get focus), so by the definition (in the prollyfill) we’ve provided your modality would remain keyboard until you cause a focus or blur by interacting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/715_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboxhall</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>To expand on Brian’s response:</p>
+<ul>
+<li>
+<p>As Brian said, having your hand on the mouse is not <em>using</em> the mouse, and it doesn’t seem confusing to delay changing the modality until you are. Going in the other direction, we found it pretty usable to need to move focus once using the keyboard in order for it to show up.</p>
+</li>
+<li>
+<p>I can’t imagine a FPS is going to have many focusable elements, though you could use this to do something like show different targeting mechanisms depending on which modality was being used, I guess? (The tricky thing would be detecting a “mixed” modality where you’re using something like WASD + mouse, but I think that’s a question for later on down the line.)</p>
+</li>
+<li>
+<p>Good question on cmd+click - I don’t think we consider modifier keys to be keyboard interaction per se, so I’d expect that to be “mouse”.</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/443_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hexalys</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>For interaction combining mouse and keyboard, note that we have the css <code>:hover</code> pseudo class at our disposal, to remove the focus ring when the mouse hovers on the document.</p>
+<p>I was recently trying to find a method preventing focus outlines on Android Phone without affecting AT or keyboard users. I have come up with this slightly crazy, yet functional approach, using <code>any-hover/any-pointer</code> MQ classes:</p>
+<pre><code>html:hover:not(.hover):not(.fine).touch.coarse a:focus.ma, a:active, a:hover {
+  outline: 0;/* Normalize readability on direct focus and hover, or Android touch only*/
+}
+</code></pre>
+<p>The above means that the context is a touch enabled device (verified by feature detect), with a coarse input (likely touch), no fine inputs (no mouse) and no <code>any-hover: hover</code> (meaning no inputs that hover directly whether coarse or fine).
+I inject those classes Modernizr style at the document level with an <code>any-hover/any-pointer</code> MQs feature detect. The <code>.ma</code> class being a specific instance of navigation sub-menu toggles which should definitely not have a focus ring in a traditional touch or mouse only context.</p>
+<p>The only issue there, is that I can’t seem to find a way to cancel the focus ring on the first touch, only on subsequent ones. Because <code>:hover</code> hasn’t yet fired yet on the document from any previous touches (note: this is speaking of Android, iOS doesn’t show default outlines anyway, and has its own black outlines when using voice over, so it’s of no concern there).</p>
+<p>But mobile aside, the simple <code>html:hover</code> technique can work reliably, and address that concern for desktop. From what I can tell, assistive technology traditionally never fires <code>hover</code>. So unless proven the contrary, any inference on <code>html:hover</code> seems like a reliable one.</p>
+<p>For normal anchor links, what I do just to be safe, is apply my own custom outline in the <code>html:hover</code> state, but fallback to the browser’s default focus ring if not. Necolas’ <code>normalize</code> rule taking care of any direct hover or active state on those.</p>
+<p>So technically, the case mentioned by Jake can be adjusted with the <code>html:hover</code> pseudo  method, either as part of the modality prollyfill, or excluded to be handled externally…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>While I understand how exposing this property only on interaction would <em>help</em> the problem of sites catering their UI only to a certain kind of input they detect the presence of (and, to be clear, when I say that, I’m talking about sites that sniff for touch to toggle display-on-hover behaviors, as <a href="//discourse.wicg.io/t/getting-rid-of-cookie-warnings/1029/16">Discourse itself is guilty of</a>), I’m still not convinced that enabling this manner of modal presentation is a good idea. Discoverability suffers enough without apps encouraging users to live in the mindset that there’s only one way to interact with them.</p>
+<p>That said, I could settle for letting this be a debate left up to content authors, rather than trying (and failing) to force the all-interfaces-must-be-on-at-all-times opinion onto them.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>What I’m trying to drive at here is what is the lowest practical level at which we can define this before we start getting too crazy (extensible web wise).</p>
+</blockquote>
+</aside>
+<p>We already have a low-level way to achieve this using events, so I think the aim here should be to make something easier to avoid people turning to hacky alternatives that harm a11y (<code>outline: none</code> and <code>el.blur()</code>).</p>
+<aside class="quote" data-post="5" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/aboxhall/40/715_1.png" width="20"/> aboxhall:</div>
+<blockquote>
+<p>The tricky thing would be detecting a “mixed” modality where you’re using something like WASD + mouse, but I think that’s a question for later on down the line</p>
+</blockquote>
+</aside>
+<p>Yeah, that’s what I meant by FPS (sorry, that wasn’t clear at all), the interaction is a combination of key &amp; mouse. I guess this would cause modality thrashing, but if that isn’t a performance problem, it’s not a problem.</p>
+<aside class="quote" data-post="5" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/aboxhall/40/715_1.png" width="20"/> aboxhall:</div>
+<blockquote>
+<p>we found it pretty usable to need to move focus once using the keyboard in order for it to show up.</p>
+</blockquote>
+</aside>
+<p>From reading the explainer, I guess hitting any key would switch to keyboard modality? That seems sensible.</p>
+<p>I’m coming around to the idea. One of the problems with <code>:tab-focus</code> is it’s based on how that element received focus, whereas modality can alter the appearance without an additional focus taking place (eg a click in a focused element, pressing a key with no interaction bound).</p>
+<pre><code>button { background: white; }
+button:focus { outline: none; background: blue; }
+
+@media not (modality: keyboard) {
+  button:focus { background: white; }
+}
+</code></pre>
+<p>…would be the backwards compatible way to use this. It’s much lengthier than a pseudo-class, hopefully that wouldn’t discourage usage.</p>
+<p>Modality as a term feels vaguer than what it’s describing here, but I don’t have a better idea.</p>
+<p>If a <code>mousedown</code>, <code>touchstart</code> or <code>keydown</code> listener prevents default, does modality switch to that input device? Or does modality only switch on <code>click</code> and <code>keypress</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<p>But if you read the piece you’ll note:</p>
+<blockquote>
+<p>Browsers have been experimenting with variations of this since at least IE7. Implementations vary a bit, and browsers are still trying to strike the right balances, but overall the idea is consistent and works well: <em>A couple of billion mostly unaware folks using Web browsers for the last 8+ years have proven it out.</em></p>
+</blockquote>
+<p>In other words – the web actually <em>does</em> work this way “out of the box” and it works that way because of years and years of user-feedback and testing.  I’m not sure how you could make the statement that this is encouraging apps or users anyone to live in one mindset, this is about responding to the fact that there isn’t one. The issue is that: a) “out of the box” styles frequently don’t work with designs.  If there is a native outline that is blue that works fine on a white background - but maybe your site has things that rest on a background that is blue and it doesn’t.  The Web today gives you levers and switches to tweak this, but in doing so all of the lever options are nuclear - they break the “out of the box” behavior. b) There’s no good plan for things that don’t already come in the box - if you make a new component - or in my brightly envisioned future you import and use non-standard but competing ‘slang’, there’s no good/reasonably simple way to get them to play nice.</p>
+<p>The proof here is that lots and lots of pretty web smart folks have tried (and often failed) to solve this problem independently, have a look at the twitters and articles like Marcy Sutton’s <a href="http://marcysutton.com/button-focus-hell/">Button Focus Hell</a>.  These are not new authors who are missing a simple thing about the Web, this problem is frequently evident in things built by frameworks and libraries that build the foundations of the Web today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>We already have a low-level way to achieve this using events, so I think the aim here should be to make something easier to avoid people turning to hacky alternatives that harm a11y (<code>outline: none</code> and <code>el.blur()</code>).</p>
+</blockquote>
+</aside>
+<p>I’m suggesting simply “lowest practical level” - definitely not that we need a new primitive, but rather explain an appropriately higher level thing atop existing primitives.  Pseudo-classes are generally speaking concepts of state machine wrapped around paired events (:focus is from the <code>focus</code> until the <code>blur</code> for example.  Media Queries are similar but generally more tied to an algorithm in which you enter and leave the state.  It <em>feels</em> to me like the later is more what we’re doing and is also more flexible (you can, for example, use <code>matchMedia</code> and <code>mediaQueryListener</code> to provide further enhancements this way) and actually simpler in many respects both implementation and use-wise.  For example - implementation wise if you want to actually abstract up a simple layer and create a pseudo-class (lets call it :keyfocus) we need new events and all kinds of stuff about bubbling and cancelling and observer perf and so on might get more complicated.  Use-wise, note that this works (assuming it is defining the algorithm as I said) it becomes possible to write global rules which is often way way better than trying to somehow match the complexities of what browsers do on each element.  If we come up with a new  element which is an interactive control, or even if your site has just never used a particular interactive element that exists today, and then someone uses it in your app where you’re targeting focus ring branding based on specific element instructions, this new one will look different.  Things like branding are what rules based systems like CSS are actually really good at dealing with in forward compatible/generic ways.  If it were a pseudo-class though, what would it look like to add a global rule and what would that mean for bubbling and so on?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/715_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboxhall</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>We already have a low-level way to achieve this using events…</p>
+</blockquote>
+</aside>
+<p>I’m not sure I follow - which events do you mean, and how?</p>
+<aside class="quote" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<aside class="quote" data-post="5" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/aboxhall/40/715_1.png" width="20"/> aboxhall:</div>
+<blockquote>
+<p>The tricky thing would be detecting a “mixed” modality where you’re using something like WASD + mouse, but I think that’s a question for later on down the line</p>
+</blockquote>
+</aside>
+<p>Yeah, that’s what I meant by FPS (sorry, that wasn’t clear at all), the interaction is a combination of key &amp; mouse. I guess this would cause modality thrashing, but if that isn’t a performance problem, it’s not a problem.</p>
+</blockquote>
+</aside>
+<p>Gotcha. Obviously if the modality isn’t being used it’s not a problem, but definitely worth thinking about the mixed modality case. I think we can solve this particular case already in the current framework by allowing you to specify a mixed (as opposed to context-dependent) modality on the containing element, just as you specify a keyboard modality on a custom text input.</p>
+<aside class="quote" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>From reading the explainer, I guess hitting any key would switch to keyboard modality? That seems sensible.</p>
+<p>I’m coming around to the idea. One of the problems with <code>:tab-focus</code> is it’s based on how that element received focus, whereas modality can alter the appearance without an additional focus taking place (eg a click in a focused element, pressing a key with no interaction bound).</p>
+</blockquote>
+</aside>
+<p>Yep, exactly.</p>
+<aside class="quote" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>…would be the backwards compatible way to use this. It’s much lengthier than a pseudo-class, hopefully that wouldn’t discourage usage.</p>
+</blockquote>
+</aside>
+<p>Agreed. Hopefully we can get a bigger win from having the UA style sheet only apply the focus ring for keyboard modality, so people are somewhat less incentivised to roll their own focus styles.</p>
+<aside class="quote" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>Modality as a term feels vaguer than what it’s describing here, but I don’t have a better idea.</p>
+</blockquote>
+</aside>
+<p>In the sense that it could equally be used to refer to things like orientation, device etc?</p>
+<aside class="quote" data-post="8" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>If a <code>mousedown</code>, <code>touchstart</code> or <code>keydown</code> listener prevents default, does modality switch to that input device? Or does modality only switch on <code>click</code> and <code>keypress</code>?</p>
+</blockquote>
+</aside>
+<p>Excellent question <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/> My instinct is no, but that’s definitely something we need to figure out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<p>This all makes total sense to me. Personally, I’d prefer the name <code>input-modality</code>/<code>input-mode</code>, since as mentioned,   <code>modality</code> is slightly vague.</p>
+<p><span class="mention">@tabatkins</span>: Thoughts about adding something like that to the <a href="https://drafts.csswg.org/mediaqueries-4/">MQ spec</a>?</p>
+<p>With my Blink hat on: <span class="mention">@aboxhall</span>, if you’re interested in playing around with an implementation in Blink, I’d be happy to assist with design and reviews of the MQ parts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<p>I am more than fine with input-modality - tbh we’ve used that in discussion and even the title of the post, and — I think even in the text itself at one point.   Honestly, I think we were just trying to save characters in actually expressing it but it doesn’t matter to me if we think it’s worth the extra 6 chars to be clear about it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/715_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboxhall</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<p>My only concern with input-modality is that it sounds to me like it’s input in the sense of <code>&lt;input&gt;</code> (i.e. data input), whereas the concept we’re shooting for is more like “interaction”. I do agree that <code>modality</code> alone is vague, though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/443_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hexalys</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<p>One concern I have with the current proposal, is that it appears to be relying on the premise that the focus ring will be prevented be default. As per all your examples using the primary <code>:focus { outline: none; }</code>.</p>
+<p>Unless you go to the expensive way to polyfill the modality MQ, that would seem to be lacking backward compatibility with older browsers stuck with only understanding <code>:focus { outline: none; }</code>?</p>
+<p>I am thinking that perhaps a ‘non-keyboard’ input modality approach might be better. At least at first. So that it doesn’t further promote preventing the focus ring globally by default, as an idea.</p>
+<p>Should design flaws, implementation issues or what not arise, it somehow feels like a reverse solution in that. Allowing a global <code>:focus { outline: none; }</code> is one of the problem we are trying to avoid…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="14" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/aboxhall/40/715_1.png" width="20"/> aboxhall:</div>
+<blockquote>
+<p>My only concern with input-modality is that it sounds to me like it’s input in the sense of <code>&lt;input&gt;</code> (i.e. data input), whereas the concept we’re shooting for is more like “interaction”. I do agree that <code>modality</code> alone is vague, though.</p>
+</blockquote>
+</aside>
+<p>Yeah, didn’t think of that aspect. We could further bikeshed this later on <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="15" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/hexalys/40/443_1.png" width="20"/> hexalys:</div>
+<blockquote>
+<p>I am thinking that perhaps a ‘non-keyboard’ input modality approach might be better. At least at first. So that it doesn’t further promote preventing the focus ring globally by default, as an idea.</p>
+</blockquote>
+</aside>
+<p>Good point. I wonder if we should enable both <code>keyboard</code> and <code>pointer</code> modalities.</p>
+<p><span class="mention">@briankardell</span> and <span class="mention">@aboxhall</span>: Do you have any other use cases in mind other than the one outlined in the article? (which AFAICT either <code>keyboard</code> or <code>pointer</code> can address, and <code>pointer</code> seems to be better in terms of progressive enhancement)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/443_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hexalys</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<p>One important issue as <span class="mention">@patrick_h_lauke</span> mentioned, is that a touch explore or sequential focus doesn’t really fall in the pointer or keyboard context. This problem is ever more exacerbated by the fact that none of the Assistive Technology follow the same touchscreen event sequence at the moment. It’s nearly impossible to be dealt with because of that.</p>
+<p>On “touch explore”, some browser like Firefox fire :hover but not :focus, some fire :focus, some do neither… And on top of that, they create their own fake outline outside of CSS presentation scope.  Honestly as a dev, I sometimes don’t know where my accessibility responsibility stands, and wether I am supposed to show a focus ring or not. Without a predictable environment and a properly defined sequence of events with guarantees that it won’t change. It’s a crapshoot. And a double focus ring prospect looks terrible and redundant.</p>
+<p>Just a quick late night brain dump, but perhaps what we need in addition here: is a way to create a bridge of understanding between the forced outlines that AT or the device environment applies, and our CSS :focus styling.</p>
+<p>In other words, if could have pseudo and/or MQs modalities such as <code>assisted-focus</code> or <code>hover-intent</code> where we could have semantics like:</p>
+<pre><code>button:focus:not(:assisted-focus){} /* I am handling the focus ring */
+</code></pre>
+<p>or</p>
+<pre><code>button:focus:assisted-focus { outline: none; } /* no double focus outlines */
+</code></pre>
+<p>and a less input-centric modality approach like:</p>
+<pre><code>@media (modality: hover-intent) {
+}
+</code></pre>
+<p>This could perhaps offer better tooling to deal with both touch simulated :hover(s) and :focus.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="1067">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>At least at first. So that it doesn’t further promote preventing the focus ring globally by default, as an idea.</p>
+</blockquote>
+</aside>
+<p>(note, that was actually <span class="mention">@hexalys</span>, not <span class="mention">@yoavweiss</span>, it’s just discourse quote weirdness I can’t seem to fix)</p>
+<p>Well…</p>
+<ol>
+<li>I don’t feel like it’s actually “expensive”, our polyfill is all of 2.5k <em>before minification or gzip</em>… Its all of 69 lines and like 10 of that is whitespace <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/> If that’s expensive, it’s a pretty high bar for calling something inexpensive.  The CSS WG is also putting together custom MQs which would make it smaller still if that beats us to being in widespread deployment.</li>
+<li>Currently if you don’t include the prolyfill, it works as it always has - if you do it’s specifically because you want to handle things better.  Note the prollyfill does a :not() on keyboard here, not just a blind rule, just like in the article.  If natively implemented, I would expect UA sheets to add the appropriate MQs to do the right things by default (they already do this, it’s just not via MQ) and then the point seems to be moot.</li>
+<li>any author styles can already do (and frequently do) <code>:focus { outline: none; }</code> - at least now they can use an MQ to say “keyboard” or “not keyboard” and old browsers would ignore them.</li>
+</ol>
+<p>In other worse, I don’t really think this is an issue - it feels like a red herring.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-15</div>
+          <div class="post_content">
+<p>I agree <span class="mention">@patrick_h_lauke</span> had interesting thoughts about whether we could abstract it away from being keyboard, I’m hoping he shares them here.  I’m not entirely sure that I agree or disagree - in fact - I kind of wish we had something like attribute selector partial matching here so we could go from less to more specific or something.  I do think there is value in treating similar things similarly at some level, and I also think there is value in exposing as much as we can so that the community can actually help figure out how to adapt as new things arise.</p>
+<p>Specifically with regard to <code>assisted-focus</code> and <code>hover-intent</code> I definitely don’t understand their meaning/proposal… Explain?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

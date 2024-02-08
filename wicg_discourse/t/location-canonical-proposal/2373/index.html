@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Location.canonical proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Location.canonical proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-09-27</div>
+          <div class="post_content">
+<p>I think there’s a useful but missing piece of window.location which is the page’s canonical URL.</p>
+<p>Currently you have to get the <code>&lt;link rel="canonical" /&gt;</code> element if it exists for something which seems like it should be available with other location related properties. It also ignores that canonical can be sent with the HTTP headers.</p>
+<p>It’s not a massive change but I think a small quality of life improvement that would also be relatively easy to polyfill.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-10-09</div>
+          <div class="post_content">
+<p>Can you provide more information about the use case? What would the page do with this information? (I understand the use case for link rel=canonical … but not so much the use case for the API you are proposing)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-10-09</div>
+          <div class="post_content">
+<p>It was more noticed as an apparent gap in the existing API rather than something that came from personal need on a project. Arguably any usecase could also work by getting the <code>&lt;link rel="canonical"&gt;</code> tag however <code>location.canonical</code> is a clearer alternative to <code>document.querySelector("link[rel='canonical']").href</code> and is shorter and cleaner once you take into account null checking on the link element before accessing <code>href</code>.</p>
+<p>As mentioned an API like this could also take into account a canonical HTTP header which is not taken into account by the link element.</p>
+<p>Some example usecases would be:</p>
+<p>An analytics script. Just as canonical URLs are helpful in terms on SEO by not splitting pagerank on duplicate pages they would be as helpful in not splitting results in analytics reports, as well as tracking down referrals that may link in to non-canonical versions of a URL.</p>
+<p>Sharing scripts (particularly with web share on the way) could easily be set to share the canonical version of a page rather than the current page (as opposed to eg AMP or mobile versions of a page).</p>
+<p>User scripts or extensions to automatically break out of AMP or mobile pages from links could easily discover and reload the page at the canonical URL.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-10-16</div>
+          <div class="post_content">
+<p><span class="mention">@marcosc</span> are the provided use cases helpful or relevant? Being such a simple feature I wouldn’t mind doing some work writing it up spec-wise but obviously wouldn’t bother if it was a non-starter.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-10-18</div>
+          <div class="post_content">
+<p>So, I think there is a more generalized problem of giving scripts access to HTTP header information that is not exposed to the page itself via any API (without doing a <code>fetch(window.location.href, {method: "HEAD"}</code>)).</p>
+<p>That could cover this use case, along with a bunch of other use cases… so maybe,</p>
+<pre><code class="lang-auto">window.location.headers; 
+</code></pre>
+<p>Would cover all the use cases.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

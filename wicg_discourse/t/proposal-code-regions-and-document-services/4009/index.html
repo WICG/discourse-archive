@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Code Regions and Document Services</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Code Regions and Document Services</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2019-10-21</div>
+          <div class="post_content">
+<h2>Introduction</h2>
+<p>The ideas shared, below, pertain to connections between <a href="https://en.wikipedia.org/wiki/Literate_programming" rel="nofollow noopener">literate computer programming</a>, <a href="https://en.wikipedia.org/wiki/Automated_reasoning" rel="nofollow noopener">computer-aided reasoning</a>, <a href="https://en.wikipedia.org/wiki/Automated_theorem_proving" rel="nofollow noopener">computer-aided mathematical proofs</a>, <a href="https://en.wikipedia.org/wiki/Argument_technology" rel="nofollow noopener">computer-aided argumentation</a>, computer-aided <a href="https://en.wikipedia.org/wiki/Fact-checking" rel="nofollow noopener">fact-checking</a> and <a href="https://en.wikipedia.org/wiki/Computational_journalism" rel="nofollow noopener">computational journalism</a>.</p>
+<p>Web documents can include <em>code regions</em> for content in computer programming languages, knowledge representation languages, other machine-readable syntaxes, or natural languages. These code regions can connect to URL-addressable services to provide features including presenting users with visual hints and feedback. Such visual hints and feedback could pertain to the correctness of programming language portions, to epistemological factors pertaining to fact-checking, or to the verification and correctness of reasoning or argumentation.</p>
+<h2>Code Regions</h2>
+<p>Code regions are document elements which contain content in computer programming languages, knowledge representation languages, other machine-readable languages, or natural languages.</p>
+<p>Groups of code regions connect to URL-addressable services. A service processes the contents of a group of code regions and provides state information and informational messages for each code region in the group. Web documents can contain multiple groups of code regions, each connected to a service.</p>
+<p>Services can provide users with visual hints and feedback on code regions. Code regions connected to services pertaining to programming languages could provide users with help, information, warnings and errors. Code regions connected to services pertaining to fact-checking could provide users with a number of epistemological visual hints and feedback items. Code regions connected to services pertaining to automated reasoning or automated theorem proving could provide users with visual hints and feedback related to verification or correctness.</p>
+<p>The technical means of providing users with visual hints and feedback are cascading stylesheets utilizing an attribute-based style selector to vary styling based upon the value of a <code>state</code> attribute which is updated by a service. The possible values of the <code>state</code> attribute are service-specific.</p>
+<p>As styleable document elements, code regions can be either inline or block elements in documents, flowing within regions of text or positioned between regions of text.</p>
+<h2>Services</h2>
+<p>A service is any compiler, interpreter, runtime environment, automated theorem prover, automated reasoner, fact-checking system, or other software system which can, via a protocol, provide custom state data and messages for code regions.</p>
+<p>Services can be hosted locally on client machines, hosted on organizations’ servers, remote servers, or hosted on the cloud.</p>
+<p>A service receives a request which includes a grouping of code regions, the contents of those code regions, and it responds with state information for each code region, e.g. “ok” or “error”, and an array of pertinent messages for each code region.</p>
+<h2>Example <code>code-region</code> Element and Attributes</h2>
+<p>The following element and attributes are a preliminary rough-draft sketch provided for purposes of discussion and to expand upon and to clarify upon the ideas discussed above.</p>
+<p>In the following example, all of the <code>code-region</code> elements with a <code>group</code> attribute value of “1234” are gathered together for purposes of an XML-RPC request to a service at a relative URL “service.php”. The HTML/XHTML contents of the group’s <code>code-region</code> elements are included in the XML-RPC request to the service. The service is invoked whenever: (1) one of the code regions in the group changes, (2) the document sequence of code regions in the group changes, or (3) the group’s service is invoked via JavaScript. Whenever the service is successfully invoked, it responds with data which is utilized to automatically populate the <code>state</code> and <code>message</code> attributes of each <code>code-region</code> element in the group.</p>
+<pre><code class="lang-auto">&lt;code-region
+service="service.php"
+service-type="xml-rpc"
+group="1234"
+index="1"
+state="error"
+message="…"&gt;
+  …
+&lt;/code-region&gt;
+</code></pre>
+<p>The <code>service</code> attribute is for the URL of a services with which to process the contents of a sequence of code regions participating in a group.</p>
+<p>The <code>service-type</code> attribute is for extensibility and indicates the type of or protocol for the service, e.g. XML-RPC. The default value could be “xml-rpc”.</p>
+<p>The <code>group</code> attribute is a text string identifying which group that a code region is in. The text value should be unique to the document. A Web document can contain multiple groups and each can contain multiple code regions.</p>
+<p>The <code>index</code> attribute of a code region is the code region’s index within the sequence of code regions within a group. Its default value is obtained from auto-incrementing a counter for each code region of a group as it occurs in document order.</p>
+<p>The <code>state</code> attribute is for data returned by a service for a particular code region. It is a service-specific text value which is automatically placed into the attribute value for purposes of scripting or styling.</p>
+<p>For example,</p>
+<pre><code class="lang-css">code-region[state='ok']:after { content:url('ok.png'); }
+code-region[state='error']:after { content:url('error.png'); }
+</code></pre>
+<p>or</p>
+<pre><code class="lang-css">code-region[state='error'] { text-decoration:underline wavy red; }
+</code></pre>
+<p>The <code>message</code> attribute is for data returned by a service for a particular code region. Its value is an array of service-specific text strings. Where the state attribute could indicate an error, the value(s) of the message attribute might describe the error.</p>
+<p>The <code>content-editable</code> attribute is for indicating whether a user can edit the content of the code region.</p>
+<h2>The Advancement of Artificial Intelligence</h2>
+<p>With code regions, Web documents can make use of artificial intelligence services including, but not limited to: automated theorem provers, automated reasoners and fact-checking systems.</p>
+<p>Users could, for instance, author argumentative essays and utilize code regions, resembling literate computer programming, to show that their facts were checked and that their arguments were valid and machine-verifiable.</p>
+<p>The ease of authoring, viewing and sharing Web documents which utilize artificial intelligence services could invigorate artificial intelligence research and development.</p>
+<h2>Conclusion</h2>
+<p>The ideas shared, above, pertain to connections between <a href="https://en.wikipedia.org/wiki/Literate_programming" rel="nofollow noopener">literate computer programming</a>, <a href="https://en.wikipedia.org/wiki/Automated_reasoning" rel="nofollow noopener">computer-aided reasoning</a>, <a href="https://en.wikipedia.org/wiki/Automated_theorem_proving" rel="nofollow noopener">computer-aided mathematical proofs</a>, <a href="https://en.wikipedia.org/wiki/Argument_technology" rel="nofollow noopener">computer-aided argumentation</a>, computer-aided <a href="https://en.wikipedia.org/wiki/Fact-checking" rel="nofollow noopener">fact-checking</a> and <a href="https://en.wikipedia.org/wiki/Computational_journalism" rel="nofollow noopener">computational journalism</a>.</p>
+<p>Web documents can include code regions for content in computer programming languages, knowledge representation languages, other machine-readable syntaxes, or natural languages. These code regions can connect to URL-addressable services to provide features including presenting users with visual hints and feedback. Such visual hints and feedback could pertain to the correctness of programming language portions, to epistemological factors pertaining to fact-checking, or to the verification and correctness of reasoning or argumentation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2019-10-24</div>
+          <div class="post_content">
+<h2>Other Possible Markup</h2>
+<p>Here are some other preliminary markup ideas for the scenarios described above:</p>
+<ol>
+<li>Services could be declared or defined in the HTML document <code>head</code> element and reference <code>code-region</code> elements by id.</li>
+</ol>
+<pre><code class="lang-auto">&lt;html&gt;
+  &lt;head&gt;
+    &lt;service id="service1" service="service.php"&gt;
+      &lt;element xref="cr1" /&gt;
+      &lt;element xref="cr2" /&gt;
+      &lt;element xref="cr3" /&gt;
+    &lt;/service&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region id="cr1" state="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region id="cr2" state="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region id="cr3" state="ok"&gt;...&lt;/code-region&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<ol start="2">
+<li>Services could be declared or defined in the HTML document <code>head</code> element and select <code>code-region</code> elements by class name.</li>
+</ol>
+<pre><code class="lang-auto">&lt;html&gt;
+  &lt;head&gt;
+    &lt;service id="service1" service="service.php" select="thm-1" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region class="thm-1" state="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region class="thm-1" state="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region class="thm-1" state="ok"&gt;...&lt;/code-region&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<ol start="3">
+<li>
+<code>service</code> elements could be parents or ancestors of grouped <code>code-region</code> elements.</li>
+</ol>
+<pre><code class="lang-auto">&lt;html&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;service id="service1" service="service.php"&gt;
+        &lt;span&gt;...&lt;/span&gt;
+        &lt;code-region state="ok"&gt;...&lt;/code-region&gt;
+        &lt;span&gt;...&lt;/span&gt;
+        &lt;code-region state="ok"&gt;...&lt;/code-region&gt;
+        &lt;span&gt;...&lt;/span&gt;
+        &lt;code-region state="ok"&gt;...&lt;/code-region&gt;
+      &lt;/service&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2>Types of Services</h2>
+<p>Possible types of services include:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Spell_checker" rel="nofollow noopener">spelling checking</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Grammar_checker" rel="nofollow noopener">grammar checking</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Parsing" rel="nofollow noopener">syntax checking</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Software_verification_and_validation" rel="nofollow noopener">software verification and validation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fact-checking" rel="nofollow noopener">fact-checking</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Proof_assistant" rel="nofollow noopener">proof checking</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Automated_reasoning" rel="nofollow noopener">reasoning verification</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Argument_technology" rel="nofollow noopener">argumentation verification</a></li>
+</ul>
+<h2>Messages and JavaScript</h2>
+<p>In addition to the possibility of setting a <code>message</code> attribute in a manner pertaining to the value of the <code>state</code> attribute, implementation possibilities include populating an array of JavaScript message objects on each <code>code-region</code> element by processing services’ responses. A message, then, could be more than a text string; each message value could deserialize to a JavaScript object with multiple fields or properties. A message could, for instance, contain a <a href="https://dom.spec.whatwg.org/#concept-range">selection range</a>.</p>
+<p>With JavaScript messages available to place on <code>code-region</code> elements, and with some other JavaScript processing, more types of services become possible.</p>
+<ul>
+<li>spelling recommendation</li>
+<li>grammar recommendation</li>
+<li>syntax recommendation</li>
+<li>other content recommendation</li>
+<li><a href="https://en.wikipedia.org/wiki/Compiler#Front_end" rel="nofollow noopener">compilers</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Interpreter_(computing)" rel="nofollow noopener">interpreters</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computer_algebra_system" rel="nofollow noopener">computer algebra systems</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hoverbox" rel="nofollow noopener">displaying relevant messages when users hover over content</a></li>
+</ul>
+<h2>
+<code>code-region</code> Content Replacement</h2>
+<p>If services can replace the HTML contents of <code>code-region</code> elements with HTML content provided in services’ responses, then other types of services become possible:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Syntax_highlighting" rel="nofollow noopener">syntax highlighting</a></li>
+</ul>
+<h2>Conclusion</h2>
+<p>Hopefully, the lists above show the utility of code regions and services. There are probably other types of services to be considered as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2019-10-26</div>
+          <div class="post_content">
+<h2>Multiple Document Services</h2>
+<p>One might observe that multiple document services can be defined in Web documents and that they could reference or select overlapping sets of <code>code-region</code> elements. One might, for example, desire to use both a spell checker and grammar checker service on the same document content.</p>
+<p>In the approach described, above, <code>state</code> attributes are populated by document services for purposes of scripting and styling. Some complexity would arise when populating <code>state</code> attributes on <code>code-region</code> elements with service-specific values from multiple document services.</p>
+<p>A solution is to specify which HTML attributes will be used for service-specific state data per document service. With respect to messages pertaining to state, text-string messages or JavaScript message objects could be interwoven into arrays or placed into other data structures which indicate which document services that sets of messages are from.</p>
+<p>Hopefully, the following examples can clarify:</p>
+<ol>
+<li>Services could be declared or defined in the HTML document <code>head</code> element and reference <code>code-region</code> elements by id.</li>
+</ol>
+<pre><code class="lang-auto">&lt;html&gt;
+  &lt;head&gt;
+    &lt;service id="service1" service="service1.php" state="state1"&gt;
+      &lt;element xref="cr1" /&gt;
+      &lt;element xref="cr2" /&gt;
+      &lt;element xref="cr3" /&gt;
+    &lt;/service&gt;
+    &lt;service id="service2" service="service2.php" state="state2"&gt;
+      &lt;element xref="cr3" /&gt;
+    &lt;/service&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region id="cr1" state1="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region id="cr2" state1="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region id="cr3" state1="ok" state2="ok"&gt;...&lt;/code-region&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<ol start="2">
+<li>Services could be declared or defined in the HTML document <code>head</code> element and select <code>code-region</code> elements by class name.</li>
+</ol>
+<pre><code class="lang-auto">&lt;html&gt;
+  &lt;head&gt;
+    &lt;service id="service1" service="service1.php" state="state1" select="thm-1" /&gt;
+    &lt;service id="service2" service="service2.php" state="state2" select="qed" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region class="thm-1" state1="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region class="thm-1" state1="ok"&gt;...&lt;/code-region&gt;
+      &lt;span&gt;...&lt;/span&gt;
+      &lt;code-region class="thm-1 qed" state1="ok" state2="ok"&gt;...&lt;/code-region&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<ol start="3">
+<li>As an aside, the approach facilitates nesting <code>service</code> elements for approach 3. <code>service</code>  elements could be parents or ancestors of grouped  <code>code-region</code>  elements.</li>
+</ol>
+<pre><code class="lang-auto">&lt;html&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      &lt;service id="service1" service="service1.php" state="state1"&gt;
+        &lt;span&gt;...&lt;/span&gt;
+        &lt;code-region state1="ok"&gt;...&lt;/code-region&gt;
+        &lt;span&gt;...&lt;/span&gt;
+        &lt;code-region state1="ok"&gt;...&lt;/code-region&gt;
+        &lt;span&gt;...&lt;/span&gt;
+        &lt;service id="service2" service="service2.php" state="state2"&gt;
+          &lt;code-region state1="ok" state2="ok"&gt;...&lt;/code-region&gt;
+        &lt;/service&gt;
+      &lt;/service&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2>Conclusion</h2>
+<p>Specifying which HTML attributes are to be populated by document services facilitates multi-service scenarios, e.g. both spell checking and grammar checking, and styling and scripting based on state data from multiple document services.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2019-10-27</div>
+          <div class="post_content">
+<h2>Well-known Document Services</h2>
+<p>It may be the case that certain document services are well-known, e.g. <a href="https://en.wikipedia.org/wiki/Spell_checker" rel="nofollow noopener">spell checking</a>, and often available client-side or at a location known to or configured on a Web browser.</p>
+<p>For these scenarios, <a href="https://en.wikipedia.org/wiki/Uniform_Resource_Name" rel="nofollow noopener">uniform resource names</a> could refer to well-known document services and could be provided instead of URL’s. Web browsers could, then, recognize the uniform resource names of well-known document services to encapsulate client-local document services or to route to document services at configured locations.</p>
+<p>For example:</p>
+<pre><code class="lang-auto">&lt;service id="service1" service="urn:service:spell-checker:en-US"&gt;
+  &lt;element xref="cr1" /&gt;
+&lt;/service&gt;
+</code></pre>
+<p>or</p>
+<pre><code class="lang-xml">&lt;service id="service1" service="urn:service:spell-checker:en-US" select="spchk" /&gt;
+</code></pre>
+<p>would intend for Web browsers to utilize a well-known document service, in this case <a href="https://en.wikipedia.org/wiki/Spell_checker" rel="nofollow noopener">spell checking</a>, available either client-side or at a location known to or configured on a Web browser.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

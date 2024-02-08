@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>RFC: Proposal for new Web Payments API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">RFC: Proposal for new Web Payments API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/736_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zkoch</div>
+          <div class="creation_date">2015-09-16</div>
+          <div class="post_content">
+<p>As a response to the work that is going on in the Web Payments IG and the pending <a href="http://www.w3.org/2015/06/payments-wg-charter.html">WG charter proposal</a>, we’ve put together an explainer doc that proposes a new payments API in the browser, paymentRequest.</p>
+<p>The ultimate goal of this proposed API is to fundamentally improve the security, reliability, and user experience of buying things on the web.</p>
+<p>One note is that this proposal contains an option for handling addresses and shipping. This is not currently a part of the proposed charter, but we think it’s a critical component of the checkout flow, so it’s included in. It is possible to remove shipping from the proposal without modifying the underlying API.</p>
+<p>While there are still many details to be worked out (this is not meant to be a full spec), we’d welcome any thoughts or comments on the general approach.</p>
+<p>This explainer doc is also available on Github: <a href="https://github.com/zkoch/paymentrequest/blob/master/explainer.md" rel="nofollow noopener">https://github.com/zkoch/paymentrequest/blob/master/explainer.md</a></p>
+<p>===</p>
+<h2>Better Web Payments</h2>
+<h3>What is this?</h3>
+<p>This is a proposal for a new web API that will allow merchants (i.e. websites selling physical or digital goods) to easily accept payments from multiple payment schemes and instruments with minimal integration.</p>
+<p>This proposal attempts to align itself with the chartered scope of the proposed Web Payment Interest Group, and the expectation is to offer this document as input to the discussions of that Working Group once it has launched.</p>
+<h3>Why do we care?</h3>
+<p>Buying things on the web, particularly on mobile, is a frustrating experience for users. Every website has its own flow and its own validation rules, and most require users to manually type in the same set of information over and over again. Likewise, it is difficult and time consuming for developers to create good checkout flows that support various payment schemes.</p>
+<p>We can fix this by allowing the User-Agent (e.g. browsers) to act as an <strong>intermediary</strong> between the three key parties in every transaction: The Merchant (e.g. an online web store), the Buyer (e.g. the user buying from the online web store), and the Payment Instrument (e.g. credit card, Bitcoin, Apple Pay). Information necessary to process and confirm a transaction is passed between the Payment Instrument and the Merchant via the User-Agent with the Buyer confirming and authing as necessary across the flow.</p>
+<p>In addition to better, more consistent user experiences, this also enables websites to take advantage of more secure payment schemes (e.g. tokenization and system-level authentication) that are not possible with standard JavaScript libraries. This reduces liability for the merchant and helps protect sensitive user information.</p>
+<h3>Goals</h3>
+<ul>
+<li>Allow the user-agent to act as intermediary between merchants, users, and payment instruments</li>
+<li>Standardize (to the extent that it makes sense) the communication flow between a merchant, user-agent, and payment instrument</li>
+<li>Easy installation and removal of payment instruments with User-Agents</li>
+<li>Allow payment instruments to bring more secure payment methods to the web</li>
+</ul>
+<h3>Non-goals</h3>
+<ul>
+<li>Not trying to create a new payment scheme</li>
+<li>Not trying to integrate directly with payment processors</li>
+</ul>
+<h3>Payment Request Lifecycle</h3>
+<ol>
+<li>Merchant requests payment with supported payment instrument(s)</li>
+<li>UA presents to user a list of payment instruments accepted by merchant and installed by user</li>
+<li>User selects payment instrument of choice and, if shipping address is requested, selects or inputs a shipping address.</li>
+<li>Total transaction amount and other necessary data is passed to payment instrument for further processing.</li>
+<li>Payment instrument returns back relevant data (e.g. credit card number, token, transaction ID) after successful authorization or transaction to UA</li>
+<li>UA passes data back to merchant</li>
+<li>Merchant independently finalizes and confirms transaction</li>
+</ol>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/966c7c627601c72d945541b931996f351894dae9" href="//discourse.wicg.io/uploads/default/original/1X/966c7c627601c72d945541b931996f351894dae9.png" title="flow_diagram.png"><img data-small-upload="//discourse.wicg.io/uploads/default/optimized/1X/966c7c627601c72d945541b931996f351894dae9_2_10x10.png" height="500" src="//discourse.wicg.io/uploads/default/optimized/1X/966c7c627601c72d945541b931996f351894dae9_2_611x500.png" srcset="//discourse.wicg.io/uploads/default/optimized/1X/966c7c627601c72d945541b931996f351894dae9_2_611x500.png, //discourse.wicg.io/uploads/default/original/1X/966c7c627601c72d945541b931996f351894dae9.png 1.5x, //discourse.wicg.io/uploads/default/original/1X/966c7c627601c72d945541b931996f351894dae9.png 2x" width="611"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">flow_diagram.png</span><span class="informations">694×567 62.8 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div> </p>
+<p>A payment instrument can fundamentally take one of two actions: 1.) It can return back data necessary to finalize the transaction (but the transaction remains non-finalized); or 2.) It can complete the transaction and return back proof of the completed transaction.</p>
+<p>An example of 1 would be a digital scheme like Apple Pay. Apple pay returns back data (e.g. a cryptogram) that the merchant must then submit to their processing partner to complete the transaction. An example of 2 might be a push payment like Bitcoin, where the payment instrument is waiting to receive notification of successful transfer of funds.</p>
+<p><strong>From a user perspective:</strong></p>
+<blockquote>
+<p>Alice has added a few things to her shopping cart and is ready to check out. She clicks the buy button, which causes the website to request payment via the browser paymentRequest API. The website tells the API which payment instruments it accepts and the browser asks the user to pick which supported instrument Alice wants to use to pay (e.g. Visa or Bitcoin). If the merchant requests shipping information, Alice also selects a shipping address from locations already stored in the browser or inputs a new one. She submits all of this to the browser which then sends the transaction details (e.g. total amount) to her selected payment instrument. The payment instrument then authorizes or confirms the transaction and passes back details to the UA, which then passes them back to the merchant’s website. The website then confirms to Alice that her order has been placed. Sometimes Alice might need to give the website or payment instrument more information in order to complete the process, but in nearly every case this flow will be faster and easier than today’s checkout systems.</p>
+</blockquote>
+<h3>Delineation of Roles</h3>
+<p><strong>Merchant:</strong> Responsible for calling <code>paymentRequest</code> on a user action. Must be able to handle and parse response from supported payment instruments.</p>
+<p><strong>User-Agent:</strong> Acts as a selection agent for various user-installed payment instruments. Handles payment instrument selection and may handle address selection and input if requested by merchant. Responsible for passing transaction details between merchant and payment instrument.</p>
+<p><strong>Payment Instrument:</strong> Fulfills a <code>paymentRequest</code> and passes back data a merchant can use to either finalize a transaction or prove a transaction has already been completed.</p>
+<h3>Basic Flow</h3>
+<p>To get started, a merchant creates a payment request. A payment request tells the browser what instruments or schemes are accepted by the merchant, the amount of the transaction, and any other necessary scheme-specific information that may be necessary to process the transaction. The standard message passing format between entities is JSON.</p>
+<pre><code class="lang-auto">var supportedInstruments = ["visa", "bitcoin", "bobpay.com"];
+
+var details = {
+    "amount": 5500, //cents
+    "currencyCode": "USD",
+    "countryCode": "US",
+    "requestShipping": true,
+    "recurringCharge": false
+};
+
+// Optional identities for schemes/instruments
+var schemeData = {
+    "bobpay.com": {
+        "merchantIdentifier": "XXXX",
+        "bobPaySpecificField": true
+    },
+    "bitcoin": {
+        "address": "XXXX"
+    }
+};
+
+var promise = paymentRequest(supportedInstruments, details, schemeData);
+
+promise.then(function(requester) {
+    requester.addEventListener("shippingAddressChange", function () {
+        var newAddress = requester.userAddress;
+        // Return back new shipping options
+        requester.updateShippingOptions([...]);
+    });
+    return requester.instrumentResponse; //always necessary
+})
+.then(function(instrumentResponse) {
+    console.log("hurray, valid response from ", instrumentResponse.instrumentName, instrumentResponse.instrumentDetails)''
+})
+.catch(function(err) {
+	// Typically no available payment instruments or error on instrument side
+   console.error("Uh oh, something bad happened", err.message);
+});
+</code></pre>
+<p>The <code>details</code> object is general to all payments. Any instrument-specific data is passed in as an optional object (<code>schemeData</code> in above example).</p>
+<p>The User-Agent presents to the user the intersection of merchant-supported payment instruments and user-installed payment instruments. When the user selects a payment instrument, the User-Agent passes both <code>details</code> and instrument-specific data from <code>schemeData</code> off to selected intrument.</p>
+<p>Restrictions:</p>
+<ul>
+<li>Page calling <code>paymentRequest</code> must be HTTPS</li>
+<li>Certain instruments may have their own restrictions</li>
+</ul>
+<h3>Events</h3>
+<p><strong><code>shippingAddressChange</code></strong>:</p>
+<p>When a user selects or inputs a new shipping address, the website may want to listen for this event in order to update available shipping options.</p>
+<h3>Methods</h3>
+<p>Both of these methods are available on the returned object from the initial <code>paymentRequest</code> call.</p>
+<p><code>requester.updateShippingOptions</code>: Updates available shipping options. Typically called as a result of a shipping address change.</p>
+<p><code>requester.cancel</code>: Cancels the payment request.</p>
+<h3>Errors</h3>
+<p><code>NoAvailablePaymentInstruments</code></p>
+<p><code>UserCanceledRequest</code></p>
+<p><code>NoShippingOptionsProvided</code></p>
+<h3>Shipping</h3>
+<p>Physical good transactions are the majority of e-commerce transactions on the mobile web. Merchants need a way to pass different shipping options into the paymentRequest. These options may be address-dependent, so if a user selects or adds a new address in the middle of a request, the merchant may need to update shipping options and prices. Default shipping options can optionally be passed into the initial <code>paymentRequest</code> as <code>defaultShippingOptions</code> in the <code>details</code> object.</p>
+<p>Shipping options and address selection/input is handled by the User-Agent. The payment instrument is not privy to shipping information.</p>
+<p>If <code>requestShipping</code> is enabled, but the merchant hasn’t supplied shipping options at the completion of the flow, the UA should throw a <code>NoShippingOptionsProvided</code> error.</p>
+<blockquote>
+<p>OPEN QUESTION: Should the UA be able to limit the amount of time a website has to respond with updated shipping options after a shippingAddressChange event? This would be to prevent a hanging UI since new shipping options might be necessary to complete a transaction. A .isExpired() function could be in the requester object.</p>
+</blockquote>
+<pre><code class="lang-auto">
+var shippingOptions = [
+    {
+        label: "Standard shipping",
+        identifier: "standardShipping",
+        description: "Arrives in 6-8 weeks",
+        amount: 500,
+    },
+    {
+        label: "2-day shipping",
+        identifier: "twoDayShipping",
+        description: "Arrives in 2 business days",
+        amount: 1000
+    }
+];
+
+requester.addEventListener("shippingAddressChange", function() {
+    var newAddress = requester.newAddress;
+    console.log(newAddress.street, newAddress.city, newAddress.state, newAddress.zip, newAddress.country);
+    // Return back new shipping options
+	 requester.updateShippingOptions(shippingOpions);
+});
+</code></pre>
+<h3>Standardizing Common Payment Instruments</h3>
+<p>The overwhelming majority of transactions currently taking place on the web use a credit or debit card. Since it’s possible for multiple payment instruments to return back credit or debit card numbers, we should standardize the <code>instrumentResponse</code> object for these transactions. The browser should verify a valid card numbers with the <a href="https://en.wikipedia.org/wiki/Luhn_algorithm" rel="nofollow noopener">Luhn check</a>.</p>
+<p><strong>Credit or debit card response:</strong></p>
+<pre><code class="lang-auto">{
+    "instrumentType": "CreditCard",
+    "instrumentName": "Visa",
+    "instrumentDetails": {
+        "cardNumber": "1234123412341234",
+        "nameOnCard": "Bob J. Paymentman",
+        "expMonth": "12",
+        "expYear": "2016",
+        "cvv2": "123"
+    }
+}
+</code></pre>
+<h3>Registering Payment Instruments</h3>
+<p>Web site owners can declare they have a supported payment instrument via their <a href="https://developers.google.com/web/updates/2014/11/Support-for-installable-web-apps-with-webapp-manifest-in-chrome-38-for-Android?hl=en" rel="nofollow noopener">Manifest</a>. User-Agents, upon seeing this declaration, can present to the user the option of installing the payment instrument.</p>
+<p>Payment instrument installation is platform-dependent, and the manifest can hint at the most appropriate form of installation for a given platform.</p>
+<pre><code class="lang-auto">"payment_instrument": {
+    "url": "bobspayments.com"
+    "label": "Bob\'s Payments",
+    "description": "Bob\'s Payments will make all your payment dreams come true",
+    "embeddable_url": "https://bobspayments.com/payment-request/",
+    "related_applications": [
+      {
+        "platform": "play",
+        "url": "https://play.google.com/store/apps/details?id=com.bobspayments.app1",
+        "id": "com.example.app1"
+      }, {
+        "platform": "itunes",
+        "url": "https://itunes.apple.com/app/bobspayments/id123456789",
+      }]
+}
+</code></pre>
+<p>This spec assumes some mechanism to securely verify a relationship between a website and a native app (e.g. <a href="http://developer.android.com/preview/features/app-linking.html" rel="nofollow noopener">Android App Links</a>).</p>
+<h3>Web &amp; Native</h3>
+<p>User-Agents are free to determine the preferred payment instrument form for a given platform. For example, User-Agents on mobile devices may require that payment instruments be installed as native applications.</p>
+<h3>Nomenclature</h3>
+<p>“Payment instrument” can be a loaded term, and the line between instrument and scheme, particulary in this document, is a blurry one. For the sake of simplicity, I have referred to any thing the user selects and uses to pay for something as a ‘payment instrument’.</p>
+<p>This has, of course, some obvious weaknesses. The primary weakness being some some “instruments” actually have instruments within them. One example of this would be Apple Pay. A user might say, “I want to pay with Apple Pay,” but in reality, they are selecting a payment instrument within Apple Pay to pay with (e.g. A Bank of America Visa Card).</p>
+<p>In the future, we may want to better align these terms with the terms defined in the Web Payments Working Group Charter.</p>
+<h3>Open Questions</h3>
+<ul>
+<li>How can we let merchants know if a payment instrument is available before calling paymentRequest()?</li>
+<li>What is the best way to standardize on desktop? How much should we standardize?</li>
+<li>Do we support general schemes (e.g. ACH) or only particular implementations of those schemes (e.g. Dwolla)?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2015-09-17</div>
+          <div class="post_content">
+<p><strong>Shipping</strong></p>
+<p>Payments may be for virtual goods or not related to a purchase at all (a donation for example) so I’d be loathe to make shipping a tightly integrated part of payments.</p>
+<p>Why not decouple shipping entirely and make it a stand-alone function on the <code>navigator.payments</code> object that can be called by the merchant prior to calling <code>paymentRequest()</code>?</p>
+<p><strong><em>Example Psuedo-code</em></strong></p>
+<pre><code>var shipping = navigator.payments.getShippingDetails(shippingOptions);
+
+//Calculate payment options based on shipping details...
+
+var payment = navigator.payments.requestPayment(...);
+</code></pre>
+<p>This would allow implementors to spec out the getShippingDetails function in a separate (or future version of this) recommendation.</p>
+<p><strong>Matching Payment Instruments</strong></p>
+<p>I think this proposal takes an oversimplified view of this process. It’s possible that the entire terms of the payment will depend upon the instrument used. An obvious example is, if the payment instrument is a Bitcoin wallet how does it pay USD$10?</p>
+<p>Also, by trying to achieve both the negotiation of terms (selection of a payment instrument + agreement by the user of the terms of the sale) and execution of the payment in a single request response flow you severely limit the possibilities for this process to evolve and incorporate features such as loyalty programs, coupons and so on in the future.</p>
+<p>The proposed flow in the <a href="http://www.w3.org/2015/06/payments-wg-charter.html#payment_flow">Web Payments WG draft charter</a> intentionally separates payment initiation from execution so that the merchant still controls the flow after the user has selected their payment instrument.</p>
+<p>If the merchant is happy to proceed then, depending on the instrument, they will either begin processing the payment (in the case where the instrument is processed by the merchant’s payment provider - e.g. a card) or request the payment instrument to complete the payment (in the case where this is the way the instrument operates - e.g. a Bitcoin wallet)</p>
+<p>Bare in mind that there are jurisdictions where the law requires users to be prompted to both select the payment instrument and confirm the final terms. i.e. There must be two distinct user actions.</p>
+<p><strong>Integration between the browser and the payment instrument</strong></p>
+<p>This is one of the most challenging aspects of this problem domain. Do we want browsers to have to build in the ability to “host” payment instruments? If not, then do they need to at least be able to execute the discovery process (finding the intersection of supported and available instruments) before the request is passed on to the appropriate instrument.</p>
+<p>What form would that instrument store take anyway since an instrument (by the implied definition in this charter) contains business logic that must be executed (i.e. it is not simply data)?</p>
+<p><strong><em>Mobile Platforms</em></strong></p>
+<p>The mobile pattern you suggest is well understood today where the browser (or any other app) can hand-off an “intent” (to use the Android SDK terminology) to the mobile platform which will present the user with a chooser if there are multiple apps (payment instruments) that can handle the action otherwise it simply launches the app and passes it the provided intent object (data and a handle back to the calling app). In Android this would involve the browser exploiting Implicit Intents and in iOS 8 and above App Extensions for example.</p>
+<p>The challenge here is that the intent “PAY” is too general. The user may be prompted with a wide selection of installed instruments, many of which are not supported by the merchant, because the intent filters are not designed for complex matching against multiple attributes. This would result in a proliferation of payment instruments so that each possibility can be uniquely indexed (i.e. Instead of “visa” you’d need to have “visa-USD”, “visa-ZAR” etc.</p>
+<p>I wouldn’t want to maintain the manifest file of a mobile app that functions as a wallet for potentially hundreds of instrument types and supporting multiple currencies.</p>
+<p>For Android one may be able to use the URI filter element to achieve what is required but I’d be keen to see that tested before we accept that it’s a workable solution and I’m not even going to try and speculate on whether iOS would ever add a <strong>Pay</strong> App Extension.</p>
+<p>However it is ultimately done, using the current intent filters for payment instrument discovery feels hacky. They were designed to filter on media types, actions and origins.</p>
+<p>I think a thorough examination of the integration options on all mobile platforms is required before we just assume that the platform can handle the payment instrument discovery process. I suspect they will all need some tweaks but this does feel like the right pattern to use.</p>
+<p><strong><em>Native Payment Instruments on the Desktop</em></strong></p>
+<p>As you suggest, this problem is not as elegantly handled on desktop platforms…</p>
+<p>In a recent thread on the <a href="https://lists.w3.org/Archives/Public/public-webpayments/2015Sep/0012.html">Web Payments Community Group</a> I suggested that we consider dealing with this in a similar way to how it is handled by the <a href="http://www.w3.org/TR/2015/PR-notifications-20150910/#displaying-notifications">Web Notifications API</a> which simply says:</p>
+<blockquote>
+<p>Display notification on the device (e.g. by making the appropriate notification platform API call).</p>
+</blockquote>
+<p>So our recommendation may be as simple as:</p>
+<blockquote>
+<p>Get user selection of payment instrument (e.g. by passing the payment request to the appropriate platform API call).</p>
+</blockquote>
+<p>This would imply that each browser should understand how to translate the requests to the browser API into a request to the platform’s payment API.</p>
+<p>On the desktop, to my knowledge, there are no platforms with native payments APIs so this would be an opportunity for the platform vendors to develop such an API that is consistent in terms of the logical messages and flow with the API in the browser making the integration easy and the logical messages re-usable for other cross-process payment requests on the platform. Feels like a win-win for everyone but would require some commitment from desktop platform vendors (who are fortunately mostly browser vendors too).</p>
+<p>On mobile platforms this approach would likely translate to something like the pattern described above.</p>
+<p>In both cases it seems that most (if not all) platforms will require some changes to accommodate payments. The mobile platforms may have the least to do but they all seem to require some change.</p>
+<p><strong><em>Web-based payment instruments</em></strong></p>
+<p>An alternative to native integration would be to allow the browser to POST the request object to a native payment instrument that is listening on a custom port on localhost. (A pattern already used by many native/Web hybrid applications like Dropbox etc)</p>
+<p>The challenge of maintaining the list of available instruments and the URL of their local API endpoints then lies with the browser that must do the payment instrument discovery/matching and then POST the request to the appropriate instrument.</p>
+<p>Obviously this wouldn’t be the ideal pattern for mobile.</p>
+<p>When using this pattern we need to figure out; how does the browser present the payment instrument UI if it is required for authentication, confirmation or some other user interaction? A new browser window/tab that operates like a dialogue? i.e. It accepts interactions then posts the payment response (instrument selection) to another browser API which closes the window and returns that response to the original calling merchant website.</p>
+<p>Enabling something like this would also enable Web-only payment instruments which I think is important. We can’t write a recommendation that forces anyone wanting to provide a payment instrument to write native applications for every platform they want to support. So even if we did support native integration, a mechanism for the browser to act as intermediary between the merchant and a Web-based payment instrument seems important anyway.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/736_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zkoch</div>
+          <div class="creation_date">2015-09-17</div>
+          <div class="post_content">
+<p>Thanks for the great comments and questions. Don’t have answers to everything yet, so hope others will chime in. But I’ll try to address the major issues below:</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Payments may be for virtual goods or not related to a purchase at all (a donation for example) so I’d be loathe to make shipping a tightly integrated part of payments.</p>
+<p>Why not decouple shipping entirely and make it a stand-alone function on the navigator.payments object that can be called by the merchant prior to calling paymentRequest()?</p>
+</blockquote>
+</aside>
+<p>I think the proposal supports the non physical good use case. You can just set requestShipping to false in the config object. Then you just have a simple payment system without shipping.</p>
+<p>The reason for not making it separate is based on UX. We want to create a streamlined checkout experience, and this means coupling shipping and payment information (not always, but frequently enough). One example of the experience that this affords is Pinterest’s new <a href="https://about.pinterest.com/en/buy-it-pinterest" rel="nofollow noopener">Buy button</a>. It’s tightly coupled with Apple Pay at this point, but it’s a great example of an experience that would be great on the web, but wouldn’t be possible unless we couple shipping with the API.</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>I think this proposal takes an oversimplified view of this process. It’s possible that the entire terms of the payment will depend upon the instrument used. An obvious example is, if the payment instrument is a Bitcoin wallet how does it pay USD$10?</p>
+</blockquote>
+</aside>
+<p>You may be right on the oversimplification bit. I could imagine one solution being that you map amounts to currency codes in the configuration, e.g:</p>
+<pre><code class="lang-auto">{
+     "USD": "10.00",
+     "BTC": "0.00044"
+{
+</code></pre>
+<p>But my preferred approach is that all of this is handled by the chosen payment instrument. A Bitcoin user, for example, could install Coinbase as their preferred payment instrument for BTC transactions. Coinbase takes a USD amount and converts it to BTC at the current exchange rate.</p>
+<p>But the fundamental idea here is that the API should be simple in nature. We want it to be as easy as possible for merchants to adopt. This proposal may indeed be too simple, so happy to expand as necessary, but I’m hesitant to move in a much more complex direction.</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Also, by trying to achieve both the negotiation of terms (selection of a payment instrument + agreement by the user of the terms of the sale) and execution of the payment in a single request response flow you severely limit the possibilities for this process to evolve and incorporate features such as loyalty programs, coupons and so on in the future.</p>
+</blockquote>
+</aside>
+<p>I am quite skeptical that the browser can or should be trying to standardize things like loyalty programs, coupons, etc. I think these things are best handled by the merchant, and I’m hesitant to overcomplicate the API at this point.</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Bare in mind that there are jurisdictions where the law requires users to be prompted to both select the payment instrument and confirm the final terms. i.e. There must be two distinct user actions.</p>
+</blockquote>
+</aside>
+<p>I think this is what is being proposed. Or at the very least, it doesn’t preclude this. The UI is up to the browser, but I would imagine a UI where you select a payment instrument and see the final amount of the transaction within the same UI. So being passed off into the payment instrument is the final step of the process. It gets confusing to talk about this because it really does become payment instrument specific, but I don’t see any issues here.</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Integration between the browser and the payment instrument</p>
+</blockquote>
+</aside>
+<p>You pose a lot of great questions that I don’t have full answers for, so I’m glad you brought them up. I agree this is one of the thornier areas. I don’t think that browsers should have to “host” payment instruments, but I do think browsers should have the ability to “register” payment instruments. That registration process, though, would need to differ by platform.</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>What form would that instrument store take anyway since an instrument (by the implied definition in this charter) contains business logic that must be executed (i.e. it is not simply data)?</p>
+</blockquote>
+</aside>
+<p>I can imagine a couple of scenarios. The most likely is that the browser keeps a record of stored/installed/registered payments instruments and the domain associated with it. The browser can then pull necessary information from that domain’s Manifest file (probably with some caching) and use that. This starts to get more into the realm of how web-based payments work, which I’ll comment more on below.</p>
+<p>Another option would be to have instruments installed as extensions. I’m not as pro this idea because it means instruments have to now build extensions for different platforms, but it does have some big advantages.</p>
+<p>In reference to your last point, I think you could think about many of these “payment instruments” as being synonymous with the definition of a “digital wallet” in the proposed WG charter. I avoided this nomenclature in this proposal because it gets confusing, but perhaps I just made the problem worse. <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Mobile Platforms</p>
+</blockquote>
+</aside>
+<p>I don’t think we can standardize how this is going to work on mobile platforms. This is all going to be platform dependent. That said, I agree with your overall assessment of the difficulties we face here. But I think it’s going to have to be up to platform owners to determine the best way to respect the specification and outline how registration works on their particular platform.</p>
+<p>I think your approach for defining native payment instruments on the desktop could also work here, i.e:</p>
+<blockquote>
+<p>Get user selection of payment instrument (e.g. by passing the payment request to the appropriate platform API call).</p>
+</blockquote>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Native Payment Instruments on the Desktop</p>
+</blockquote>
+</aside>
+<p>This isn’t something I’ve really considered, and I’m not sure how critical of a use case this it. Do people want/need to have native payment instruments installed onto their desktops/laptops? I feel like I may have misunderstood what you’re saying, so please feel free to correct me if I’m wrong in my understanding.</p>
+<aside class="quote" data-post="2" data-topic="1100">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>Web-based payment instruments</p>
+</blockquote>
+</aside>
+<p>Why not take advantage of what the web has already built and use iFrames and postMessage to do this? In the Manifest file I define an “embeddable_url” that could be embedded by the browser into some sort of WebView contained within native browser UI. That seems the cleanest way to handle this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/726_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adrianba</div>
+          <div class="creation_date">2015-09-23</div>
+          <div class="post_content">
+<p>We (Microsoft) are definitely interested in discussing this proposal in the WICG before it gets to the WG.</p>
+<p>I submitted a <a href="https://github.com/zkoch/paymentrequest/pull/4">PR</a> with a few minor suggestions and opened a couple of issues for discussion. We’re still reviewing and I will likely have a few more comments soon.</p>
+<p>It would be great to move this into the WICG repo on GitHub.</p>
+<p>Cheers,</p>
+<p>Ade.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-09-24</div>
+          <div class="post_content">
+<p>I’d be happy to assist moving the repo to be under the WICG org</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/736_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zkoch</div>
+          <div class="creation_date">2015-09-24</div>
+          <div class="post_content">
+<p>That would be great. Is there anything you need from me? Or is it as simple as forking the repo?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-09-25</div>
+          <div class="post_content">
+<p><span class="mention">@zkoch</span>: Sent you an invite to join the WICG GitHub organization as part of the new “Web Payments” team. If you would give me ownership of the repo, I could then move it into the org, under the team’s administration.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/736_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zkoch</div>
+          <div class="creation_date">2015-09-25</div>
+          <div class="post_content">
+<p>Just a quick note that we’ve transferred the repo into the WICG Github org under the “Web Payments” team. The old URL will redirect to the right place, but here’s the new location: <a href="https://github.com/WICG/paymentrequest" rel="nofollow noopener">https://github.com/WICG/paymentrequest</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/754_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">greenido</div>
+          <div class="creation_date">2015-10-08</div>
+          <div class="post_content">
+<p>Hey <span class="mention">@zkoch</span> - Do you wish us (=the passion developers who wish to see payments done <strong>right</strong> on the web) keeping the discussion here or to open issues in the repo?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/736_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zkoch</div>
+          <div class="creation_date">2015-10-08</div>
+          <div class="post_content">
+<p>Good question. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> I would say the Github repo is probably preferred, that way we can more easily track issues and changes. That said, I can see the forum being a better venue for more generic conversations around the web and payments (e.g. “Is this really the right approach?” or “Have you considered…”)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Getting original size of image synchronously (naturalWidth/…Height can’t be used for this anymore)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Getting original size of image synchronously (naturalWidth/…Height can’t be used for this anymore)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-10-29</div>
+          <div class="post_content">
+<h2>TL;DR</h2>
+<p>There should be a way in JS to (synchronously) get real width and height of an already loaded image not affected by <code>width</code> and <code>height</code> attributes or by <em>anything else</em>.</p>
+<p>The <code>naturalWidth</code> and <code>naturalHeight</code> properties cannot be used for that anymore since those are now affected by irreversible inconsistent implicit calculations for unknown practical purpose.</p>
+<h2>Details</h2>
+<p>The <code>naturalWidth</code> and <code>naturalHeight</code> properties were <strong>already</strong> providing exactly this ability until it has been decided by WHATWG that a sort of correction should be applied to those values by dividing in corresponding pixel ratio.</p>
+<p>The correction is applied to images specified via the <code>srcset</code> attribute. Even worse, resulting values are inaccurate and therefore original values cannot even be restored as is.</p>
+<p>For example, for the <strong>same</strong> 100×100 image:</p>
+<pre><code>&lt;img    src="example.png"    alt="" /&gt;
+&lt;img srcset="example.png 3x" alt="" /&gt;
+</code></pre>
+<p><code>naturalWidth</code> is <strong><code>100</code></strong> in the first case and <strong><code>33</code></strong> in the second one.</p>
+<p>We could check if the image has the <code>srcset</code> attribute and multiply (or not) <code>naturalWidth</code> / <code>naturalHeight</code> by corresponding pixel ratio conditionally. But:</p>
+<ul>
+<li>
+<p>to determine the pixel ratio, we are forced to parse <code>srcset</code> (oh my…) (please correct me if I’m wrong);</p>
+</li>
+<li>
+<p><code>srcset</code> value may be invalid;</p>
+</li>
+<li>
+<p>there is a precision issue (<code>33*3</code> is <code>99</code>, not the original <code>100</code>, so information is <em>irreversibly lost</em>).</p>
+</li>
+</ul>
+<p>So the story would get too complicated given that we are trying just to obtain the exact value that browser already knows <em>directly</em> and <em>precisely</em>.</p>
+<p>So now we are <strong>again</strong> (as before introducing <code>naturalWidth</code> and <code>naturalHeight</code>) forced to use a redundant asynchronous <code>new Image</code> request and then read the dummy-image’s <code>width</code> and <code>height</code> once it’s loaded, instead of just reading the real dimensions of the already loaded image synchronously and directly.</p>
+<p>As a result, some <strong>new</strong> properties should probably be introduced like <code>realWidth</code> and <code>realHeight</code> for the purpose of getting the <strong>real</strong> original size of image not corrupted by <strong>any</strong> redundant implicit calculations. In other words, the new properties should return exactly the same values that are returned respectively by <code>width</code> and <code>height</code> properties of an image created via <code>new Image</code>.</p>
+<p>Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-10-30</div>
+          <div class="post_content">
+<p>Hi,</p>
+<p>You can see the reasoning for current natual{Width,Height} behavior in <a href="http://ircbot.responsiveimages.org/bot/log/respimg/2014-09-30#T93834">this IRC discussion</a>. They are defined (and always were defined) as CSS pixels, and therefore should represent the image’s intrinsic dimensions in those pixels, rather than in “physical” ones.</p>
+<p>You could probably make a solid case for an API that enables you to retrieve an image’s density, which combined with natural{Width,Height} might give you what you need.</p>
+<p>Could you please describe your use case for knowing the “physical” image dimensions?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-10-30</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1782">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>you can see the reasoning for current natual{Width,Height} behavior in this IRC discussion.</p>
+</blockquote>
+</aside>
+<p>Thanks for the link, unfortunately the IRC log doesn’t make it more clear what was the real practical purpose of making <code>naturalWidth</code> / <code>naturalHeight</code> returning an altered value. A much better API would probably be just to introduce a property like <code>currentPixelRatio</code> so that those who need this could on their own divide the unaltered <code>naturalWidth</code> / <code>naturalHeight</code> value in the <code>currentPixelRatio</code> value instead of directly returning irreversibly altered value.</p>
+<aside class="quote" data-post="2" data-topic="1782">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>Could you please describe your use case for knowing the “physical” image dimensions?</p>
+</blockquote>
+</aside>
+<p>For example, I need to know real image size for my <a href="http://tanalin.com/en/projects/smart-upscale/" rel="nofollow noopener">SmartUpscale</a> Firefox extension (fwiw, powered by WebExtensions API) that disables blur (by applying <code>image-rendering: -moz-crisp-edges</code>) for images displayed at integer zoom levels (useful primarily for HiDPI displays such as 4K monitors), e. g. when each image pixel can be represented as a group of exactly 2×2 or 3×3 absolutely identical physical pixels, so blur is unneeded and just unreasonably decreases sharpness.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-10-31</div>
+          <div class="post_content">
+<p>On systems that have non-integral DPRs (including non-integral zoom levels) that may never be true, so that is not a universal use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-10-31</div>
+          <div class="post_content">
+<p>Hello, Ashley. If I understand you correctly, you are talking about pages with <code>viewport</code> different from <code>width=device-width</code> on mobile devices. I’m aware of that, and that’s not a reason not to apply smart upscaling on all other pages in mobile browsers at default zoom and on <em>absolutely</em> all pages in <em>desktop</em> browsers at OS-level zooms like 200% (often used with <a href="http://tanalin.com/en/blog/2015/05/dell-p2415q-review/" rel="nofollow noopener">4K monitors</a>) or 300%. Fwiw, dynamic zoom changes are detected by my extension as well, though for touch-powered zoom such detection is indirect and limited until Resize Observers and Visual Viewport API are available.</p>
+<p>Also, I plan to use integer-ratio non-blurry upscaling (with scaled-image size chosen by extension dynamically, see my <a href="http://tanalin.com/_experimentz/demos/non-blurry-scaling/" rel="nofollow noopener">web demo</a> for how such upscaling should look like) for image opened via direct URL in a separate tab once ability to override image-view page is available in WebExtensions API. This is applicable regardless of whether device is mobile.</p>
+<p>Also, we probably don’t actually need a special usecase here at all, we <em>already</em> had the feature available via <code>naturalWidth</code> and <code>naturalHeight</code> properties, those have just been corrupted after <code>srcset</code> has been introduced (btw, I have no idea what’s the <em>practical</em> reason to alter the values aside from the purely theoretical “it’s defined in CSS pixels”). What were usecases for <code>naturalWidth</code> and <code>naturalHeight</code>?</p>
+<p>Moreover, we can obtain the required values anyway by creating a new <code>Image</code> (and fortunately, that ability cannot be changed in the future), it just doesn’t make sense to load already loaded image and get asynchronously something actually available immediately.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-10-31</div>
+          <div class="post_content">
+<p>I’ve seen Android tablets with a DPR of something like 2.333387, plus I often browse with Chrome zoomed to 110%. I guess your use case is interesting to users with certain configurations, but I don’t see it as a general-purpose case. I think it would be more compelling to suggest general-purpose use cases, since people are understandably skeptical about introducing new web platform features for one feature for a subset of users.</p>
+<p>Despite that, it sounds like <code>naturalWidth</code> and <code>naturalHeight</code> return the same thing that getBoundingClientRect does. Am I right about that? If so it would be an odd feature…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-10-31</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="1782">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>I’ve seen Android tablets with a DPR of something like 2.333387</p>
+</blockquote>
+</aside>
+<p>Based on my experience, default fractional DPR is only applied to webpages without <code>width=device-width</code> value in the <code>viewport</code> meta element (that value is recommended for responsive/adaptive layouts since otherwise they work not as expected).</p>
+<p>For example, on Samsung Galaxy Tab S 10.5 tablet (with physical resolution of 2560×1600), viewport width in Firefox is <code>980</code> without the meta (so the effective DPR is about <code>2.6122</code> instead of <code>2</code>), and <code>1280</code> with the meta (so the effective DPR is exactly <code>2</code>). Fwiw, <em>formal</em> DPR (returned by <code>window.devicePixelRatio</code>) is <code>2</code> in both cases.</p>
+<aside class="quote" data-post="6" data-topic="1782">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>I often browse with Chrome zoomed to 110%</p>
+</blockquote>
+</aside>
+<p>If you often browse the web at a fractional zoom, image quality probably doesn’t matter much for you, so you’re just not in target audience of my extension, that’s perfectly ok and does not make the extension less useful for those interested in high image quality.</p>
+<p>By the way, unlike Chrome, Firefox <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=401322" rel="nofollow noopener">allows</a> to change <em>text size</em> (with images in particular <em>not</em> zoomed) instead of performing full-page zoom, that can be enabled via the “View → Zoom → Zoom Text Only” checkbox.</p>
+<aside class="quote" data-post="6" data-topic="1782">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>it would be more compelling to suggest general-purpose use cases</p>
+</blockquote>
+</aside>
+<p>Consider the proposed feature as a noncorrupted version of existing <code>naturalWidth</code> and <code>naturalHeight</code>, so no extra usecases are needed over usecases for <code>naturalWidth</code> and <code>naturalHeight</code>.</p>
+<aside class="quote" data-post="6" data-topic="1782">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>it sounds like naturalWidth and naturalHeight return the same thing that getBoundingClientRect does. Am I right about that?</p>
+</blockquote>
+</aside>
+<p><code>width</code> and <code>height</code> properties of the object returned by <code>getBoundingClientRect()</code> are similar to <code>offsetWidth</code> and <code>offsetHeight</code> which include <em>paddings</em> and <em>borders</em> and cause <em>reflow</em> while <code>naturalWidth</code> and <code>naturalHeight</code> have <em>nothing to do</em> with styles and just return dimensions of the image itself regardless of its styling on the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-06-03</div>
+          <div class="post_content">
+<p>An official comment by e.g. <span class="mention">@tabatkins</span> would be appreciated. Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2957_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jerome-rdlv</div>
+          <div class="creation_date">2020-06-09</div>
+          <div class="post_content">
+<p>I found this page looking for solutions to my problem.
+I have a use case which I think is a legitimate one.
+I’m using <code>Canvas</code> to add color effects to images. For the chosen image, my script creates a new <code>Canvas</code>, positioned it on top of original image, and draw the altered image in it. For this to work I have to respect the <code>object-fit</code> and <code>object-position</code> properties of the original image, and I need <code>naturalWidth</code> and <code>naturalHeight</code> to do that calculation. But those values do not correspond to the intrinsic image dimensions at all when <code>srcset</code> is in use, even corrected with <code>window.devicePixelRatio</code>. I actually can’t get to understand what are those values in that context.
+As <span class="mention">@MT</span> said, the only solution I’m aware of at this point is to create a new <code>Image</code> object and get natural dimensions asynchronously.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Standard tab control</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Standard tab control</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>I would like to be able to provide a tabbed interface on a website, without having to use JavaScript. Clicking on a tab should display the corresponding tab panel, and the HTML markup alone should be fully accessible (keyboard, screen reader).</p>
+<p>An example of a tab UI is Gmail:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711" href="//discourse.wicg.io/uploads/default/original/2X/a/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711.jpg" title="Gmail-interface4.jpg"><img data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/a/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711_2_10x10.png" height="372" src="//discourse.wicg.io/uploads/default/optimized/2X/a/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711_2_690x372.jpg" srcset="//discourse.wicg.io/uploads/default/optimized/2X/a/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711_2_690x372.jpg, //discourse.wicg.io/uploads/default/optimized/2X/a/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711_2_1035x558.jpg 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/a/aa6bd688d7ef02d8fc7ae3efda6b759f7e60a711_2_1380x744.jpg 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Gmail-interface4.jpg</span><span class="informations">1869×1009 324 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>Hmm not sure how something like this would work without Javascript without making many many assumptions about what should happen. There are a many things that need to be either explicitly declared in your markup or implied.</p>
+<ol>
+<li>When does a tab get transitioned to? After a ‘click’, maybe when enter key is pressed?</li>
+<li>If transition is triggered by a key press, which variation? ‘keyDown’, ‘keyUp’?</li>
+<li>How should the content load once transitioning to a tab? (Lazily vs eager)</li>
+<li>Should the tab content already be in the DOM waiting to be shown? Or injected when its requested?</li>
+<li>Should the tab content be cached upon first view? If so, when do we query for up-to-date content?</li>
+<li>Should it have a loading spinner?</li>
+<li>If there is a loading spinner, when should it show/hide? Right before content is shown?</li>
+<li>How would the loading spinner get displayed? Fade in? Fade out? Css transition? Css Animations?</li>
+</ol>
+<p>I’ve only scratched the surface here…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>1 and 2. Keyboard interaction with tab controls is standardized in ARIA, so that is taken care of.<br/>
+3, 4 and 5. The tab control is merely responsible for displaying the correct tab panel. Whether or not tab panels are prepopulated or lazyloaded is up to the web app.<br/>
+6, 7 and 8. No loading indicator is needed since the tab panel is displayed immediately (it’s the same mechanism as with the <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> elements).</p>
+<p>I hope this makes it clear that my proposal is only for a basic tabbed UI functionality.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>Should the <code>&lt;details/summary&gt;</code> style be reused for this? If so, what should the element names be?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>please look at <a href="https://discourse.wicg.io/t/panels-and-panelsets/1184">Panels and panelsets</a></p>
+<p>Also, ARIA standardising keyboard control through adding javascript isn’t necessarily a good answer. There are cases where different platforms do, and probably <em>should</em> do, something other than what the ARIA models propose, generally based on Windows if there are differences.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>I quite like the panel and panelset idea. It’s got a good balance of high level semantics without overly restricting developers. The mediaquery control of <code>preferred-display</code> is particularly nice.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p><span class="mention">@chaals</span> <span class="mention">@chaoaretasty</span> I like the panel/panel sets proposal.</p>
+<blockquote>
+<p>The first panel element within a panelset element should be expanded by default. Any subsequent claims of expansion trump the original claim.</p>
+</blockquote>
+<p>Source: <a href="https://specs.webplatform.org/common-panel/bkardell/gh-pages/#the-panelset-element">https://specs.webplatform.org/common-panel/bkardell/gh-pages/#the-panelset-element</a></p>
+<p>I’m not sure what “trump the original claim” means. Does it mean that expanding another panel automatically collapses the previously expanded panel? This would be needed for built-in interaction functionality in a a tabbed interface, which is what I want.</p>
+<p>Also, having to set the <code>expandable</code> attribute on each panel isn’t optimal (it would be code repetition, since a tab panel is expandable by design); it would be nice if the attribute could be set on the panel set element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-07-30</div>
+          <div class="post_content">
+<p>Reading the “requirements” of this particular discussion</p>
+<blockquote>
+<p>I would like to be able to</p>
+<ul>
+<li>provide a tabbed interface on a website</li>
+<li>without having to use JavaScript</li>
+<li>clicking on a tab should display the corresponding tab panel</li>
+<li>the HTML markup alone should be fully accessible</li>
+</ul>
+</blockquote>
+<p><a href="http://codepen.io/zzzzBov/full/ZOjyvr" rel="nofollow noopener">I mocked up a quick proof-of-concept with HTML, CSS, and no JS</a>.</p>
+<p>In making it, I didn’t feel as though I really needed additional elements, however that meant relying heavily on ARIA attributes. What I felt was lacking were certain CSS selectors.</p>
+<p>It’d be great if there were a way to use attribute references in selectors in some way so that a checkbox could select its own label(s), and a label could select its checkbox. Given how many ARIA attributes are IDs or lists of IDs, this would significantly improve ARIA in general.</p>
+<hr/>
+<p>All that said, there are certainly some issues. Without JS there’s no way to manage state such as the <code>aria-expanded</code> attribute. Having some dedicated elements that have explicit behavior could simplify implementations, and make it easier for developers to build tabs correctly, rather than a bunch of <code>&lt;div&gt;</code>s with <code>onclick</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-07-31</div>
+          <div class="post_content">
+<p>Thanks for summarizing it in a terse list <img alt=":blush:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/blush.png?v=5" title=":blush:"/>. Until, this gets standardized in HTML, the best solution for web developers is to use an “ARIA tabs” library, I think.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-07-31</div>
+          <div class="post_content">
+<p>So you’d basically like to be able to simplify rules like these</p>
+<pre><code class="lang-css">#tab-1:checked ~ [role="tablist"] [for="tab-1"], 
+#tab-2:checked ~ [role="tablist"] [for="tab-2"], 
+#tab-3:checked ~ [role="tablist"] [for="tab-3"] {
+  background-color: #FFF;
+}
+#tab-1:checked ~ #tab-panel-1, 
+#tab-2:checked ~ #tab-panel-2, 
+#tab-3:checked ~ #tab-panel-3 {
+  display: block;
+}
+</code></pre>
+<p>to something like this?</p>
+<pre><code class="lang-css">.tab:checked &gt;&gt;&gt; label {
+  background-color: #FFF;
+}
+.tab:checked &gt;&gt;&gt; .panel {
+  display: block;
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-08-01</div>
+          <div class="post_content">
+<p>Yes, although the syntax needs to be worked out.</p>
+<p>Something like</p>
+<pre><code>label:attr(for, input:checked, id)
+</code></pre>
+<p>could work to select the labels where the <code>[for]</code> attributes matche the <code>input:checked</code> elements’ <code>id</code> attributes</p>
+<p>In the example, this would replace</p>
+<pre><code>#tab-1:checked ~ [role="tablist"] [for="tab-1"] {
+  background-color: #FFF;
+}
+#tab-1:checked ~ #tab-panel-1 {
+  display: block;
+}
+...
+</code></pre>
+<p>with</p>
+<pre><code>.tabs__tab:attr(for, .tabs__radio:checked, id) {
+  background-color: #FFF;
+}
+.tabs__panel:attr(id, .tabs__tab:attr(for, .tabs__radio:checked, id), aria-controls) {
+  display: block;
+}
+</code></pre>
+<p>I’m sure there are a bajillion reasons why this sort of selector can’t and won’t exist, and I have no idea what sort of specificity the selector would have, but I can guarantee that if I had access to something like it, I’d use it all the time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-08-01</div>
+          <div class="post_content">
+<blockquote>
+<p>I’m not sure what “trump the original claim” means. Does it mean that expanding another panel automatically collapses the previously expanded panel?</p>
+</blockquote>
+<p>Yes, basically it is explaining what a single  with options would do… If you say</p>
+<p>If the markup is at odds, the last one wins.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-08-01</div>
+          <div class="post_content">
+<p>JFTR, there used to be a solution for that in Selectors 4 drafts (subject indicator <code>$</code> and reference combinator <code>/…/</code>), but the latter part is <a href="https://drafts.csswg.org/selectors/#changes" rel="nofollow noopener">gone</a> and the former has been replaced by <a href="https://drafts.csswg.org/selectors/#has-pseudo" rel="nofollow noopener"><code>:has()</code></a>.</p>
+<pre><code>$label /for/ input:checked {}
+label:has(/for/ input:checked) {}</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

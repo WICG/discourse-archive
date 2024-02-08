@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] HTMLVideoElement Decode and Display Frame Resolution</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] HTMLVideoElement Decode and Display Frame Resolution</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-24</div>
+          <div class="post_content">
+<p><strong>Problem</strong></p>
+<p>Chromium and Chrome implementation of video decoder does not display the correct value for the encoded frame <code>width</code> and <code>height</code> when the video is produced by W3C specification <code>MediaRecorder</code> ad the video codec is set to VP8 or VP9.</p>
+<p>The result is various incorrect values being output for  <code>videoWidth</code> ,  <code>videoHeight</code> ,  <code>ImageBitmap.width</code> ,  <code>ImageBitmap.height</code> ,  <code>MediaStreamTrack.getSettings().width</code>  and  <code>MediaStreamTrack.getSettings().height</code> and the tab crashing when <code>HTMLMediaElement.captureStream()</code> is called on a <code>&lt;video&gt;</code> element where the encoded frames have variable resolution through the track (tab crashes at first <code>resize</code> of the <code>&lt;video&gt;</code> element).</p>
+<p>In brief the bug is described at <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1004018" rel="nofollow noopener">https://bugs.chromium.org/p/chromium/issues/detail?id=1004018</a>.</p>
+<p><strong>Solution</strong></p>
+<p>Add an attribute and property to HTML <code>&lt;video&gt;</code> <code>decodeAndDisplayFrameResolution</code> element which mandates the VP8 and VP9 video decoders decode each individual encoded frame and display the potentially variable resolution (width and height) frames at HTML <code>&lt;video&gt;</code> element during playback instead of only reading the initial pixel dimensions once from the metadata of the WebM file.</p>
+<p>Adding the attribute and property will avoid ambiguity as to what width and height is expected to be displayed at the HTML <code>&lt;video&gt;</code> element meaning that when variable resolution frames are encoded there will be a means officially specified to decode and display the each encoded frame which could potentially be encoded with variable resolution within the media file instead of only decoding the initial frame or media file metadata resolution.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-24</div>
+          <div class="post_content">
+<p>Related WPT issue <a href="https://github.com/web-platform-tests/wpt/issues/17821" rel="nofollow noopener">https://github.com/web-platform-tests/wpt/issues/17821</a> where <code>resize</code> event is not dispatched at Chromium, Chrome for WebM file recorded at W3C specified <code>MediaRecorder</code> with VP8 or VP9 codec set.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jesup</div>
+          <div class="creation_date">2019-09-26</div>
+          <div class="post_content">
+<p>a new attribute isn’t a great solution here; a better one is to tighten the spec (if needed) and fix Chrome’s implementation</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-26</div>
+          <div class="post_content">
+<p>Agree. Am banned AFAICT indefinitely from contributing to WHATWG. Therefore in lieu of that path filed this proposal following reading at an issue, where if recollect accurately, that WHATWG and W3C have settled whatever issues they had re HTML. Do not have a current count of the number of Chromium bugs have filed relevant to this issue, more than one exists and is observable across various subdirectories of “media” parent source code. This proposal is intended to illuminate the issue of lack of clarity at a given specification regarding the subject matter of encoding, decoding and displaying variable resolution video; and/or plausible assertion of ambiguity of a definition of the pertinent terms used re <code>width</code> and <code>height</code> in controlling primary source specification(s) relied upon for guidance for the meaning of the terms used in potentially dependent and/or concurrent specifications.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

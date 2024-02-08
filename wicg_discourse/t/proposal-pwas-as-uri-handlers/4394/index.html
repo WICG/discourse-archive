@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] PWAs as URI Handlers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] PWAs as URI Handlers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2857_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LuHuang</div>
+          <div class="creation_date">2020-04-17</div>
+          <div class="post_content">
+<p>Hello WICG,</p>
+<p>Developers can create a more engaging experience if Progressive Web Apps (PWAs) are able to register as handlers for http(s) uniform resource identifiers (URIs). We have a proposal that would enable PWAs to register as URI handlers and be launched when associated URIs are activated in native applications.</p>
+<h2>Problem</h2>
+<p>It is common for native applications to register themselves as URI Handlers: once registered with the user’s consent, such applications can be launched directly when the user clicks on links.</p>
+<p>There is not currently a platform agnostic way for a PWA to register as a URI handler. Clicking on a link that points to content in an installed PWA opens that content in a default browser’s tab instead of launching the PWA in an application window. If the user installed the PWA, it is likely that they would like to experience an app-like experience instead.</p>
+<h2>Proposal</h2>
+<p>We propose a platform agnostic scheme for PWAs to register as URI handlers, allowing PWA developers to opt in using the web app manifest, and URI content owners to opt in using a pwa-site-association file.</p>
+<p>More details can be found in <a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/master/PwaUriHandler/explainer.md" rel="nofollow noopener"><strong>this explainer</strong></a>.</p>
+<p>Thank you for your consideration.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2857_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LuHuang</div>
+          <div class="creation_date">2020-04-17</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@mgiuca</span>, would love to get your thoughts on this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2795_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nightpool</div>
+          <div class="creation_date">2020-04-18</div>
+          <div class="post_content">
+<blockquote>
+<p>Clicking on a link that points to content in an installed PWA opens that content in a default browser’s tab instead of launching the PWA in an application window</p>
+</blockquote>
+<p>Is this true? On Chrome, after installing a PWA, I’m prompted to choose between the PWA experience and my default browser when opening links that fall within the scope of the PWA. This is covered (as i understand it) by the <a href="https://w3c.github.io/manifest/#deep-links" rel="nofollow noopener">deep links</a> section of the Web App Manifest spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2857_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LuHuang</div>
+          <div class="creation_date">2020-04-18</div>
+          <div class="post_content">
+<p>Thank you for pointing that out. On Chrome in Android, the prompt does show up when opening in-scope links. That is a behavior congruent with the deep links section of the Web App Manifest spec. It works because intent filters are registered for in-scope URI with Android during the WebAPK installation. I believe this mechanism is itself called “deep linking”.</p>
+<p>This proposal aims to bring that same user experience to desktop platforms as well, without relying on the intent filter deep linking mechanism. This goal is also in line with the deep links section of the Web App Manifest spec.</p>
+<p>Additionally, this proposal aims to give the PWA developer more control over which URIs are handled through an application experience and which are not. It is analogous to giving the developer more control over how intent filters are formed in their Android WebAPK. <a href="https://github.com/WICG/sw-launch" rel="nofollow noopener">sw-launch</a> has the same goal of giving the developer more control but does it by providing a programmatic API.</p>
+<p>Additionally, this proposal introduces the concept of handling associated, out of scope URI. This is not specifically allowed or disallowed by the current Web App Manifest spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2795_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nightpool</div>
+          <div class="creation_date">2020-04-18</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="4394" data-username="LuHuang">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/luhuang/40/2857_2.png" width="20"/> LuHuang:</div>
+<blockquote>
+<p>On Chrome in Android, the prompt does show up when opening in-scope links</p>
+</blockquote>
+</aside>
+<p>Not just chrome on android! Chrome on desktop has the same behavior as well when desktop PWAs are installed (it shows the native experience for in-scope links). I’m not 100% sure whether this behavior is mediated by the operating system or the browser—my guess is that it varies between operating systems. Given that, and the <a href="https://w3c.github.io/manifest/#deep-links" rel="nofollow noopener">deep links</a> section of the manifest, I think your Goals 1-6 are <em>already</em> handled by the spec, so you might want to rewrite the Introduction and Goals section to focus on use-cases that aren’t already enabled by the existing platform.</p>
+<aside class="quote no-group quote-modified" data-post="4" data-topic="4394" data-username="LuHuang">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/luhuang/40/2857_2.png" width="20"/> LuHuang:</div>
+<blockquote>
+<p>Additionally, this proposal aims to give the PWA developer more control over which URIs are handled through an application experience and which are not. […] <a href="https://github.com/WICG/sw-launch" rel="nofollow noopener">sw-launch</a> has the same goal of giving the developer more control but does it by providing a programmatic API.</p>
+</blockquote>
+</aside>
+<p>This is good context, thank you! I didn’t see anything about this goal or about sw-launch in the explainer, that would be very good context to add—you should probably add both a high-level problem statement that addresses this and concrete example use cases to the explainer. Additionally, it would be great to explain why you think your solution is better suited to address this problem then sw-launch, or at least how you see your two solutions interacting, so developers aren’t confused by having two solutions to solve the same problem.</p>
+<aside class="quote no-group" data-post="4" data-topic="4394" data-username="LuHuang">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/luhuang/40/2857_2.png" width="20"/> LuHuang:</div>
+<blockquote>
+<p>Additionally, this proposal introduces the concept of handling associated, out of scope URI. This is not specifically allowed or disallowed by the current Web App Manifest spec.</p>
+</blockquote>
+</aside>
+<p>Yeah, I saw that in the explainer, but I wasn’t sure if it was core to your spec since it wasn’t mentioned in your goals section or your problem statement. I think this behavior adds a lot of complexity to the proposed solution, and I’m not sure how it would interact with the other parts of the spec. While you’re right that the Web App Manifest spec doesn’t <em>forbid</em> it, a close reading does present some complications:</p>
+<blockquote>
+<p>If an <a href="https://w3c.github.io/manifest/#dfn-application-context" rel="nofollow noopener">application context</a> is created as a result of the user agent being asked to <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate">navigate</a> to a <a href="https://w3c.github.io/manifest/#dfn-deep-link" rel="nofollow noopener">deep link</a>, the user agent <em>MUST</em> immediately <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate">navigate</a> to the <a href="https://w3c.github.io/manifest/#dfn-deep-link" rel="nofollow noopener">deep link</a> with <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#replacement-enabled">replacement enabled</a>. Otherwise, when the <a href="https://w3c.github.io/manifest/#dfn-application-context" rel="nofollow noopener">application context</a> is created, the user agent <em>MUST</em> immediately <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate">navigate</a> to the <a href="https://w3c.github.io/manifest/#dfn-start-url" rel="nofollow noopener">start URL</a> with <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#replacement-enabled">replacement enabled</a>.</p>
+</blockquote>
+<p>This wouldn’t fall under the first <code>if</code> statement, since <code>deep links</code> are defined to be <em>in-scope</em> links, and it would be handled by the <code>Otherwise,</code> case. So when launching an out of scope link, the user agent would have to immediately navigate to the <code>start URL</code>, making it impossible for the web app author to tell <em>which</em> out-of-scope link was handled, or do any specific behavior based on the out of scope link.</p>
+<p>This section could be amended, of course, but given that the use-cases you provided in the introduction and goals section, the whole thing (adding a well-known route, adding a file format, adding a whole life-cycle of site association renewal) seems like a lot of complication for very little benefit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2857_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LuHuang</div>
+          <div class="creation_date">2020-04-19</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="4394" data-username="nightpool">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/nightpool/40/2795_2.png" width="20"/> nightpool:</div>
+<blockquote>
+<p>Not just chrome on android! Chrome on desktop has the same behavior as well when desktop PWAs are installed (it shows the native experience for in-scope links).</p>
+</blockquote>
+</aside>
+<p>Which OS and version of Chome are you using to observe this behavior? So far I have been unable to repro on Windows 10(84) and OSX(79). I know that “link capturing”, the predecessor of sw-launch would have enabled that behavior. Could that have been what you observed?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2857_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LuHuang</div>
+          <div class="creation_date">2020-05-21</div>
+          <div class="post_content">
+<p>Hello WICG chairs. This API now has interest from Google (see issue link below) and Microsoft. I would like to request to move the explainer to a WICG repo for incubation. Thank you for your kind attention.</p>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/issues/322" rel="nofollow noopener" target="_blank">github.com/MicrosoftEdge/MSEdgeExplainers</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/issues/322" rel="nofollow noopener" target="_blank">[PwaUriHandler] Interested in reviewing a spec and implementation</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2020-05-21" data-format="ll" data-time="07:57:56" data-timezone="UTC">07:57AM - 21 May 20 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/jakearchibald" rel="nofollow noopener" target="_blank">
+<img alt="jakearchibald" class="onebox-avatar-inline" height="20" src="https://avatars1.githubusercontent.com/u/93594?v=4" width="20"/>
+          jakearchibald
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">Hey! So we (as in Chrome) are interested in reviewing a fuller proposal and implementation of PWA as URI Handler.
+There was...</p>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">PWA URL Handling</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>cc. <span class="mention">@marcosc</span>, <span class="mention">@cwilso</span>, <span class="mention">@yoavweiss</span>, <span class="mention">@travisleithead</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2795_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nightpool</div>
+          <div class="creation_date">2020-05-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="6" data-topic="4394" data-username="LuHuang">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/luhuang/40/2857_2.png" width="20"/> LuHuang:</div>
+<blockquote>
+<p>I know that “link capturing”, the predecessor of sw-launch would have enabled that behavior. Could that have been what you observed?</p>
+</blockquote>
+</aside>
+<p>It’s possible! I guess this must have been a very early version of Desktop PWA support on Chrome MacOS, sometime around 2018. I remember links from other sites navigating to the installed PWA by default, possibly with some sort of pop-up. From my perusal of the Chromium bug tracker it looks like this feature was removed, citing site compatibility issues, but I couldn’t find any documentation on what the site compatibility issues were. <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=740783" rel="nofollow noopener">This</a> was the main tracking bug, but a quick perusal of the linked issues didn’t turn up any broken web pages, just a list of broken Chromium behaviors—mostly a ton of different ways navigation contexts can get created. <a href="https://docs.google.com/document/d/1GxndFnJ8t6zUH4c4MxBE7jeSPCQxPMbF7NjOEx6sVrQ/edit#" rel="nofollow noopener">This document created after removing the flag in question</a> has a list of those. It seems like the site issues mentioned <a href="https://github.com/WICG/sw-launch/blob/master/explainer.md" rel="nofollow noopener">didn’t make it into the sw-launch event explainer</a> either… maybe <span class="mention">@mgiuca</span> or <span class="mention">@g-ortuno</span> remembers.</p>
+<p>Maybe a simpler alternative would be a property that opted-in to this behavior?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2020-05-28</div>
+          <div class="post_content">
+<p>Thanks for pointing us to that issue. IMO as co-chair, this meets the qualification to begin incubation. I’ve created a repo for you to start with at: <a href="https://github.com/WICG/pwa-url-handler" rel="nofollow noopener">https://github.com/WICG/pwa-url-handler</a></p>
+<p>Thanks!
+-travis</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

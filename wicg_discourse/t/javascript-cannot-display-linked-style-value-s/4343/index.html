@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>JavaScript cannot display linked style value(s)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">JavaScript cannot display linked style value(s)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2312_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richarddunnebsc</div>
+          <div class="creation_date">2020-03-29</div>
+          <div class="post_content">
+<p>I tried using JavaScript to check if a div is visible or not using an alert.  Whether using class or id, if visibility is in a linked .css file,
+<code>alert(document.getElementById("ID").style.visibility);</code><br/>
+displays nothing (blank).
+<code>alert(document.getElementById("ID").style.visibility.value);</code>
+displays Undefined.  If the style is within the div tag itself however
+<code>&lt;div id="ID" style="visibility: visible;"&gt;</code>
+<code>alert(document.getElementById("ID").style.visibility);</code>  displays visible.
+Is this normal behaviour?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1381_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SebastianZ</div>
+          <div class="creation_date">2020-03-31</div>
+          <div class="post_content">
+<p>Yes, that is expected behavior, even if it might not make sense at first sight. The reason for this is explained at the <a href="https://developer.mozilla.org/en-US/docs/Web/API/ElementCSSInlineStyle/style" rel="nofollow noopener">related MDN page</a>. What <code>style</code> returns is the <em>inline</em> style, i.e. only the properties that are defined in the <code>style</code> attribute of the element. That’s why it returns an empty string when not set via <code>style</code>.</p>
+<p>In order to get the applied style of a CSS property, you need to use <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle" rel="nofollow noopener"><code>window.getComputedStyle(document.getElementById("ID"))</code></a>. So to get the value of the <code>visibility</code> property you need to call <code>window.getComputedStyle(document.getElementById("ID")).getPropertyValue("visibility")</code>.</p>
+<p>There is also a newer, little bit shorter method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/computedStyleMap" rel="nofollow noopener"><code>computedStyleMap()</code></a>, which also much more flexible, though the <a href="https://drafts.css-houdini.org/css-typed-om/#computed-stylepropertymapreadonly-objects" rel="nofollow noopener">related specification</a> is not finished yet and therefore not available in all browsers yet.
+With that you get the value of the <code>visibility</code> property via <code>document.getElementById("ID").computedStyleMap().get("visibility").value</code>.</p>
+<p>Bonus tip: Use <a href="https://developer.mozilla.org/en-US/docs/Web/API/Console/log" rel="nofollow noopener"><code>console.log()</code></a> instead of <code>alert()</code>! That allows you to inspect the variable within the console of your favorite browser’s DevTools.</p>
+<p>Sebastian</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

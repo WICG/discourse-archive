@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] First-Party Sets</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] First-Party Sets</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2019-01-30</div>
+          <div class="post_content">
+<p>(The following is a quick summary of the explainer at <a href="https://github.com/mikewest/first-party-sets" rel="nofollow noopener">https://github.com/mikewest/first-party-sets</a>. If you’re interested in more details, I’d suggest skimming that document.)</p>
+<hr/>
+<h1>A Problem</h1>
+<p>One pattern that most browsers have agreed upon is a categorization of requests and documents into “first-party” and “third-party” buckets, giving users the option to regulate cross-context access to persistent state.</p>
+<p>A number of browser features depend upon this distinction to some extent. Cookie controls are the most prominent example, followed by narrower features like credential sharing schemes (<a href="https://developer.apple.com/reference/security/shared_web_credentials" rel="nofollow noopener">Shared Web Credentials</a> and <a href="https://developers.google.com/identity/smartlock-passwords/android/associate-apps-and-sites" rel="nofollow noopener">Smart Lock for Passwords</a>, for example), process selection, etc. Note that the latter two examples rely on proprietary heuristics in some cases.</p>
+<p>The first-/third-party distinction breaks down to an extent in practice, as a single entity will often host its assets and services across domains that aren’t known  <em>a priori</em>  to be related. Consider  <code>https://apple.com/</code>  and  <code>https://icloud.com/</code> ,  <code>https://google.com/</code>  and  <code>https://youtube.com/</code> , or  <code>https://amazon.com/</code>  and  <code>https://amazon.de/</code> . These origins all represent distinct registrable domains, and are generally considered “third-party” to each other, though they’re controlled by the same entity, and explicitly share state information with each other in order to support features like single sign-on.</p>
+<h1>A Proposal</h1>
+<p>One way of approaching this problem would be to run with an approach similar to what some native platforms have already shipped: JSON files hosted at well-known locations on various origins that wish to assert their shared first-partyness. We could allow  <code>https://a.example/</code> ,  <code>https://b.example/</code> , and  <code>https://c.example/</code>  to declare themselves as a first-party set by hosting a JSON file at  <code>/.well-known/first-party-set</code> containing a  <code>first-party-set</code>  member which holds the set of  <code>origins</code> being asserted:</p>
+<pre><code class="lang-auto">{
+  ...,
+  "first-party-set": {
+    "origins": [ "https://a.example/", "https://b.example/", "https://c.example/" ]
+  }
+  ...
+}
+</code></pre>
+<p><code>https://a.example/</code> informs the browser about this file by delivering an <code>X-Bikeshed-This-Origin-Asserts-A-First-Party-Set: ?T</code> header. Upon receipt, the browser pulls down this file, as well as the files for any other origin asserted to be in the set. If all the origins assert the same set, huzzah! If not, it’s not a set.</p>
+<h2>What does being first-party set enable?</h2>
+<p>I have three things in mind:</p>
+<ul>
+<li>The “block third-party cookies and site data” behavior in browsers could respect this notion of first-partyness to avoid breaking same-entity interactions. Likewise, browsers can enhance their cookie control mechanisms with this additional metadata. For example, “Forget this site” can shift towards “Forget this entity”, wiping data for an entire set of first-parties at once.</li>
+<li>Browsers’ credential sharing behavior for sites which are affiliated could substitute this proposal for the vendor-specific solutions which exist today.</li>
+<li>Browsers may use first-party sets as one additional input into heuristics around their process models while they <a href="https://chromium.googlesource.com/chromium/src/+/master/docs/security/side-channel-threat-model.md#multiple-origins-within-a" rel="nofollow noopener">ramp up to strict origin isolation</a>.</li>
+</ul>
+<p>WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3518_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">krgovind</div>
+          <div class="creation_date">2020-05-28</div>
+          <div class="post_content">
+<p>Bumping this thread back up because the proposal has undergone significant revision, and has recently been the subject of discussion on various forums; including at <a href="https://github.com/privacycg/meetings/blob/master/2020/05-virtual/05-14-minutes.md#first-party-sets" rel="nofollow noopener">PrivacyCG</a>, and <a href="https://lists.w3.org/Archives/Public/public-web-adv/2020May/0012.html">WebAdvBG</a>.</p>
+<p>Our primary motivation for this proposal remains to define a <em>privacy boundary</em> that allows browsers to eliminate cross-site tracking that currently relies on mechanisms such as third-party cookies and fingerprinting. Tracking policies and privacy models from various browser vendors - <a href="https://github.com/michaelkleber/privacy-model/blob/master/README.md" rel="nofollow noopener">Chromium</a>, <a href="https://blogs.windows.com/msedgedev/2019/06/27/tracking-prevention-microsoft-edge-preview/" rel="nofollow noopener">Edge</a>, <a href="https://wiki.mozilla.org/Security/Anti_tracking_policy" rel="nofollow noopener">Mozilla</a>, <a href="https://webkit.org/tracking-prevention-policy/" rel="nofollow noopener">WebKit</a> - scope access to user identity to some notion of <em>first-party</em>, which we refer to as a <em>privacy boundary</em>.</p>
+<p>Although the top-level document’s registrable domain can act as a natural <em>privacy boundary</em>; it is clear that multi-domain sites are a reality, which compels us to define a better alternative. For example, Firefox ships an <a href="https://github.com/mozilla-services/shavar-prod-lists#entity-list" rel="nofollow noopener">entity list</a> to group together domains belonging to the same organization.</p>
+<p>Organizations generally prefer maintaining distinct domain names to manage branding, or to allow for future business sales/acquisitions. Additionally, choosing the registrable domain as the privacy boundary may compel organizations to move all their web properties to a single parent domain. The parent domain that a property is hosted on may change with business ownership, and train users to make security decisions based on the subdomain component of URLs. This could make them <a href="https://www.google.com/safebrowsing/static/faq.html#q2" rel="nofollow noopener">more susceptible</a> to phishing attacks.</p>
+<p>First-Party Sets serves as a web platform mechanism that allows site operators to assert a list of domains as being associated with the same entity. This then allows us to define a top-level document’s First-Party Set as the <em>privacy boundary</em>. Browsers may choose to not impose cross-domain communication restrictions across members of a given First-Party Set (such as is done in practice with <a href="http://disconnect.me" rel="nofollow noopener">disconnect.me</a>’s extension, Firefox ETP’s use of the <em>entity list</em>, and Edge Tracking Protection’s similar exception for same-party domains). However, it is important to apply a set of countervailing pressures:</p>
+<ul>
+<li>Preventing abuse by unrelated websites forming a First-Party Set - This is achieved by requiring every organization to submit their list for acceptance based on conformance with a published UA policy.</li>
+<li>Making site associations visible to the user - This is achieved by making First-Party Sets discoverable via <a href="https://github.com/krgovind/first-party-sets#ui-treatment" rel="nofollow noopener">various browser UI surfaces</a>.</li>
+<li>Discourage formation of arbitrarily large sets by imposing storage and entropy limits - <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Browser_storage_limits_and_eviction_criteria" rel="nofollow noopener">Browser storage limits</a> and entropy limits such as the proposed <a href="https://github.com/bslassey/privacy-budget" rel="nofollow noopener">Privacy Budget</a> that are currently applied per-domain are applied per First-Party Set</li>
+</ul>
+<p>The primary goal of this proposal is to standardize First-Party Sets as the web’s privacy boundary.</p>
+<p>In order to ensure privacy, security, and platform predictability, it may also be valuable to standardize the framework for:</p>
+<ul>
+<li>Assertion - The notion of letting sites opt-in to First-Party Sets by designating an “owner domain” and defining “member domains”. The format for the .well-known manifest file.</li>
+<li>Acceptance - Agreement on what constitutes the “UA policy” and verification process. The proposal currently allows maximum flexibility for individual UAs to define their own policy and process, but it may be desirable to achieve rough consensus.</li>
+<li>Delivery - The current proposal allows for both (a) static lists shipped with the browser; or (b) signed assertions served by the site, to help overcome scalability issues with a static list.</li>
+</ul>
+<p>We would also like to invite the community’s inputs on our alternative design of defining sets using <a href="https://github.com/krgovind/first-party-sets#origins-instead-of-registrable-domains" rel="nofollow noopener">origins instead of registrable domains</a>, which can help mitigate <a href="https://github.com/sleevi/psl-problems" rel="nofollow noopener">some of the problems</a> with web platform features’ reliance on Public Suffix List.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2949_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pbannist</div>
+          <div class="creation_date">2020-05-28</div>
+          <div class="post_content">
+<p>While I believe that the First-Party sets proposal is valuable and serves a material purpose, it contains significant bias that entrenches major organizations at the expense of smaller ones. And it does this in a way that:</p>
+<ol>
+<li>Significantly relies on an opaque and arbitrary construct (the “organization”) to create the appearance (but not reality) of more privacy for users, via pre-existing UA policies.</li>
+<li>Implies that small organizations are more likely to take advantage of users and their privacy.</li>
+</ol>
+<p>As I pointed out in my issue on the github proposal (<a href="https://github.com/krgovind/first-party-sets/issues/14" rel="nofollow noopener">https://github.com/krgovind/first-party-sets/issues/14</a>), large organizations can own many disparate entities that are not obvious to the user.  From a user’s perspective, there is no obvious way for them to discern that “<a href="http://geico.com" rel="nofollow noopener">geico.com</a>” and “<a href="http://dairyqueen.com" rel="nofollow noopener">dairyqueen.com</a>” are owned by the same organization (Berkshire Hathway, in this case), and have grouped together to provide web services.  Just as there is no way for them to discern that two small companies (<a href="http://foo.com" rel="nofollow noopener">foo.com</a> and <a href="http://bar.com" rel="nofollow noopener">bar.com</a>) have partnered together to create a single First-Party set across their domains to provide similar services.</p>
+<p>The addition of browser UI surfaces that allow the user the discover that a given domain is part of a First-Party set is a great way to create transparency to the user. Additionally, Privacy Budget and browser storage limits prevent their generalized misuse.  However, these elements do not address the underlying point that small organizations are biased against. Another issue on the github proposal (<a href="https://github.com/krgovind/first-party-sets/issues/13" rel="nofollow noopener">https://github.com/krgovind/first-party-sets/issues/13</a>) speaks to how First-Party sets (as authored) will drive the consolidation of ownership of websites and remove diverse and unique voices from the open web.</p>
+<p>My primary issue with this proposal is the reliance on browser UA policies, which all rely on “organizations” to be the deciding factor about whether a given First-Party Set is valid or not. This issue appears in the often-repeated phrase “unrelated websites”. The definition of what is related or not related is completely arbitrary to the user. “Unrelated websites” is a meaningless term, as there is clearly no relation between <a href="http://geico.com" rel="nofollow noopener">geico.com</a> and <a href="http://dairyqueen.com" rel="nofollow noopener">dairyqueen.com</a> - but that is a completely valid First-Party set. This implication that a large organization can be “trusted” to create a First-Party set, but many small organizations cannot group together exposes the underlying bias in these UA policies.</p>
+<p>I believe that browsers should modify their UA policies to allow for small organizations to group together and form First-Party sets (or similar entities) as long as they adhere to all other relevant policies. Alternatively, the authors should remove the requirement of using the browser UA policy from this proposal.</p>
+<p>Without addressing this major concern, I do not believe that this proposal represents the needs of the many stakeholders of a thriving web, and there are ways to solve for this issue that do not negatively impact user privacy concerns in any way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mallory</div>
+          <div class="creation_date">2020-05-28</div>
+          <div class="post_content">
+<p>I agree with <span class="mention">@pbannist</span> about the problem: This preferences big over small entities, I come to a different conclusion in that I think a privacy concerned user would want <a href="http://dairyqueen.com" rel="nofollow noopener">dairyqueen.com</a> and <a href="http://geico.com" rel="nofollow noopener">geico.com</a> to be considered separate entities.</p>
+<p>In short: I think the solution is to be less permissive, not more, to comport with user expectations of what “first party” means.</p>
+<p>-Mallory</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2342_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">lassey</div>
+          <div class="creation_date">2020-05-29</div>
+          <div class="post_content">
+<p>In <a href="https://lists.webkit.org/pipermail/webkit-dev/2020-May/031222.html" rel="nofollow noopener">https://lists.webkit.org/pipermail/webkit-dev/2020-May/031222.html</a> <span class="mention">@othermaciej</span> noted that while there are still issues to work out, that he would support moving this to a CG such as WICG to incubate.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">othermaciej</div>
+          <div class="creation_date">2020-06-01</div>
+          <div class="post_content">
+<p>This is an interesting technology, though in my opinion incomplete as-is because it has not solved the hard problems.</p>
+<p>I feel like this is a better fit for Privacy CG than WICG, since the right privacy experts from browsers, search engines, and adtech ecosystem are there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-02</div>
+          <div class="post_content">
+<p>The discussion in the <a href="https://www.w3.org/community/web-adv/">W3C Improving Web Advertising Business Group</a> this week, specifically in relation to First Party sets, once again raises the issue of governance of the various proposals that have been put forth. Like Turtledove/Sparrow, the proposals around first party sets imply (in fact, they require) a governance structure. Specifically, the group discussed that in some cases independent domains should be allowed to federate browser data, while in other cases this would not be allowed. This means a decisioning structure needs to be put in place to provide basic rules for what federation(s) would be allowed, and to potentially adjudicate requests and violations.</p>
+<p>This same requirement is central to the debate over Turtledove and Sparrow, where the main discussion is around what entities have access to end user content consumption data and are responsible for creating the cohorts and populating the reporting structures.</p>
+<p>In both cases, it seems implied that the only “governance” is the browsers themselves, and that this governance will be opaque (not necessarily published, without clearly visible procedures).</p>
+<p>This proposal needs an explicit understanding of what governance structures are being proposed. There needs to be success criteria for the application of these policies. These criteria should benefit all stakeholders including browser vendors who would avoid any appearance of collusion that could otherwise be viewed as stifling competition. The W3C Improving Web Advertising Business Group have developed a draft of such <a href="https://github.com/w3c/web-advertising/blob/master/success-criteria.md" rel="nofollow noopener">succes criteria</a>.</p>
+<p>Recognizing there are important questions to address in finalizing these success criteria to evaluate first-party sets and other similar proposals aimed at improving web advertised. A non-exhaustive list below highlights some of these issues that deserve greater attention:</p>
+<ul>
+<li>
+<p>What safeguards are in place to ensure that browser decisions are not unilateral and are consistent with the agreed norms for content owners, marketers who fund them and other stakeholders?</p>
+</li>
+<li>
+<p>If for-profit companies govern certain content consumption data collection and processing activities, and if so, what is the minimum number required for a competitive open market as well as should there be limits on the number of these governing authorities?</p>
+</li>
+<li>
+<p>How should cross-publisher data sharing permissions be granted, administered and audited?</p>
+</li>
+<li>
+<p>Which risks to people will these changes reduce or eliminate?</p>
+</li>
+<li>
+<p>Should people be given the right to overrule default settings to further restrict or more broadly allow the collection and processing of their content consumption data?</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">melanierichards</div>
+          <div class="creation_date">2020-06-02</div>
+          <div class="post_content">
+<p>Speaking on behalf of the Microsoft Edge team, we believe that First-Party Sets could be useful in helping unblock valid intra-organizational use cases while maintaining the right privacy promises. We’re supportive of exploring this idea further. Agreed that as a community we’ll need to continue workshopping mitigations against abuse while striking the right balance between organizational cohesion vs. sets that can be reasoned about by most users. We’re hopeful that we can collectively come up with solutions to these considerations, and are interested in continued discussion on First-Party Sets!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2020-06-03</div>
+          <div class="post_content">
+<p>Great.  We <a href="https://github.com/WICG/first-party-sets">transferred</a> this to WICG for the time being; <a href="https://discourse.wicg.io/u/krgovind">krgovind</a> was going to file a Privacy CG proposal issue to enable discussion there, and if that CG wants to pick it up as a work item we can transfer it over there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2949_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pbannist</div>
+          <div class="creation_date">2020-06-05</div>
+          <div class="post_content">
+<p>I’m glad this was moved to the WICG and I support that it stay there. FPS has many facets to it, some of which are related to privacy, but others are related to other considerations. Being discussed in the Privacy Group would make privacy the overriding priority, rather than a broader set of considerations (inclusive of privacy) discussed around the proposal and its potential implementation.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

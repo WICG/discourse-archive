@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Input character class whitelisting and blacklisting</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Input character class whitelisting and blacklisting</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/invoke-emoji-input/1030/2">Invoke emoji input</a>:</p>
+<aside class="quote" data-full="true" data-post="2" data-topic="1030">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/><a href="//discourse.wicg.io/t/invoke-emoji-input/1030/2">Invoke emoji input</a>
+</div>
+<blockquote>
+<p>Why wouldn’t you want this to just be part of the browser functionality for every text input?  Most/all text inputs are potential places you could put emoji.</p>
+</blockquote>
+</aside>
+<p>That brings up an interesting point, though: is there a way in the current set of <code>input</code> attributes to really say “don’t present input methods for these classes of character”? Like, we have type hints for <em>overall forms of input</em> to present, like number pads, and we have complex validation expressions to mark certain <em>overall strings</em> as invalid, but there’s no really good hinting mechanism for “don’t even suggest the user be allowed to type this kind of character because I’m just going to reject it” (unless that disallowed set is “everything but digits” or “non-URL/email characters”).</p>
+<p>Sure, a UA <em>could</em> try breaking down <code>pattern</code> to see if it can figure out what characters are contextually allowed by certain rules (although that’s going to fail for a <em>ton</em> of complex <code>pattern</code> values), but I think it’d be better if we had full-on “whitelist” and “blacklist” attributes to explicitly opt-in or opt-out to the inputs to certain well-defined character classes/sets (which could also be expanded to having the UA / polyfill <em>actively filter out</em> those characters, which is buggy code I know I’ve certainly written for more than a few scenarios).</p>
+<p>Granted, restricting the character set is frequently not the best UX (see the way GitHub handles invalid characters when creating repo names, where it just tells you what name it’s going to convert it to) - but it also frequently <em>is</em> the best UX for many <em>other</em> inputs and <code>contenteditable</code>-based controls (namely, ones involving numbers).</p>
+<p><em>Also</em> also, blacklisting and whitelisting by <em>named character classes</em> is a more friendly alternative to validation than <code>pattern</code> in terms of locale-dependent patterns (even though most locale-dependent patterns already have their own <code>type</code> - which can’t be applied to <code>contenteditable</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<p>And of course there’d have to be an advisory note in the spec and documentation for this, just as there should be for <em>every</em> bit of functionality that can be used to restrict input (like <code>pointer-events: none</code> and <code>touch-action: none</code>), that this is <em>only</em> to <strong>assist</strong> users in not inputting the described characters, and that you can <em>never</em> rely on UA behaviors to <strong>enforce</strong> any kind of restriction (due to <em>the nature of client-server relationships</em>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>Help me understand here, are you asking for lets say email class not to allow more than one @ symbol and date boxes not to allow letters?</p>
+<p>I think this may make sense in some cases certainly however as you mentioned this feels poor UX in some cases too. Is the main rationale dependable values that only validate? As validationMessage API helps with that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1039">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Help me understand here, are you asking for lets say email class not to allow more than one @ symbol and date boxes not to allow letters?</p>
+</blockquote>
+</aside>
+<p>It’s really about hinting what kind of input methods the UA should present in a more granular way than just declaring the type of data, ie. saying “don’t display the ‘insert emoji’ button if you have one”, or “only display the keyboard of ASCII-safe characters”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>Ok so this is strictly further clarification of what mobiles are currently doing rather than limiting down the keys a user can press on a hardware keyboard on a desktop?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>Well, I was thinking it would be helpful if desktop (and mobile) browsers implemented a soft limit on characters being input by physical keyboards, too (maybe triggering something like an <code>:error</code> class on the input element and/or firing an event).</p>
+<p>Also, desktop browsers have onscreen input methods, too. There’s no reason for rules like this to not apply to non-mobile IME.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="1039">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>Also, desktop browsers have onscreen input methods, too. There’s no reason for rules like this to not apply to non-mobile IME.</p>
+</blockquote>
+</aside>
+<p>Yup that’s why I stated hardware because of all the funky devices happening. <code>"My old IBM PCI keyboard"</code> should perhaps be the new way of referencing it <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<aside class="quote" data-post="6" data-topic="1039">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>maybe triggering something like an :error class on the input element and/or firing an event</p>
+</blockquote>
+</aside>
+<p>Yeah so the validation messages and API copes with that already (somewhat, it isn’t able to be styled still - <a href="//discourse.wicg.io/t/validation-styling/800">see other issue</a>)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

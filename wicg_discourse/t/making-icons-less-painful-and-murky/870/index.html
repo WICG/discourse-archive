@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Making icons less painful and murky</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Making icons less painful and murky</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>One thing that has <em>long</em> irritated me is that page icons, unlike backgrounds, stylesheets, or pretty much <em>any other resource that a page may load</em>, do <em>not</em> follow <code>Cache-Control</code>-family directives like <code>ETag</code> or <code>Expires</code> to get reloaded when they change. Icons, for some reason, are <em>only reloaded <a href="http://stackoverflow.com/questions/2208933/how-do-i-force-a-favicon-refresh" rel="nofollow noopener">if and when their URL changes</a></em>.</p>
+<p>EDIT EDIT EDIT: Apparently this has something to do with icons being overlayed by <a href="https://code.google.com/p/chromium/issues/detail?id=440322#c6" rel="nofollow noopener">the history system in Chrome</a>, which just feels like <em>all kinds</em> of mistaken. But at least it’s not a <em>platform-wide</em> mistake.</p>
+<p>There’s also the annoyance of having <a href="//discourse.wicg.io/t/a-standard-for-favicons-touch-icons-conformity-interoperability/678/3">tons and tons of different standards for icons</a>, and, of course, <a href="https://mathiasbynens.be/notes/touch-icons" rel="nofollow noopener">each browser has their own arbitrary selection criteria for which to use</a>, leading to <em>more</em> resolution-specific icons and <a href="https://xkcd.com/927/" rel="nofollow noopener">inexplicably separate new standards</a> like <code>manifest.json</code> (which <em>still</em> has this render-proliferation problem). What we really need is a simple “downscale whatever <code>rel="icon"</code> implements a size above what you need, or upscale the largest if there isn’t one” rule, which is capable of handling <em>all</em> of these (letting authors just upload a 2048x2048 icon and call it a day).</p>
+<p>On the subject of the “many different renders cascade”, we’re inexplicably supposed to host <em>tons</em> of different-resolution raster renders, for <em>every possible display size</em> of what is most likely the same icon. Past 32x32, there’s only so much hinting that’s realistically going to differentiate the images beyond just being differently-sized downscales of a larger source image - and the number of sizes we need to provide is doubling every year. It’d be more space- and transfer-efficient (both in terms of image size and definition size), not to mention smoother and more future-proof, to just be able to provide <em>the vector source</em> for icons. I could write a polyfill for this, too, but again, there’s no reason this can’t be implemented by the browsers themselves (since there are sufficient code paths to do this in userland).</p>
+<h2>TL;DR:</h2>
+<ol>
+<li>Icon caching needs to follow the regular asset pipeline caching model.</li>
+<li>In the presence of links to multiple sizes and definitions matching multiple vendor-specific standards, precedence and selection for icon loading and usage behavior needs to be simplified, specified, standardized, and made polyfillable.</li>
+<li>Browsers need to learn how to use SVG icons. I shouldn’t have to upload a new set of renders to my server every time Apple releases a new iPhone with an all-unprecedented Super Retina 2 Turbo HD Tournament Edition Plus-Size screen resolution.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>Here are my thoughts, in no good order - ideally these could be rewritten into a sensible order and specified in more strict spec-speak language:</p>
+<h2>Icon selection algorithm</h2>
+<p>Icons MUST be specified as <code>&lt;link&gt;</code> children of the document’s <code>&lt;head&gt;</code> with rules following the current HTML Standard. Beyond this, icons may be defined in any order - User Agents MUST NOT prioritize definition order over size in any way.</p>
+<p>User-Agents have a “minimum viable resolution” (heretofore known as the <strong>MVR</strong>). (On a traditional desktop, this would be 16x16, on an Android phone running Chrome on Lollipop, this would be 192x192, etc.) If and <em>only</em> if no icons are specified in the head that provide at least the size of the MVR, User-Agents MAY look for icons in legacy vendor locations. For this reason, it is recommended that developers implement either a vector source with <code>sizes="any"</code>, or a sufficiently large raster source, as a final fallback.</p>
+<p>User-Agents MUST start by loading the icon defined by a link that is smallest while still being greater than the MVR. (For the purposes of this selection algorithm, “any” has an infinite size.)</p>
+<p>Caveat: if an icon is defined that is smaller but “close” (by the UA’s assessment) to the MVR, and the next-largest would be “prohibitively large” (again by the UA’s assessment) to retrieve, the User-Agent MAY elect to upscale the “close” smaller icon (or display a reduced-size version with transparent margins). The User-Agent MUST NOT request undefined / vendor-specific locations as long as a larger icon is defined.</p>
+<p>(Example a User-Agent with an MVR of 196px encounters a page with a 192px icon defined and a 9000px icon defined, that User-Agent MUST use either the 192px icon upscaled, or retrieve the 9000px icon. it MUST NOT look for /apple-touch-precomposed-196px.)</p>
+<p>If an icon fails to load (eg. 404), User-Agents MUST re-enter this logic with that icon removed from the pool. User-Agents MUST retry loading that icon the next time the page is loaded.</p>
+<p>If any icon link is specified <em>without</em> a size in the head, if no suitable links with sizes are specified, the first one MUST be retrieved before resorting to vendor icons. If, after retrieval, it is larger than the MVR, it MUST be downscaled using the User-Agent’s best-quality downscaling. If it is smaller than the MVR, User-Agents MAY search fo an alternative in legacy vendor locations.</p>
+<p>manifest.json takes precedence <strong>only</strong> when a page is being “installed” in some way, in which case it is assumed that the User-Agent will retrieve <em>all</em> relative icon sizes needed to represent the icon in its interface (using the same downscale-next-largest logic).</p>
+<p>(Maybe manifest.json could be used as an alternative in the event that no icon links are defined in <code>&lt;head&gt;</code> - that would be polyfillable.)</p>
+<p>Vendors are <strong><em>strongly discouraged</em></strong> from implementing any new vendor-specific icon locations (read: plz no apple-touch-icon-973px in 2017).</p>
+<h2>Icon retrieval</h2>
+<p>Each page has a property (or method) like <code>document.displayIcon</code> that resolves to the URL of the icon that is being used to represent the page live. (Assigning to this property could set the href on the corresponding link element, or create one on demand if none is present.)</p>
+<p>Icons are retrieved the same way as stylesheets, and are refreshed with the same logic.</p>
+<p>(One thing that would be cool would be if the fetch(es) for this (these) resource(s) were also exposed, but the Fetch API isn’t sufficiently specced out to permit designing this yet AFAIK.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>Plus, in the ~month since this was posted, Apple screwed up icons for <em>every other user agent</em> by defining a <em>different kind of icon</em> that is differentiated by <em>an additional attribute on the element</em>. (Isn’t there a rule somewhere in some spec that says “don’t add attributes to distinguish things that will otherwise be recognized as something undesirable by UAs that don’t recognize the attribute”? There should be.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>On a related note, I’m building an extension right now that, as part of its functionality, displays pages’ icons, and it gets messed up by <code>.ico</code> images - Chrome can render them just fine, but it uses <em>the largest sie defined</em> (I think) and then <em>downscales</em> that to whatever size I’m using it at (I think? Maybe attributes fix this. Should experiment.)</p>
+<p>This ends up looking ugly for stuff like Gitter, which uses a .ico with a 16x16 render and a 32x32, and the 32x32 does <em>not</em> cleanly downsample to 16x16.</p>
+<p>Not sure what I want here: is there already a spec for selecting images from multi-image container formats (would also be relevant for TIFF etc)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>I agree SVG icons for sizes beyond a certain scale are ideal. (Safari’s new Pinned Tabs seem to scale them down to 16×16 though, so maybe they stopped caring?)</p>
+<p><a href="http://timkadlec.com/2013/04/media-queries-within-svg/" rel="nofollow noopener">With media queries it’s possible to “hint” SVGs so they look better at smaller sizes</a>, but the only browser that uses SVG in favicons, Firefox, doesn’t run a full SVG renderer for resource reasons, so it doesn’t work in practice. Maybe it should? <a href="https://www.w3.org/Graphics/SVG/WG/wiki/Proposals/SVG_hinting">The W3C has been chewing on this, and their list of problems/use-cases is handy.</a></p>
+<p>I’d love to scorch the earth and start over with something that doesn’t fill every <code>&lt;head&gt;</code> with identical <code>&lt;link&gt;</code>s, but I guess we’d have to do an HTML5 and figure out what in the hell browsers are currently already doing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phbernard</div>
+          <div class="creation_date">2015-12-10</div>
+          <div class="post_content">
+<p>I have no strong opinion on how icons should be declared. But I would like to emphasis an overlooked issue: design discrepancy across platforms.</p>
+<p>My favorite is the difference between Android Chrome and iOS Safari. At first, they look very similar. Same kind of OS, same kind of devices and the same “Add to home screen” feature (ie. the ability to place a bookmark on the home screen, among native apps). Using the same icon seems to make a lot of sense. In practice, it’s not that clear. Google’s native apps icons (Maps, Agenda, YouTube…) are not square but use transparency, with a slight drop shadow. Using this kind of style for a webapp icon sounds like a good idea. But iOS prevents transparency for icons: submit a transparent Touch icon and iOS will fill the transparent regions with black. Better design two different icons after all.</p>
+<p>At the moment, the most widely used mechanism to declare multi-platform icons is the <code>link</code> markup with the <code>sizes</code> attribute. And it is also the most annoying. Some desktop browsers tend to use the largest icon, which is often the 192x192 icon for Android Chrome (for prior versions which do not support manifest.json). Whereas the proprietary, unsatisfying Touch icon has the merit of being used by iOS (and platforms for which iOS look and feel is okay).</p>
+<p>A set of icons which differ only by their resolution is not enough. Even a system based on platform type (eg. phone vs tablet vs desktop, or touch- vs non-touch-screen) is not enough. Although it would be convenient to be able to ship a one-size-fits-all icon, it is important to have the ability to provide a particular icon to a particular platform.</p>
+<p><strong>TL; DR:</strong></p>
+<p>It is not enough to pick the right icon solely with resolution. Each platform has its own design guidelines. It is important to be able to provide a particular icon to a particular platform.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-12-23</div>
+          <div class="post_content">
+<p><span class="mention">@phbernard</span> has a good point: although I personally don’t like trying to cater my icons to individual platforms (partly due to exactly the problems he describes), I know this is a common design pattern (as seen in generators like <a href="https://realfavicongenerator.net/" rel="nofollow noopener">https://realfavicongenerator.net/</a>), and having these aesthetic differences entangled with <em>resolution changes</em> is unacceptable (and having a vendor-specific override like <code>apple-touch-icon</code> basically all the same problems with leaky semantics as vendor prefixing).</p>
+<p>Perhaps there should be another attribute on <code>link</code> elements for icons (like the <code>sizes</code> attribute), like <code>theme</code>, which can contain a list of spec-defined keywords like <code>primary</code>, <code>flat</code>, <code>skeumorphic</code>, <code>solid-white</code>, and <code>opaque-square</code>, where each of these are effectively euphemisms for specific current platform aesthetics, but may also be reused for future platforms with similar designs:</p>
+<ul>
+<li>
+<code>primary</code>: In lieu of any other implemented design concerns, this icon should be used (like the <code>rel=canonical</code> of themes)</li>
+<li>
+<code>flat</code>: Android, iOS 7+</li>
+<li>
+<code>skeumorphic</code>: iOS &lt;7</li>
+<li>
+<code>opaque-square</code>: iOS and other platforms that don’t support transparent backgrounds for icons</li>
+<li>
+<code>solid-white</code>: Windows 8 tile icons</li>
+<li>
+<code>solid-black</code>: OSX Safari pinned tabs</li>
+</ul>
+<p>Vendors may choose to prioritize icons for environment-fit based on these keywords, in either direction (eg. iOS might add a +1 priority for <code>flat</code> and <code>opaque-square</code>, whereas Android may treat <code>flat</code> as +1 and <code>opaque-square</code> as -1). Content authors are <strong>strongly discouraged</strong> from varying resolution between differently-themed icon variants (eg. only providing a 2048px variant for the <code>skeumorphic</code> themed icon): vendors are permitted to prioritize higher-resolution but mismatchingly-themed icons over lower-resolution but properly-themed icons. (NOTE: This seems like it has the best-aligned interests in the worst-case breakdown-of-adherence scenario, which would essentially resemble what we have now.)</p>
+<p>Vendors could also add the ability to specifically target their environments’ rules with trademarked keywords like <code>android</code> or <code>ios</code>, with the explicit statement that vendors <em>must not</em> prioritize another vendor’s keyword over a spec-defined one (including <code>default</code>). Ideally, documentation for specifying icons for a specific document would suggest picking vendor keywords <em>alongside the closest spec keywords</em>, akin to the way <code>shortcut icon</code> is often recommended as a rel over <code>icon</code>:</p>
+<pre><code class="lang-auto">&lt;link rel="icon" sizes="any" theme="primary skeumorphic" href="/brand/logo.svg"&gt;
+&lt;link rel="icon" sizes="any" theme="flat android" href="/brand/android-logo.svg"&gt;
+&lt;link rel="icon" sizes="any" theme="flat opaque-square ios" href="/brand/ios-logo.svg"&gt;
+&lt;link rel="icon mask-icon" sizes="any" theme="solid-black" color="#abc123" href="/brand/mask-icon.svg"&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-12-23</div>
+          <div class="post_content">
+<p>Next steps for this:</p>
+<ul>
+<li>Write an explainer.</li>
+<li>Write a use cases document.</li>
+<li>Write a spec describing the interactions of the mechanisms and algorithms above.</li>
+<li>Condense the spec into a “Recommendations for Vendors” document stating what browsers will need to start doing differently from what they’re doing now.</li>
+<li>Write a polyfill to rewrite a series of <code>rel</code> definitions matching said spec into a single <code>link</code> element to make the correct icon selection crystal clear for the browser (including <a href="http://stackoverflow.com/a/34440779/34799" rel="nofollow noopener">a shim for rasterizing SVG favicons</a>).</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phbernard</div>
+          <div class="creation_date">2016-06-01</div>
+          <div class="post_content">
+<p>This post is similar to what I wrote in <a class="inline-onebox" href="https://discourse.wicg.io/t/making-icons-less-painful-and-murky/870/4#post_6">Making icons less painful and murky</a>, so you can safely ignore this one. I’m writing this to describe how the lack of design criteria impacts Android Chrome.</p>
+<p><strong>TL; DR:</strong> As of today, you can design a set of icons for a web app that mimic Google’s own Android native app icon styles. However, this is brittle because the icons are only distinguished by their resolution (eg. “192x192” vs “512x512”) instead of roles (eg. “this icon is for the home screen” vs “this icon is for the splash screen”) or characteristics (eg. “this icon has a drop shadow” vs “this icon is flat”).</p>
+<p>On Android, Google’s native apps (GMail, Maps, etc.) have two kind of icons and two distinct styles:</p>
+<p><strong>Home screen</strong>: icons have a small drop shadow.</p>
+<p><img height="102" src="//discourse.wicg.io/uploads/default/original/2X/9/9a14e4601c00f5e038b211d6c6dcfff63e57f753.png" width="138"/></p>
+<p><strong>Splash screen</strong>: icons have no drop shadow.</p>
+<p><img height="231" src="//discourse.wicg.io/uploads/default/original/2X/c/c70f497293175cad15cf118f6b8d7e8f319b3ab0.png" width="328"/></p>
+<p>If you develop a web app, you can legitimately want to follow the same styles with your own app icon. You can actually do this by creating a 192x192 icon with a shadow (it will be used as the home screen icon) and a 512x512 icon without shadow (it will be used as the splash screen icon), and declare them in the manifest file.</p>
+<p>However, this is not reliable. What if someday Android Chrome uses the 512x512 icon as the home screen?</p>
+<p>This emphasises the need of a system such as <span class="mention">@stuartpb</span>’s, described above.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-07-16</div>
+          <div class="post_content">
+<p>Jotting down a couple notes here:</p>
+<ul>
+<li>The way we currently specify icons is <em>so wrong</em>, in that we have <em>inherently tied resolution to size</em> - one very important extension any effort in this space should introduce is a decoupling of <em>“size”</em> (which is an abstract unit approximating real-world sizes, most consistently based on fraction of the user’s available view angle) from <em>resolution</em> (which is a concrete count of individual pixel dots in an image that, depending on the format, likely does not even apply). CSS (and the <code>&lt;picture&gt;</code> element in conjunction) understands this: icon definitions (including manifest.json) need to come up to speed.</li>
+<li>Just because an image is an SVG doesn’t necessarily mean it’s resolution-independent. SVGs can have resolution-dependent components, especially if they embed a raster mask <a href="http://stuartpb.github.io/tf2-vai/tf/medic/bonesaw_spy_callers.svg" rel="nofollow noopener">(I just made an SVG like this the other day)</a>. Resolution should <em>always</em> be treated as a variable, <em>never</em> superseded by inference from the image format - although “any” should <em>always</em> be an acceptable value, even for nominally raster formats (though possibly with a distinction between pixelated or smooth upscaling).</li>
+<li>Deterministic design elements, such as drop shadows, should <em>always</em> be handled by the platform, and should <em>never</em> be expected to have been handled by the author’s content pipeline. (If and when the pendulum of design swings back to pseudo-three-dimensional skeumorphism where shadows <em>need</em> to be <em>just so</em>, shadows should <em>still</em> be handled by the platform, but based on something like an <em>optional</em> separate depth mask.) In this same vein, icon images should never <a href="https://developer.chrome.com/webstore/images#iconsize" rel="nofollow noopener">be expected to have dead space around the icon</a> - if the UA wishes to maintain a “weight” to its icons, it needs to integrate <a href="https://github.com/stuartpb/chachacat" rel="nofollow noopener">a way to weigh and shrink the icons appropriately itself</a>.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

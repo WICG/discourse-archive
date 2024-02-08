@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Force/prevent device tooltips with CSS</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Force/prevent device tooltips with CSS</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-09-15</div>
+          <div class="post_content">
+<p><a href="//discourse.wicg.io/t/disable-svg-tooltips-with-title-pointer-events-none/1054">Originally proposed by</a> <span class="mention">@MT</span></p>
+<h2>Use Cases</h2>
+<ol>
+<li>
+Force mobile devices to display native tooltips for content, instead of elements like `<abbr>` just plain not working at all.
+```css
+abbr[title] {
+  show-tooltip: always;
+}
+```
+<p>This has advantages as a native solution, so the web page needn’t recreate complex visibility logic. (“Does the entire tooltip fit on the screen?” is a question most tooltip libraries struggle with, and a pure CSS solution can’t do it at all.)</p>
+</abbr>
+</li>
+<li>
+Implementing custom tooltips, so you can use `title` semantically and as a fallback, without having the dreaded double-tooltip. (GitHub's style guide currently uses `aria-label` for exactly this purpose, which has problems.)
+<pre><code class="lang-auto">&lt;button&gt;
+  &lt;img src="help.png" alt="Help"
+       title="This form allows JPEG and PNG uploads." /&gt;
+&lt;/button&gt;
+</code></pre>
+<pre><code class="lang-css">.help-sign {
+  show-tooltip: never;
+  position: relative;
+}
+
+.help-sign:hover::before,
+.help-sign:focus::before {
+  content: attr(title);
+  display: block;
+  position: absolute;
+  left: 50%;
+  /* etc. */
+}
+</code></pre>
+</li>
+<li>Suppressing unwanted tooltips when using SVG's `` element for accessible names.
+<pre><code class="lang-auto">&lt;svg&gt;
+  &lt;title&gt;A bar chart showing buzzwords increasing over the past year.&lt;/title&gt;
+  &lt;!-- ... --&gt;
+&lt;/svg&gt;
+</code></pre>
+<pre><code class="lang-css">svg|title { show-tooltip: never; }
+</code></pre>
+</li>
+<h2>Syntax</h2>
+<p>The property <code>show-tooltip</code> takes the values <code>always</code>, <code>never</code>, and <code>auto</code> (for overriding back to normal behavior).</p>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-09-16</div>
+          <div class="post_content">
+<p>I like the idea in general (as I’ve briefly proposed it myself earlier in a <a href="//discourse.wicg.io/t/disable-svg-tooltips-with-title-pointer-events-none/1054/2">comment</a> here at WICG).</p>
+<p>I’m not sure about exact keywords for value though. It probably makes sense to use <code>show</code> and <code>none</code> (or <code>hide</code>) which are more consistent with existing CSS keywords (<code>none</code> is used widely (e.g. <code>display: none</code>); <code>show</code> / <code>hide</code> are used e.g. in the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/empty-cells" rel="nofollow noopener">empty-cells</a> property).</p>
+<p>Also, the property could probably be named just <code>tooltip</code> instead of <code>show-tooltip</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-09-16</div>
+          <div class="post_content">
+<p>Ah, I should have known I originally got it from you. Linked in the original post.</p>
+<p>I took the <code>always</code> and <code>never</code> values from some experimental specs I’ve seen floating around, but yours are simpler and shorter. Seems better to me.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

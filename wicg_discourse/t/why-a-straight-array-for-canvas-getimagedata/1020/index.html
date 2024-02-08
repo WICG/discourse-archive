@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Why a straight array for canvas.getImageData?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Why a straight array for canvas.getImageData?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anthony_Caudill</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>One of the things that’s perplexed me about HTML 5 was the decision to string the color component values of getImageData together in a straight, one dimensional array. From a developer’s perspective, it is both inconvenient and unperformant to have to carefully loop through each of the values by adding 1, 2, and 3 to the indices of the colors. From an organizational perspective, it’s a nightmare because you have to copy the array to an array of appropriately structured objects to make sense of the data. This copying slows all operations down by orders of magnitude and needlessly complicates code. Why not make an array of objects with properties red, green, blue, and alpha?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>It is actually more performant to return a one dimensional array of groups of four elements, because this is what is stored in the native code in the browser. Constructing thousands (or even millions) of small Pixel objects with r, g, b and a properties would be a significant performance impact. It’s straightforward to do this yourself if you want, but the conversion to and from this format would probably be a lot slower than the pixel operations you were going to do anyway.</p>
+<p>One technique I like is to make a Uint32Array view to the returned data. Now each pixel is one array element, and you can pick out pixels with bitwise logic (which is very fast).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anthony_Caudill</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>It’s also useless, because any and all operations you’d need to access the image buffer for require direct interaction with the color components. Your bitwise logic operations would be redundant if the pixels were sorted into object arrays at the browser level, nor are they faster than to create object arrays. It makes zero sense for browser vendors to code canvas pixels as a straight array, unless that’s the way the hardware expects it to be fed and even then, a “visor” could interpret the array as objects in the same way Uint32Array interprets the array as an integer. Your bitwise logic extractions are absolutely not faster, or even as fast, than a one-time native code object array struct.</p>
+<p>Just to find out, I made an algorithm which extracts palettes from true colors images and exchanges them. The one which compensates for the array not being sorted into objects is actually slower than the one which does. Switching just one image’s palette takes 2 1/2 minutes on a Core2Duo 2.66 Ghz machine with one core.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>Yes, the hardware does use it in that format too. I have a lot of native code experience and every image related API I have ever used in native land also uses that kind of format. It is the fastest format, because that is the raw representation and converting it to or from anything else would have an O(n) performance overhead.</p>
+<p>I’d be curious to see your benchmark, since I am pretty sure the fastest way is to access the typed array directly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1020">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/e9a140/40.png" width="20"/> Anthony_Caudill:</div>
+<blockquote>
+<p>Just to find out, I made an algorithm which extracts palettes from true colors images and exchanges them. The one which compensates for the array not being sorted into objects is actually slower than the one which does. Switching just one image’s palette takes 2 1/2 minutes on a Core2Duo 2.66 Ghz machine with one core.</p>
+</blockquote>
+</aside>
+<p>Is that benchmark taking the time to convert the Array <em>into</em> your desired format into account? Remember: <em>this is the format the image is already in</em>. Sending the same format to JS lets the VM assemble the Uint8ClampedArray with a hardware/kernel/stdlib-assisted operation like <code>memcpy</code> under the hood (or even a copy-on-write object that reads <em>directly</em> from the underlying data without needing a special RGBA-address-translation interface) - even doing the work for the conversion <em>in the implementation</em> is still going to have that hitch.</p>
+<p>Also, if your comparison <em>is</em> taking the conversion time into account and it’s faster, are you doing linear access for both loops? Row-oriented loops can end up having faster performance, even with higher complexity, than column-oriented loops, due to the performance advantages of <a href="https://en.wikipedia.org/wiki/Locality_of_reference" rel="nofollow noopener">cache locality</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anthony_Caudill</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>No, it doesn’t, because as I explicitly said, I made two version of the algorithm, one with reorganization and one without. You see, the additional operations required to pick out each and every time sum up to more than the cost of reorganization at start, particularly when the data is operated on multiple times. The more complex the operation, the greater the ultimate penalty.</p>
+<p>Here’s a fiddle of the whole thing, complete with benchmarking. The operation takes a while so you’ll need to either leave the browser alone during the process (the browser will become unresponsive during the benchmarking), or approve the prompts if your browser tries to time it out.</p>
+<p>Instructions: Browse for any two different images using the buttons provided (Image and Palette). Then click “Repalette”. The first image will be recolored to match the palette of the second. You won’t be able to see it though, 1) because the benchmarking requires the original image be used rather than the recolor; and 2) browsers like Firefox have runover problems between setTimeout and long-running code. (I could fix that… it’s not a priority. If you want to see the recolor, comment out the setTimeout in Repalette().)</p>
+<p><a class="onebox" href="https://jsfiddle.net/hc52jx04/5/" rel="nofollow noopener" target="_blank">https://jsfiddle.net/hc52jx04/5/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="1020">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/e9a140/40.png" width="20"/> Anthony_Caudill:</div>
+<blockquote>
+<p>You see, the additional operations required to pick out each and every time sum up to more than the cost of reorganization at start, particularly when the data is operated on multiple times.</p>
+</blockquote>
+</aside>
+<p>Okay - so that’s the performance profile for <em>your</em> use case. There’s <em>nothing stopping you</em> from implementing this optimization <em>for your use case</em>.</p>
+<p>However, the point I think you might be missing here is that <em>many</em> operations on image data (I would cautiously estimate the <em>majority</em> of them) <em>don’t</em> involve repeated accesses to the same points (some, like <a href="https://github.com/stuartpb/chachacat" rel="nofollow noopener">a calculation of the convex hull</a>, don’t even access <em>every</em> point). For <em>these</em> use cases, reformatting the array would be a needless performance hit, and for the cases where it <em>does</em> increase performance (I assume because the property accesses get JITted into register operations in a way the VM doesn’t anticipate for typed arrays), it’s using an operation that the end dev can optimize for their own case (maybe you’ll want to implement some layers of memoization alongside the raw channel values).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anthony_Caudill</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>Here’s a newer edit of the fiddle, with recommendations from Moz’s graphics team. <a href="http://jsfiddle.net/hc52jx04/16/" rel="nofollow noopener">http://jsfiddle.net/hc52jx04/16/</a></p>
+<p>On my computer, the reorganized algorithm is 200x faster.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Background fetch</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Background fetch</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-02-09</div>
+          <div class="post_content">
+<p>The service worker is capable of fetching and caching assets, the size of which is restricted only by <a href="https://storage.spec.whatwg.org/#usage-and-quota">origin storage</a>. However, if the user navigates away from the site or closes the browser, the service worker is likely to be killed. This can happen even if there’s a pending promise passed to <code>extendableEvent.waitUntil</code>, if it hasn’t resolved within a few minutes the browser may consider it an abuse of service worker and kill the process.</p>
+<p>This makes it difficult to download and cache large assets such as podcasts and movies, and upload video and images. Even if the service worker isn’t killed, having to keep the service worker and therefore the browser in memory during this potentially long operation is wasteful.</p>
+<h1>Goals</h1>
+<ul>
+<li>Enable background-download/upload of multiple resources</li>
+<li>Allow the OS to handle the fetch, so the browser doesn’t need to continue running</li>
+<li>Allow the OS to show UI to indicate the progress of the fetch, and perhaps allow the user to pause/abort</li>
+<li>Allow the OS to deal with poor connectivity by pausing/resuming the download/upload (may be tricky with uploads, as ranged uploads aren’t a thing)</li>
+<li>Allow the app to react to success/failure of the fetch, perhaps by showing a notification</li>
+</ul>
+<h1>Status</h1>
+<p>There’s an explainer at <a href="https://github.com/jakearchibald/background-fetch">https://github.com/jakearchibald/background-fetch</a>, along with a collection of issues by members from multiple browser vendors. I’m going to rewrite the explainer soon, incorporating the feedback so far.</p>
+<p>There’s an <a href="https://groups.google.com/a/chromium.org/forum/#!searchin/blink-dev/background%2420fetch/blink-dev/Ia9_-CVrl1U/oW0riJbHBAAJ">intent to implement</a> for Chromium. This will help guide the design of the spec and API. We also plan to conduct an origin trial to assess API usability and make changes as a result.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2017-02-10</div>
+          <div class="post_content">
+<p>Based on positive feedback in <a href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-dev/Ia9_-CVrl1U/jEBQGVv_BQAJ;context-place=forum/blink-dev">blink-dev thread</a>, this has been moved to a WICG repo: <a href="https://github.com/WICG/background-fetch">https://github.com/WICG/background-fetch</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p><span class="mention">@cwilso</span> I’ve added a stub spec. Can you mirror the repo to github pages? I don’t have access to settings so I can’t do this myself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2017-02-22</div>
+          <div class="post_content">
+<ol>
+<li>Added default gh-pages branch</li>
+<li>Removed master</li>
+<li>Made you an admin.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-02-22</div>
+          <div class="post_content">
+<p><span class="mention">@cwilso</span> <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/> Using gh-pages is no longer recommended (and looks to no longer be available for new repos at all).  There’s a setting for turning on GitHub Pages, with option to have it expose either the root of the repo or the /docs folder.</p>
+<p>I guess Jake can do that now, and switch the branch back to being named “master”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2017-02-22</div>
+          <div class="post_content">
+<p>gah, sorry.  that’s what happens when I get jetlagged and behind.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

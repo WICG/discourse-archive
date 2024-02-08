@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>WebCodecs Proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">WebCodecs Proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-06-24</div>
+          <div class="post_content">
+<h1>WebCodecs</h1>
+<p>API that allows web applications to encode and decode audio and video</p>
+<p>Many Web APIs use media codecs internally to support APIs for particular uses:</p>
+<ul>
+<li>HTMLMediaElement and Media Source Extensions</li>
+<li>WebAudio (decodeAudioData)</li>
+<li>MediaRecorder</li>
+<li>WebRTC</li>
+</ul>
+<p>But there’s no general way to flexibly configure and use these media codecs. Because of this, many web applications have resorted to implementing media codecs in JavaScript or WebAssembly, despite the disadvantages:</p>
+<ul>
+<li>Increased bandwidth to download codecs already in the browser.</li>
+<li>Reduced performance</li>
+<li>Reduced power efficiency</li>
+</ul>
+<p>It’s great for:</p>
+<ul>
+<li>Live streaming</li>
+<li>Cloud gaming</li>
+<li>Media file editing and transcoding</li>
+</ul>
+<p>See the <a href="https://github.com/pthatcherg/web-codecs/blob/master/explainer.md" rel="nofollow noopener">explainer</a> for more info.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-06-26</div>
+          <div class="post_content">
+<p>This sounds great! Currently we ship a WebAssembly encoder for WebM Opus in our web app, even though Chrome has one built-in, just so we can get faster-than-realtime encoding.</p>
+<p>It’s not quite clear to me from the explainer how the container formats work though. It looks like we can get a stream from an Opus encoder, but how would those be arranged in to a WebM container? Would that still be left to the web app to solve? It’s a common case for transcoding and the browser also has readers and writers for the container formats too, so it would be nice if that could be covered as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-06-26</div>
+          <div class="post_content">
+<p>Does this proposal include the ability to decode any video that <code>HTMLMediaVideoElement</code> can decode?</p>
+<p>We can already use <code>decodeAudioData()</code> of <code>AudioContext</code> and <code>startRendering()</code> of <code>OfflineAudioContext()</code> to get audio data. What have been trying to achieve is getting video data; e.g., <code>decodeVideoData()</code> as an array of <code>ImageData</code> or <code>ImageBitmap</code> faster than real-time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-06-26</div>
+          <div class="post_content">
+<p>The scope of this explainer excludes container formats.  That would be left to the JS/WASM.  The idea here is to do what the JS/WASM cannot (as efficiently) do, but let it it control everything from there.  However, if there is enough interest, I suppose one could also propose/design some kind of WebMediaContainers API that goes well with this one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-06-26</div>
+          <div class="post_content">
+<p>The idea here is to expose all of the codecs that the browser currently has underneath in the implementation of HTMLMediaElement, so yes, it should be able to decode any video.  However (as mentioned in a previous comment), the media going into the decoder is not containerized.  So, if you want to decode vp8 inside of mp4, you need to parse the mp4 and pass in the raw vp8 rather than passing in the mp4.</p>
+<p>It’s true that decodeAudioData is already there, but it has flaws pointed out in the explainer.</p>
+<p>The idea of this proposal is to basically give you “decodeVideoData”, but also “encodeVideoData” and “encodeAudioData”, and all with a better (but lower-level) API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-06-26</div>
+          <div class="post_content">
+<p>Filed an issue relevant to the current language in Explainer about <code>MediaRecorder</code> being able to record multiple tracks, which is not presently possible.</p>
+<p>Also filed a PR to include an additional use case of merging multiple input media files to a single output stream or file.</p>
+<p>Can</p>
+<blockquote>
+<p>Decoded and encoding images</p>
+</blockquote>
+<p>be clarified at the Explainer?</p>
+<p>Does the proposal intend to provide a means to get the encoded images from any container that <code>HTMLVideoElement</code> is currently capable of decoding?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-06-26</div>
+          <div class="post_content">
+<blockquote>
+<p>The idea of this proposal is to basically give you “decodeVideoData”, but also “encodeVideoData” and “encodeAudioData”, and all with a better (but lower-level) API.</p>
+</blockquote>
+<p>Ok. That should be close enough if not exactly what have been trying to achieve at <a href="https://github.com/guest271314/MediaFragmentRecorder" rel="nofollow noopener">https://github.com/guest271314/MediaFragmentRecorder</a>, by piping input through <code>MediaRecorder</code> to get various, potentially dissimilar input containers and codecs into <code>webm</code> e.g., input <code>const merged = await decodeVideoData(["video1.webm#t=5,10", "video2.mp4#t=10,15", "video3.ogv#t=0,5"], {codecs="openh264"});</code>; similar to the output of using <code>mkvmerge</code> (though <code>mkvmerge</code> also sets cues and duration, which <code>MediaRecorder</code> at least at Chromium, does not).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2483_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brion</div>
+          <div class="creation_date">2019-07-13</div>
+          <div class="post_content">
+<p>I really like this proposal – it would be very useful for several of my plans for Wikipedia’s video support, including in-browser transcoding on upload and realtime composition and transitions in a video editor… as long as it’s possible to manipulate and synthesize the data in a DecodedVideoFrame.</p>
+<p>Currently it looks like there’s no way specified to manipulate one other than to pass it into stuff for playback or recording, and no way to create one except through decoding a compressed frame.</p>
+<p>Ideally, I’d be able to get at the pixels in a decoded frame so I can do something custom with them (recode them manually, or combine with another decoded frame or a generated image to create a transition or visual effect) and then send that on.</p>
+<p>Would you consider adding pixel-data getters and a constructor for DecodedVideoFrame, or would another way of doing these be preferable? Thanks!</p>
+<p>[edit: It occurs to me that some kind of composition of this proposal with something like <a class="inline-onebox" href="https://discourse.wicg.io/t/proposal-allow-media-source-extensions-to-support-demuxed-and-raw-frames/3730">[Proposal] Allow Media Source Extensions to support demuxed and raw frames</a> may be a happy union on that front. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/> ]</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2019-07-15</div>
+          <div class="post_content">
+<p>Re: composition with MSE. Yes I had that thought as well. If we end up with standardized definitions for an EncodedPacket and DecodedFrame we could add append methods for arrays of those to MediaSource SourceBuffer objects.</p>
+<p>It’s possible that has a longer standardization process since it requires new APIs versus an extensions to the byte stream registry. It’s also unclear exactly how a wasm decoder would be able to directly write into a JS object. Possibly the object can use ArrayBufferViews that can point into wasm memory.</p>
+<p>(Lets keep subsequent discussion of that on the other proposal. Thanks!)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-07-23</div>
+          <div class="post_content">
+<p>It should be possible to get to raw audio through WebAudio.  It should also be possible to go through a canvas to get to the raw pixel data, but that’s rather hacky.  We have been discussing better ways to get access to raw pixel data but it’s complicated to do it in a way that’s easy and fast.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2454_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npurushe</div>
+          <div class="creation_date">2019-08-27</div>
+          <div class="post_content">
+<p>We at Twitch are supportive of this proposal. This can potentially remove a lot of the overhead containers add (both chunked CMAF and MPEG-TS) for low latency streaming.</p>
+<p>It would also be useful to have a way to enumerate the codecs available and their capabilities, e.g max profile, level supported for video.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sagoston</div>
+          <div class="creation_date">2019-08-28</div>
+          <div class="post_content">
+<p>We at Sony Interactive Entertainment are supportive of this proposal.  The efficiency and flexibility provided would be a great addition!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2543_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">santosh_sampath</div>
+          <div class="creation_date">2019-08-29</div>
+          <div class="post_content">
+<p>I think this would be a great replacement for PPAPI video codecs that was available in Chromebooks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2301_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboba</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>This is a very interesting proposal that can potentially apply to both streaming and real-time media.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-09-13</div>
+          <div class="post_content">
+<p>Given the amount of response, I’ll transfer ownership of the git repository over to the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-09-13</div>
+          <div class="post_content">
+<p>The repo now lives at <a href="https://github.com/wicg/web-codecs" rel="nofollow noopener">https://github.com/wicg/web-codecs</a></p>
+<p>Thank you for flying WICG!! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="3662">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/pthatcher/40/2282_2.png" width="20"/> pthatcher:</div>
+<blockquote>
+<p>However, if there is enough interest, I suppose one could also propose/design some kind of WebMediaContainers API that goes well with this one.</p>
+</blockquote>
+</aside>
+<p>What is necessary to begin that process?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-09-23</div>
+          <div class="post_content">
+<p>Probably right an explainer and post it on discourse.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-24</div>
+          <div class="post_content">
+<p>Posted the proposal on discourse. What needs to be in the explainer?</p>
+<pre><code>let videoWriter = new WebMediaContainer({videoCodec:"WebM", audioCodec:"Opus", ...videoWriterSettings});
+videoWriter.addVideoFrame(
+  videoFrame /* WebP, PNG, etc. as Blob, ArrayBuffer, data URI, ImageBitmap, ImageData, canvas */, frameDuration, width, height, /* WebVTT, ...frameSettings */
+);
+videoWriter.addAudioFrame(
+   audioFrame /* AudioBuffer, Float32Array, Blob, ArrayBuffer, data URI, other... */, sampleRate, numberOfChannels, frameDuration
+);
+await videoWriter.compile(); // Blob
+</code></pre>
+<p>Expose the media encoders, muxers, and containers writers that the browsers already have in source code directly to the developer?</p>
+<p>Again, the concept is very simple. Browsers that have implemented <code>MediaRecorder</code> already write data to a container, currently WebM or Matroska. The developer should be able to use that internal code in JavaScript. Whether the input be static files or live media.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

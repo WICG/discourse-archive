@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>IndexedDB 2.0 performance improvements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">IndexedDB 2.0 performance improvements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/630_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nolanlawson</div>
+          <div class="creation_date">2015-06-28</div>
+          <div class="post_content">
+<p>I’ve mentioned this before to <span class="mention">@inexorabletash</span> and <span class="mention">@jonathank</span>, but I thought it would be worthwhile to jot down my thoughts in one place.</p>
+<p><strong>TLDR</strong>: Is <code>getAll()</code> good enough to get top performance out of IndexedDB? Do we also need native joins or <code>putAll()</code>?</p>
+<p>There’s been <a href="//discourse.wicg.io/t/indexeddb-api-clean-up-promises/876">some discussion</a> about bringing better integration with promises or explicit transaction support to IndexedDB. But from the PouchDB perspective, our biggest ask for IndexedDB 2.0 would be neither promises nor transaction control, but rather better bulk APIs to get faster performance. In several performance tests (e.g. <a href="https://github.com/pouchdb/pouchdb/issues/3921">this one</a>), we’ve seen WebSQL perform up to 40x faster than IndexedDB for bulk reads in Chrome. Writes are about the same.</p>
+<p>The new <code>getAll()</code> is going to help a lot with that (described <a href="http://w3c.github.io/IndexedDB/">here</a>, we haven’t started using it yet in PouchDB). But we could possibly leapfrog WebSQL for write speed if we also had a <code>putAll()</code>. (Question: would this actually be any faster than just doing multiple parallel <code>put()</code>s?)</p>
+<p>Another big win for PouchDB would be some kind of native “join” with <code>getAll()</code>, since our pagination implementation (<code>allDocs()</code>) currently involves using an IDBCursor and manually joining two object stores, which means a lot of separate requests and therefore a lot of waiting. Whereas in WebSQL, we can just write a single query using <code>JOIN</code> and whatever criteria we want inside of the <code>WHERE</code>. This is a huge win for performance and is largely where that 40x number comes from.</p>
+<p><code>getAll()</code> mitigates this somewhat for the primary object store, but when joining the second object store, we still have to do a bunch of separate <code>get()</code> requests because we need to fetch based on a list of keys. (Or we could sort the keys and use a cursor, but in the past <a href="https://github.com/pouchdb/pouchdb/issues/3039#issuecomment-64308886">I haven’t found this to be faster</a>). Maybe the multiple parallel <code>get()</code>s aren’t so bad, though; I haven’t tried it out yet.</p>
+<p>At some point soon, I’ll implement <code>getAll()</code> support in PouchDB and report back how much it affects performance. In the course of writing this post, I’ve started to wonder if <code>getAll()</code> doesn’t solve most of the problems I’ve outlined. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/611_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">inexorabletash</div>
+          <div class="creation_date">2015-07-02</div>
+          <div class="post_content">
+<p>I replied somewhere, but not here…</p>
+<p>Very much looking forward to your <code>getAll()</code> performance numbers. For <code>putAll()</code> vs. parallel <code>put()</code> calls - we’ll be trying to get numbers on that. The Lovefield team let us know that they see the overhead of waiting for all the <code>success</code> events to fire (and be ignored) before a transaction can commit was a throughput bottleneck so we’ve been investigating eliminating that. But we’ll look at bulk puts as well.</p>
+<p>If anyone wants to write us some benchmarks we’d love it!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-07-05</div>
+          <div class="post_content">
+<p>It sounds to me like joins are more required here for the use case you are after?</p>
+<p>Do you have any rough idea how you think the join API might look (In the current implementation). Unless you think the new promises API would be better suited of course.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="916">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/nolanlawson/40/630_1.png" width="20"/> nolanlawson:</div>
+<blockquote>
+<p>Another big win for PouchDB would be some kind of native “join” with getAll(), since our pagination implementation (allDocs()) currently involves using an IDBCursor and manually joining two object stores, which means a lot of separate requests and therefore a lot of waiting. Whereas in WebSQL, we can just write a single query using JOIN and whatever criteria we want inside of the WHERE. This is a huge win for performance and is largely where that 40x number comes from.</p>
+<p>getAll() mitigates this somewhat for the primary object store, but when joining the second object store, we still have to do a bunch of separate get() requests because we need to fetch based on a list of keys. (Or we could sort the keys and use a cursor, but in the past I haven’t found this to be faster). Maybe the multiple parallel get()s aren’t so bad, though; I haven’t tried it out yet.</p>
+</blockquote>
+</aside>
+<p>I just want to chime in to say that I’m using PouchDB and am definitely feeling the perf burn regarding the N-step <code>get</code> process for getting docs with PouchDB views (even with only, like, six documents, there’s about a full second of lag), so +1 from me.</p>
+<p>(Aside <span class="mention">@nolanlawson</span>: If this gets implemented, maybe the Pouch docs could start pulling back on all the <a href="http://pouchdb.com/2014/05/01/secondary-indexes-have-landed-in-pouchdb.html" rel="nofollow noopener">“Use non-random UUIDs for a free index that works with getAll”</a> protips that kinda sorta directly contradict best practices for B-tree balancing in CouchDB.)</p>
+<aside class="quote" data-post="3" data-topic="916">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Do you have any rough idea how you think the join API might look (In the current implementation). Unless you think the new promises API would be better suited of course.</p>
+</blockquote>
+</aside>
+<p>I’m not actually that well-versed in the IndexedDB surface (that’s half of why I’m using PouchDB, to get <em>away</em> from having to know it), but I understand it provides some kind of databases, that use some kind of direct indexing with linear index range access. Given that information, I actually half kind-of expected it already had some kind of mechanism like RethinkDB’s <a href="http://rethinkdb.com/api/javascript/eq_join/" rel="nofollow noopener"><code>eqJoin</code></a>.</p>
+<p>The way I’d imagine this working (and, again, I have <em>no idea</em> how this kind of call looks in IndexedDB specifically, so the exact semantics would probably be finessed), you’d query the database with (assuming it has to be one function call) an array of objects alongside your main selector. Those objects would look like <code>{key: 'smith', store: 'smiths'}</code>, where the <code>"smith"</code> field of documents in the selection refer to primary indices of documents in the <code>"smiths"</code> store.</p>
+<p>IndexedDB would then return a 2-dimensional array, where each second-level array contains the document (if any) that exists for the given index in the original array. (If you wish to get the original document, you do it by specifying the store itself and its primary index field as a position in the requested array - probably the first index.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>A code example (written against my imaginary IndexedDB API that probably differs from the actual API in minor respects):</p>
+<pre><code class="lang-javascript">var ctx = new IndexedDBIsh();
+
+// Yes, I'm pretending you can get stores synchronously.
+// I know that's almost certainly not the case. It's not really a salient detail.
+// If it bothers you, imagine there's an `await` in front of all of these.
+var mainStore = ctx.getOrCreateStore('example-main-store',
+  {primaryIndex: '_id'});
+var sideStore = ctx.getOrCreateStore('example-side-store',
+  {primaryIndex: 'powerWord'});
+var otherSideStore = ctx.getOrCreateStore('example-side-store2',
+  {primaryIndex: 'bar'});
+
+// Also assuming putAll is a thing to make populating examples easier
+mainStore.putAll([
+  {_id: 'asc5g7', wizard: 'Grindelwald', foo: 'grg34535'},
+  {_id: 'h556d3', wizard: 'Samguys', foo: 'phwwwbt'},
+  {_id: 'p160in9', wizard: 'Oinghrom', foo: 'phwwwbt'}
+]);
+sideStore.putAll([
+  {powerWord: 'Grindelwald', level: 7, color: 'blue'},
+  {powerWord: 'Samguys', level: 100, color: 'crystal'},
+  {powerWord: 'Oinghrom', level: 9009, color: 'invisible'},
+]);
+otherSideStore.putAll([
+  {bar: 'phwwwbt', irrelevant: 'fields', arbitrary: 'document'},
+  {bar: 'grg34535', assuming: 'valid', "no": "structure"},
+  {bar: 'consistency', "is": "the", hobgoblin: "of", little: "minds"},
+]);
+
+// So then doing:
+mainStore.getCross([
+  {key: "wizard", store: "example-side-store"},
+  {key: "foo", store: "example-side-store2"}
+])
+
+/* would yield something like:
+[
+  {key: 'asc5g7', docs: [
+    {powerWord: 'Grindelwald', level: 7, color: 'blue'},
+    {bar: 'grg34535', assuming: 'valid', "no": "structure"}
+  ]},
+  {key: 'h556d3', docs: [
+    {powerWord: 'Samguys', level: 100, color: 'crystal'},
+    {bar: 'phwwwbt', irrelevant: 'fields', arbitrary: 'document'}
+  ]},
+  {key: 'p160in9', docs: [
+    {powerWord: 'Oinghrom', level: 9009, color: 'invisible'},
+    {bar: 'phwwwbt', irrelevant: 'fields', arbitrary: 'document'}
+  ]}
+]
+*/
+
+// And if you want the original document...
+mainStore.getCross([
+  // you look up its key in its own data store
+  {key: "_id", store: "example-main-store"},
+  // alongside whatever other docs you want
+  {key: "wizard", store: "example-side-store"}
+])
+
+/* and then that looks like:
+
+[
+  {key: 'asc5g7', docs: [
+    {_id: 'asc5g7', wizard: 'Grindelwald', foo: 'grg34535'},
+    {powerWord: 'Grindelwald', level: 7, color: 'blue'}
+  ]},
+  {key: 'h556d3', docs: [
+    {_id: 'h556d3', wizard: 'Samguys', foo: 'phwwwbt'},
+    {powerWord: 'Samguys', level: 100, color: 'crystal'}
+  ]},
+  {key: 'p160in9', docs: [
+    {_id: 'p160in9', wizard: 'Oinghrom', foo: 'phwwwbt'},
+    {powerWord: 'Oinghrom', level: 9009, color: 'invisible'}
+  ]}
+]
+*/
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/630_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nolanlawson</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p><span class="mention">@stuartpb</span> The burn you are feeling with secondary indexes in PouchDB is more related to the way we architected PouchDB than a problem with IndexedDB itself. (That is, unless you notice a big speedup when you switch to WebSQL in e.g. Chrome.)</p>
+<p>Long story short, in order to provide a reasonable abstraction over IndexedDB, WebSQL, and LevelDB, for secondary indexes we created a layer on top of PouchDB that essentially delegates the responsibility for creating the secondary index to an auxiliary PouchDB. This design has several flaws, notably in performance, but it allowed us to iterate quickly. We will probably replace it in the future.</p>
+<p>In the meantime, we are definitely looking into improving the performance of the core APIs (especially the “cursor” APIs, <code>allDocs()</code> and <code>changes()</code>), which would speed up primary indexes and replication in PouchDB as well as slightly speeding up secondary indexes (since those are just a second PouchDB). So when I talk about joins here, I am mostly talking about internal PouchDB details, especially around how we organized “metadata” and “documents” (think: <code>allDocs()</code>, which iterates over document IDs and gives you the winning revision of each document, vs <code>changes()</code>, which iterates over document revisions keyed by the order they were added to the database).</p>
+<p>BTW I also did a brief review of <code>getAll()</code> and <code>getAllKeys()</code> and how it might be used in PouchDB; some discussion is <a href="https://github.com/pouchdb/pouchdb/issues/4235#issuecomment-138387841">on Github</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

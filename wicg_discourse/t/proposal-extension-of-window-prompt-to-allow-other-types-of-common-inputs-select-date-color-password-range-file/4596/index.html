@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Extension of window.prompt to allow other types of common inputs (&lt;select&gt;, date, color, password, range, file, &hellip;)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Extension of window.prompt to allow other types of common inputs (&lt;select&gt;, date, color, password, range, file, &hellip;)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2020-06-25</div>
+          <div class="post_content">
+<p>I often find myself wanting a quick modal to accept some input, but I don’t want to include a big dependency, or manually code up something. And I’m obviously not alone here: I see <code>window.prompt</code> and <code>window.confirm</code> used quite often on the web - even in large applications.</p>
+<p>I’m a huge fan of having “simple things be simple, and complex things be possible”, as the saying goes, and in the case where I just want to quickly grab some user input, I think it should be as simple as <code>prompt(...)</code>.</p>
+<p>An async version of this is “polyfill-able”. Here’s a very rough sketch:</p>
+<pre><code class="lang-auto">async function prompt2(message, opts) {
+  let ctn = document.createElement("div");
+  let type = opts.type;
+  let input;
+  if(type == "select") {
+    input = `&lt;select style="width:100%;height:100%;background:white;color:inherit;font:inherit;box-sizing:border-box;"&gt;${opts.options.map(o =&gt; `&lt;option value="${o.value}"&gt;${o.content}&lt;/option&gt;`).join("")}&lt;/select&gt;`;
+  } else if(type == "buttons") {
+    input = opts.buttons.map(o =&gt; `&lt;button style="height:100%;margin-right:0.5rem;font:inherit;box-sizing:border-box;" data-value="${o.value}"&gt;${o.content}&lt;/button&gt;`).join("");
+  } else {
+    input = `&lt;input style="width:100%;height:100%;background:white;color:inherit;font:inherit;box-sizing:border-box;" type="${opts.type}"&gt;`;
+  }
+  ctn.innerHTML = `
+    &lt;div style="background:rgba(0,0,0,0.2); position:fixed; top:0; left:0; right:0; bottom:0; z-index:9999999; display:flex; justify-content:center; color:black; font-family: sans-serif;"&gt;
+      &lt;div style="width:400px; background:white; height: min-content; padding:1rem; border:1px solid #eaeaea; border-radius:3px; box-shadow: 0px 1px 10px 3px rgba(0,0,0,0.24); margin-top:0.5rem;"&gt;
+        &lt;div style="opacity:0.6;"&gt;${window.location.hostname} says:&lt;/div&gt;
+        &lt;div style="margin:1rem 0;"&gt;${message}&lt;/div&gt;
+        &lt;div style="display:flex; height:2.3rem;"&gt;
+          &lt;div style="flex-grow:1; padding-right:0.5rem;"&gt;${input}&lt;/div&gt;
+          ${type !== "buttons" ? `&lt;button style="font:inherit;box-sizing:border-box;"&gt;Submit&lt;/button&gt;` : ""}
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `;
+   document.body.appendChild(ctn);
+   let value = await new Promise((resolve) =&gt; {
+    if(type !== "buttons") {
+      ctn.querySelector("button").onclick = () =&gt; {
+        if(type == "file") {
+          resolve(ctn.querySelector("input").files);
+        } else {
+          resolve(ctn.querySelector("input,select").value);
+        }
+      }
+     } else {
+        ctn.querySelectorAll("button").forEach(b =&gt; {
+          b.onclick = () =&gt; resolve(b.dataset.value);
+        });
+     }
+   });
+   ctn.remove();
+   return value;
+}
+</code></pre>
+<p>Usage:</p>
+<pre><code class="lang-auto">let name = await prompt2("Please type your name:", {type:"text"});
+let pw = await prompt2("Please type your password:", {type:"password"});
+let date = await prompt2("Please choose a date:", {type:"date"});
+let files = await prompt2("Please choose a file:", {type:"file"});
+let choice = await prompt2("Please choose an option:", {type:"select", options:[{content:"Thing 1", value:"1"}, {content:"Thing 2", value:"2"}]});
+let choice = await prompt2("Please choose an option:", {type:"buttons", buttons:[{content:"Thing 1", value:"1"}, {content:"Thing 2", value:"2"}]});
+
+// Demo:
+(async function() {
+  window.prompt2 = await import("https://deno.land/x/gh:josephrocca:prompt2@v0.0.2/mod.js").then(m =&gt; m.default);
+  let date = await prompt2("Please choose a date:", {type:"date"});
+})();
+</code></pre>
+<p><img alt="image" data-base62-sha1="js9RfiXyAiR6fElPTITvXgrPuYO" height="275" src="//discourse.wicg.io/uploads/default/original/2X/8/88582dd928b9cc859275eaf7a65c7dff70b4e28a.png" width="625"/></p>
+<p>Obviously <code>window.prompt</code> can’t be made async, and the second param of <code>window.prompt</code> is already used for the default value, so perhaps it would be better to start over with a new function. Although it would be great to have a sync version of this API too - so that we don’t have to sprinkle <code>async</code> throughout a codebase that was completely sync up until that point.</p>
+<p>I wonder if it would be safe enough to use the second param of <code>window.prompt</code>? I doubt anyone is actually passing an object to the second parameter on purpose, so that they can have <code>[object Object]</code> as the default value. And then a <code>window.promptAsync</code> could be added which has the same UI, but returns a promise. But I’m really just thinking out loud here.</p>
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/showModal" rel="nofollow noopener">showModal</a> is not what I’m looking for here, because it requires much more than a simple one-liner like <code>prompt(...)</code>.</p>
+<p>I noticed that there are over a million views on these questions simply asking how to customise the <code>confirm</code> prompt (either by adding an extra button or changing okay/cancel to yes/no):</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/9091001/how-to-show-confirmation-alert-with-three-buttons-yes-no-and-cancel-as-it" rel="nofollow noopener">https://stackoverflow.com/questions/9091001/how-to-show-confirmation-alert-with-three-buttons-yes-no-and-cancel-as-it</a></li>
+<li><a href="https://stackoverflow.com/questions/823790/javascript-confirm-popup-yes-no-button-instead-of-ok-and-cancel" rel="nofollow noopener">https://stackoverflow.com/questions/823790/javascript-confirm-popup-yes-no-button-instead-of-ok-and-cancel</a></li>
+<li><a href="https://stackoverflow.com/questions/11046572/make-javascript-alert-yes-no-instead-of-ok-cancel" rel="nofollow noopener">https://stackoverflow.com/questions/11046572/make-javascript-alert-yes-no-instead-of-ok-cancel</a></li>
+<li><a href="https://stackoverflow.com/questions/9334636/how-to-create-a-dialog-with-yes-and-no-options" rel="nofollow noopener">https://stackoverflow.com/questions/9334636/how-to-create-a-dialog-with-yes-and-no-options</a></li>
+</ul>
+<p>So it looks like there’s decent demand for this sort of thing.</p>
+<p>Does anyone have any thoughts here?</p>
+<p>Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2020-06-27</div>
+          <div class="post_content">
+<p>My first question would be, do websites use the <code>prompt()</code> function? If yes, in what scenarios? If no, why not?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2020-06-28</div>
+          <div class="post_content">
+<p>In its current form it’s obviously only useful for accepting text input, so I tend to see it used in cases where a small bit of text input is needed - i.e. not in cases where some other data is needed at the same time. You could do that with sequential prompts, but it would be terrible UX. As an example, <a href="http://glitch.com" rel="nofollow noopener">glitch.com</a> uses it when renaming files in the file tree.</p>
+<p>If you look at those stack overflow links, you can see that many hundreds of thousands of developers are wanting to use <code>confirm()</code> but struggling with the lack of customizability. Many just want to have two buttons: “yes” and “no”.</p>
+<p>I’ve had that problem before too, when all I wanted to do was ask the user whether they wanted a high-quality render, or a low-quality/fast render. I could have asked “Would you like a high-quality render? It will take a bit longer.”, but okay/cancel doesn’t work because “cancel” sounds like it means “cancel the whole task”. Later, I added a third render method, and in that case a simple drop-down menu with three items (or a prompt with 3 buttons) would have been perfect.</p>
+<p>The main use case for me though would be in being able to quickly whip up demos and non-user-facing tools. It’s super handy when I’m coding up some sort of simulation thing, and I don’t want to have to worry about the DOM at all. I just want to ask the user (usually me, in this case) something like “How many iterations?” or “Resolution?” and <code>prompt()</code> works well for that in a lot of cases. Having a drop-down menu would help in cases where the question is “Which algorithm? (foo, bar, blah)” and I’ve got to type in the one I want.</p>
+<p>Also, it’s interesting that Deno is adding (or has added?) support for confirm and prompt. So if other input methods were added, that might be something worth thinking about. For example, adding a range slider might be interesting to implement via a command line interface. Although now that I think about it, you’d just use the arrow keys to slide along.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-07-02</div>
+          <div class="post_content">
+<p>I think your example is both great and kinda answers your own question… in the sense that you can create the prompt you want using the form primitives already provided.</p>
+<p>You can also use the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog"> tag</a> to solve your proposed use case: Allowing you to create more complex pop-up UIs with forms.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2022-03-08</div>
+          <div class="post_content">
+<blockquote>
+<p>you can create the prompt you want using the form primitives already provided</p>
+</blockquote>
+<p>Hey Marc, it is of course possible for a developer to create a popup that accepts user input. I think it’s fairly clear that this isn’t meant as a “capabilities” proposal - it’s a UX/convenience one. I think that prompts are used often enough (going by the many hundreds of thousands of page views on those stack overflow links alone) that it would be valuable to revisit the idea of browser-provided input modals like this (in a new <code>async</code> form).</p>
+<p>One could try to make the argument that browsers shouldn’t have provided color pickers, because it’s completely possible to implement it with the primitives that are already provided.</p>
+<p>Of course, there are trade-offs in implementing features like this, but bets can be hedged by e.g. not providing guarantees on how the color picker looks, the position/size of the render, etc. This proposal is essentially just a convenient and programmatic way (i.e. no HTML/CSS) to accept user inputs of various types (i.e. other than just text). It’s abstract enough, and there is enough visible demand for a feature like this that I don’t think there’s any danger in it producing bad web “cruft” that will forever need to be kept around for backward-compatibility reasons.</p>
+<p>A feature like this could also end up being implemented in runtimes like Deno (where <code>confirm</code> and <code>prompt</code> are already implemented).</p>
+<blockquote>
+<p>You can also use the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog" rel="noopener nofollow ugc">tag</a> to solve your proposed use case</p>
+</blockquote>
+<p>I mentioned the dialog tag in my original post. It’s a bit of a beast to work with compared to <code>confirm</code> and <code>prompt</code> and requires a bunch of HTML to declare it (not far off just coding up my own one from scratch at that point).</p>
+<p>(Sorry for bumping this after so long! I am still very interested in a proposal like this though.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2022-04-11</div>
+          <div class="post_content">
+<p>I just noticed that Gmail uses the <code>confirm</code> function for warning about attachments mentioned in the email body text, but not attached:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/34299c9907b6ed43a4b540960bdff02937f38427" href="//discourse.wicg.io/uploads/default/original/2X/3/34299c9907b6ed43a4b540960bdff02937f38427.png" title="image (1)"><img alt="image (1)" data-base62-sha1="7rrYPvmHUC6BU6v8jEKocD5tMR9" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/3/34299c9907b6ed43a4b540960bdff02937f38427_2_10x10.png" height="317" src="//discourse.wicg.io/uploads/default/optimized/2X/3/34299c9907b6ed43a4b540960bdff02937f38427_2_690x317.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/3/34299c9907b6ed43a4b540960bdff02937f38427_2_690x317.png, //discourse.wicg.io/uploads/default/original/2X/3/34299c9907b6ed43a4b540960bdff02937f38427.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/3/34299c9907b6ed43a4b540960bdff02937f38427.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use href="#far-image"></use></svg><span class="filename">image (1)</span><span class="informations">918×423 27.2 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>Luckily the ok/cancel answers match their question well. If the convenience factor is strong enough for the Gmail team, it’s probably the case that <a href="https://stackoverflow.com/questions/823790/javascript-confirm-popup-yes-no-button-instead-of-ok-and-cancel" rel="noopener nofollow ugc">these 403k devs</a> aren’t just being lazy in wanting to use things like <code>confirm</code> and <code>prompt</code>, but with customized answer types like yes/no.</p>
+<p>“Simple things should be simple, and complex things should be possible” - and taking some input from the user programmatically definitely falls into the “simple” class.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2023-01-08</div>
+          <div class="post_content">
+<p>Another example of a big organisation using <code>prompt</code> - Github:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/e2109e0fe67bf86474cf0990564f032b56e9bebb" href="//discourse.wicg.io/uploads/default/original/2X/e/e2109e0fe67bf86474cf0990564f032b56e9bebb.png" title="image"><img alt="image" data-base62-sha1="wfRvGhVcdGNhqYSKfmbHVAtqsgH" data-dominant-color="2E3236" height="406" src="//discourse.wicg.io/uploads/default/optimized/2X/e/e2109e0fe67bf86474cf0990564f032b56e9bebb_2_690x406.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/e/e2109e0fe67bf86474cf0990564f032b56e9bebb_2_690x406.png, //discourse.wicg.io/uploads/default/optimized/2X/e/e2109e0fe67bf86474cf0990564f032b56e9bebb_2_1035x609.png 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/e/e2109e0fe67bf86474cf0990564f032b56e9bebb_2_1380x812.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1438×848 65.1 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>One line of code! Keepin it simple. Warms my heart <img alt=":relieved:" class="emoji" height="20" loading="lazy" src="//discourse.wicg.io/images/emoji/twitter/relieved.png?v=12" title=":relieved:" width="20"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

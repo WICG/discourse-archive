@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] HTML Ping for navigation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] HTML Ping for navigation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2018-06-09</div>
+          <div class="post_content">
+<p>in amp or webpackaging, the origin server can’t gathering access log because request doesn’t reach to origin server.</p>
+<p>currently it’s solved by analytics library like 1px img, send beacon etc (like google analytics).</p>
+<p>on the other side, <code>&lt;a ping&gt;</code> attribute sends ping to server when clicking links.
+the benefit of adding ping attr spec into html as declarative attribute was</p>
+<ul>
+<li>opt-outable</li>
+<li>no extra library</li>
+<li>works fine if JS are disabled (by feature policy or amp policy)</li>
+</ul>
+<p>I think its good to use <code>&lt;a ping&gt;</code> way when user navigate to page, for gathering access log if contents served from other server like amp cache or webpackaging cdn.</p>
+<p>for example</p>
+<pre><code class="lang-auto">&lt;meta name="ping" ping="https://example.com/ping"&gt;
+</code></pre>
+<ul>
+<li>opt-outable
+<ul>
+<li>user can configure browser like do not track</li>
+</ul>
+</li>
+<li>contents provider can gather access log to contents
+<ul>
+<li>even if it’s served other server by signign or amp</li>
+</ul>
+</li>
+<li>no extra script</li>
+</ul>
+<p>polyfill can build upon Send Beacon API at onload/domcontentloadded event
+like current analytics scripts are doing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-06-13</div>
+          <div class="post_content">
+<p>I love this idea - it’d simplify analytics <em>tremendously</em>, while making tracking opt-outs trivial for browsers to implement. Here’s some of the major wins I see:</p>
+<ol>
+<li>It’s the kind of tracking I would find optimal - it’s 100% user-controllable, and users could select <em>which</em> tracking sources they are okay with (one might be okay with Google Analytics, but not necessarily some questionable third party they’ve never heard of), even without the website’s permission. They wouldn’t even have to trust what the website says to know what trackers are available, provided the site developers use that API, and it’d offer the more technically inclined the ability to inspect what data is actually being sent about their activities. It’d also allow browsers to make decisions more easily to blacklist trackers with poor (and often illegal) data handling practices. Let’s just say even if a site isn’t complying with GDPR, you don’t necessarily need <em>them</em> to tell you what’s actually going on.</li>
+<li>It’s possible for browsers to optimize and streamline the data gathering, so it takes far less memory and CPU resources, especially for the common case of page load and link tracking. (This is one of the two main issues I have with trackers - the other being unnecessary invasiveness.) They could even take advantage of HTTP2 by putting things like tracker methods as headers, to take advantage of guaranteed compression, and by keeping tracking down to a single connection per source. They could also push this off the main thread as a low-priority worker thread or task, ensuring it doesn’t interfere with what’s important, without having to delay sending all the data until page leave. (Having no extra script is nice, but it’s insignificant compared to this.)</li>
+<li>It’s possible to still do analytics even when scripting is disabled or just not supported (AMP isn’t the only scenario, although it’s the most popular one). This means the main reason ads use JS at all is eliminated, and ads can revert back to HTML/CSS only (allowing sandboxing), thwarting most of the malvertisements that exist today without affecting legitimate ones. (Ad distributors would still want JS to check that ads are being served properly, but they don’t need to trust third party trackers’ JS otherwise.)</li>
+<li>Many of the analytics stuff are highly duplicative of various HTTP headers and HTML data browsers already have to interpret, like site referrers, screen resolution, viewport size, document encoding, etc. Of course, some escape hatches will be required for proper initialization (the initial fetch should be delayed until DOM ready, so settings can be set).</li>
+<li>Error reporting could become a lot more efficient. If you hooked into the HTML error reporting system, you could tell the browser to report errors to a particular location as a certain type of ping, rather than going through the complicated mess of an entire script load. You could even send async stack traces by default. It’s not like they don’t already have 90% of the client-side stuff implemented for this just to comply with the spec, so the remaining 10% is pretty much cake. Plus, all this could be queued up off thread.</li>
+</ol>
+<p>I could see as web sites migrate from the existing patchwork to this kind of system, transparency would increase tremendously, and independent tracker scripts themselves becoming increasingly suspect in general, especially if they continue to require a script by default.</p>
+<p>I do have a few requests:</p>
+<ol>
+<li>It would probably be better as a <code>&lt;link rel="ping" as="name" href="..."&gt;</code> instead - it makes more sense as this than as a <code>meta</code> element, since the ping endpoint is conceptually an external resource. It’s also possible you may want to notify different trackers about different events, and this would become especially relevant for</li>
+<li>This should be capable of notifying on initial page view, too, as well as on element hover (by option). 99% of analytics boils down to either page load, element click, or element hover, so this is absolutely required.</li>
+<li>This should include enough info with the pings to link one page to another, with the ability to control how sites can view these transitions. This could be done by two things: requesting an ID that’s per-document (not per-window), per-name from the URL, used exclusively for such pings, and with page transitions, sending instead a combined ping with both the old and new ID rather than a single link ping + a subsequent request for a new ID. The reason the ID is requested from the ping server is so it knows to set up a “session” as necessary, to help make session forgery harder to accomplish.</li>
+<li>There absolutely <em>must</em> be a DOM API for this, for manually sending pings and controlling what data is sent with them. It can (and <em>should</em>) require direct user intervention to be used, but for dynamic web pages, not all pings can really be traced to a direct, clear route that maps one-to-one with the URL. It should also allow sending more than one kind of ping, sending a ping with data, setting default options for the ping (with some browser defaults for referrers, etc.), awaiting the processing of a ping, and resetting the session (request a new ID without implying a new visit). Note that these can only error if the alias is wrong, and that browsers should make efforts to thwart detection of disabled tracking.</li>
+<li>There needs to be a means to control cross-domain tracking. This could be done through extending CORS pretty trivially with a request header, and browsers could also control this.</li>
+</ol>
+<p>The first three could be done as part of the initial ping sequence, but the fourth would mainly exist to replace existing programmatic APIs, and the fifth would be asserting web security and extending it to tracker protection at a much finer grained level than what exists today.</p>
+<hr/>
+<p>BTW, as you already pointed out, there is the send beacon API, but it’s kind of ridiculous to require a script to be loaded every time just to do basic analytics and data gathering that could be almost trivially handled and optimized by browsers. (Browsers know better than scripts when downtime actually exists.)</p>
+<p>One other thing: GA in terms of this would become slightly different: you’d need to add two lines instead of one, and their script would become a module you’d want to bundle instead for 99% of cases where you actually need their plugin and multiple-tracker system.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2018-06-14</div>
+          <div class="post_content">
+<p>Could this not make use of <a href="https://www.w3.org/TR/reporting/">https://www.w3.org/TR/reporting/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2018-07-04</div>
+          <div class="post_content">
+<p>original ping attr has ping-from &amp; ping-to, and only sending ping when clicked.
+that’s simple and works.</p>
+<p>so this spec should starting from same point.
+other requirements will extend spec in future.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2018-07-04</div>
+          <div class="post_content">
+<p>If Ping considered Reporting, thats works.</p>
+<pre><code class="lang-auto">Report-To: { "url": "https://example.com/csp-reports",  "group": "ping" }
+</code></pre>
+<p>and</p>
+<pre><code class="lang-auto">&lt;meta name="ping" report-to="ping"&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2018-09-29</div>
+          <div class="post_content">
+<p>As a developer it’d feel alot better analyzing user-behavior in a native, secure and controlled fashion without using third-party dependencies such as Google Tag Manager/Analytics etc.</p>
+<p>Firefox will soon be blocking cross-origin tracking pixels by default:
+<a class="onebox" href="https://blog.mozilla.org/futurereleases/2018/08/30/changing-our-approach-to-anti-tracking/" rel="nofollow noopener" target="_blank">https://blog.mozilla.org/futurereleases/2018/08/30/changing-our-approach-to-anti-tracking/</a></p>
+<p>As for <code>ping</code>, I think it makes sense for it to be a feature in <a href="https://github.com/WICG/feature-policy" rel="nofollow noopener">feature-policy</a>, proposed in: <a href="https://github.com/WICG/feature-policy/issues/221" rel="nofollow noopener">https://github.com/WICG/feature-policy/issues/221</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sudharshaan</div>
+          <div class="creation_date">2018-11-09</div>
+          <div class="post_content">
+<p>I was following this post and was curios where does this discussion post end? any resolution? is there  a debate somewhere else which says <a> could be harmful in terms of cyber security? I see a GDPR comment which is very healthy and descriptive.</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-11-12</div>
+          <div class="post_content">
+<p>You would be best finding other areas to discuss GDPR and its wider affects in more detail. What the W3C and web standards do rarely have any impact with that. GDPR is about what businesses do with data and what rights citizens have over their data. It isn’t necessarily about the technology used to get and take advantage of that data, which is what the standards do.</p>
+<p>Let’s try to stay on-topic of web standards and off the murky waters of legal interpretation and how technology  adapts around it.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

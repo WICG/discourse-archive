@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Linking to local (image) resources</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Linking to local (image) resources</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2017-01-16</div>
+          <div class="post_content">
+<p>HDML and WML are special-purpose markup languages that were invented for pre-smartphone era mobile phones with their limited display, processor and data transmission capabilities. They are inspired by HTML, but rely heavily on “cards” – which you can think of as interactive slides with single actions. XHTML Mobile Profile was much closer to Web standards. WAP and i-mode were the streamlined and controlled alternatives to the real, open Web back in the day (10 to 20 years ago).</p>
+<p>Anyhow, there is one feature that mobile browsers also supported with XHTML-MP that was really just specified for HDML/WML: local image resources. There are various approaches (and a good <a href="https://mobiforge.com/design-development/a-guide-using-pictograms-mobile-applications" rel="nofollow noopener">overview from 2012 at Mobiforge</a>).</p>
+<h2>WML and XHTML over WAP</h2>
+<h3>URL scheme</h3>
+<pre><code>&lt;object   data="pict:///time/season/winter"&gt;
+  &lt;object data="pict:///weather/snow"&gt;
+    &lt;img   src="http://www.pict.com/xx/snowman.wbmp"
+           alt="snowman" /&gt;
+  &lt;/object&gt;
+&lt;/object&gt;
+</code></pre>
+<p>This WML code is actually also valid (X)HTML, because it doesn’t use any custom element types or attributes, but relies on the standard nested fallback model of the <code>object</code> element which WML imported from HTML. The predefined set of graphics usable with <strong><code>pict:</code></strong> is found in <a href="http://www.openmobilealliance.org/tech/affiliates/wap/wap-213-wapinterpic-20010406-a.pdf" rel="nofollow noopener">WAP-213 Pictogram Specification (section 7)</a> from 2001. It is almost completely covered by existing Unicode emojis, although some mappings are not quite obvious.</p>
+<p>This URL scheme could be added to the set of Web specs and a registry for additional values (e.g. more recent emojis) be set up.</p>
+<h3>Extra <code>localsrc</code> attribute</h3>
+<pre><code>&lt;img localsrc="pict:///core/arrow/right"
+          src="http://www.pict.com/xx/rightArrow.wbmp"
+          alt="→" /&gt;
+</code></pre>
+<p>The <strong><code>localsrc</code></strong> attribute has been added to WML’s <code>img</code> element and many WAP browsers also support(ed) it within XHTML. The local image was the preferred one, the remote resource in <code>src</code> or, ultimately, the string in <code>alt</code> is the fallback!</p>
+<h2>HDML <code>icon</code> attribute</h2>
+<pre><code>&lt;img icon="68" src="/img/emoji/U263a.svg" alt=":-)" /&gt;
+&lt;img icon="smileyface" src="/img/emoji/263A.png" alt=":smile:" /&gt;
+</code></pre>
+<p>Similar to WML, its alternative and predecessor <a href="http://www.w3.org/TR/hdml20-6.html">HDML</a> had a custom attribute for local image resource, called  <strong><code>icon</code></strong> here. The supported values dependended on the vendor, but numbers below 1000 were used the most.  I’m believe <code>icon</code> was preferred over <code>src</code>.</p>
+<h2>NTT i-mode, Unicode Emoji: Character references</h2>
+<p>Prior to Unicode 6, each Japanese telco used different Shift-JIS codes for related sets of emojis. The original <a href="http://cgi.wap2.jp/emoji/imode/" rel="nofollow noopener">i-mode set</a> was supported by all(?) of them and there were extensive <em>m:n</em> <a href="http://broadband.mb.softbank.jp/mb/service/3G/mail/pictogram/convert.pdf" rel="nofollow noopener">mapping tables</a> for the codes of the extended sets, which formed the base of standardization. The glyphs – especially Softbank’s ones by Apple – were also assigned to Unicode PUA codes in the BMP (U+Exyz). Nowadays, standard Unicode emojis are found throughout BMP (e.g. in U+26xy) and SMP (with many at U+1Fxyz). They can be referenced by numeric character references, in either decimal <code>&amp;#1234;</code> or hexadecimal <code>&amp;#xABCD;</code> notation.</p>
+<pre><code>&amp;#x263A;&amp;#xFE0F; &amp;#x1F600;    
+</code></pre>
+<h2>Symbol fonts</h2>
+<p>Today, symbol fonts like <a href="http://fontawesome.io/get-started/" rel="nofollow noopener">Font Awesome</a> are also using Unicode PUA code points (e.g. U+Fxyz) – often <a href="http://github.com/FortAwesome/Font-Awesome/issues/222" rel="nofollow noopener">despite appropriate normal code points being available</a> – and frequently, in HTML, an abomination of empty class-laden <code>i</code> element instances for attaching <a href="https://github.com/FortAwesome/Font-Awesome/blob/master/css/font-awesome.css" rel="nofollow noopener">CSS</a> generated content – allegedly following conventions set by <a href="http://getbootstrap.com/" rel="nofollow noopener">Twitter Bootstrap</a>. If the font resource doesn’t load, this technique may fall back badly to other fonts using the same private-use code points for utterly different glyphs, e.g. unrelated emojis.</p>
+<pre><code>&lt;link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css"&gt;
+
+&lt;a class="btn btn-default" href="path/to/settings" aria-label="Settings"&gt;
+  &lt;i class="fa fa-cog" aria-hidden="true"&gt;&lt;/i&gt;
+&lt;/a&gt;
+</code></pre>
+<h2>Emoji shortcodes or shortnames</h2>
+<aside class="quote quote-modified" data-post="1" data-topic="1636">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="/user_avatar/discourse.wicg.io/crissov/40/1990_2.png" width="20"/>
+<a href="https://discourse.wicg.io/t/named-emoji-entities-or-short-names/1636">Named Emoji Entities (or Short Names)</a> <a class="badge-wrapper bullet" href="/c/html"><span class="badge-category-bg" style="background-color: #fc0;"></span><span a="" all="" also="" attaches="" but="" class="badge-category clear-badge" data-drop-close="true" directly="" fit="" it="" markup.="" most="" natural="" notably="" related="" s="" style="" that="" title="For all HTML-related discussions. Not just the HTML standard (though that" to="">HTML</span></a>
+</div>
+<blockquote>
+    There has been some discussion previously about allowing generic access to Unicode character names from entity references. 
+
+
+Emojis are popular and most of them seem to have a single unambiguous canonic “short name” which is often different from its Unicode name. The syntax convention, also supported here in Discourse, is different, though: instead of a mandatory ampersand prefix and sometimes optional semicolon suffix as in SGML / XML / HTML &amp;foo;, they are used with colons on both sides :foo:.…
+  </blockquote>
+</aside>
+<p>For many facial emojis there are traditional Western sideways ASCII art emoticons <code>:-)</code> or Eastern kaomoji <code>(^_^)</code>, although no universally accepted convention exists for their equivalences. Likewise, many (server-side) frameworks that replace emoji characters by image files are supporting English code names enclosed in colons <code>:smile:</code>, much like HTML named entity references <code>&amp;auml;</code>. It’s allegedly easier or safer to work with these in some programming languages (e.g. PHP) or database systems than directly with supplementary plane Unicode characters.</p>
+<h1>Related</h1>
+<p><a href="https://wiki.whatwg.org/wiki/Resource_Identifiers">Resource Identifiers at WHATWG Wiki</a> proposes a <code>res</code> attribute that works in the opposite direction:</p>
+<pre><code>&lt;img src="local/copy/of/something.png"
+     res="org.gov.mil.something.png" /&gt;
+</code></pre>
+<aside class="quote" data-post="1" data-topic="1090">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="/user_avatar/discourse.wicg.io/simevidas/40/1026_2.png" width="20"/>
+<a href="https://discourse.wicg.io/t/fallback-for-when-external-script-times-out/1090">Fallback for when external script times out</a>
+</div>
+<blockquote>
+    In bad network conditions, an external &lt;script&gt; may take a very long time to load (or not load at all). Is there a standard approach to provide a fallback to the user in this scenario? 
+If not, how about a &lt;noscript&gt; inside the &lt;script&gt; which would only be triggered if the browser “decides” that the external script load failed or took too long.
+  </blockquote>
+</aside>
+<h2>Lazy Loading</h2>
+<ul>
+<li><a href="http://w3c.github.io/resource-hints" rel="nofollow noopener">Resource Hints</a></li>
+<li><a href="http://www.w3.org/TR/resource-priorities/">Resource Priorities</a></li>
+<li><a href="https://discourse.wicg.io/t/a-standard-way-to-lazy-load-images/1153">A standard way to lazy-load images (WICG#1153)</a></li>
+</ul>
+<h1>Draft Proposal</h1>
+<p>I’m not sure which would be the best way to reference local, preinstalled or cached resources. I don’t have much experience with the <code>source</code>  element and its <code>srcset</code> attribute either, by the way.</p>
+<p>This could be one approach to edit <a href="https://html.spec.whatwg.org/multipage/embedded-content.html">Embedded Content</a> etc. in the HTML specs:</p>
+<blockquote>
+<p>Add  the legacy <code>localsrc</code> attribute to all HTML element types that support a <code>src</code> or <code>data</code> atribute and to <code>link</code>, but not other element types that support an <code>href</code> attribute.
+Do not add an <code>icon</code> attribute.
+Do not standardize the <code>pict:</code> URL scheme (and do not reuse <code>local:</code> or <code>about:</code> either).</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2023-04-23</div>
+          <div class="post_content">
+<p>When I wrote the above a while ago, I apparently made a mistake regarding HDML: the attribute wasn’t called <code>icon</code> but <code>name</code> according to the specification I linked to.</p>
+<p><a class="onebox" href="https://www.w3.org/TR/hdml20-6.html#HEADING6-177" rel="noopener" target="_blank">https://www.w3.org/TR/hdml20-6.html#HEADING6-177</a></p>
+<p>The example would then become:</p>
+<pre><code class="lang-html">&lt;img name="68" src="/img/emoji/U263a.svg" alt=":-)"&gt;
+&lt;img name="smileyface" src="/img/emoji/263A.png" alt=":smile:"&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2023-04-24</div>
+          <div class="post_content">
+<p>I was not able to get the jest of this proposal. If it goes towards multiple fallbacks, there are several ways to achieve it in HTML5, the object wrapping is just one of those.</p>
+<p>The <a href="https://github.com/WICG/webcomponents/issues/997" rel="noopener nofollow ugc">template proposal</a>  has given the local fallback option to any content including the image. Its <code>custom-element</code> implementation would provide the fine grained control over fallback chains.</p>
+<p>But just a fallback does not look like an essence of this proposal.</p>
+<p><span class="mention">@Crissov</span> , can you express the proposal in sentence or two, please?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2023-04-24</div>
+          <div class="post_content">
+<p>I think I’m nowadays leaning more towards reviving the <code>pict:</code> URL scheme with an actively maintained registry and use it within <code>&lt;picture&gt;&lt;source media="(prefers-reduced-data: reduce)" srcset="pict:…"&gt;</code>.</p>
+<p>PS: I actually went there already: <a class="inline-onebox" href="https://discourse.wicg.io/t/using-emojis-as-images/2542">Using emojis as images</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

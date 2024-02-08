@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Asynchronous JSON parsing and serialization</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Asynchronous JSON parsing and serialization</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1693_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxArt</div>
+          <div class="creation_date">2017-11-22</div>
+          <div class="post_content">
+<p>Currently, the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON" rel="nofollow noopener"><code>JSON</code> global object</a> contains the methods <code>parse</code> and <code>stringify</code> in order to, respectively, parse JSON strings to ordinary JavaScript values, and serialize JavaScript values to JSON strings. Alas, both these methods are <em>synchronous</em>, which is bad if they’re used on the main thread. Although usually very fast, for larger objects they could take hundreds of milliseconds to do their jobs (e.g. parsing a string larger than 1 MB).</p>
+<p>My proposal would be to introduce two other methods, <code>parseAsync</code> and <code>stringifyAsync</code> (tentative names), with the same signatures of <code>parse</code> and <code>stringify</code> respectively, but returning a <code>Promise</code> of the expected type. For example:</p>
+<pre><code class="lang-javascript">const data = JSON.parse(rawJSON);
+// would become
+JSON.parseAsync(rawJSON).then(data =&gt; { ... });
+
+const payload = JSON.stringify(data);
+// would become
+JSON.stringifyAsync(data).then(payload =&gt; { ... });
+</code></pre>
+<p>I think this could be valuable especially on a Node-based server, where avoiding to block the main thread is paramount.</p>
+<p>These new methods would go well for an eventual, future <em>streaming</em> JSON parsing and serializing API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-22</div>
+          <div class="post_content">
+<p>This is a good idea if it can be done in a way which improves performance, but AFAIK there’s not much to be gained from this. In particular to make stringifying async, it would have to first synchronously copy the entire object to be stringified, in order to avoid it mutating as it stringifies it asynchronously. The copy could well be slower than just stringifying on the spot. So that means there’s no point making an async version. I’m not sure about parsing, but I would guess there’s a similar issue there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1693_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxArt</div>
+          <div class="creation_date">2017-11-25</div>
+          <div class="post_content">
+<p>Parsing is done on a primitive, so I guess everything should be ok, but you’re probably onto a good point about the serialization part. I’d be surprised to know copying the object would take the same amount of time of stringifying, but still it could be significant. Anyway, I’m not and expert on this.</p>
+<p>The alternative would be… not copying the object at all. Developers would have to be careful not to make modifications to the object being serialized until the task is done. It shouldn’t be hard and it would be a good practice to work with immutable values.</p>
+<p>I guess this behaviour wouldn’t be very aligned with the rest of the API ecosystem, though. I wonder how bad that could be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-12-06</div>
+          <div class="post_content">
+<p>I know it requires a bit more setup, but couldn’t you just do this by sending the object to a worker, and then have the worker post back the stringified data?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1693_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxArt</div>
+          <div class="creation_date">2017-12-06</div>
+          <div class="post_content">
+<p>Yes, that’s how one would do it today, indeed. But that, more than just having to do extra work, would only work in browsers, not in Node.</p>
+<p>And I actually had Node in mind for this proposal. But thanks for pointing out a workaround <img alt=":+1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/+1.png?v=5" title=":+1:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-12-06</div>
+          <div class="post_content">
+<p>Ah, the Node point is true. I wonder then if it’s worth moving this down the stack to the TC39 folks?</p>
+<p><span class="mention">@domenic</span>, do you have any opinions? I imagine this must have been discussed before.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-12-06</div>
+          <div class="post_content">
+<p>You should benchmark this, since I think it’s likely that the overhead of posting to a worker (especially an object, which invokes the structured clone algorithm) will be larger than just doing the work on the main thread normally (where nothing needs to be cloned).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

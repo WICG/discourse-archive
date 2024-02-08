@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Rethinking cookies</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Rethinking cookies</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-01-27</div>
+          <div class="post_content">
+<p>One complaint I’ve heard about the HTTP/2 spec is that it doesn’t introduce a better persistence mechanism than cookies. While I think it’s not the place for a new version of the protocol to demand people rearchitect the way their apps work, I do think it’s worth throwing around ideas for new headers that could replace them.</p>
+<p>What I’d like to see, as an alternative cookies, are UUIDs generated and managed per-domain (as in “same domain rules” domain) by the user agent, that are included in headers with each (secure) request: one for the current browser session, one for the device across sessions, and another class that could be persisted via another mechanism (ie. Chrome Sync) across devices.</p>
+<p>Users could reset these at any time via the UX facilities they have for managing cookies right now (eg. clicking the icon in the address bar in Chrome). They could also choose to opt out of them on sites they don’t want to be tracked on, or to only explicitly enable them if they’re paranoid (the way that browsers like Lynx prompt for every cookie by default).</p>
+<p>These headers could also be disabled for any cross-domain content so as to thwart framejacking and tracking (and enabled via request for explicit user approval in situations where they’re actually necessary - hence “Google AdWords wants to see your activity on this site” could be consciously refused by the user).</p>
+<p>The idea of this header would be to initially provide a more appetizing alternative to cookies that developers could gravitate toward, leading to better UX around user sessions (since there wouldn’t be the inbuilt assumptions around support the way there are for cookies). As more of the web would move toward supporting one-way tokens like this, the old defaults around cookies could be deprecated and retired, the same way as how built-in pop-up blocking across all the major browsers made popup-based navigation wane to near-nonexistence over the course of several years (the idea being you would choose to “Accept cookies” about as frequently as you’d pick “Allow popups” today).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-01-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="744">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>one for the current browser session, one for the device across sessions, and another class that could be persisted via another mechanism (ie. Chrome Sync) across devices.</p>
+</blockquote>
+</aside>
+<p>To simplify this, I would reduce it to just the cross-session “device” UUID. The notion of a “session” is increasingly meaningless in the modern resume-on-start ecosystem, and cross-device syncing could be handled in any number of better ways (having the UA offer to sync the UUIDs, reading identity via something like Persona, or associating on the backend after third party OAuth verification).</p>
+<hr/>
+<p>I was thinking there might be call to have a separate UUID, with the same persistence semantics, exposed to <em>scripts</em> instead of requests (as a different UUID, so the one on requests is effectively httpOnly). However, I’m not sure if there’s really any call for scripts to have access to a UUID like this - non-httponly cookies are essentially only useful for slumming localStorage, AFAIK.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2015-01-29</div>
+          <div class="post_content">
+<p>The central problem here is how to encourage the transition. You say it’s a “more appetising alternative to cookies” – how is it more attractive to Web sites, as compared to cookies?</p>
+<p>If we could find a good answer to that, I think that it’d be possible to supplant cookies; e.g., by having browsers only send this new header when no cookies are stored for the origin.</p>
+<p>And, I do think that there are some possibilities, because there’s some information that cookies don’t capture about user sessions (as you imply).</p>
+<p>However, making something more attractive than cookies to Web sites means that it’ll need to be as useful as cookies are now for them – including for things like SSO, and yes, ad tracking.</p>
+<p>If they don’t support that, ad networks et al won’t migrate to them, and will stay on cookies. Even if we find a way to force them to stop using cross-domain cookies and use a browser-generated, origin-scoped session ID instead, sites will likely find a way to pass identity around on the back end, making the privacy impact even more opaque than it is.</p>
+<p>That’s  arguably a worse outcome than where we currently are – i.e., if the endgame for this is both cookies and this new header being widely deployed, it’s not a good outcome for privacy or end users. I’m concerned that without the ‘carrot’ for getting sites to move over en masse, it’s going to be too difficult to introduce your ‘stick’ of requiring explicit opt-in to use cookies; too many sites will want to stay on them (even in the long run).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2015-01-30</div>
+          <div class="post_content">
+<p>Have either of you seen the Origin-Bound Cert and Channel-Bound Cookies specs?</p>
+<p><a href="http://www.browserauth.net/origin-bound-certificates" rel="nofollow noopener">http://www.browserauth.net/origin-bound-certificates</a></p>
+<p><a href="http://www.browserauth.net/channel-bound-cookies" rel="nofollow noopener">http://www.browserauth.net/channel-bound-cookies</a></p>
+<p>Its almost exactly what you described.</p>
+<p>It originated from Google and they are actually using it in production. Chrome is the only browser that implements it and Google properties are already using it. Look around in your Chrome cookies, you see some “Channel ID” super cookies, thats them!</p>
+<p>There doesn’t seem to be any open source implementations available for Apache or nginx. As far as I can tell, Google has the only closed sourced version baked into their “gws” (Google Web Server).</p>
+<p>I think its pretty neat and would totally consider rolling it out too if 1) there was an open implementation and 2) there was some indicator Google is still serious about it and its not going to be abandoned any minute.</p>
+<p>They started on an IETF draft a few years ago now, but it didn’t seem like it went anywhere. <a href="https://tools.ietf.org/html/draft-balfanz-tls-obc-00" rel="nofollow noopener">https://tools.ietf.org/html/draft-balfanz-tls-obc-00</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2015-02-11</div>
+          <div class="post_content">
+<p>Yep - they’re interesting, but specific to Chrome (for now).</p>
+<p>See also:
+<a class="onebox" href="https://datatracker.ietf.org/wg/tokbind/charter/" target="_blank">https://datatracker.ietf.org/wg/tokbind/charter/</a>
+… which is likely to be chartered soon to work on things that might be interesting…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>Has there been any progress on that? This “token binding” thing sounds interesting, but it also sounds really technical and over my head (and my rule of thumb is, if it goes over my head, it will go over most dev’s heads).</p>
+<p>I’m thinking about drafting up a proposal for some kind of Consensual Tracking Community Group, for pursuing a browser UX that can let us migrate to world where tracking the user <em>with</em> their consent is non-intrusive, but tracking it <em>without</em> their consent is a thing of the past.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

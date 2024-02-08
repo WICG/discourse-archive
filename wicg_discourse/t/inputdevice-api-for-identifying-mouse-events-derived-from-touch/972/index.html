@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>InputDevice API for identifying mouse events derived from touch</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">InputDevice API for identifying mouse events derived from touch</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<p>I’ve long seen developers <a href="https://docs.google.com/document/d/1-ZUtS3knhJP4RbWC74fUZbNp6cbytG6Wen7hewdCtdo/edit#" rel="nofollow noopener">struggle</a> to identify whether a <code>mousedown</code> event is due to a real mouse, or as a result of touchscreen activity they’ve already handled via <code>touchend</code>.  After more than a year of discussion in various W3C groups, I’ve come up with a generic <a href="http://rbyers.github.io/InputDevice/inputdevice.html" rel="nofollow noopener">InputDevice API</a> that can solve this problem today while providing a clean path for addressing other similar issues in the future.</p>
+<p>Any feedback?  We’d like to ship a first version of this API in blink soon if possible, and others vendors have <a href="https://github.com/RByers/InputDevice/blob/gh-pages/README.md" rel="nofollow noopener">expressed some interest too</a>.</p>
+<p>Thanks,
+Rick</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>I have no real <em>objections</em> to this, but it seems to me the only place it would actually be <em>useful</em> is within polyfills (either FastClick or PEP), and those are still going to need to maintain the code path where this value isn’t present into the foreseeable future <a href="https://www.safari-is-the-new-ie.com/" rel="nofollow noopener">because of iOS</a>, so I don’t really see its utility. If a content author wants to identify the source of an event, they should be coding against Pointer Events (with the Pointer Events Polyfill), not mouse events. I’d rather see work in Blink put toward native Pointer Events (and its supporting features like the <code>touch-action</code> CSS property) than a neither-here-nor-there solution that won’t be consistently available on the platforms that would need to expose it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>I guess we have to separate the immediate scenario (<code>firesTouchEvents</code>) from the <a href="https://docs.google.com/document/d/1WLadG2dn4vlCewOmUtUEoRsThiptC7Ox28CRmYUn8Uw/edit#heading=h.o7qaw089pyqp" rel="nofollow noopener">longer term direction</a>.  Would you agree that there’s utility to the general notion of exposing additional device information in this way?  This proposal has been designed in discussion with the Pointer Events Working Group, where <a href="http://www.w3.org/wiki/PointerEvents/UseCasesAndRequirements#Requirements:_Pointer_Events_v.Next_Specification">we’ve long said we need a place</a> to hang additional device information.  In particular, we agreed to explore generalizations of <code>navigator.maxTouchPoints</code> and <code>pointerType</code> in a future version of the spec.  By hanging a new API off of <code>UIEvent</code> we can get the same benefits for <code>MouseEvent</code>, <code>TouchEvent</code> and <code>PointerEvent</code>.</p>
+<p>Regarding the foreseeable future for iOS, Apple has <a href="https://bugs.webkit.org/show_bug.cgi?id=146848" rel="nofollow noopener">publicly indicated some support for adding this to WebKit</a>, and I’ve had private discussions with Safari engineers that have influenced the design.  Indeed one of my goals here is to provide a path for getting more device information available in an event-model-agnostic fashion so that the entire future of input on the web isn’t tightly coupled to Pointer Events which Apple is opposed to implementing.</p>
+<p>Regarding the <a href="https://docs.google.com/document/d/1-ZUtS3knhJP4RbWC74fUZbNp6cbytG6Wen7hewdCtdo/edit" rel="nofollow noopener">immediate-term issue of identifying mouse events derived from touch</a>:  Yes Pointer Events solves that, and we’re definitely <a href="http://crbug.com/471824" rel="nofollow noopener">actively implementing Pointer Events in blink</a> (and I <a href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/sc5lHnlcLvM" rel="nofollow noopener">shipped <code>touch-action</code></a> over a year ago now).  But the web evolves incrementally and I believe (given the lack of universal support for Pointer Events) that it’s best to provide incremental solutions for small problems to web developers that don’t force them to rewrite all of their event handling code. There’s not yet evidence that developers are willing to depend on the Pointer Events polyfill in large scale production, so I don’t think it’s practical to tell developers the only way to solve this problem properly is to switch to the pointer event API.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

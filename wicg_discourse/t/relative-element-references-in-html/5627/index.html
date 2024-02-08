@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Relative element references in HTML</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Relative element references in HTML</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#problem-statement-1" name="problem-statement-1"></a>Problem statement</h1>
+<p>Currently, when HTML syntax needs to reference another element, this is typically done via id references:</p>
+<pre><code class="lang-auto">&lt;input type="radio" id="foo"&gt;
+&lt;label for="foo"&gt;Foo&lt;/label&gt;
+</code></pre>
+<pre><code class="lang-auto">&lt;input list="foo"&gt;
+&lt;datalist id="foo"&gt;
+...
+&lt;/datalist&gt;
+</code></pre>
+<p>See also:</p>
+<ul>
+<li>Literally any nontrivial ARIA markup, e.g. <a href="https://www.w3.org/TR/wai-aria-practices-1.1/examples/tabs/tabs-1/tabs.html#sc1_label">these tabs</a>
+</li>
+<li><a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/CSSAnchoredPositioning/explainer.md#declaring-an-anchor-element" rel="noopener nofollow ugc"><code>&lt;popup&gt;</code> proposal by Microsoft</a></li>
+</ul>
+<p>This works well for top-level, global things, but less well for repeated structures and deeply nested contexts. Assigning a bunch of ids is also more flimsy, and less portable. Copying and pasting code, the quintessential code reuse method of novices, is not friendly to this method.</p>
+<p>Not only is assigning ids an unnecessary overhead for authors, but since all ids create global variables, it even has the potential to break JS code. The more ids that are specified, the higher the overhead to avoid collisions.</p>
+<p>Note that Web Components also often need syntax to reference other elements, and HTML does not offer a great precedent for them, since its only element reference mechanism is global ids. Since ids are not always convenient, WC authors end up inventing their own syntax, which can often be suboptimal (I have even seen attributes that specify a …child index).</p>
+<p>Also, given ARIA’s heavy need for <a href="https://www.w3.org/TR/wai-aria-1.1/#attrs_relationships">relationship attributes</a>, the additional overhead of these IDREFs means that authors are more likely to skimp on accessibility.</p>
+<p>There should be a way to associate elements based on their relationship in the DOM tree. E.g. so that a <code>&lt;label&gt;</code> could be associated with its previous sibling without said sibling requiring an id.</p>
+<h1>
+<a class="anchor" href="#solution-1-selectors-2" name="solution-1-selectors-2"></a>Solution 1: Selectors</h1>
+<p>Selectors + <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/:scope" rel="noopener nofollow ugc"><code>:scope</code></a> seem like a natural fit for this, though the full power of selectors may be too much here, and not really needed. Also, for this to work, it would need to be able to look in both directions, whereas selectors only look up the tree. Perhaps a hugely cut down selector grammar involving <a href="https://drafts.csswg.org/selectors/#relational" rel="noopener nofollow ugc"><code>:has()</code></a> like this might work:</p>
+<pre><code class="lang-auto">&lt;relative-selector&gt; = &lt;element&gt; ':has(' [ &lt;combinator&gt; &lt;element&gt; ]* ')'
+&lt;element&gt; = [ &lt;type-selector&gt; | &lt;id-selector&gt; | ':scope' ]
+</code></pre>
+<p>(tokens not defined here are from <a class="inline-onebox" href="https://drafts.csswg.org/selectors/#grammar" rel="noopener nofollow ugc">Selectors Level 4</a> )</p>
+<p>There is also the question of disambiguation: if we keep the same attributes, the new syntax needs to be invalid as an id, or sufficiently rare, for web compat. Or, alternatively, new attributes could be introduced, which would also allow for fallbacks.</p>
+<p>Then the label example could become:</p>
+<pre><code class="lang-auto">&lt;input type="radio"&gt;
+&lt;label relfor="input:has(+ :scope)"&gt;Foo&lt;/label&gt;
+</code></pre>
+<h1>
+<a class="anchor" href="#solution-2-relative-ids-3" name="solution-2-relative-ids-3"></a>Solution 2: Relative ids</h1>
+<p>An alternative solution would be to introduce a mechanism for relative ids, which are scoped to the closest ancestor scope with an id or relative name. E.g.:</p>
+<pre><code class="lang-auto">&lt;div prop="foo"&gt;
+  &lt;input type="radio" prop="bar"&gt;
+  &lt;label for="bar"&gt;Bar 1&lt;/label&gt;
+&lt;/div&gt;
+
+&lt;div prop="foo"&gt;
+  &lt;input type="radio" prop="bar"&gt;
+  &lt;label for="bar"&gt;Bar 2&lt;/label&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Such a mechanism could also be useful for other Web Platform languages, e.g. CSS also often needs element references, and has the same problem with ids (e.g. see <a href="https://drafts.csswg.org/css-images-4/#element-notation" rel="noopener nofollow ugc"><code>element()</code></a> ).</p>
+<h1>
+<a class="anchor" href="#solution-3-keywords-for-common-cases-4" name="solution-3-keywords-for-common-cases-4"></a>Solution 3: Keywords for common cases</h1>
+<p>A lot of the use cases for relative references only need referencing a previous or next sibling. If a more general solution is infeasible (or lacks implementer interest), introducing keywords for these common cases would address a lot of author needs. Disambiguation may be more of a problem in that case, as it doesn’t make sense to introduce entirely new attributes for this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>I just want to note the relation between this proposal and one of the <a href="https://github.com/WICG/aom/blob/gh-pages/explainer.md#motivating-use-cases" rel="noopener nofollow ugc">motivating use cases for AOM</a>:</p>
+<blockquote>
+<ol start="2">
+<li>Setting <a href="https://www.w3.org/TR/wai-aria-1.1/#attrs_relationships">relationship properties</a> without needing to use IDREFs
+<ul>
+<li>Currently, to specify any ARIA relationship, an author must specify a unique ID on any element which may be the target of the relationship.</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>Oh yes, ARIA is a huge use case here. I can’t believe I forgot to include it. Will update original post, thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>For the common case of form elements maybe there should just be a tag like</p>
+<pre><code class="lang-auto">&lt;inputset&gt;
+  &lt;label&gt;elm&lt;/label&gt;
+  &lt;input&gt;
+&lt;/inputset&gt;
+</code></pre>
+<p>that just automatically wires its descendants up. Usually need a wrapper anyway and where you don’t it could be set to display: contents. It could be extended for wiring up error messages and descriptions too, given a native way to express those (yes please).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3733_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dgrammatiko</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>I like this approach. If it can also somehow solve the label in the light DOM and input inside a shadow DOM problem then this would be great (ok, I know that’s probably not the case but I had to try…)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">paceaux</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>I like the suggestion, but I have concerns about “scoped IDs” ; particularly if JavaScript is bound to an ID, and there are multiples, I could see some issues.</p>
+<p>In tables, for <code>&lt;td&gt;</code> and <code>&lt;th&gt;</code>  we get the <code>headers</code> attribute; it allows setting one or many labels for a cell. This allows me to set a content-to-label relationship with <code>&lt;td headers="someLabel"&gt;Pizza&lt;/td&gt;</code>.</p>
+<p>But Tables <em>also</em> offers a “label-to-parent” relationship with the <code>scope</code> attribute. I can have <code>&lt;td scope="row"&gt;Foods&lt;/td&gt;</code> which effectively means, "this is a label for everything coming after it in the same parent element (a row).</p>
+<p>Tables <em>also</em> has the ability to jump up to a grandparent, for setting scope:  <code>&lt;td scope="rowgroup"&gt;Things we consume&lt;/td&gt;</code>.  This means the label is labeling everything in the <code>tbody</code>, <code>thead</code>, or <code>tfoot</code>.</p>
+<p>I know I’m stating what we already know, but the point is mostly that we have some model for this <em>already</em> in how we make tables. Tables offer these kinds of relationships:</p>
+<ul>
+<li>label to siblings</li>
+<li>label to parent scope</li>
+<li>content to label</li>
+</ul>
+<p>Right now, the <code>&lt;label for="" /&gt;</code> sets label-to-content relationship. And… <em>that’s it</em>.</p>
+<p>So, why can’t we adopt the concepts we use to create label-to-parent-scope and label-to-siblings relationships from tables and apply them to forms, or even <em>all elements</em> ?</p>
+<ol>
+<li>Why can’t I assign a label from the perspective of the input? <code>&lt;input headers="some-label" &gt;</code>
+</li>
+<li>Why can’t I write <code>&lt;label scope="label"&gt;</code>  to apply to downstream elements?</li>
+<li>Why can’t I write <code>&lt;label scope="fieldset"&gt;</code>to go up to a parent or grandparent.</li>
+</ol>
+<p>I’m asking because, <em>in particular</em> a <code>scope</code> attribute allowed on <code>&lt;label&gt;</code> would eliminate the need to use an <code>id</code>, but still accomplish the goal of referencing another element. And it would have the benefit of being a pattern used elsewhere.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2021-10-09</div>
+          <div class="post_content">
+<p>I love solution 1 because it would seem to fix a problem I’ve found with the Shadow DOM. That problem is trying to pass a <code>&lt;datalist&gt;</code> in so an input can provide a developer controlled set of autocomplete options.</p>
+<p>The <code>&lt;datalist&gt;</code> can only be referenced by the id to the <code>list</code> attribute on <code>input</code>. Since the datalist is given through a slot, its ID isn’t a technical part of the Shadow DOM. So in order to make this work you need to copy all the entries into one within the component and keep them up-to-date as things change. Creating a bunch of extra work and potential bugs.</p>
+<p><code>&lt;input rellist=“:slotted(datalist)”&gt;</code> could be a neat way to handle such a situation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3739_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Westbrook</div>
+          <div class="creation_date">2021-10-09</div>
+          <div class="post_content">
+<p>Do you think this could apply to all cross shadow boundary relations in some way? Really cool to see how it might support ::slotted(). For the <code>relfor</code> approach, does that imply the need for similar <code>relaria-labelledby</code> et all attributes to ensure this applies across the ID ref ecosystem?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-12</div>
+          <div class="post_content">
+<blockquote>
+<p>Do you think this could apply to all cross shadow boundary relations in some way?</p>
+</blockquote>
+<p>I think that’s a very important use case, yes. Thanks for pointing it out.</p>
+<blockquote>
+<p>For the <code>relfor</code> approach, does that imply the need for similar <code>relaria-labelledby</code> et all attributes to ensure this applies across the ID ref ecosystem?</p>
+</blockquote>
+<p>It would, hence why I’m really hoping there’s a way to use the existing attributes and disambiguate, because being stuck with <code>relaria-labelledby</code> or <code>aria-rellabelledby</code> or whatever would be pretty awful. The downside of that is that anything that would be sufficiently web compatible, would be pretty awful to type, to avoid conflicts. E.g. see how weird the syntax for <a href="https://web.dev/text-fragments/" rel="noopener nofollow ugc"><code>:~:text</code> fragments</a> is, for the same reason.</p>
+<p>Alternatively, we could come up with new names entirely, for attributes that cover both relative and absolute syntax (e.g. solution 1 above already is a strict superset of any existing IDREF) instead of having different, worse names for relative syntax. Then, we could deprecate the previous IDREFs and recommend use of the new attributes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-10-14</div>
+          <div class="post_content">
+<p><span class="mention">@leaverou</span>, from your problem statement I see that the pain points are:</p>
+<ol>
+<li>Duplicate IDs break the one-to-one relationship usually expected when using IDREFs</li>
+<li>Declaring IDs on elements automatically creates global JS variables, which is an unnecessary overhead</li>
+</ol>
+<p>I like your proposed solution for the scoping but I think we can solve more issues if we simplify it. (<strong>Edit:</strong> by “simplify,” I mean removing the <code>prop="foo"</code> requirement, because that would land us in the same place if each prop needs to be unique too.) What if adding an attribute of <code>refscope</code> to an element did this:</p>
+<ol>
+<li>Prevents IDs declared in the scope from being made into global variables</li>
+<li>Creates a donut scope where IDs and IDREFs can only be paired in the scope (any IDs or IDREFs in nested <code>refscope</code>s or outside the current <code>refscope</code> are ignored when creating the relationships)</li>
+<li>Institutes a last-write-wins policy for figuring out which duplicated ID is the “right” one.</li>
+</ol>
+<p>Then copy-pasted chunks of HTML would work as expected as long as there is/are proper <code>refscope</code>s.</p>
+<p>Example:
+This chunk can be present multiple times in a document without errors</p>
+<pre><code class="lang-auto">&lt;div refscope&gt;
+  &lt;label for="foo"&gt;an input&lt;/label&gt;
+  &lt;input id="foo" type="text" /&gt;
+&lt;/div&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2021-10-15</div>
+          <div class="post_content">
+<p><span class="mention">@leaverou</span> Another use case is the <a href="https://www.w3.org/TR/css-ui-4/#typedef-id"><code>&lt;id&gt;</code></a> value in CSS <a href="https://www.w3.org/TR/css-ui-4/#nav-dir">Directional Focus Navigation</a> (albeit not supported in any browsers).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-16</div>
+          <div class="post_content">
+<p>I wrote a sketch to rough out the idea: <a href="https://codepen.io/jimmyfrasche/pen/yLoeRQm" rel="noopener nofollow ugc">https://codepen.io/jimmyfrasche/pen/yLoeRQm</a></p>
+<p>I reused label with a type=description for elements that should set a description. That would be an orthogonal change I’m not especially committed to but it felt like the right thing to do. I wouldn’t mind if there were a label type=error as well but it was too saturday for me to work that out. The rest of the semantics are how I imagine it, though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-16</div>
+          <div class="post_content">
+<p>Of the three possibilities I like solution 2 the best but it’s a bit confusing that using a <code>prop</code> creates a new scope. I think it would be easier to reason about if there were an explicit <code>propscope</code> making the original example:</p>
+<pre><code class="lang-auto">&lt;div propscope&gt;
+  &lt;input type="radio" prop="bar"&gt;
+  &lt;label for="bar"&gt;Bar 1&lt;/label&gt;
+&lt;/div&gt;
+
+&lt;div propscope&gt;
+  &lt;input type="radio" prop="bar"&gt;
+  &lt;label for="bar"&gt;Bar 2&lt;/label&gt;
+&lt;/div&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-16</div>
+          <div class="post_content">
+<p>This is starting to look worryingly much like Microdata <img alt=":crazy_face:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/crazy_face.png?v=10" title=":crazy_face:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-16</div>
+          <div class="post_content">
+<p>I even looked up how itemscope worked to double check that I wasn’t introducing new behavior/spelling. Seemed like a fitting precedent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-10-19</div>
+          <div class="post_content">
+<p>I found a problem with messing <code>refscope</code>s: for open slots of a component (like in a shadow DOM), you’ll want to be able to opt the children <strong>out</strong> of the scope. For example:</p>
+<pre><code class="lang-auto">&lt;template id="my-component" refscope&gt;
+  &lt;p&gt;I'm a web component with a slot&lt;/p&gt;
+  &lt;slot&gt;
+    &lt;p&gt;but the contents of this slot should be able to be referenced by elements outside of this component&lt;/p&gt;
+  &lt;/slot&gt;
+&lt;/template&gt;
+</code></pre>
+<p>If we introduce a mechanism to create scopes for IDs and IDREFs, we’ll likely need a mechanism to end them. Sometimes the author will want to end only the containing scope but sometimes they’ll want to end several or all.</p>
+<p>Ending the current scope and ending all scopes might be all we need. Maybe adding a couple of optional values to the <code>refscope</code> attribute will be enough.</p>
+<pre><code class="lang-auto">&lt;template id="my-component" refscope&gt;
+  &lt;p&gt;I'm a web component with a slot&lt;/p&gt;
+  &lt;slot refscope="end"&gt;
+    &lt;p&gt;the contents of this slot are able to be referenced by elements in the containing scope&lt;/p&gt;
+  &lt;/slot&gt;
+  &lt;slot refscope="end-all"&gt;
+    &lt;p&gt;the contents of this slot are able to be referenced by unscoped elements&lt;/p&gt;
+  &lt;/slot&gt;
+&lt;/template&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-10-19</div>
+          <div class="post_content">
+<p>An issue I see with using some kind of selector syntax is that selectors could match more than one element and then we’re back in the same problem space of needing to disambiguate which element is intended.</p>
+<pre><code class="lang-auto">&lt;input type="radio" class="cool" name="this_one" /&gt;
+&lt;input type="radio" class="cool" name="that_one" /&gt;
+&lt;label for="input[type='radio'].cool"&gt;
+  which input do I label?
+&lt;/label&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-19</div>
+          <div class="post_content">
+<p>ids can be duplicate too, in practice, but somehow the browser doesn’t throw its hands up in the air in that case <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=10" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-19</div>
+          <div class="post_content">
+<p>If there are multiple matches it can do the same thing document.querySelector does but that also means that something can work and then a change in unrelated html can break the relationship which will be hard to notice.</p>
+<p>The same is true of id if the unrelated change introduces a duplicate id but at least all you have to do then is search for that id to find the duplicate instead of having to figure out what new element also matches an arbitrary selector.</p>
+<p>You could also have a duplicate prop but since they’re limited in scope you only need to examine that scope.</p>
+<p>Of the three, I’d rather debug prop. (Or use an <code>inputset</code> element and not have to worry about anything <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=10" title=":smile:"/>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-25</div>
+          <div class="post_content">
+<p>I broke this out into two separate proposals to avoid diluting this topic</p>
+<ul>
+<li><a class="inline-onebox" href="https://discourse.wicg.io/t/extend-label-element-with-type-attribute-to-let-it-set-descriptions-and-error-messages/5667/2">Extend label element with type attribute to let it set descriptions and error messages</a></li>
+<li><a class="inline-onebox" href="https://discourse.wicg.io/t/add-inputset-tag-for-simplifying-form-creation/5668/2">Add inputset tag for simplifying form creation</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

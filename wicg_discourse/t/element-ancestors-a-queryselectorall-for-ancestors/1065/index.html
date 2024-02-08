@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Element.ancestors, a querySelectorAll for ancestors</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Element.ancestors, a querySelectorAll for ancestors</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p><em>(This post has been edited since its original proposal to remove <code>ancestorQuerySelector</code>, which was essentially the same as <code>Element.parentElement.closest</code>, and rename <code>ancestorQuerySelectorAll</code> to simply <code>ancestors</code>.)</em></p>
+<p>Pretty self-explanatory: where <code>Element.querySelector</code> returns the <em>first matching child element</em>, <code>Element.querySelectorAll</code> returns <em>all matching child elements</em>, and <code>Element.closest</code> returns the first <em>ancestor</em> matching a given selector query, <code>Element.ancestors</code> would return a <code>NodeList</code> (like <code>querySelectorAll</code>) of <em>all ancestors</em> matching a given selector query (similar to jQuery’s <a href="https://api.jquery.com/parents/" rel="nofollow noopener"><code>parents()</code></a> function).</p>
+<p>Implementation / prollyfill:</p>
+<pre><code class="lang-auto">Element.ancestors = function ancestors(selector) {
+  // this would use a (non-live) NodeList, but there doesn't appear to be an API for that
+  var matchingAncestors = [];
+
+  var parent = this.parentElement;
+  while (parent) {
+    if (parent.matches(selector)) matchingAncestors.push(parent);
+    parent = parent.parentElement;
+  }
+  return parent;
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/closest" rel="nofollow noopener"><code>Element.closest()</code></a>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p><span class="mention">@stuartpb</span> as <span class="mention">@MT</span> said <code>Element#closest()</code> returns the single Element parent, you would need to think of a method that returns a <code>NodeList</code> or the future <code>Elements</code> collection, which its name is close to <code>closest()</code>. I don’t think we’ll want to have <code>closest</code> and <code>ancestorQuerySelectorAll</code>.</p>
+<p>Only thing I can think of is <code>closestAll</code> but don’t really like it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="2" data-topic="1065">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Element.closest()?</p>
+</blockquote>
+</aside>
+<p>Ah yes, I’d misinterpreted the name - it sounds like something that’s going to select siblings and/or children (and it didn’t turn up when I Googled “ancestor query selector”). Reading the docs now, I see that it is only ancestors, so yes, this is what I was proposing with <code>ancestorQuerySelector</code>.</p>
+<p>As <span class="mention">@Edwin_Reynoso</span> says, <code>closest</code> doesn’t tackle the <code>ancestorQuerySelectorAll</code> case, which could maybe be added as <code>listClosest</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p><code>parents()</code> could work since it has the letter <strong>s</strong>. The only other thing with the string “parent” is <code>parentElement</code> and <code>parentNode</code> since parents is a method I think it’ll make sense?</p>
+<p>But still doesn’t makes sense kind of weird, so <code>closestParents()</code>??? or <code>closestAncestors()</code> since <code>closest</code> is not really a parent of the element its being called on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>If you’re returning all of the parents that match a selector, “closest” doesn’t make sense any more.  Just <code>ancestors()</code> would do.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>TBH I’m not sure when is this ever wanted. Like when do you ever want to query multiple parents, which is probably why only <code>closest()</code> was created and created to return 1 <code>Element</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>Well, there’s also <code>furthest()</code>, which would want to address the <em>highest parent</em> matching a selector - and sometimes you <em>do</em> want to affect multiple levels of parent (ie. changing background colors in a zebra-striping fashion).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="1065">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>changing background colors in a zebra-striping</p>
+</blockquote>
+</aside>
+<p>What do you mean by your example??</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-14</div>
+          <div class="post_content">
+<pre><code class="lang-auto">var levels = target.ancestors('.differentiated-level');
+
+var d = 360 / (1+Math.PHI);
+
+for (var i = 0; i &lt; ancestors.length; i++) {
+  levels[i].style.backgroundColor = 'hsl(' + (i*d % 360) + ',100%, 50%)';
+}
+</code></pre>
+<p>This is more like a <a href="http://usercontent2.hubimg.com/3641997_f260.jpg" rel="nofollow noopener">Fruit Stripe</a> zebra, but it’s a demo of the general behavior I was talking about.</p>
+<p>Now, of course, the issue with that example is that you could just as easily do repeated calls to <code>.closest</code> with an increment of <code>i</code> in a <code>while (closest)</code> loop - but for other cases (eg. counting <em>how many levels</em> a node is deep in a selector), <code>.ancestors()</code> is significantly easier (although the savings at this point are more bikeshedding, and I honestly don’t feel the need to argue in favor of <code>ancestors()</code> so hard when <code>closest()</code> already exists).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<p>I edited the OP to reflect the above discussion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<p>Also, I just noticed: <code>.closest</code> can select <em>the element itself</em> - I suppose the <code>element.ancestorQuerySelector</code> I was proposing would be equivalent to <code>element.parentElement.closest</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-19</div>
+          <div class="post_content">
+<p>I think you mean <code>parent.parentElement</code> in your <code>ancestor</code> function.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

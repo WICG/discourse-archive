@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Custom Elements] Not requiring hyphens in names</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Custom Elements] Not requiring hyphens in names</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>I started an email thread about the idea here: <a href="http://lists.w3.org/Archives/Public/public-webapps/2016AprJun/0045.html">http://lists.w3.org/Archives/Public/public-webapps/2016AprJun/0045.html</a></p>
+<p>TLDR: I think it’d be nice to be able to name Custom Elements anything without requiring a hyphen, <code>&lt;box&gt;</code> for example. It’d be nice to be able to register elements with the same name as native elements (div, input, p, span, etc) in order to be able to override those elements. Furthermore, browser vendors could continue to add new native elements, but the proposed feature would allow users to override the elements if they wanted to.</p>
+<p>Here’s the example from the email thread, which builds on my idea of being able to <a href="https://discourse.wicg.io/t/proposal-making-components-using-custom-elements-shadowdom/1440">register elements on a per-shadow-root basis</a>, and shows a pattern similar to React components where the component is a Custom Element, and the shadowRoot is to the Custom Element as what JSX/render() is to a React Component:</p>
+<pre><code class="lang-auto">//  --------------- SomeElement.js
+import MyElement from './MyElement'
+
+export default
+class SomeElement extends HTMLElement {
+    constructor() {
+        this.root = this.createShadowRoot()
+        this.root.registerElement('MyElement', MyElement) // &lt;myelement&gt; or &lt;MyElement&gt;
+
+        const frag = document.createDocumentFragment()
+        frag.innerHTML = `
+            &lt;div&gt;
+              &lt;MyElement&gt;
+                  ...
+              &lt;/MyElement&gt;
+            &lt;/div&gt;
+        `
+        this.root.appendChild(frag)
+    }
+
+    static get observedAttributes() { return [ ... ] }
+    connectedCallback() { ... }
+    disconnectedCallback() { ... }
+    attributeChangedCallback() { ... }
+}
+</code></pre>
+<pre><code class="lang-auto">//  --------------- app.js
+import SomeElement from './SomeElement'
+import $ from 'jquery'
+
+// elements registered on the document won't cross into shadow roots
+document.registerElement('SomeElement', SomeElement)
+$('&lt;someelement&gt;blah blah&lt;/someelement&gt;').appendTo(document.body)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>I responded in the WebApps thread:</p>
+<blockquote>
+<p>This would prevent us from ever adding any new elements to the language, or at least require us to do real-world usage checks and avoid names that would break too many pages if we took it over. Requiring a dash is a minimal cost to element authors, and permanently avoids any clashes.</p>
+<p>This is similar to CSS requiring custom properties to start with a double-dash, like --foo.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1439">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>This would prevent us from ever adding any new elements to the language</p>
+</blockquote>
+</aside>
+<p>No it wouldn’t, because what I suggested is that native elements be overridable. Therefore, if some web app has</p>
+<pre><code class="lang-auto">shadowRoot.registerElement('xxx', SomeClass)
+</code></pre>
+<p>and then browser vendors introduce an actual <code>xxx</code> element, the web app won’t break because that <code>shadowRoot.registerElement</code> call would continue to override the native <code>xxx</code> element.</p>
+<p>Then, if the end user really really wants to use the new native <code>xxx</code> element, that end user can rename the registered element so that it doesn’t override <code>xxx</code> anymore.</p>
+<p>This will work just fine, apps won’t break, and browsers can introduce any elements they wish. No problem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>And I further responded about why that’s problematic, too:</p>
+<blockquote>
+<p>That means we lose the lingua franca that HTML provides; two independent libraries can’t ever depend on the core HTML elements, because the other library might have overridden some of them.</p>
+<p>Having a well-known common API is worthwhile. (JS technically has this problem, but replacing built-ins, when it’s done, is typically just to expand them. And once modules finally ship, we’ll have a built-in module with pristine versions of all the built-ins, too.)</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>If a library overrides an element, and another library uses the replaced version, isnt that the desired behavior? It would match the behavior of JS objects.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1439">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>two independent libraries can’t ever depend on the core HTML elements</p>
+</blockquote>
+</aside>
+<p>That’s why I mentioned the idea for allowing registration in ShadowDOM roots: it allows developers to specify what elements are in their component scopes (similarly to JavaScript in React, but in the HTML scope of a Custom Element’s shadow root). The shadow root of an entirely different Custom Element might register a different set of Custom Elements all together.</p>
+<p>This would allow more freedom of expression for someone writing HTML components.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>FWIW, there was my <a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=14011">proposal</a> (2011-09-03) about custom elements that allowed reusing tag names of standard elements in a forward-compatible way and used CSS-like syntax to declare such elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-14</div>
+          <div class="post_content">
+<p><span class="mention">@MT</span> Wow, I was a total newb back then. xD It says in the last comment</p>
+<blockquote>
+<p>For example, search engines wouldn’t be able to determine how to process the files that used these new features.</p>
+</blockquote>
+<p>I guess this is true, but is it really that important? Suppose someone, using the suggestion here coupled with the ShdowDOM idea I linked to in the opening post, defines an element</p>
+<pre><code class="lang-auto">shadowRoot.registerElement('span', CustomClass)
+</code></pre>
+<p>Arguably, at this point it doesn’t even matter because the <code>&lt;span&gt;</code> tag won’t even be part of the page’s initial markup for spiders to consider. But, even if it was, then, why not leave it at the developer’s discretion to determine the meaning of the elements in his app? It’s like variables in JavaScript: developers have freedom to name them conveniently.</p>
+<p>If someone goes and turns a SPAN element into some video player at the top level,</p>
+<pre><code class="lang-auto">document.registerElement('span', VideoPlayerElement)
+</code></pre>
+<p>this changes the meaning os the span tag, but, so? Can’t we tell developers “Hey, we recommend you use native tags for their semantic meaning so engines know what the information in your site means” and just leave it at that? It’s like in JavaScript: “Hey, name your variables with meaning” but some people like cryptic single-letter names, and sometimes the single-letter names are better (f.e. <code>nodes.map(n =&gt; console.log(n)</code> is still easy to understand).</p>
+<p>Someone might really really like to use <code>&lt;div&gt;</code> tags <em>all</em> the time. The following is a single-letter-variable-like-in-javascript example, possibly making someone’s programming experience more enjoyable:</p>
+<pre><code class="lang-auto">shadowRoot.registerElement('d', HTMLDivElement)
+</code></pre>
+<pre><code class="lang-auto">&lt;d&gt;
+  I love Divs and use them all the time!
+&lt;/d&gt;
+</code></pre>
+<p>Someone might hate single letter elements, so</p>
+<pre><code class="lang-auto">shadowRoot.registerElement('anchor', HTMLAnchorElement)
+shadowRoot.registerElement('paragraph', HTMLParagraphElement)
+</code></pre>
+<pre><code class="lang-auto">&lt;paragraph&gt;
+  &lt;anchor&gt;This is a link.&lt;/anchor&gt;
+&lt;/paragraph&gt;
+</code></pre>
+<p>A simple component might use a <a href="http://infamous.io" rel="nofollow noopener">3D library</a> (disclaimer, I’m working on it) that has MotorHTMLScene and MotorHTMLNode element classes, and it could then be convenient to use them like this:</p>
+<pre><code class="lang-auto">myComponentShadowRoot.registerElement('s', MotorHTMLScene)
+myComponentShadowRoot.registerElement('n', MotorHTMLNode)
+myComponentShadowRoot.registerElement('mesh', MotorHTMLMesh) // this one doesn't exist yet
+</code></pre>
+<pre><code class="lang-auto">&lt;div&gt;
+  &lt;h1&gt;A 3D scene:&lt;/h1&gt;
+
+  &lt;s style="width: 600px; height: 400px;"&gt;
+    &lt;n rotation="0, 30, 0" onUpdate="rotation[1]++"&gt;
+
+      &lt;span&gt;This text rotates and has some decorative mesh behind it!&lt;/span&gt;
+
+      &lt;n translation="0 0 -200"&gt;
+        &lt;mesh model="/path/to/file.json"&gt;
+        &lt;/mesh&gt;
+      &lt;/n&gt;
+
+    &lt;/n&gt;
+  &lt;s&gt;
+&lt;/div&gt;
+</code></pre>
+<p>I dislike having to do things like <code>&lt;x-box&gt;</code> just because I had to add a hyphen to the name of an element who’s purpose can be described using a single word word.</p>
+<p><em>Let’s let authors enjoy their programming experience by letting them have more flexibility and customizability!</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-04-14</div>
+          <div class="post_content">
+<p>I absolutley get the reason why I’m not allowed to do this. Although I’m the page author, I don’t own the page entirely. There are user plugins/extensions working with the DOM, there are third party scripts I don’t own, but are included from a different domain and can change update at any time.</p>
+<p>But I actually don’t understand why attributes and properties aren’t also name spaced. I know that in an older version of polymer there was the advice to not (re-)use existing attributes and properties. But how should I know any future property/attribute?</p>
+<p>What does custom elements say about problems here?</p>
+<p>I know, that there where some problems in the past with HTML5, for example some people used <code>required="false"</code> for their JS - form validation hooks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-05-19</div>
+          <div class="post_content">
+<p>I don’t understand how this problem is different than global variables in any programming language.</p>
+<p>If I make a global variable <code>foo</code>, then my code can rely on it, and if the environment defines a new <code>foo</code> global variable in a future release, it doesn’t matter, it won’t break my code because my global variable will continue to reign.</p>
+<p>People in other programming languages know how to work with globals. It can easily be like this in HTML.</p>
+<p>For example, if I define a custom element <code>&lt;foo&gt;</code>, then if browsers introduce a new element <code>foo</code>, then the app can still work, because <code>&lt;foo&gt;</code> will still be defined by the app’s code. It just would mean that the app can not take advantage of the new element… but that is okay because the app was never taking advantage of the element in the first place.</p>
+<p>On the same principal, defining a custom element <code>&lt;div&gt;</code> should override the global one, just like overriding variables in JavaScript. I don’t see why this can’t work.</p>
+<p>Honestly have to put a hyphen in all my custom element names is a complete annoyance.</p>
+<p>Plus, currently, there’s nothing stopping libraries like jQuery or framework like Angular from working with non-hyphen names, so introducing new elements that conflict with names used in a jQuery app or Angular app will have much much higher chance of causing problems than global-variable-overriding would. In the case of jQuery or Angular (or any tools that can rely on element names) their functionality doesn’t and never will override built-in behavior, so they can very easily be broken. I would be much more concerned about that.</p>
+<p>There’s honestly nothing to worry about with overriding built ins using a native API like custom elements, because the risk of a problem is very low.</p>
+<p>Just imagine JavaScript requiring all globals to be prefixed with <code>_</code>, or something. It is not going to happen, and HTML doesn’t need to do it either.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-07-28</div>
+          <div class="post_content">
+<p>The problem with this is that there’s no <em>scoping</em> to protect <em>other</em> libraries from each other’s edits. Say the following happens:</p>
+<ol>
+<li>LibraryA defines a <code>&lt;foo&gt;</code> custom element, and adds them to your page.</li>
+<li>
+<code>&lt;foo&gt;</code> gets added to HTML. LibraryA continues to work fine, as it “overrides” the definition of <code>&lt;foo&gt;</code>.</li>
+<li>You add LibraryB to your page, which uses native <code>&lt;foo&gt;</code> elements. It creates one and puts it into your page, and… whoops! LibraryA activates, takes over the element, and suddenly everything’s confused and you have, at best, a badly displaying element, and at worst, script errors.</li>
+</ol>
+<p>The same argument is why custom properties in CSS are syntactically distinct from native properties.</p>
+<p>JS gets away with custom and built-in things living together in the same namespace because most of the names you write in JS aren’t global, they’re arguments or methods or local variables.  We <em>do</em> run into occasional problems adding new things to JS due to collision with global names (function names, class names), but most of the time we are either using a fairly verbose name that probably wont’ collide with anything (<code>CSSMathValue</code>, for example), or are attaching it as a property of an existing global that’s lived for a long time, so authors already know not to override it.  (This is why CSS added the <code>CSS</code> namespace object, so we could put useful short names somewhere without risk of colliding with author-defined globals.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-07-29</div>
+          <div class="post_content">
+<p>Exactly, you just described the issues with relying on globals.</p>
+<p>I think some way to scope names would be great (for the same reason we scope variables in JS).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2017-07-29</div>
+          <div class="post_content">
+<p>We could use a colon!</p>
+<p>Er, wait…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2017-07-29</div>
+          <div class="post_content">
+<p>I like the idea of not having to specify hyphen names in custom elements. However, I can’t get on board with the idea of overriding logic already defined in core level HTML elements. But maybe we can find a middle ground?</p>
+<p>As an example, perhaps browsers can throw an error when attempting to override core-level methods/properties on an HTMLElement? But new methods on the element would still be allowed? Another third-party library would never need to know about this custom logic on the element, so no problem there.</p>
+<p>EDIT: edited for clarity</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-10-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="15" data-topic="1439">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mkay581/40/1057_1.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>perhaps browsers can throw an error when attempting to override core-level methods/properties on an HTMLElement?</p>
+</blockquote>
+</aside>
+<p>How would we achieve this? f.e., If we do this:</p>
+<pre><code class="lang-auto">class Foo extends HTMLElement {}
+customElements.define('foo', Foo)
+</code></pre>
+<p>and then later the browsers come out with a new builtin element called <code>foo</code> and an <code>HTMLFooElement</code> class, the above definition will not have the <code>HTMLFooElement</code> methods and properties, as if they were overridden to be deleted.</p>
+<p>What should happen in this case? It seems like the expected behavior would be for the element not to behave like a the builtin <code>foo</code>, so that the app continues to work exactly as it did before. People can optionally rename their elements if they wish to be able to use the new <code>foo</code> element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-10-25</div>
+          <div class="post_content">
+<p>Ok, so we allow developer overriding of elements. Then a developer includes a 3rd party component that is expecting the native element not their custom one on top. What should happen? This then brings 3rd party component developers into needing to do even more extensive feature detection on everything. Or developers needing to use a fine tooth comb over every little aspect of their application, even in updates that would otherwise be mundane.</p>
+<p>Also, browser vendors could be dissuaded from choosing a solid element name simply because an element already exists with the same name in a large number of sites. Just like new JS methods and properties. So allowing global names muddies the waters for future implementations. And having “the new element simply not take effect or be overridden” isn’t a good option for browser vendors. Everyone should have consistent access to the default elements.</p>
+<p>Allowing users to override native element names in the global space isn’t a widely beneficial thing to have. It will only bring in more problems long-term for users. Namespacing them and requiring a dash is a perfectly reasonable way to have a namespace enforced as to not collide with any future native development.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-10-30</div>
+          <div class="post_content">
+<p>Does it help at all that a lot of folks in standards, including browser vedors are discussing how we do mixins that would allow effectively what you seem to be describing?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2017-11-02</div>
+          <div class="post_content">
+<p>I’ve thought a bit about this, and your thoughts are exactly in line with what the TAG was getting at in section 3.3 <a href="https://www.w3.org/2001/tag/doc/polyfills/#don-t-squat-on-proposed-names-in-speculative-polyfills">https://www.w3.org/2001/tag/doc/polyfills/#don-t-squat-on-proposed-names-in-speculative-polyfills</a> .</p>
+<p>And I agree with that.</p>
+<p>But the customized built-in mechanism exactly addresses this concern, allowing authors to ‘ponyfill’ instead of polyfill, polluting the global namespace.<a href="https://github.com/sindresorhus/ponyfill" rel="nofollow noopener">https://github.com/sindresorhus/ponyfill</a></p>
+<p>Finally, why not allow the custom built-in mechanism to be used for HTMLUnknown elements? This would have allowed, for instance, a  element to be developed without it having to have been a ‘speculative polyfill’ which now has to be removed because its in the way of the global namespace? <a href="https://twitter.com/yoavweiss/status/925760243178622978" rel="nofollow noopener">https://twitter.com/yoavweiss/status/925760243178622978</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2017-11-02</div>
+          <div class="post_content">
+<p>Not really. If we’re discussing it, let’s have that discussion here, not behind closed doors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2017-11-02</div>
+          <div class="post_content">
+<p><span class="mention">@trusktr</span> if we have class <code>Foo</code> that extends <code>HTMLElement</code>, and later come out with a builtin <code>Foo</code>, any third party libraries that require the builtin <code>Foo</code> element should announce in their release that they require the builtin <code>Foo</code> element in order for their library to behave as intended. I don’t see why we’re so worried about future-proofing element names that do not yet exist. Because:</p>
+<ol>
+<li>the same argument can be said about names with hyphens. It seems short-sighted to <em>always</em> assume a single word for builtin element names in the future when multiple words (separated by a hyphen will be more intuitive).</li>
+<li>Some developers were already using <code>Set</code> or a <code>Map</code>  as a global variables before they became native classes and we didn’t seem to be concerned, so why are we with these custom element classes?</li>
+</ol>
+<p><span class="mention">@Garbee</span></p>
+<blockquote>
+<p>Ok, so we allow developer overriding of elements. Then a developer includes a 3rd party component that is expecting the native element not their custom one on top. What should happen? This then brings 3rd party component developers into needing to do even more extensive feature detection on everything.</p>
+</blockquote>
+<p>Nah. What the 3rd party component developers should do is announce in their release that their library may not be fully compatible if the builtin element is not used. 3rd party developers have always had the burden of notifying their users of a potential breaking change and making sure they stick to semver to prevent breaking previous usage. I don’t see why this would be any different.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

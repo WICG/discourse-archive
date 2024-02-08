@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>HTMLSelectElement add ability to show option list programmatically</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">HTMLSelectElement add ability to show option list programmatically</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1515_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dtapuska</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<h2>Problem:</h2> The ability to open a HTMLSelectElement's option list from javascript doesn't exist. Some of the solutions used currently with Chrome won't work in the future due to planned trusted event processing.
+<p>An example of a current solution that works in Chrome is:</p>
+<pre><code>showDropdown = function (element) {
+    var event = document.createEvent('MouseEvents');
+    event.initMouseEvent('mousedown', true, true, window);
+    element.dispatchEvent(event);
+};
+
+showDropdown(document.getElementById('dropdown'));
+</code></pre>
+<p>This solution relies on the fact that Chrome currently allows untrusted events to execute the default action. The default action for the HTMLSelectElement for mousedown is to open the option list.</p>
+<p>According to the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#trusted-events">UI Event</a> specification untrusted actions should not execute the default action. Chromium’s bug number is <a href="http://crbug.com/334015" rel="nofollow noopener">334015</a>.</p>
+<h2>Solution:</h2>
+Since this is not consistent across all browsers I would like to propose that we add a open() method to the HTMLSelectElement that will open the option list when called.
+<pre><code>interface HTMLSelectElement : HTMLElement {
+      void               open();
+      void               close();
+    };
+</code></pre>
+<p>This method would run the <a href="https://html.spec.whatwg.org/multipage/#focusing-steps">focusing-steps</a> open the select option list. If the element is inert it would do nothing.</p>
+<h2>Use Cases:</h2>
+One possible of use of this functionality is an annotated tutorial that progressively instructs the user to fill out the form values as it executes. It may overlay instructions and indicate the user to select the correct option shown.
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>I’ve seen developers ask about doing this a bunch (eg. <a href="http://stackoverflow.com/questions/6992639/can-i-open-a-selectbox-with-javascript" rel="nofollow noopener">this stackoverflow thread</a>), and it seems reasonable to me that it should be possible.  I wish I had some concrete examples of websites relying on this in Chrome at the moment, but that won’t be easy to find until we break their workaround.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>I prefer an <code>open</code> attribute just like in <code>&lt;dialog&gt;</code>:</p>
+<pre><code class="lang-auto">&lt;select open&gt;
+ &lt;option value="1"&gt;1&lt;/option&gt;
+&lt;/select&gt;
+</code></pre>
+<p>So that in my markup I can also decide that its open.</p>
+<p>In my JS:</p>
+<pre><code class="lang-auto">select.open; // true
+select.open = false; // closes it and removes open attribute
+</code></pre>
+<p>Also a <code>close()</code> method:</p>
+<pre><code class="lang-auto">select.close(); // closes it and removes open attribute
+</code></pre>
+<p>The <code>close()</code> method exist in the <code>&lt;dialog&gt;</code> element as well, I guess for preference.</p>
+<p>Also whenever the <code>&lt;select&gt;</code> is opened by mouse/keyboard that <code>open</code> attribute is added, so that you can check if <code>open</code>. (Not sure what’d be the use but just be best, just in case there is a use for detecting if open)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1035">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dtapuska/40/1515_1.png" width="20"/> dtapuska:</div>
+<blockquote>
+<p>This method would run the <a href="https://html.spec.whatwg.org/#focusing-steps">focusing-steps</a></p>
+</blockquote>
+</aside>
+<p>Please link to <a href="https://html.spec.whatwg.org/multipage/interaction.html#focusing-steps">the mutipage spec page</a> rather than locations in the one-page spec, for those of us on slow connections, phones, or low-memory Chromebooks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<p>If we’re fully pedantic, it ought to be <a href="https://html.spec.whatwg.org/multipage/#focusing-steps">this</a>, since <a href="https://critic.hoppipolla.co.uk/showcomment?chain=12223" rel="nofollow noopener">apparently that’s preferred</a>. I guess the stability of the individual subpages isn’t guaranteed?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p><span class="mention">@dtapuska</span> Could you add a “Use cases” section (with one or more examples) to your original post?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1515_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dtapuska</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p>My first impression was that this was a good idea but then I ran into some problems…</p>
+<p>The <code>&lt;dialog&gt;</code> specification does do mirroring of the open variable; although I’m not sure if it would really be great here. It works well because the open variable is basically an attribute selector for “display: none” on the dialog element.
+Sometimes UAs work with native controls for these that aren’t represented in the HTML view like <code>&lt;dialog&gt;</code> is and this can create a synchronization problem. ie; The reading the value of <code>open</code> may not really represent exactly what the author of the page really wants.</p>
+<p>I tried implementing this in Chrome and I ran into a few problems.</p>
+<pre><code>&lt;select id='first' open&gt;
+  &lt;option&gt;1&lt;/option&gt;
+&lt;/select&gt;
+&lt;select id='second' open&gt;
+&lt;option&gt;2&lt;/option&gt;
+&lt;/select&gt;
+
+&lt;script&gt;
+document.getElementById('first').open // should be true
+document.getElementById('second').open // likely should be false; but may return true depending on timing of how the UA processes the second select
+&lt;/script&gt;
+</code></pre>
+<ul>
+<li>What happens with the values when they are removed from the DOM and added back to the DOM?</li>
+<li>What happens when ‘multiple’ is added as an attribute or specified at the same time as open?</li>
+<li>The open value may not reflect what is currently on the screen because it may not be synchronous. For example if we set two selects with open.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1515_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dtapuska</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p>Do you have a specific example that you’d like to see. I added a textual example; and I’m sure I can come up with others so I’m not really sure if what I described is what you wanted. Please let me know and I can revise if need be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1919_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jacobrossi</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<p><span class="mention">@RickByers</span>  I remember seeing <a href="http://www.hbogo.com/activate" rel="nofollow noopener">http://www.hbogo.com/activate</a> use this behavior in Chrome.</p>
+<pre><code>0!==g.nsIphonePicker&amp;&amp;(d.isIphone()||d.isIpad()||d.isAndroid())?(e.$watch("iphoneSelectedItem",e.onClick),f.bind("click",function(b){if("SELECT"!==b.target.nodeName&amp;&amp;!e.disabled){var c=f.find("select");if(c.show(),a[0].createEvent){var b=a[0].createEvent("MouseEvents");b.initMouseEvent("mousedown",!0,!0,window,0,0,0,0,0,!1,!1,!1,!1,0,null),c[0].dispatchEvent(b)}else c.fireEvent&amp;&amp;c[0].fireEvent("onmousedown")}}
+</code></pre>
+<p><span class="mention">@dtapuska</span> I’m not sure I understand the synchronicity issue.  I don’t see an issue blocking us from making <code>element.open = true</code> synchronously open a select control.  Browsers do seem to enforce a single control being opened at a time.  So in your example, the first element would no longer have a value of open==true once the second element is parsed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1515_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dtapuska</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<p><span class="mention">@jacobrossi</span>  It’s really an implementation detail. I attempted to show/hide the popup when the HTMLSelectElement was attached/detached to the layout/render tree. The problem with that is that is inside a layout so I can’t manipulate the DOM during a layout. So what I would need to do is dispatch a show of the popup after the layout is done.</p>
+<p>Depending on how I handled it if I just pushed it as an event to execute later then <span class="hashtag">#9</span> shows a case where it is pathologically incorrect. If I inserted it as an event that occurs just after layout then it would likely work but would require some custom plumbing…</p>
+<p>Perhaps I was attempting it incorrect; but I was recording how it might cause me issues if the “boolean open” was the desired approach wrt to this problem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1035">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jacobrossi/40/232_1.png" width="20"/> jacobrossi:</div>
+<blockquote>
+<p><span class="mention">@RickByers</span>  I remember seeing <a href="http://www.hbogo.com/activate" rel="nofollow noopener">http://www.hbogo.com/activate</a> use this behavior in Chrome.</p>
+</blockquote>
+</aside>
+<p>Great, thanks for the concrete use case!  That’s probably justification enough to keep Chrome from becoming spec-compliant on event default actions until we’ve shipped a replacement API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1515_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dtapuska</div>
+          <div class="creation_date">2016-05-06</div>
+          <div class="post_content">
+<p>To resurrect this discourse. I’m considering abandoning this request due to the fact that:</p>
+<ol>
+<li>Other vendors don’t do this</li>
+<li>It isn’t clear what should happen with iframes for this proposal. We’ve thought about it and think that an iframe is able to annoy the user by requesting the focus to the iframe.</li>
+</ol>
+<p>It might just be better to point people who want this behavior to implement the widget themselves. There are a number of examples:
+<a href="http://jsfiddle.net/BB3JK/47/" rel="nofollow noopener">http://jsfiddle.net/BB3JK/47/</a>
+<a href="http://codepen.io/wallaceerick/pen/ctsCz" rel="nofollow noopener">http://codepen.io/wallaceerick/pen/ctsCz</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

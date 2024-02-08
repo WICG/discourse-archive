@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Useragent-like Initial Styling for Custom Elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Useragent-like Initial Styling for Custom Elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-06</div>
+          <div class="post_content">
+<p>It occurred to me that when making Custom Elements, I’d like for them to have default styling that is easy to override (i.e. the styling has least priority, i.e. the styling is first in the CSS cascade just like useragent styling).</p>
+<p>Is this possible? Is the best we currently have to use <code>&lt;style&gt;</code>/<code>&lt;link&gt;</code> elements at the top of the page and/or to put <code>&lt;style&gt;</code>/<code>&lt;link&gt;</code> elements inside shadow roots?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-12-06</div>
+          <div class="post_content">
+<p>What would the default styling be? I’m quite fond of the fact that there’s <em>nothing</em> I have to override, but newer devs might not feel the same.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-07</div>
+          <div class="post_content">
+<p>The default style might be anything that a Custom Element author wants.</p>
+<p>In my case, I want to ship elements to end users, for those elements to have certain initial styling, and for the end user to be able to easily override the styles as if they are top level useragent styles.</p>
+<p>More specifically, in my case, the custom elements are used in 3D scenes, and they have default styling like <code>transform-style: preserve-3d; position: absolute;</code> among other styles. These styles are the default styles that give the elements their some of their default rendering functionality.</p>
+<p>Currently, I style these elements via the <code>style=""</code> attribute because otherwise styles in the top-level document won’t bleed into shadow roots. But the problem is these styles have the highest specificity and require <code>!important</code> to override which makes managing styles more difficult for the end user. I could inject <code>&lt;style&gt;</code> elements into all of the end user’s shadow roots, but that adds much unwanted complexity to my library code and unideal side effects to the user’s environment.</p>
+<p>Useragent styles bleed into shadow roots, which is a nice way of having default styles across a whole app for all builtin elements. It’d be great to have this sort of least-specific styling for Custom Element authors’ elements.</p>
+<p>Do you get what I mean?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-12-07</div>
+          <div class="post_content">
+<p>Ah, yes. I misread what you stated and thought you were proposing <em>browser</em> defaults.</p>
+<p>I think this could be resolved with the now-deprecated “shadow piercing” selector (<code>&gt;&gt;&gt;</code>), though I may be missing something obvious. It would also let you use the same stylesheet, naturally.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-07</div>
+          <div class="post_content">
+<p>The piercing selector might be the best current option if it wasn’t deprecated, but maybe we should think about allowing Custom Element authors to provide default styles for all instances of their elements across the whole app while not allowing end users to be able to add rogue styling to component internals.</p>
+<p>It seems like useragent styling is a good example.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-12-07</div>
+          <div class="post_content">
+<p>This is not ideal, but once <a href="https://drafts.csswg.org/selectors-4/#is" rel="nofollow noopener"><code>:is()</code></a> is implemented, you can provide styles with very little specificity, so that they are easy to override.
+We still need a proper solution for this though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1047_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robdodson</div>
+          <div class="creation_date">2017-12-08</div>
+          <div class="post_content">
+<p>You might want to check out the Constructable Stylesheets proposal. There’s a comment on providing custom elements with UA-like styles: <a href="http://tabatkins.github.io/specs/construct-stylesheets/#styles-in-all-contexts" rel="nofollow noopener">http://tabatkins.github.io/specs/construct-stylesheets/#styles-in-all-contexts</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-12-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="2468">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/leaverou/40/110_1.png" width="20"/> leaverou:</div>
+<blockquote>
+<p>This is not ideal, but once :is() is implemented, you can provide styles with very little specificity,</p>
+</blockquote>
+</aside>
+<p>That would certainly be better than what we have now. I would totally like to use that right now.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1592_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">platosha</div>
+          <div class="creation_date">2018-02-16</div>
+          <div class="post_content">
+<p>Also, please note the <a href="https://github.com/w3c/webcomponents/blob/83ffdee7c5ad7ce5e220967ddbda6b43a1f67497/proposals/Default-Stylesheets-Concept-and-Proposal.md" rel="nofollow noopener">Default Stylesheets</a> proposal for Web Components, which was made a while ago.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

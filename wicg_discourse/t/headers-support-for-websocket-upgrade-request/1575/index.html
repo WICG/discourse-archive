@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Headers support for WebSocket upgrade request</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Headers support for WebSocket upgrade request</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-07-01</div>
+          <div class="post_content">
+<p>I’ve just started using WebSockets, and noticed I can’t pass JWT token in the same way as I do with HTTP – through <code>Authorization: Bearer _TOKEN_</code>, since browsers do not seem to support custom headers for WebSocket upgrade. I can’t find any limitation in <a href="https://tools.ietf.org/html/rfc6455" rel="nofollow noopener">RFC 6455</a>, so it’s seems to be a browser-only issue.</p>
+<p>I believe browsers should support custom headers in WebSocket upgrade requests (with same rules as XHR/Fetch), if just for consistency between different technologies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-07-04</div>
+          <div class="post_content">
+<p>Same problem with <a href="https://developer.mozilla.org/en/docs/Web/API/EventSource" rel="nofollow noopener">EventSource</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jokeyrhyme</div>
+          <div class="creation_date">2016-07-06</div>
+          <div class="post_content">
+<p><span class="mention">@ashmind</span> check out the “Opening Handshake” section: <a href="https://tools.ietf.org/html/rfc6455#section-4" rel="nofollow noopener">https://tools.ietf.org/html/rfc6455#section-4</a></p>
+<p>There are headers that MUST be in there, and there are headers that MAY be in there, but there’s no mention that any arbitrary header has to be supported.</p>
+<p>If you need to pass tokens, I would suggest putting them in query string arguments. This is private enough if you are using WebSockets over TLS, although the server itself might log whole URLs. If you control the server part yourself, ensure that it does not log any tokens when it writes to its access log.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-07-06</div>
+          <div class="post_content">
+<p><span class="mention">@jokeyrhyme</span> I don’t think that is a correct interpretation, see in the same section</p>
+<pre><code class="lang-nohighlight">   12.  The request MAY include any other header fields, for example,
+        cookies [RFC6265] and/or authentication-related header fields
+        such as the |Authorization| header field [RFC2616], which are
+        processed according to documents that define them.
+</code></pre>
+<p>This explicitly mentions <code>Authorization</code> I want to use here, but allows for other fields as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2019-08-05</div>
+          <div class="post_content">
+<p>Having looked at the API I think this would be trivial and non-breaking to add and would enable the (now common) use of bearer tokens in the WebSocket handshake as a means of authenticating the connection.</p>
+<p>One could allow any custom headers or keep it simple and only allow a value for the <code>Authorization</code> header:</p>
+<pre><code class="lang-auto">[Constructor(USVString url, optional (DOMString or sequence&lt;DOMString&gt;) protocols = [], optional DOMString authorizationHeader), Exposed=(Window,Worker)]
+interface WebSocket : EventTarget {
+  ...
+};
+</code></pre>
+<p>The algorithm to <a href="https://fetch.spec.whatwg.org/#concept-websocket-establish">establish a websocket</a> already has steps to add headers to the handshake so simply including another (if provided in the constructor) seems pretty straight-forward.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

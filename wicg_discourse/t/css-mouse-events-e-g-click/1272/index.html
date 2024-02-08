@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS mouse events (e.g. click)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS mouse events (e.g. click)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/879_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">polinovskyi</div>
+          <div class="creation_date">2016-01-27</div>
+          <div class="post_content">
+<p>Hi all!
+Did not find the relevant topic, so decided to open it here.</p>
+<p>We still do a lot on the client with JavaScript, however some simple things could be done with CSS as well (I hope <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/>). For example, why don’t we have something like <strong>click</strong> in CSS? For example, when we have an information block on the page with close button, we still use some JS to close it. To emulate some click behavior we can do something like
+<code>input[type="checkbox"]:checked + p {...}</code> to make an accordion and other things without JavaScript. But all that looks like a hack with these hidden checkboxes.</p>
+<p>What if we could have, say, pseudo-class as <strong>:clicked</strong> and use it the same way? Then things would go easier, you could do something like:
+<code>.close-button:clicked .modal-body {display: none;}</code></p>
+<p>Of course, there are some things to think about, like getting the state of the element back (if we need to show the info block once again, we need to reset the clicked state though).</p>
+<p>Any way, does it make any sense? May be other ideas how we could do that and what events we could use?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2016-01-29</div>
+          <div class="post_content">
+<p>I’m <em>already</em> working on a solution to this! I don’t think we can handle JS events the same way we handle CSS pseudo-classes, but the <a href="http://elementqueries.com" rel="nofollow noopener">elementqueries.com</a> syntax could easily be extended to include JS events!</p>
+<p>How EQCSS works is CSS styles are scoped to a selector, the plugin adds a unique identifier to each element with queries on it, JS watches the page, and when the query condition is met, it adds a <code>&lt;style&gt;</code> tag to the end of the page with CSS written for the unique identifier of the element that matches the query. For a more in depth explanation of the workings of the plugin, check out the technical documentation: <a href="https://github.com/eqcss/eqcss/wiki/EQCSS-1.0.0-~-Technical-documentation" rel="nofollow noopener">https://github.com/eqcss/eqcss/wiki/EQCSS-1.0.0-~-Technical-documentation</a></p>
+<p>Now, how to handle CSS for events? I propose a syntax like this:</p>
+<pre><code class="lang-auto">@element 'button' and (event: click) {
+  body {
+    background: red;
+  }
+}
+</code></pre>
+<p>But I’m not sure which syntax looks better:</p>
+<pre><code class="lang-auto">@element 'button' and (click) {}
+
+@element 'button' and (onclick) {}
+
+@element 'button' and (event: click) {}
+</code></pre>
+<p>Unlike CSS pseudo-classes, like <code>:hover</code> which CSS applies and then also removes, there is no way the browser would know to remove the styles from the <code>click</code> query.</p>
+<p>Imagine you have code like this:</p>
+<pre><code class="lang-auto">&lt;input&gt;
+
+&lt;style&gt;
+  @element 'input' and (event: keydown) {
+    $this {
+      background: red;
+    }
+  }
+&lt;/style&gt;
+</code></pre>
+<p>After pressing a key, the bottom of your page might look like this:</p>
+<pre><code class="lang-auto">&lt;input data-EQCSS_1&gt;
+
+...
+
+&lt;style&gt;
+  [data-EQCSS_1] {
+    background: red;
+  }
+&lt;/style&gt;
+</code></pre>
+<p>Now suppose you added a <code>keyup</code> event as well:</p>
+<pre><code class="lang-auto">&lt;input&gt;
+
+&lt;style&gt;
+  @element 'input' and (event: keydown) {
+    $this {
+      background: red;
+    }
+  }
+  @element 'input' and (event: keyup) {
+    $this {
+      background: lime;
+    }
+  }
+&lt;/style&gt;
+</code></pre>
+<p>Let’s say you press a keyboard key twice, here’s what the bottom of the page would look like:</p>
+<pre><code class="lang-auto">&lt;input data-EQCSS_1&gt;
+
+...
+
+&lt;style&gt;
+  [data-EQCSS_1] {
+    background: red;
+  }
+  [data-EQCSS_1] {
+    background: lime;
+  }
+  [data-EQCSS_1] {
+    background: red;
+  }
+  [data-EQCSS_1] {
+    background: lime;
+  }
+&lt;/style&gt;
+</code></pre>
+<p>Resulting in the last <code>keyup</code> condition’s style being the one that applies. <em>This</em> is closer to how JavaScript events apply CSS styles to elements when you’re working with JS - but you’re right, it sure would be nice to write those CSS styles in a CSS-like syntax.</p>
+<p>I was going to make EQCSS v.1.2.0 all about performance enhancements - but if you want to explore adding conditions for events on elements then I can definitely boost the priority of that feature.</p>
+<p>Also, note how instead of applying to just one element, in my proposed syntax it acts as a container query, like a <code>@media</code> query it could hold multiple sets of CSS rules applying to many different elements on the page, not <em>just</em> the element that meets the condition.</p>
+<p>Let me know what you think, we’ve already got the hard part of this polyfill/plugin done! This is just another feature we can add on top <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>(How I think EQCSS would implement the functionality in JavaScript is when it parsed the EQCSS syntax it would add an <code>addEventListener()</code> for that event on that element. When the listener fires would be when that specific CSS would be appended to the page)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-01-29</div>
+          <div class="post_content">
+<p>Tracking that state would certainly be an issue here like requiring timing events to unset the state. Having JavaScript able to set the state might be the first step along this path which would also be extensible.</p>
+<p><span class="mention">@tomhodgins</span> this (shameless plug of some crappy notes I made) <a href="https://github.com/jonathanKingston/notes/blob/master/ideas/pseudo-media-query.md" rel="nofollow noopener">https://github.com/jonathanKingston/notes/blob/master/ideas/pseudo-media-query.md</a> was a direction I was going for the same issue as element queries.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/879_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">polinovskyi</div>
+          <div class="creation_date">2016-01-29</div>
+          <div class="post_content">
+<p><span class="mention">@tomhodgins</span> , your syntax suggestion looks quite cool - it gives a possibility to manipulate actually any elements on the page. You think, this elementqueries would be implemented in browsers one day? Actually, the idea is quite promising itself <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>The only thing that looks not nice (we should think about it) is he polluting the page with the styles after events are changed, like you’ve described. But for the moment nothing better is coming to my mind.
+Thanks for the feedback!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhnns</div>
+          <div class="creation_date">2016-01-30</div>
+          <div class="post_content">
+<p>This feature sounds pretty awesome and would definitely reduce the necessity for JavaScript (I like JS, but pushing layout stuff to CSS, like animations and transitions, was definitely a good idea).</p>
+<p>One thing that bugs me though is that events are different to states. And CSS is all about state. That’s why <code>:hover</code> and media queries work so well in CSS: They describe a state. Events, however, are not a state, they are just a single point in time, they just notify about something. Whether the element is in a different state after that depends heavily on the element. Of course, you can always turn an event in artificial states, like <code>beforeclick</code>, <code>onclick</code>, <code>afterclick</code> but I don’t think that this would be really useful.</p>
+<p>Wouldn’t it be better to have a CSS syntax to push elements to a different state, e.g. by adding/removing CSS classes? Thus CSS would not only describe what different states would look like, but also how to transition between them, basically describing a state machine. And that’s usually what we do with JavaScript: Listening on events and modifying CSS classes.</p>
+<p>It’s hard to imagine a CSS-ish syntax for it, because the CSS language has no way to describe change. But I do think that it would perfectly fit to the declarative way of describing layouts. It could look like this, for example:</p>
+<pre><code class="lang-css">.some-btn {
+    onclick: #some-form =&gt; (+.dirty, -.pristine)
+}
+</code></pre>
+<p>This would add the <code>.dirty</code> class (hence <code>+</code>) and remove the <code>.pristine</code> class (hence <code>-</code>) from the element matching <code>#some-form</code>. I know, the syntax looks pretty weird and there’s probably a more beautiful syntax. But what do you think?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2016-02-01</div>
+          <div class="post_content">
+<p>to be clear, this would only be something for situations where a click only has as a result a change in visual presentation, right? i think the number of situations where this is true, compared to situations where you’d also want to execute some actual logic/code first, is quite small…not to mention it just feels very dirty with regards to the old “CSS for presentation, JS for behavior” idea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2016-02-02</div>
+          <div class="post_content">
+<p>There’s precedent for this; <code>:active</code> will fire on anything when clicked, and mobile browsers implement this behavior for <code>:hover</code> as a shim.</p>
+<p>CSS has been straining “style and not behavior” for a while now (<code>user-select</code>, <code>pointer-events</code>, <code>will-change</code>, that old “ARIA assigned through CSS” idea, not to mention <code>behavior</code> and <code>binding</code>)—it seems inevitable that we’ll bite the bullet and rename them Cascading Specification Sheets someday. Its declarative assignment mechanism is probably the best thing about it (how great would it be to specify, say, an abbreviation’s expansion through its syntax, instead of repeating <code>title</code> on every <code>&lt;abbr&gt;</code>?), so I’m looking forward to any changes like this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/879_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">polinovskyi</div>
+          <div class="creation_date">2016-02-05</div>
+          <div class="post_content">
+<p>Well, yes, it is about behavior. But, is this old paradigm still valuable? Are CSS animations or media-queries can be treated only as “presentation” part? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

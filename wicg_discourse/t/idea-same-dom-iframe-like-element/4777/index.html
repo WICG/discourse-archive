@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[idea] Same-DOM &lt;iframe&gt;-like element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[idea] Same-DOM &lt;iframe&gt;-like element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-09-11</div>
+          <div class="post_content">
+<p>This idea is similar to my idea in <a class="inline-onebox" href="https://discourse.wicg.io/t/proposal-same-document-same-context-windows-declaratively-via-html-window-element/3556/23">[proposal] Same-document same-context windows, declaratively via HTML &lt;window&gt; element</a>.</p>
+<p>This idea differs in that we can code the content in an iframe-like element from the same DOM where we are using the iframe-like element.</p>
+<p>For the sake of example, let’s call it <code>&lt;frame&gt;</code>.</p>
+<p>Usage:</p>
+<pre><code class="lang-auto">&lt;div&gt;
+  The following content is rendered in a separate frame:
+  &lt;frame&gt;
+    &lt;div id="divInsideFrame"&gt;Content in a frame&lt;/div&gt;
+  &lt;/frame&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  // The content is written in the same DOM where the &lt;frame&gt; is used,
+  // so we can reference it and modify the content within the outer context:
+  const div = document.querySelector('#divInsideFrame')
+  div.style.background = 'cornflowerblue'
+&lt;/script&gt;
+</code></pre>
+<p>What this does:</p>
+<ul>
+<li>Renders the child DOM of the <code>&lt;frame&gt;</code> element inside an iframe-like container/context</li>
+<li>Any styling (CSS) and rendering (f.e. canvas 2d or webgl) is scoped inside of the iframe-like context.</li>
+<li>If any graphics crash, browsers can limit the crash to this frame (and perhaps browsers can put a “refresh” button on it) without crashing the whole tab. This can be useful for sites like <a href="http://codepen.io" rel="nofollow noopener">http://codepen.io</a>, <a href="https://www.shadertoy.com" rel="nofollow noopener">https://www.shadertoy.com</a>, etc.</li>
+</ul>
+<hr/>
+<p>I’m not sure about the following, but perhaps the <code>&lt;frame&gt;</code> has its own JavaScript context, and the user can launch specific scripts in that context that can not access the outer context. f.e.:</p>
+<pre><code class="lang-auto">&lt;div&gt;
+  The following content is rendered in a separate frame:
+  &lt;frame&gt;
+    &lt;div&gt;Content in a frame&lt;/div&gt;
+  &lt;/frame&gt;
+&lt;/div&gt;
+&lt;script&gt;
+   document.querySelector('frame').runScript('http://some.script/to/run.js') // or something
+&lt;/script&gt;
+</code></pre>
+<p>That script</p>
+<ul>
+<li>can access only the DOM that is being rendered in the frame.</li>
+<li>can access attributes and props on those elements, which means the script can access content provided by the outer context, via Proxy Membrane.</li>
+<li>can even use <code>getComputedStyle</code> to see what styles are applied from the outer context</li>
+<li>can not access everything from the outer context, because the Proxy Membrane prevents certain properties from being reachable.</li>
+</ul>
+<p>Again, I’m not sure about the <code>&lt;frame&gt;</code> elements having a (somehow-secure while the DOM comes from the outside) JS context in them.</p>
+<p>Maybe it would work the same way as when passing nodes from an outer context to the inner context, in that the inner context can gain access to a lot of things from the outer context.</p>
+<p>Maybe it would be fine for same-origin code.</p>
+<p>But the main idea is that some things like graphics (CSS, canvas, webgl) can be isolated in terms of how the browser renders those parts (separate process, f.e.).</p>
+<p>It some ways, it would be similar to a container element in place of the <code>&lt;frame&gt;</code> having style <code>contain: strict; overflow: hidden;</code> or similar, but with additional separation.</p>
+<p>Maybe the <code>&lt;window&gt;</code> idea in the other thread can have a similar separate-JS-context type of thing too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Somnid</div>
+          <div class="creation_date">2020-09-14</div>
+          <div class="post_content">
+<p>Sounds like this: <a class="inline-onebox" href="https://discourse.wicg.io/t/use-iframe-contents-if-srcdoc-is-present-but-empty/1548">Use &lt;iframe&gt; contents if srcdoc is present but empty</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for a Web Background Sync API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for a Web Background Sync API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mek</div>
+          <div class="creation_date">2015-09-30</div>
+          <div class="post_content">
+<p>We’ve been working for a while on a Background Sync API, to allow websites with service workers schedule work to be performed later. As described in our <a href="https://github.com/slightlyoff/BackgroundSync/blob/master/explainer.md" rel="nofollow noopener">explainer document</a>:</p>
+<blockquote>
+<p>If you write an email, instant message, or simply favourite a tweet, the application needs to communicate that data to the server. If that fails, either due to user connectivity, service availability or anything in-between, the app can store that action in some kind of ‘outbox’ for retry later.</p>
+<p>Unfortunately, on the web, that outbox can only be processed while the site is displayed in a browsing context. This is particularly problematic on mobile, where browsing contexts are frequently shut down to free memory.</p>
+<p>Native application platforms provide <a href="https://developer.android.com/reference/android/app/job/JobScheduler.html" rel="nofollow noopener">job scheduling</a> APIs that enable developers to collaborate with the system to ensure low power usage and background-driven processing. The web platform needs capabilities like this too.</p>
+<p>We propose a new API that extends <a href="https://github.com/slightlyoff/ServiceWorker" rel="nofollow noopener">Service Workers</a> with a <code>sync</code> event and an API for signalling the desire for this event to fire.</p>
+</blockquote>
+<p>The explainer mentions both one-off syncs as well as periodic syncs, although initially we’d like to focus on just the first one of those, since we think it has much less privacy/security implications, and already addresses a lot of the use cases we’re interested in. We’ve started writing a <a href="https://wicg.github.io/BackgroundSync/spec/" rel="nofollow noopener">spec</a> for one-off syncs, and hope to further evolve/incubate this API in the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-09-30</div>
+          <div class="post_content">
+<p>+1 to this; exposing “sync” points (when the network is active) seems great.  The spec desperately needs some usage examples, but I <em>presume</em> that whenever you have data to sync, you register() it with some tag; the UA periodically notices that there is registered sync requests and the network is up, and fires a sync event with the appropriate tag, so you can start performing network activity.</p>
+<p>I presume that this is so you can, for example, generate a guid for a DB entry key, with the value being something like “user 1234 favorited tweet 5678”, and register() a sync with that guid, then when the sync event fires you can retrieve that information and make a request at the server?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>+1 as well. I’d love to see this work move forward.</p>
+<p>The spec seems to be in a fairly advanced state. Would you consider moving the repo to the WICG GitHub org?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mek</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>I think moving this to the WICG GitHub org would make a lot of sense, yes. I assume it is possible to do so while keeping all the github issues (and maybe even links to other stuff) working?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<p>Yeah. The repo remains the same, just changes ownership. I’ll ping you by mail for the gory details.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mek</div>
+          <div class="creation_date">2015-11-24</div>
+          <div class="post_content">
+<p>For people following along, the repo did get moved, so now the location of the spec is: <a href="https://wicg.github.io/BackgroundSync/spec/" rel="nofollow noopener">https://wicg.github.io/BackgroundSync/spec/</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

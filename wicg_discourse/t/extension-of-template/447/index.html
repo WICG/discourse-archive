@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extension of &lt;template&gt;</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extension of &lt;template&gt;</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>The main motive of this article is to add variable interpolation into <code>&lt;template&gt;</code></p>
+<p>I’m not precious of the particular naming conventions used here (engine vs emitter and variables); just keen to see the interest in the idea and if it is worth implementing a mock up.</p>
+<p><strong>Use cases for extension</strong>:</p>
+<ul>
+<li>Removal of boilerplate template rendering code</li>
+<li>Defined interface for client and server side detection of template types</li>
+<li>Fall back should allow for simple code to make up for lack of support</li>
+</ul>
+<p>Here is a sample example template:</p>
+<pre><code>&lt;template id="test"&gt;
+  &lt;div&gt;
+    &lt;h2 class="heading"&gt;&lt;/h2&gt;
+    &lt;div class="content"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<p>Here are three alternative implementation proposals.</p>
+<p><strong>Registering typed content emitters:</strong></p>
+<pre><code>&lt;template id="test" type="application/x-handlebars-template"&gt;
+  &lt;div&gt;
+    &lt;h2 class="heading"&gt;{{heading}}&lt;/h2&gt;
+    &lt;div class="content"&gt;{{content}}&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+  document.registerTemplateContentEmitter('application/x-handlebars-template', function (documentFragment, context) {
+    let template = Handlebars.compile(source);
+    return template(context);
+  });
+&lt;/script&gt;
+
+&lt;script&gt;
+  let statements = [
+    {heading: 'Shouty statement', content: 'Going somewhere'},
+    {heading: 'Appeasing hook', content: 'Disappointing ending'}
+  ];
+  let template = document.getElementById('test');
+  statements.forEach(function (statement) {
+    document.body.appendChild(template.content.emit(statement));
+  });
+&lt;/script&gt;
+</code></pre>
+<p>Advantages:</p>
+<ul>
+<li>More flexibility for content producers</li>
+<li>Emitter types are likely to work cross site reliably due to defined names globally</li>
+<li>Ability to use logic supplied in template engines</li>
+<li>Browsers could choose to adopt native type handlers too; much like video encodings (this would likely need a fall back still)</li>
+</ul>
+<p>Disadvantages</p>
+<ul>
+<li>More JavaScript required to bind the type</li>
+</ul>
+<p><strong>Add bindings element for data output:</strong></p>
+<pre><code>&lt;template id="test"&gt;
+  &lt;div&gt;
+    &lt;h2 class="heading"&gt;&lt;binding bind-key="heading" /&gt;&lt;/h2&gt;
+    &lt;div class="content"&gt;&lt;binding bind-key="content" /&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+  let statements = [
+    {heading: 'Shouty statement', content: 'Going somewhere'},
+    {heading: 'Appeasing hook', content: 'Disappointing ending'}
+  ];
+  let template = document.getElementById('test');
+  statements.forEach(function (statement) {
+    document.body.appendChild(template.content.emit(statement));
+  });
+&lt;/script&gt;
+</code></pre>
+<p>Advantages:</p>
+<ul>
+<li>Browsers could precompile, cache and optimise for included templates</li>
+<li>Interpolation of variables is simplified</li>
+<li>Boilerplate code for use of templates is reduced</li>
+<li>Native interpolation</li>
+</ul>
+<p>Disadvantages:</p>
+<ul>
+<li>Adding extra complexity to HTML</li>
+<li>Less flexibility for using existing templating</li>
+</ul>
+<p><strong>Inline emitter declaration:</strong></p>
+<pre><code>&lt;template id="test" type="application/x-handlebars-template"&gt;
+  &lt;script&gt;
+    document.registerEmitter(function (documentFragment, context) {
+    let template = Handlebars.compile(source);
+    return template(context);
+  });
+  &lt;/script&gt;
+  &lt;div&gt;
+    &lt;h2 class="heading"&gt;{{heading}}&lt;/h2&gt;
+    &lt;div class="content"&gt;{{content}}&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+  let statements = [
+    {heading: 'Shouty statement', content: 'Going somewhere'},
+    {heading: 'Appeasing hook', content: 'Disappointing ending'}
+  ];
+  let template = document.getElementById('test');
+  statements.forEach(function (statement) {
+    document.body.appendChild(template.content.emit(statement));
+  });
+&lt;/script&gt;
+</code></pre>
+<p>Advantages:</p>
+<ul>
+<li>Most flexibility per template output</li>
+<li>Precompilation of library code would be possible internally by browsers</li>
+</ul>
+<p>Disadvantages:</p>
+<ul>
+<li>Adding in a new context based JavaScript usage in the DOM which
+developers will be less familiar with. Being its own document
+instance this should be possible.</li>
+<li>More boilerplate code duplicated per template which could be just based upon content type</li>
+<li>Type attribute would then be possible to be omitted which then means crawlers and other technologies wouldn’t get the benefit of knowing the types of engine used.</li>
+</ul>
+<p>I’m interested to hearing peoples interest in this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1984_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Yehuda_Katz</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>This is work that could reasonably build on Polymer’s <code>Node.bind</code>, which depends on Jafar Husain’s effort to standardize <code>Observables</code>.</p>
+<p>Personally, I would like to see us standardize observables first, followed by <code>Node.bind</code>, and then proceed to <code>&lt;template&gt;</code>-based syntax.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>Agreed, I appreciate you taking the time to respond to this.</p>
+<p>I wasn’t particularly expecting the binding variables in terms of updates at all; merely a one way simplified output render.</p>
+<p>However it certainly seems to cover even more use cases with this and simplifies/adds native support to the active update features of the likes of Meteor, Derby and other libraries.</p>
+<p>So with that I agree completely that it is worth the wait for these features to standardise before considering this; assuming the time frame won’t be 5 years.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1984_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Yehuda_Katz</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>Yes, five years would be very very sad.</p>
+<p>In the meantime, I would strongly encourage you to write a library adding variable interpolation that assumes the existence of <code>&lt;template&gt;</code>. It could be nice way to explore the ideas while Polymer (and Ember, likely) explore <code>Node.bind</code> in userland as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-08-30</div>
+          <div class="post_content">
+<p>Could you make a custom element that extends template?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-09-05</div>
+          <div class="post_content">
+<p>Would be this to just to prove the concept so browsers could eventually support it?</p>
+<p>For example the result would be:</p>
+<pre><code class="lang-auto">  &lt;x-template id="test" type="application/x-handlebars-template"&gt;
+    &lt;div&gt;
+      &lt;h2 class="heading"&gt;{{heading}}&lt;/h2&gt;
+      &lt;div class="content"&gt;{{content}}&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/x-template&gt;
+
+  &lt;script&gt;
+    let statements = [
+      {heading: 'Shouty statement', content: 'Going somewhere'},
+      {heading: 'Appeasing hook', content: 'Disappointing ending'}
+    ];
+    let template = document.getElementById('test');
+    statements.forEach(function (statement) {
+      document.body.appendChild(template.content.emit(statement));
+    });
+  &lt;/script&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-09-10</div>
+          <div class="post_content">
+<p>As a quick example here is the above working:</p>
+<h2>Setup</h2>
+<pre><code class="lang-auto">(function () {
+    var XTemplateProto = Object.create(HTMLTemplateElement.prototype);
+    XTemplateProto.emit = function (context) {
+        var source = this.innerHTML;
+        if (this.type in this.emitters) {
+            return this.emitters[this.type].call(this, context);
+        }
+        return source;
+    };
+    
+    XTemplateProto.emitElement = function (context) {
+        var dummyNode = document.createElement('div');
+        var fragment = document.createDocumentFragment();
+        dummyNode.innerHTML = this.emit.call(this, context);
+        if (dummyNode.children.length) {
+            for (var i = 0; i &lt; dummyNode.children.length; i++) {
+                fragment.appendChild(document.importNode(dummyNode.children[i], true));
+            }
+        }
+        return fragment;
+    };
+
+    Object.defineProperty(XTemplateProto, 'type', { 
+        value: 'text/x-handlebars-template',
+        writable: true
+    });
+
+    Object.defineProperty(XTemplateProto, 'emitters', { 
+        value: {},
+        writable: false
+    });
+
+    XTemplateProto.registerEmitter = function (type, callback) {
+        this.emitters[type] = callback;
+    };
+
+    window.XTemplateElement = document.registerElement('x-template', {
+        prototype: XTemplateProto
+    });
+
+}());
+</code></pre>
+<h2>Usage</h2>
+<pre><code class="lang-auto">// Define emitter for chosen template type
+XTemplateElement.prototype.registerEmitter('text/x-handlebars-template', function (context) {
+    var source = this.innerHTML;
+    var template = Handlebars.compile(source);
+    return template(context);
+});
+
+// Create a template node
+var tag = new XTemplateElement();
+tag.innerHTML = '&lt;div&gt;&lt;h2 class="heading"&gt;{{heading}}&lt;/h2&gt;&lt;div class="content"&gt;{{content}}&lt;/div&gt;&lt;/div&gt;';
+tag.id = "template-test";
+tag.type = "text/x-handlebars-template";
+document.body.appendChild(tag);
+
+// Use the template
+var statements = [
+  {heading: 'Shouty statement', content: 'Going somewhere'},
+  {heading: 'Appeasing hook', content: 'Disappointing ending'}
+];
+var template = document.getElementById('template-test');
+statements.forEach(function (statement) {
+  if (statement) {
+       document.body.appendChild(template.emit(statement));
+  }
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-09-10</div>
+          <div class="post_content">
+<p>I’m thinking that the code above would be modified to then hold the context and also expose methods to modify that state. The emitter could then also be rerun and innerHTML be modified into the document when the context changes.</p>
+<p>I will try and get a working example going with HTMLbars to see if that implementation would be possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1015_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eisaksen</div>
+          <div class="creation_date">2014-12-17</div>
+          <div class="post_content">
+<p>I really don’t see the need for this once Template Strings are standard in all browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-12-17</div>
+          <div class="post_content">
+<p><span class="mention">@eisaksen</span> unless there is planned support for this in the DOM with HTML bars style auto interpolation of variables on update… I don’t see it helping much for the use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1015_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eisaksen</div>
+          <div class="creation_date">2014-12-17</div>
+          <div class="post_content">
+<p><a href="http://tc39wiki.calculist.org/es6/template-strings/" rel="nofollow noopener">Template Strings</a> combined with <a href="https://github.com/arv/ecmascript-object-observe" rel="nofollow noopener">Observers</a> does serve the same purpose (which are planned specs). Template Strings are already in FF &amp; Observers are in Chrome. Both are high on IE’s list to look at.</p>
+<p>I’m not saying HTML Bars or other JS templates are bad at all, I just don’t see why we need it as a standard when we have tools already that solve the same problems.  I guess it depends if you are more comfortable using HTML Bars.  All of your code examples show cases that can easily be solved with either so it just depends on your poison.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-12-18</div>
+          <div class="post_content">
+<p>My examples failed to illustrate that different parts would be used by different authors of the system. Having a large number of markup authors in a company is a common setup yet that requirment shifts the more we move things away from being markup.</p>
+<p>Sure as a developer I could create a mapping from markup to template string or something but all to easily separation of concerns would likely be forgotten. So as a quick example I guess I could pick out hbs files and package them up into template strings but rather than making cacheable native html template includes; I would be custom rolling something similar to html over json approach.</p>
+<p>The idea behind these languages is to get as close to writing html as possible,  so why not make it part of the language. I’m not suggesting any one of these flavours has it 100% right however what it does do is separate concerns of templates and scripts.</p>
+<p>I’m not suggesting your approach is wrong or flawed just in a commercial setting it seems more error prone and against the normal distribution of labour(not that any of this should define standards I might add).</p>
+<p>Secondly when the templates use dom the statements within the template string would have to be reevaluated and likely rebuild the dom the statements wrapped. This leads to many engineering issues surrounding keeping state of dom and memory management that most developers are likely not going to want to solve in their day job (sure programmers love challenges and pet projects but I would rather leave as much as this to shared libraries where possible).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-26</div>
+          <div class="post_content">
+<p><span class="mention">@robin</span> you mentioned on twitter this would have not to suck before it could become native, do you think there is merit in this happening at all?</p>
+<p>I liked the approach of making it agnostic however I can see that that would lead to the same support issues that codecs have. I still think the <code>registerEmitter</code> solution is sound to this.</p>
+<p>However I would like to see peoples feedback on this and see if there is real interest in making this happen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2015-05-27</div>
+          <div class="post_content">
+<p>I like the approach, I like the idea of making it pluggable. The thing I was referring to for the “not suck” bit is templating languages in general (I really don’t like HBS and friends); the idea of making <code>&lt;template&gt;</code> more powerful to support actual templating is certainly attractive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<p>So the current code is here: <a href="https://github.com/jonathanKingston/extendTheWebForward/blob/master/templateEmit/README.md" rel="nofollow noopener">https://github.com/jonathanKingston/extendTheWebForward/blob/master/templateEmit/README.md</a></p>
+<p>This only supports binding an format to the template.</p>
+<p>I played around with using Object.observe to rewrite the DOM on the fly which would match similar support to what <span class="mention">@Yehuda_Katz</span> was saying.</p>
+<p>The things I think we need to make the live DOM updates much easier are:</p>
+<ul>
+<li>inert placeholder elements</li>
+<li>an event to know when a fragment has reached the DOM with a NodeRange of the elements inserted</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1190_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mevrael</div>
+          <div class="creation_date">2017-01-10</div>
+          <div class="post_content">
+<p>Why this proposal is so complicated and why do you even want to give developers that weird syntax and ask him to register a 3rd party JavaScript template engine?</p>
+<p>This has no differences. You can do it now - clone template and pass it into any 3rd party template engine.</p>
+<p>Standards are standards. I want to see a variables and if statements parsed by a native code and syntax should be always the same, and no 3rd party library should be included. Imagine a huge production app with a lot of 3rd party components and if each of them will use custom syntax and will require to import different template engines, code will become a mess very fast, not talking about the bundle size.</p>
+<p>I believe there is no need in discussing that such feature should be allowed in  tag. <strong>So the only topic to discuss is - the syntax.</strong></p>
+<p>I would +1 the most popular solution used across many template engines in many languages - {{ }}, to make life even easier and faster it could be implemented as a simple string.replace. We may force developers to write a variable name without a spaces, i.e. {{ var }} will be invalid and {{var}} will work.</p>
+<p><strong>2nd point we should standardize is - attaching event handlers</strong> when new template was inserted into DOM.</p>
+<p>I would propose here new <code>handler="method"</code> attribute which would receive an Element when called.</p>
+<pre><code class="lang-auto">&lt;template id="card"&gt;
+  &lt;card&gt;
+    &lt;h2&gt;{{title}}&lt;/h2&gt;
+    &lt;div&gt;{{description}}&lt;/div&gt;
+    &lt;a href="/card/{{id}}"&gt;Read more&lt;/a&gt;
+    &lt;button handler="onEdit"&gt;Edit&lt;/button&gt;
+  &lt;/card&gt;
+&lt;/temlate&gt;
+</code></pre>
+<p>In JS I would suggest just adding new function <code>Node parseTemplate(String id, Object data = {}, Object handlers = {})</code> because current syntax and manual clone/importNode is ridiculous. We already have functions parseInt, parseFloat, etc.</p>
+<pre><code class="lang-auto">document.body.appendChild(parseTemplate('card', {
+  title: 'Card title',
+  description: 'Hello, World',
+  id: 42
+}, {
+ onEdit(btn) {
+   btn.addEventListener('click', () =&gt; {
+      // ...
+   });
+  }
+});
+</code></pre>
+<p>Please provide your thoughts and let revive this old discussion.</p>
+<p>I would suggest using Slack, there is popular public frontend room - <a href="http://frontenddevelopers.org/" rel="nofollow noopener">http://frontenddevelopers.org/</a> (PM me any time there <span class="mention">@mevrael</span>) I know about IRC and not using it. Slack is the key of a successful discussion and actually making things really done. Would anyone be interested in making a Web Standards public Slack group?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2017-03-29</div>
+          <div class="post_content">
+<p>TL;DR I think web components are probably moving in a different direction.</p>
+<p>Firstly I don’t see anyone wanting to adopt this, which I think is a shame as React/Polymer could adopt something like this for JSX but they aren’t looking to standardise etc.</p>
+<p>Secondly I’m not convinced we can standardise something in HTML that isn’t HTML even if just scoped within a template.</p>
+<blockquote>
+<p>Why this proposal is so complicated and why do you even want to give developers that weird syntax and ask him to register a 3rd party JavaScript template engine?</p>
+</blockquote>
+<p>I proposed three syntaxes initially all of which I still see as more feasible than the level of complexity of your proposal. The weird syntax you are referring to is to extend templates how they currently behave without breaking existing behaviour. I’m not sure based on other comments if you were referring to the shim code with the importNode and clone etc.</p>
+<p>The code I was suggesting was:</p>
+<pre><code class="lang-auto">&lt;template id="card"&gt;
+  &lt;card&gt;
+    &lt;h2&gt;{{title}}&lt;/h2&gt;
+    &lt;div&gt;{{description}}&lt;/div&gt;
+    &lt;a href="/card/{{id}}"&gt;Read more&lt;/a&gt;
+    &lt;button&gt;Edit&lt;/button&gt;
+  &lt;/card&gt;
+&lt;/template&gt;
+</code></pre>
+<pre><code class="lang-auto">document.body.appendChild(document.getElementById("card").emit({
+  title: 'Card title',
+  description: 'Hello, World',
+  id: 42
+}));
+</code></pre>
+<p>This removes the need for another top level function that could cause breakage and isn’t really any more complex.</p>
+<p>The syntax handler was to prevent arguments about how that gets handled, where eventually we could have a native syntax potentially.</p>
+<p>The handler parameter and other improvements I would suggest be part of web components themselves and a separate topic to this. I suspect components are what you are after anyway:</p>
+<pre><code class="lang-auto">class MyCard extends HTMLElement {
+  constructor(properties) {
+    this.properties = properties;
+  }
+
+  connectedCallback() {
+    const {
+      title="",
+      id=0
+    } = this;
+
+    const template = `&lt;h2&gt;${title}&lt;/h2&gt;
+    &lt;div&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/div&gt;
+    &lt;a href="/card/${id}"&gt;Read more&lt;/a&gt;
+    &lt;button&gt;Edit&lt;/button&gt;`;
+
+    const shadow = this.attachShadow({mode: "closed"});
+    shadow.innerHTML = template;
+
+    shadow.querySelector("button").addEventListener("click", this);
+  }
+
+  handleEvent(e) {
+    // If the user has defined a callback for edit call it here
+    if (this.onEdit) {
+      this.onEdit(e);
+    }
+  }
+
+  set properties(properties) {
+    Object.assign(this, properties);
+  }
+}
+customElements.define('my-card', MyCard);
+</code></pre>
+<p>Usage like:</p>
+<pre><code class="lang-auto">const myCardInstance = new MyCard({
+  title: 'Card title',
+  id: 42
+});
+
+myCardInstance.textContent = "Hello world";
+
+myCardInstance.onEdit = (e) =&gt; {
+  console.log('Button clicked', e);
+};
+
+document.body.appendChild(myCardInstance);
+</code></pre>
+<p>Or:</p>
+<pre><code class="lang-auto">let other = document.createElement("div");
+document.body.appendChild(other)
+meb.innerHTML = `&lt;my-card title="abs" id="111" disabled="true"&gt;Hello all&lt;/my-card&gt;`;
+</code></pre>
+<p>Slack is a different discussion nor is it open etc and this is an official board provided by the W3C for discussion of standards. Personally I would prefer a persistent storage of messages rather than a chat room.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1190_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mevrael</div>
+          <div class="creation_date">2017-03-29</div>
+          <div class="post_content">
+<p>Thank you for reply. Actually main discussion is now on GitHub <a href="https://github.com/whatwg/html/issues/2254" rel="nofollow noopener">https://github.com/whatwg/html/issues/2254</a> since it is easier for developers to contribute and many people are not aware of this platform.</p>
+<p>The most of opinions agree that there should be just a new method on Template prototype instead of global function.</p>
+<p>There is also a polyfill for this proposal already in development and works for basic use cases: <a href="https://github.com/Mevrael/html-template" rel="nofollow noopener">https://github.com/Mevrael/html-template</a></p>
+<p>I still totally against “web components” and that weird syntax of “classes” and event handling is a basic feature which is not connected to web components. You already pointed out that Google with Polymer moves it into different angle and doesn’t cares about standardization.</p>
+<p>So far we need to come up with syntax for logical operations and loops like <code>{{ if () }} {{ endif }} {{ foreach (users as user) }} {{ endforeach }}</code> and for event handlers.</p>
+<p>There is difference between chat and summary. It is easier to chat/do a meeting when you need to discuss specific topics real-time and persistent storage with summary should be only at the end, otherwise there is only persistent storage with sometimes off-top, discussions in different directions and it is very disorganized and hard to find relevant information, what is current stage and all the main key points accepted/discussed/rejected.</p>
+<p>However, I would say separate repo where anyone could contribute to wiki and docs would be the best option.</p>
+<p>We sometimes discussing it on my gitter room <a href="https://gitter.im/bunny-js/Lobby" rel="nofollow noopener">https://gitter.im/bunny-js/Lobby</a> and there is a fork of template implementation which somehow supports if statements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2017-03-29</div>
+          <div class="post_content">
+<p>I suggest we move this to the<a href="https://github.com/whatwg/html/issues/2254" rel="nofollow noopener"> <strong>whatwg</strong> github issue.</a> my response to this will go there.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>How do we fix disproportional scroll speed when CSS transform scale is applied?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">How do we fix disproportional scroll speed when CSS transform scale is applied?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-09-28</div>
+          <div class="post_content">
+<p>For example, in this fiddle the body is a scroll container and the body is also scaled by 4, which makes scrolling seems to be faster:</p>
+<p><a class="onebox" href="https://jsfiddle.net/trusktr/cuthrn92/13/" rel="nofollow noopener" target="_blank">https://jsfiddle.net/trusktr/cuthrn92/13/</a></p>
+<p>And in this fiddle, the body (the scroll container) is scaled to 0.25 which makes the scroll seems to be too slow:</p>
+<p><a class="onebox" href="https://jsfiddle.net/trusktr/cuthrn92/14/" rel="nofollow noopener" target="_blank">https://jsfiddle.net/trusktr/cuthrn92/14/</a></p>
+<p>Of course, the scrolling is the same relative to the body’s coordinate system, but the scrolling is not the same relative to the screen.</p>
+<p>This means that when using your finger to scroll, the content does not move at the speed of your finger.</p>
+<p>Any idea how we can make the scrolling move at finger speed like when scrolling in a non-transformed container?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-09-28</div>
+          <div class="post_content">
+<p>Alright, I came up with an almost-there solution: <a href="https://jsfiddle.net/trusktr/cuthrn92/62/" rel="nofollow noopener">https://jsfiddle.net/trusktr/cuthrn92/62/</a></p>
+<p>Try changing the <code>scale</code> value in the JS window to any value, then scroll speed will always be the same (pretend the green border is not there, which is for reference. The green still moves faster or slower, but the pink area moves the same as if nothing were scaled).</p>
+<p>But the problem you’ll notice while scrolling is that the scroll bar will move slower and slower as you get to the end, because the scrollHeight of the body is dynamically changing.</p>
+<p>I would need to somehow (???)_ calculate what the final scroll height of the body will be so that I can see the <code>.wrapper</code> container to that height ahead of time, that way we get a smooth scroll bar.</p>
+<p>Also, if you press <code>cmd</code>+<code>down</code> in macOS (scroll all the way to the end in one go) then it won’t actually scroll all the way to the end because at the time you press that the scrollHeight will not yet be its full value, so it will go to the value it currently knows.</p>
+<p>Any ideas how to pre-calculate the total height needed for the <code>wrapper</code>? I think it involves some crazy maths.</p>
+<p>This is my first try, but obviously I realized it didn’t work (bottom of the JS): <a href="https://jsfiddle.net/trusktr/cuthrn92/64" rel="nofollow noopener">https://jsfiddle.net/trusktr/cuthrn92/64</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

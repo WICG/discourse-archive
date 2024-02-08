@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Suggestion: error reporting API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Suggestion: error reporting API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2021-09-06</div>
+          <div class="post_content">
+<p>I would like a way to report an error explicitly so it gets enqueued for <code>window.onerror</code> and friends.</p>
+<p>Currently, I’ve been resorting to this, though I’ve not historically gotten consistent results even in the REPL as it relies on garbage collection to work and I’ve had browsers recognize the synchronous aspect before:</p>
+<pre><code class="lang-auto">// What I currently use
+function reportError(e) {
+  new Promise((_, reject) =&gt; { reject(e) })
+}
+
+// What I previously used to work around a V8
+// unhandled rejection reporting bug
+function reportError(e) {
+  Promise.resolve().then(() =&gt; { throw e })
+}
+
+// If rethrowing changes the stack and the first
+// variant fails to generate a report, you'll
+// need to blend the two
+function reportError(e) {
+  Promise.resolve().then(() =&gt;
+    new Promise((_, reject) =&gt; { reject(e) })
+  )
+}
+</code></pre>
+<blockquote>
+<p>Note: I’ve also run into issues with the second variant in the past as well <a href="https://stackoverflow.com/questions/3734236/how-can-i-rethrow-an-exception-in-javascript-but-preserve-the-stack" rel="noopener nofollow ugc">due to various browsers like Chrome and WebKit (especially in old PhantomJS) replacing stacks</a>.</p>
+</blockquote>
+<p>A method that doesn’t have that element of non-determinism and implementation detail reliance would be far superior to that, and it’d also ease integration with <a href="https://github.com/w3c/reporting" rel="noopener nofollow ugc">the reporting API proposal</a> as well as I’d only have one mechanism I’d have to integrate with.</p>
+<p>Note: the usual mechanism of <code>console.error</code> is <em>not</em> acceptable, as it doesn’t actually trigger an <code>error</code> event.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2021-09-07</div>
+          <div class="post_content">
+<p>^^ <span class="mention">@Ian_Clelland</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ian_Clelland</div>
+          <div class="creation_date">2021-09-07</div>
+          <div class="post_content">
+<p>This looks similar to the <code>reportError</code> method that we’d like to <a href="https://groups.google.com/a/chromium.org/d/msgid/blink-dev/CAM0wra-L-Jqk5W2_XLU35t0LhKqnu0igYWJQSE20cqPxwmr3Zg%40mail.gmail.com?utm_medium=email&amp;utm_source=footer" rel="noopener nofollow ugc">ship in Chrome</a> (and is <a href="https://html.spec.whatwg.org/#dom-reporterror">already in HTML</a>) – that should fire <code>window.onerror</code>.</p>
+<p>Re: integrating with the Reporting API; we’ve discussed previously the idea of allowing script-generated reports, but never reached agreement that it was a good idea (outside of tests). That’s not a final decision by any means, though – <a href="https://github.com/w3c/reporting/issues/119" rel="noopener nofollow ugc">this issue</a> would be a good place to discuss that aspect.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2021-09-27</div>
+          <div class="post_content">
+<p>Fantastic! Commented: <a href="https://github.com/w3c/reporting/issues/119#issuecomment-927433502" rel="noopener nofollow ugc">https://github.com/w3c/reporting/issues/119#issuecomment-927433502</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] MulticastReceiver API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] MulticastReceiver API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<h1>MulticastReceiver</h1>
+<p>An API that allows web applications to join a multicast (S,G) and receive authenticated, congestion-safe multicast IP traffic from services that offer it.</p>
+<p>It provides:</p>
+<ul>
+<li>per-packet authentication</li>
+<li>an origin-based security model</li>
+<li>protection against over-subscription</li>
+</ul>
+<p>This lets browsers join in subscribing to popular live media events or file downloads (software or pre-recorded media) that make use of multicast IP to enable the efficient use of network and server resources.</p>
+<p>See the <a href="https://github.com/GrumpyOldTroll/wicg-multicast-receiver-api/blob/master/explainer.md" rel="nofollow noopener">explainer</a> for more info.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>What is <code>evt.data</code> at <code>mr.onmessage = function(evt) { processPackets(evt.data); }</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>This would potentially provide solutions for the question at <a href="https://github.com/guest271314/MediaFragmentRecorder/issues/8" rel="nofollow noopener">https://github.com/guest271314/MediaFragmentRecorder/issues/8</a>.</p>
+<p>A rudimentary example of a similar concept: Given “an idealized computer with unlimited resources” (<a href="https://en.wikipedia.org/wiki/Kurt_G%C3%B6del#Incompleteness_theorem" rel="nofollow noopener">https://en.wikipedia.org/wiki/Kurt_Gödel#Incompleteness_theorem</a>) an “infinite” <code>MediaStream</code> beginning at current time <code>0</code> once began any individual that has access to the Internet can add media to the stream - multicast to any individual that has Internet access -  where the <code>MediaStream</code> is capable of being recorded as the timeline is “infinite” is will be possible to select both played time slices and future (as yet unpublished and broadcast) time slices as discrete media files, and/or a series of linear or assymetric time slices of merged media fragments resulting in a single recording <a href="https://next.plnkr.co/edit/Axkb8s" rel="nofollow noopener">https://next.plnkr.co/edit/Axkb8s</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<blockquote>
+<p>What is  <code>evt.data</code>  at  <code>mr.onmessage = function(evt) { processPackets(evt.data); }</code> ?</p>
+</blockquote>
+<p>It will be an array of packet objects that provide a per-packet receive timestamp and the packet contents.</p>
+<p>In an early <a href="https://github.com/GrumpyOldTroll/chromium/blob/34412cd308b747703eedffceaaea30617a28fd25/third_party/blink/renderer/modules/multicast/dom_multicast_receiver.cc#L265" rel="nofollow noopener">prototype</a> this was an ArrayBuffer containing a single packet payload, but I’m pretty sure that’s not going to work.</p>
+<p>I’m hoping to update the prototype and nail down a design that will work ok using shared memory to transfer from the receiving service to the renderer for a block of packet payloads, and to expose those packets to the javascript with a receive timestamp and access to the payload data.</p>
+<p>But there are details I don’t know exactly what they’ll look like yet, so I didn’t put it in the examples yet.  (For instance, I want to make sure the timestamps can be used easily for some math, so I might not use DateTime, but rather a float-second or integer-microsecond offset from a DateTime.  There’s still some TBDs here, sorry…)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>Conceptually extending <code>EventSource</code> and <code>BroadcastChannel</code> and potentially including use of <code>scheduler.postTask()</code> could provide a tentative means to achieve the requirement.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="3939">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/guest271314/40/2280_2.png" width="20"/> guest271314:</div>
+<blockquote>
+<p>any individual that has access to the Internet can add media to the stream - multicast to any individual that has Internet access</p>
+</blockquote>
+</aside>
+<p>I’m not sure I fully understand this, but this API doesn’t support any sending from the browser, it’s only for subscribing to channels that someone is sending, and it requires the sender to have some infrastructure in place.  So I’m not sure this API does anything directly to help with reflecting media to others from a browser, if that’s the intent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>Did not state that this API is for sending. A “multicast” requires content to be broadcast. There are already mechanisms in place to “stream” data, e.g., this comment. It is logical at the outset to consider the various forms of content that can and will be “multicast”. While this API does not provide such an upload of data from the browser given the fact that individual tend to tire of any content rather rapidly after digesting such content <em>once</em> unless the content is unique and exceptional and the number of images, video and audio that individuals and organizations upload to various media streams, it is reasonable to estimate that by some means data uploaded by individual users will be “multicast”, if not directly by this API, indirectly as a feed of content to this API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>I agree that it would be possible to operate a service that accepts data that users upload and sends it using multicast IP to everyone who’s subscribed to a feed, with data arriving through this API.  Thanks for clarifying, I hadn’t properly understood what you meant.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>Was describing own face value interest in the concept with reference to actual code composed to achieve that requirement. “media” encompasses various forms. “media” could be plain text or mark up result of speech recognition. In which case the “medium” would be text, not encoded images or audio. Meaning arbitrary limits on what a concept is capable of or should be confined to in language in a document (specification or code) are not static. With that fact realized the basic concept of an API can be extended without undue reliance on only the concepts drawn by the individuals that initially write the draft. The intent of the comments was simply to share what immediately recognized as similar concepts. Perhaps that is not the case. Shared anyway to verify. Cannot put the intent of the comment clearer than DeadPrez  <em>It’s Bigger Than Hip-Hop</em></p>
+<blockquote>
+<p>In the real world<br/>
+These just people with ideas<br/>
+They just like me and you<br/>
+When the smoke and camera disappear<br/></p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>Cool, well thanks for the interest, and I appreciate the comments. <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=9" title=":smile:"/></p>
+<p>You’d need to handle loss and out of order packets, and the message size would be limited to a packet payload in size, so there would be a lot more hassle than EventSource (until there’s another library wrapped around it to give something closer to EventSource), but if your audience size is big enough and inside networks that forward multicast, it could be worthwhile.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>Out of order and packet loss can tentatively be handled by using a header similar to <code>HTTP_LAST_EVENT_ID</code>. Though if the stream is live you could not insert a packet into the past ex post facto. As long as the packets are proximal before the read/write at the client (e.g., after N packets read, sort, supply to device for display or other API for processing) lexicographical order can be achieved; essentially the reverse of this pattern <a href="https://stackoverflow.com/questions/42475492/how-to-read-and-echo-file-size-of-uploaded-file-being-written-at-server-in-real" rel="nofollow noopener">How to read and echo file size of uploaded file being written at server in real time without blocking at both server and client?</a> where the client takes the place of the server.</p>
+<p>Also, this API, once implemented appears to be a viable workaround or comparable approach for <code>fetch("/path/to/", {method:"POST",body:new ReadableStream({/*...*/})})</code>, see <a href="https://github.com/whatwg/fetch/issues/439" rel="nofollow noopener">https://github.com/whatwg/fetch/issues/439</a>, <a href="https://github.com/whatwg/fetch/pull/425" rel="nofollow noopener">https://github.com/whatwg/fetch/pull/425</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>There is no prohibition from the multicast originating from and being transmitted from the browser itself, correct?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-09-27</div>
+          <div class="post_content">
+<p>I don’t think there’s any way to originate UDP Multicast IP packets from the browser itself, and this API does not provide one.  That would come with a much more complicated set of security problems, for instance as covered in this document:</p>
+<ul>
+<li><a href="https://www.w3.org/TR/tcp-udp-sockets/#interface-udpsocket">https://www.w3.org/TR/tcp-udp-sockets/#interface-udpsocket</a></li>
+</ul>
+<p>The proposed MulticastReceiver API tries to expose a much smaller capability, with (hopefully) much less capacity to cause security issues, and that therefore should not require special permissions.</p>
+<p>The intent is that the permissions necessary are equivalent to the permissions needed to download streaming content from the same origin as the web page originating the requests.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="13" data-topic="3939">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/g/85f322/40.png" width="20"/> GrumpyOldTroll:</div>
+<blockquote>
+<p>I don’t think there’s any way to originate UDP Multicast IP packets from the browser itself</p>
+</blockquote>
+</aside>
+<p>Have you tried to do so?</p>
+<p>When an individual or institution claims a procedure is not possible (or, in fact claims <em>anything</em>) that claim requires verification by means of the scientific method and/or the historical record. Have repudiated such claims more than once in various domains (within the domain of code with code demonstrating what was claimed was not possible is in fact possible).</p>
+<p>AFAICT WebRTC has the ability to generate UDP. “from the browser itself” <em>could</em> be interpreted as including Native Messaging, without the restriction explicitly listed, where if JavaScript is not capable of generating UDP Multicast IP packets, which do not gather why that would be the case, the incoming UDP Multicast IP packets can be intercepted, reverse-engineered and reproduced, or a shell script can be used, the results of which can be messaged to “the browser itself” and transmitted externally from “the browser itself”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GrumpyOldTroll</div>
+          <div class="creation_date">2019-10-02</div>
+          <div class="post_content">
+<p>I haven’t tried to do it, no.  It’s out of scope for the intended purpose.</p>
+<p>But also, the proposed API probably would prevent web apps from succeeding at the suggested kind of peer-to-peer multicast in practice, even if it’s possible to get the browser to emit multicast packets.</p>
+<p>In order for the packets to be received by this API at a remote peer, they’d also need to receive an authenticated <a href="https://datatracker.ietf.org/doc/draft-jholland-mboned-ambi/" rel="nofollow noopener">AMBI</a> stream, advertised via a <a href="https://datatracker.ietf.org/doc/draft-jholland-mboned-dorms/" rel="nofollow noopener">DORMS</a> server with <a href="https://datatracker.ietf.org/doc/draft-jholland-mboned-cbacc/" rel="nofollow noopener">CBACC</a> info that provides rate limits.</p>
+<p>(If the source is inside a NAT that the receivers are outside, it would probably get more tricky still, but I think those barriers would already be pretty severe for most web apps.)</p>
+<p>I’d be interested to see a script that did send multicast packets from a browser, but I don’t think that would be sufficient to enable the usage I think you were asking about.</p>
+<p>To be clear: I’m not completely sure it’s impossible to make this work with sufficient effort from the sender, but the API is very much not designed for that use case, and I expect that even if it’s possible, it would be much easier for the sender to operate a service that accepts messages from the sender and transmits them to subscribed receivers from that service.</p>
+<p>If I understand the use case you’re asking about, it might be possible that future extensions might help it, but I doubt this API can do it directly from one browser to a bunch of others.  (However, it could help with making an external server that could relay messages to many others.)</p>
+<p>I hope that helps to clarify.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

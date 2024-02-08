@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Idea] Radial options for flex and grid</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Idea] Radial options for flex and grid</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3648_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sirisian</div>
+          <div class="creation_date">2021-08-21</div>
+          <div class="post_content">
+<p>Rendering data for pie charts, donut charts, pie menus, and general arcs is not as intuitive as rendering flex or grid layouts of the same information. Solutions for this often rely on SVG, JS, and are usually bespoke setups which doesn’t mesh well with flexible layouts. In this post I’m suggesting that minimal additions to the flex and grid layouts can create a powerful new set of layouts for developers.</p>
+<p>Below on the left is a normal <code>flex-direction: column</code>. On the right is a similar layout with the addition of <code>flex-radial: start; flex-radius: 50px 100px;</code></p>
+<p><img alt="radialflex" data-base62-sha1="1rFcL4MfpuhFONSg63d4FRBS7ur" height="142" src="//discourse.wicg.io/uploads/default/original/2X/0/0a22bd8ebdbb02571a55853be736bbba6554ffbb.png" width="272"/></p>
+<pre><code class="lang-css">display: flex;
+/* all the normal flex styles are the same, like flex-direction, flex-wrap, align-items, justify-content, etc */
+flex-radial: start; /* or end. Defines where the radius is on the left, right, top, or bottom relative to the flex-direction. For row, start and end correspond to the top and bottom respectively. For column, start and end correspond to left and right respectively. */
+flex-angle: 0deg 360deg; /* "start end" is one format. More complex formats for later would be the ability to skip angular areas. So 315deg 45deg, 135deg 225deg would fit item first between -45 to 45 degrees then spill-over to 135 to 225 degrees effectively only having items on the left and right sides. */
+flex-radius: 0px auto; /* or 1fr. These define the inner and outer radius. Using a flex value would allow say a pie chart to automatically resize to its container elegantly */
+box-sizing: inner-radius; /* or outer-radius (or content-box or border-box) */
+box-items: radial; /* or none. Controls how items rotate around the center point. Radial means their box model rotates and takes the shape of a sector. If none is supplied then the box model stays axis aligned positioned around its center. Using none can cause items to overlap. */
+text-orientation: first-line; /* or middle-line, last-line, per-line, or existing values. Controls how the baseline is defined inside of the box model. All of the options except the existing options align the baseline(s) pointing toward the center. If none is used the text keeps its orientation. */
+</code></pre>
+<p>For children of the layout these options can be overridden:</p>
+<pre><code class="lang-css">text-orientation: first-line; /* or middle-line, last-line, per-line, or existing values. Only when writing-mode: horizontal-tb */
+</code></pre>
+<p>Two examples of the text-orientation are below. One could imagine a webpage that rotates items into view with a simple transform animation.</p>
+<p><img alt="radialflex3" data-base62-sha1="qGziJuCTnqAJnPxhIchNiKWVgNI" height="219" src="//discourse.wicg.io/uploads/default/original/2X/b/bb0868952765ebb061b5e91422e79d3936151862.png" width="213"/></p>
+<p>Margin and padding are handled differently based on the above box-items properties. I haven’t worked out what changes would be required. In theory with say a negative left margin (and border-radius) you could have something that looks like:</p>
+<p><img alt="radialflex4" data-base62-sha1="uY83XHRDlvS4utryV8mllxQbSwZ" height="250" src="//discourse.wicg.io/uploads/default/original/2X/d/d90d47bf51406740eddbc37969f84468190bcb5d.png" width="250"/></p>
+<p>In that example the text-orientation is set to the default “mixed”.</p>
+<h4>
+<a class="anchor" href="#angle-units-1" name="angle-units-1"></a>Angle Units</h4>
+<p>Items inside of the layout would have the option to use <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/angle" rel="noopener nofollow ugc">angle units</a> for their lengths along the main-axis:</p>
+<p>So if you used <code>flex-direction: column</code> you could then define the height of an element as <code>height: 20deg</code>. These are also valid units for the <code>flex-basis</code>. This would allow one to easily divide sectors up by specific degree increments. (In general if you want the items to be equal size though you can just use 1fr).</p>
+<h4>
+<a class="anchor" href="#grid-2" name="grid-2"></a>Grid</h4>
+<p>Everything defined above for flex would work the same for grid except the properties are all prefixed with <code>grid-</code> instead of <code>flex-</code>.</p>
+<p><img alt="radialflex2" data-base62-sha1="qv1DTD0zXW0qsPlDu4g8UV5K0Cc" height="324" src="//discourse.wicg.io/uploads/default/original/2X/b/b9ba60951e5ee0ee1455209ad366c0b3938f5900.png" width="320"/></p>
+<h4>
+<a class="anchor" href="#animation-3" name="animation-3"></a>Animation</h4>
+<p>Since all of these properties are CSS styles they can be animated to achieve a wide variety of effects. Simple things like pie menus that grow when you click a button would be trivial. Or by animating the flex-angle on a pie chart from 0deg 0deg to 0deg 360deg you would see a radial swipe.</p>
+<h4>
+<a class="anchor" href="#accessibility-4" name="accessibility-4"></a>Accessibility</h4>
+<ul>
+<li>I’m not very familiar with this topic, or it’s requirements so I could be totally off base. I think having this layout could potentially be more accessible than alternatives people usually do with complex CSS, SVG, and JavaScript-focused solutions to manually position elements. (Some of which involve absolute positioned items obfuscating the DOM). Since it’s a layout and doesn’t touch the underlying DOM it means simply disabling radius with no other changes unwraps the layout and can be readable. Turning a pie-chart into a stacked bar chart(? I don’t know if that’s what those are called).</li>
+</ul>
+<h4>
+<a class="anchor" href="#possible-issues-5" name="possible-issues-5"></a>Possible issues:</h4>
+<ul>
+<li>Doesn’t support spiral designs. So imagine you have <code>flex-wrap: wrap</code> with a hundred items of fixed size. With this system you’d simply see rings of items. Could add a radial function to allow spirals. Maybe for later.</li>
+<li>Text overflow is complicated by having to clip with a sector rather than a simple box. The main use case I see is having short snippets or labels being used, but it’s possible people put longer paragraphs.</li>
+<li>Implementation complexity. Most layouts and rendering deal with boxes. A radius requires that the background, borders, box-shadow and tons of other things have variants to render arc versions. In this idea alone one could create a sector and apply a border-radius which generates geometry that doesn’t currently exist. Granted it’s just a vector object and Skia can definitely render it, but it’s a lot of changes for toggling just one CSS property.</li>
+</ul>
+<h4>
+<a class="anchor" href="#other-applications-6" name="other-applications-6"></a>Other applications:</h4>
+<ul>
+<li>A speedometer with speed markers could be created easily with this.</li>
+<li>A shield/armor/health indicator in a game that follows an arc. A radial-grid could render stacked shield on top of the armor arcs. (Could render and animate a rainbow of colors also if that’s easier to visualize).</li>
+<li>A radial build menu in an RTS. A radial-grid could create a tiered menu.</li>
+<li>A commo rose</li>
+</ul>
+<h4>
+<a class="anchor" href="#proposal-7" name="proposal-7"></a>Proposal</h4>
+<p>I am way outside of my element to be able to write a layout proposal. If someone is interested in this idea feel free to turn it into a real proposal. I’ve created this post ad-hoc (like the property names) with initial ideas to get a discussion going since it’s something I’d actively use if implemented. (I searched for a bit and couldn’t find anything similar suggested).</p>
+<h4>
+<a class="anchor" href="#conclusion-8" name="conclusion-8"></a>Conclusion</h4>
+<p>Anyone have any use cases I’m missing or added properties that would make this more powerful? Any criticism toward this approach would be appreciated also. I believe my approach of integrating it into the existing flex and grid layouts is ideal, but I could be wrong. In my thinking it would work with subgrid also, but I digress as that gets into edge cases.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/881_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sbaechler</div>
+          <div class="creation_date">2021-08-22</div>
+          <div class="post_content">
+<p>Radial units would also make sense for SVG arc elements. Currently you always have to calculate the x/y end coordinates with Javascript (or the image editing software).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

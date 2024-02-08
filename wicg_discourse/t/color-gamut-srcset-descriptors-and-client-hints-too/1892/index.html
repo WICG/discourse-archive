@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Color gamut `srcset` descriptors (and Client Hints, too)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Color gamut `srcset` descriptors (and Client Hints, too)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2016-12-08</div>
+          <div class="post_content">
+<p>Better-than-sRGB displays are here; <code>&lt;picture&gt;</code> + <a href="https://drafts.csswg.org/mediaqueries-4/#color-gamut" rel="nofollow noopener"><code>color-gamut</code> media queries</a> let us use them responsibly on the web. <a href="https://webkit.org/blog/6682/improving-color-on-the-web/" rel="nofollow noopener">Like so</a>.</p>
+<p>Right now, <code>srcset</code> only allows us to describe images with their width, relative to their layout container (using either <code>x</code> descriptors or <code>w</code> descriptors + <code>sizes</code>). As other responsive image variables become important, it makes sense to be able to describe resources with them, too. <code>h</code> is probably the future-descriptor with the most consensus, but I also remember discussing type-based descriptors at some point, like:</p>
+<p><code>srcset="i.jpg type(image/jpg), i.webp type(image/webp)"</code></p>
+<p>Thinking ahead, at some point, it might make sense to add color-gamut, too:</p>
+<pre><code class="lang-auto">&lt;img srcset="i-p3.jpg gamut(p3)" src="i-srgb.jpg" alt /&gt;
+</code></pre>
+<p>This pattern, compared to the status quo…</p>
+<pre><code class="lang-auto">&lt;picture&gt;
+&lt;source media="(color-gamut: p3)" srcset="i-p3.jpg" /&gt;
+&lt;img src="i-srgb.jpg" alt /&gt;
+&lt;/picture&gt;
+</code></pre>
+<p>…would provide some of the same advantages that <code>w</code>+<code>sizes</code> does over <code>&lt;source media="(min-width)"&gt;</code>: less and less-complicated markup (although the combinatorics of, say, just 3 sizes × 2 formats × 2 gamuts = 12 resources for one image, still get a bit dizzying*), and putting control in the hands of the (more context-aware, less error-prone) browser.</p>
+<hr/>
+<p>*: this is a strong argument for adding a <code>Gamut</code> (or whatever) hint to Client Hints, too, to take the responsibility for this complexity away from markup / authors, and put it on the server.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/996_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kornel</div>
+          <div class="creation_date">2016-12-09</div>
+          <div class="post_content">
+<p>Sorry, to me this seems to aimed at an edge case of an edge case.</p>
+<p>Separate images in the example on WebKit blog are probably meant to show what can be done, rather than what should be done.</p>
+<p>In my experience, wide-gamut images can be used on all displays, without any extra markup.</p>
+<ul>
+<li>
+<p>Penalty in file size is not as large as it was for high-DPI images.</p>
+</li>
+<li>
+<p>The difference between sRGB and P3 gamuts is not <em>that</em> large to require a separate image. It’s smaller than differences between different lighting conditions (outdoors/day/night) and similar to variations between existing "sRGB"ish displays.</p>
+</li>
+<li>
+<p>Image formats support “rendering intent” setting which covers multiple use-cases without a need to manually provide re-colored images. Even if you want to have an image with “very red” and “very very red”, you can disable colorspace clipping and have that contrast preserved in sRGB.</p>
+</li>
+</ul>
+<p>And the selection already works with <code>&lt;picture&gt;</code> for edge cases when that would be needed, but I’m really struggling to imagine a case that isn’t covered by automatic colorspace conversion.</p>
+<p>So all it does is provide microsyntax that saves some typing compared to <code>&lt;picture&gt;</code>, at the same time muddying the distinction between always-respected media queries of <code>&lt;picture&gt;</code> and choose-whatever-you-like nature of <code>srcset</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2017-01-05</div>
+          <div class="post_content">
+<blockquote>
+<p>In my experience, wide-gamut images can be used on all displays, without any extra markup.
+<em>[snip]</em>
+…I’m really struggling to imagine a case that isn’t covered by automatic colorspace conversion.</p>
+</blockquote>
+<p>The problem is browsers that don’t color manage. P3-encoded images in unmanaged, sRGB environments look bad: noticeably desaturated. The biggest culprit right now for that is Chrome on Android, but it looks like that’s <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=229108" rel="nofollow noopener">about to change</a>.</p>
+<p>I think you’re right that advocating for color management in browsers – and using the <code>&lt;picture&gt;</code> pattern when you really need it – is probably the best way forward (rather than adding profile descriptors to <code>srcset</code>).</p>
+<blockquote>
+<ul>
+<li>Penalty in file size is not as large as it was for high-DPI images.</li>
+</ul>
+</blockquote>
+<p>There is no bandwidth cost to encoding your images in a wider space. There is a significant bandwidth cost to encoding them at deeper depths (e.g. 12-bit, or 16-bit colors, vs 8). Luckily (?) JPEG is limited to 8 bits, so we’re stuck with that for a while (and if your image doesn’t have <em>extremely</em> smooth gradients, it’s hard to see any banding artifacts w/ P3. ProPhoto and Rec2020 might be another story).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

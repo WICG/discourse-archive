@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Packaging for the Web: signed and indexed</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Packaging for the Web: signed and indexed</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1128_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dmitry_Titov</div>
+          <div class="creation_date">2016-11-16</div>
+          <div class="post_content">
+<p>We’d like to propose the <a href="https://github.com/dimich-g/webpackage/blob/master/README.md" rel="nofollow noopener">updated packaging format for the Web</a> to address multiple forms of distribution of pages and PWAs, needs of Physical Web, access to content while offline and hosting of content on CDNs…</p>
+<p>It allows to pack multiple resources into a single file and sign it with publisher’s certificate. Digital signature allows to validate authenticity and integrity of the package on the client device regardless of the delivery mechanism, so the pages loaded form the package can be given the claimed origin’s treatment, together with green lock, scripting and network access.</p>
+<p>The Content Index structure allows efficient load to resources by direct access to them w/o need to unpack the package, which is important for devices with limited storage.</p>
+<p>Here is the initial <a href="https://github.com/dimich-g/webpackage/blob/master/README.md" rel="nofollow noopener">Explainer</a>, this builds on work of Jeni Tennison and others (<a href="https://w3ctag.github.io/packaging-on-the-web/" rel="nofollow noopener">Packaging on the Web</a>)</p>
+<p>WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-11-17</div>
+          <div class="post_content">
+<p>Questions: can this work with fetch +  streams + cache API already? That is, could we implement it with those?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1046_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dauwhe</div>
+          <div class="creation_date">2016-11-17</div>
+          <div class="post_content">
+<p>The digital publishing community is very interested in this. We’re working on a <a href="http://w3c.github.io/dpub-pwp-ucr/index.html">use cases document</a>, and packaging is a key issue. We will definitely be in touch!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1369_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">addyosmani</div>
+          <div class="creation_date">2016-11-17</div>
+          <div class="post_content">
+<p>Do we know how web packaging interfaces with resource prioritization, Resource Hints and concepts like link rel=“preload” or H/2 Server Push? Something unclear to me at the moment is whether every asset in a package is considered to have the same priority or whether we’ll have hooks for saying certain assets are more critical to get down early than others. Thoughts? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2016-11-18</div>
+          <div class="post_content">
+<p>It’s 404ing. Where did the draft go?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1046_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dauwhe</div>
+          <div class="creation_date">2016-11-18</div>
+          <div class="post_content">
+<p>The link is working again. I’m guessing it was a GitHub glitch.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1128_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dmitry_Titov</div>
+          <div class="creation_date">2016-11-19</div>
+          <div class="post_content">
+<p>We still are at early stage of figuring out how this fits architecturally into layers of loading/caching. Current thinking is that it probably best to be thought of as “shadow of the http cache”. As such, it should be transparent to fetch/streams/cache APIs. Effectively, loading a package would add a layer to cache. Subsequent fetches of fresher versions of the resources would still go into regular cache, ‘overwriting’ the versions in the package.</p>
+<p>It might be interesting to expose this ‘layer’ of caching to Cache API in some form. For example, it might be useful to clear all caches but not the package-provided one, to quickly go to a consistent set of resources.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-11-21</div>
+          <div class="post_content">
+<p>Ok, so it still sounds like there is some experimentation to do here. Would be great to exhaust the exploration of doing this fetch + streams + cache API (over H/2). As Dmitry mentions, this might expose some use cases not yet covered by the Cache API - which would be great.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1167_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kevinSuttle</div>
+          <div class="creation_date">2016-12-14</div>
+          <div class="post_content">
+<p>I have written about this, but not just software for the web—all software.
+<a class="onebox" href="http://kevinsuttle.com/posts/propelling-dx-through-config" rel="nofollow noopener" target="_blank">http://kevinsuttle.com/posts/propelling-dx-through-config</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2017-06-08</div>
+          <div class="post_content">
+<p>The <a href="https://github.com/dimich-g/webpackage">explainer</a> has evolved quite a bit, we have a <a href="https://github.com/dimich-g/webpackage/tree/master/go/webpack/cmd/wpktext2cbor">rough tool</a> to generate signed packages, and I think it’s time to start writing a spec and taking this format through the standards process.</p>
+<p>I think the IETF is probably the right place to standardize the format itself. They have more experts on file formats than the W3C does, and we don’t want to miss out on that review.</p>
+<p>The W3C should standardize the process of a browser <em>loading</em> the format. To that end, I’d like to move the repository under the WICG and start the loading spec shortly.</p>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2017-06-08</div>
+          <div class="post_content">
+<p>Fetch+streams+window.caches are enough to use a packaging format to fill in an existing Service Worker, but they don’t help bootstrap a Service Worker that hasn’t already been fetched from the network. The browser needs some sort of native support for that. We do need to figure out whether:</p>
+<ol>
+<li>that native support should take the form of just loading a Service Worker from the package, and firing an event with the package contents as an argument, vs</li>
+<li>the browser should put the package’s contents directly into its HTTP cache so that future fetches find them there.</li>
+</ol>
+<p>That, and the signature checking and error handling model are the main things the W3C spec will need to spell out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-06-09</div>
+          <div class="post_content">
+<p>Could maybe web manifest help in some way? It has a way of bootstrapping a service worker.</p>
+<p><a class="onebox" href="https://www.w3.org/TR/appmanifest/#serviceworker-member" target="_blank">https://www.w3.org/TR/appmanifest/#serviceworker-member</a></p>
+<p>Could we add other stuff to manifest to help? or would the manifest just be another resource in the package?</p>
+<p>(web manifest my be totally off base - please feel free to disregard if it’s unhelpful… just sounded familiar, so I’d thought I’d mention it)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2017-06-10</div>
+          <div class="post_content">
+<p>The Web Package explainer currently says that App Manifest keys can be used inside a Web Package’s <a href="https://github.com/WICG/webpackage#manifest">manifest.metadata section</a>, but I think I’m going to need to promote that to the top level in order to let unsigned packages declare dependencies, and it probably makes more sense at the top level anyway.</p>
+<p>The <a href="https://www.w3.org/TR/appmanifest/#serviceworker-member"><code>serviceworker</code></a> member is definitely how we’d identify which resource inside the package should be used as the SW script, if we pick <a href="https://discourse.wicg.io/t/proposal-packaging-for-the-web-signed-and-indexed/1827/11?u=jyasskin">option 1 from above</a>, but it doesn’t work to <em>only</em> provide the app manifest because we’d like people to be able to install these packages while offline, and the steps for processing the serviceworker member involve fetching data from the network. We need to bundle the intended results of those fetches with the manifest, which is exactly what Web Packaging does.</p>
+<p>I think we will need to add some fields to the app manifest to support packages (e.g. origin and packaging-date), and I’ll be sending issues and PRs when we know more clearly what those are.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

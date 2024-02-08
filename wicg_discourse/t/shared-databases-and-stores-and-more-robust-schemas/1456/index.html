@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Shared databases and stores (and more robust schemas)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Shared databases and stores (and more robust schemas)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brettz9</div>
+          <div class="creation_date">2016-04-20</div>
+          <div class="post_content">
+<h2>Introduction</h2>
+<p>It would be hard to overestimate the benefits that application-agnostic file systems have brought, both with healthy competition spurring on improved apps, and users not being stuck with their data locked away in a data silo readable or modifiable by only one app.</p>
+<p>Especially if shared file systems are not going to see the light of day (and even if they are), I would like to see choice be brought back to users after the open web has now, in effect, paradoxically removed this control away from users, with IndexedDB (as well as localStorage and cookies) only defined to be viewable by the site which created them (and Firefox’s <code>globalStorage</code> never became standard).</p>
+<p>Just because some progressive sites allow you to export their data, this is not a substitute for the ability to effortlessly switch between applications which you can empower to read or edit your own data.</p>
+<p>And this proposal also goes beyond the idea of cross-origin database requests or exposing the database API via <code>postMessage</code> as these still require a particular site to act as a privileged go-between.</p>
+<p>I’d like to see the ability for sites to create and modify databases and stores into a shared space potentially available to all websites.</p>
+<p>For privacy/security/UX reasons, there would be one out-of-page browser UI component for users to initiate the whitelisting of sites for create, read-write, or read-only access to shared stores as one was visiting the sites, but the main browser UI would be a kind of “web desktop” where all previously approved shared stores were displayed.</p>
+<p>I would even hope that browsers would even consider opening ALL local databases for origin-agnostic reading or editing since the large amount of storage in IndexedDB should not be used for housing authentication tokens or other site-sensitive details but data owned by the user (and even an app for housing your passwords should not be the only one to continue having access to your data, giving you the choice to move to another such app).</p>
+<h2>Addressing privacy/security/notification-fatigue concerns</h2>
+<p>Since it could become a nightmare to have sites constantly asking to serve as a shared storage type handler in addition to the privacy/security risks of such ready access to shared data, the idea would be for sites to advertise that they can support read-only, read-write, or create-read-write access to certain shared formats, and the only browser UI that would expose this to the user would be a button to indicate that the site supports a particular shared storage type for which the user could grant the site access (and showing the button visibly different or absent when a site was not advertising any shared format support). This would not be a door-hanger or desktop notification which could intrude on the user.</p>
+<p>If a shared store of the name/type and schema requested by the site had not yet been created, the first create-read-write privilege-supporting site to have the button clicked would gain access (and with storage limits) toward creating the shared store. (Requiring a schema, ideally one as robust as JSON Schema would be important to ensure that sites would not clash with the same name but different data types.)</p>
+<p>Since the origin-agnostic access could be compromised if the origin site (or current default site) could continually make upgrades to the format, there should, I think, be no upgrade access for these stores (at least not unless “upgrade” access were a separate privilege). A site already with access that wanted to upgrade would need to migrate the data to a non-shared store or wait for another button click by the user to gain the user’s permission for migrating to a new shared store, and such a migration would not remove the old shared store data.</p>
+<p>If the user later visited another site which advertised support and they clicked the shared privilege granting button, there could perhaps be an option to immediately change to this new site’s default, or, the browser could opt to require the user to right-click the shared store in the “web-desktop” to change its “Open with…” behavior (but all button-clicked whitelisted sites would show up there as options).</p>
+<p>There is still the concern about privacy/security for malicious sites, whether those which sought to plant their flag with a well-known shared store before other sites had a chance or which were approved later, but this is the price we have on the desktop too when installing apps that can be used as read/write handlers for our files. There is trust involved too in adding our data into non-shared data stores on the existing web too.</p>
+<p>But the manner described above should not amplify the means for malicious or intrusive abuse since a site cannot gain access to this shared data by harassing the user with door-hanger notifications. As with the desktop, access would only occur at user initiation.</p>
+<h2>Web-desktop UI</h2>
+<p>The browser could expose a UI “web desktop” to users for navigating through all shared databases/stores in some file-system-like interface. But since we wouldn’t want spam sites polluting the user’s web-desktop, mentioning the names of various products, etc., the UI could perhaps be purely indexed by site origin. However, to prevent sites from muscling attention by setting up many domains, the site wouldn’t even be listed unless a user whitelisted a site–not at the initiation of the site like door-hanger notifications, but with the above-mentioned button within the browser UI if the site had offered itself for handling shared storage.</p>
+<p>While developers could perhaps be given access to see a JSON serialization of a given store to know what was in it without opening it in a particular site, the default UI for regular users would first show a list of origin sites and if one drills down into a particular site, one could then choose to view or edit a particular database or store (handled by default by the originating site). (Or if one is already visiting a site with a store in the browser, it would provide a button to “View/edit this site’s (shared) data with…”.)</p>
+<p>If the user right-clicked a particular database/store on the web-desktop, it would have a context menu item to open the db/store with other sites, mentioning that X, Y, and Z sites have also previously requested and been granted potential access (read-only or readwrite) to this particular database/store and that you could choose to open with their site instead (with some warning about privacy/security of the shared information).</p>
+<p>The UI could also allow the user to move the database/store out of the site-indexed section and give it a name they can remember and within any folders they wanted to set up, but such a move would be more like a symlink, not granting even the origin site any additional privileges except to continue to be able to read and/or modify the store data (the file name or path itself would be opaque to the origin site).</p>
+<p>(Ideally, this UI for local database storage could be integrated with views on other remotely hosted data files such as bookmarked JSON files (if served with a specific content type or with an accompanying JSON schema indicating content types) that could be viewed in any content-type handler viewer/editor (and even allowing, if the site supported and gave access, for a PUT request back to the site). Thus even remotely hosted data could become agnostic, at least toward viewing and potentially for editing.)</p>
+<p>The browser could ideally, moreover, allow users to highlight selections during their browsing and use a context menu to add the content into chosen shared stores, being sensitive to content type (e.g., if highlighting formatted text, one could shuttle the data to a preexisting shared store which supported HTML or to one which supported plain text).</p>
+<h1>MIME types</h1>
+<p>Besides allowing for custom formats–a MUST in my opinion–shared stores could also designate themselves as adhering to a particular MIME type and/or JSON Schema (which could also indicate MIME types for subobjects, via the JSON Hyper Schema). This addition of validation requirements could help prevent corruption and promote interoperability of data. And if sites had offered themselves as handlers of the MIME or schema type, the UI could, also via context menu or such, allow one to designate a particular site as trusted for opening such well-known types, but normally the control would be granular to the particular shared database/store.</p>
+<p>Aliases could be added to the web-desktop so that as long as the schema defined a MIME type for a given store or subobject within a store, one could treat those particular objects like individual files–directly editable in other apps.</p>
+<h1>Conclusion</h1>
+<p>The main idea here is to return control of the user’s data to the user. Not to continue allowing sites to make virtual black boxes even out of data they store locally on the user’s own machine or as remote but web-accessible data files. While it would be up to sites (if not browsers) to decide whether shared storage would become well-used or not, I think it would become compelling for sites to support as well as for users to demand, as this ability became available and employed for any given data format and as users came to recognize the benefits for themselves of such choice and ownership.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brettz9</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<p>While I am offering this suggestion for the advantages I see in IndexedDB, I also see advantages in a shared file system area in that it allows native desktop apps the opportunity to work on these files in a similarly app-agnostic manner.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

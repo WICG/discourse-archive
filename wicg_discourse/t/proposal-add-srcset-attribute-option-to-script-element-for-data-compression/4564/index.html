@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Add &lsquo;srcset&rsquo; attribute option to script element for data compression</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Add &lsquo;srcset&rsquo; attribute option to script element for data compression</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frankowens</div>
+          <div class="creation_date">2020-06-22</div>
+          <div class="post_content">
+<p>The ‘script’ element currently only allows a single ‘src’ attribute to retrieve Javascript from a remote resource.  In order to deliver compressed content, which is recommended by many websites and optimization tools, both the web browser and the server have to be configured in a roundabout way to show that they support compressed content delivery.  The web browser has to present to the server an ‘Accept-Encoding’ HTTP header and the web server has to hand the request off to custom-compiled extensions to perform the compression and/or rewrite the request.</p>
+<p>Data compression is an expensive, CPU-bound operation.  So having the web server itself perform compression potentially multiple times for mostly static content seems rather counter-productive.  If the content is pre-cached, a rewrite server module has to get involved.  If the content is cached by the web server, that usually involves a memory/disk caching web server module (or even a completely different server like Varnish).  In any case, multiple pieces of technology have to come together to support compressed content in the first place.</p>
+<p>A better option, if it were available, would be to use a ‘srcset’ attribute on the ‘script’ element that declares a set of URLs and their ‘Content-Encoding’ equivalent for the same resource (gzip, deflate, etc).  Then the compressed content could be pre-cached on disk on the server and statically delivered without requiring any custom server modules to be installed and configured.  This would be analogous to img srcset but for data compression in the script element.</p>
+<p>It might also be a good idea to consider something similar for the ‘link’ element at the same time for delivering pre-cached, compressed CSS.  However, Javascript widgets are getting a lot heavier these days (250KB-500KB uncompressed, unminified JS is fast becoming the new “normal”), so the script tag is a much more critical path.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-06-22</div>
+          <div class="post_content">
+<p>Well, the compressed content can already be cached compressed on disk, but admittedly, this requires some smarts on the server-side.</p>
+<p>The problem with treating compression as <em>the</em> selection dimension here is that it may not be the only meaningful one. (e.g. see this <a href="https://twitter.com/mathias/status/1105857829393653761">proposal</a>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-06-22</div>
+          <div class="post_content">
+<p>At the same time, if there’s evidence that it would ease deployments, maybe there’s room for a “compression suffix” concept (e.g. <code>.gz</code>, <code>.br</code>) that may make it easier to serve statically compressed resources.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

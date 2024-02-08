@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] requestNativeScripts() - Write, reference, execute native (shell) scripts in main thread, Worker, Worklet scope</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] requestNativeScripts() - Write, reference, execute native (shell) scripts in main thread, Worker, Worklet scope</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-29</div>
+          <div class="post_content">
+<p>API to write/read/execute native applications based on the concepts of Native File System, Native Messaging, MutationObserver, PerformanceObserver, inotifywait.</p>
+<p><strong>Problem</strong></p>
+<p>A problem that cannot current be solved without using a native application, or if preferred, a shell script.</p>
+<p><strong>Solution</strong></p>
+<p>Select a local directory to store and/or write and modify shell scripts to be executed, including using parameters passed from JavaScript contexts, whether <code>Window</code>, <code>Worker</code>, or <code>Worklet</code>, etc. scopes.</p>
+<p>Observe the local directory for changes, for example, using <code>inotifywait</code> or similar directory and file change observing program to monitor (potentially recursively), which ultimately can be incorporated into source code shipped by the implementer.</p>
+<p>Built on top of Native File System the user provides a name to the shell script (which can already exist in the directory where permission to read/write is requested). The user writes or modifies the shell script where an event is dispatched for each read/write. The written file is executed. When the supplied output file name is written the directory a <code>Promise</code> is resolved with value set to the output file name. Native File System can then be used to get the output file.</p>
+<p>This solution avoids using an extension or app, a local server, or WASM, to execute and get output of native applications.</p>
+<p>Example of the current implementation using Native Messaging, which demonstrates how the below algorithm can be implemented in order to omit the need for using Native Messaging</p>
+<ul>
+<li><a href="https://github.com/guest271314/native-messaging-mkvmerge" rel="nofollow noopener">native-messaging-mkvmerge</a></li>
+</ul>
+<p>~/native-messaging-mkvmerge/host$ inotifywait -m -r --format ‘%:e %f’ ~/native-messaging-mkvmerge/host<br/>
+Setting up watches.  Beware: since -r was given, this may take a while!
+Watches established.<br/>
+OPEN native-messaging-host.js<br/>
+ACCESS native-messaging-host.js<br/>
+CLOSE_NOWRITE:CLOSE native-messaging-host.js<br/>
+OPEN native-messaging-host.js<br/>
+ACCESS native-messaging-host.js<br/>
+CLOSE_NOWRITE:CLOSE native-messaging-host.js<br/>
+OPEN protocol.js<br/>
+ACCESS protocol.js<br/>
+CLOSE_NOWRITE:CLOSE protocol.js<br/>
+OPEN:ISDIR<br/>
+ACCESS:ISDIR <br/>
+ACCESS:ISDIR <br/>
+OPEN mkvmerge<br/>
+ACCESS mkvmerge <br/>
+CLOSE_NOWRITE:CLOSE mkvmerge <br/>
+// …<br/>
+OPEN merged.webm<br/>
+ACCESS merged.webm<br/>
+// …<br/>
+ACCESS merged.webm<br/>
+CLOSE_NOWRITE:CLOSE merged.webm<br/>
+DELETE _YLXYCZLTY0KHJ00O.webm<br/>
+DELETE _5D67C3V117PB8YCW.webm<br/>
+OPEN:ISDIR <br/>
+ACCESS:ISDIR <br/>
+ACCESS:ISDIR <br/>
+DELETE _EXGPUXEN6MW17I4A.webm<br/>
+OPEN:ISDIR <br/>
+ACCESS:ISDIR <br/>
+ACCESS:ISDIR <br/>
+ACCESS:ISDIR <br/>
+CLOSE_NOWRITE:CLOSE:ISDIR <br/>
+ACCESS:ISDIR <br/>
+CLOSE_NOWRITE:CLOSE:ISDIR <br/>
+OPEN:ISDIR <br/>
+// …<br/>
+ACCESS:ISDIR <br/>
+CLOSE_NOWRITE:CLOSE:ISDIR <br/>
+DELETE _VENHB8899Q4YRRGW.webm<br/>
+// … await writeScript.execute() =&gt; <br/>
+// let dir = await self.chooseFileSystemEntries({type: “openDirectory”}) =&gt;<br/>
+// let result = await dir.getFile(&lt;${outputFileName /* merged.webm */}&gt;) =&gt;<br/>
+// done.<br/>
+DELETE merged.webm</p>
+<p>The basic algorithm</p>
+<p>Context: <code>Window</code>, <code>WorkerGlobalScope</code>, <code>WorkletGlobalScope</code></p>
+<ol>
+<li><code>let outputFileName = "file.ext", scriptName = "doStuff"</code></li>
+<li><code>let nativeScripts = await self.requestNativeScripts(&lt;Map&gt; [[&lt;${scriptName}&gt;, "/path/to/local/directory/sciptName"]])</code></li>
+<li><code>let writeScript = await nativeScripts.get(&lt;${scriptName}&gt;).write("#!/bin/bash ... doStuff(&lt;${outputFileName}&gt;)")</code></li>
+<li><code>await writeScript.execute() // when outputFileName is written resolve Promise</code></li>
+<li><code>let dir = await self.chooseFileSystemEntries({type: "openDirectory"})</code></li>
+<li><code>let result = await dir.getFile(&lt;${outputFileName}&gt;) // get output of executed native application</code></li>
+</ol>
+<p><strong>Related</strong></p>
+<ul>
+<li><a href="https://github.com/whatwg/html/issues/3443" rel="nofollow noopener">&lt;script type=“shell”&gt; to execute arbitrary shell commands, and import stdout or result written to local file as a JavaScript module</a></li>
+<li><a href="https://github.com/WICG/native-file-system/issues/72" rel="nofollow noopener">https://github.com/WICG/native-file-system/issues/72</a></li>
+</ul>
+<p>–</p>
+<p><a href="https://github.com/guest271314/requestNativeScripts/blob/master/Explainer.md" rel="nofollow noopener">Explainer</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

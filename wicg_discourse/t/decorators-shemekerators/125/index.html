@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Decorators shemekerators</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Decorators shemekerators</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-28</div>
+          <div class="post_content">
+<p>Decorators as described in the <a href="http://www.w3.org/TR/components-intro/">Web Components Intro</a> have been more or less dropped - as described they are kind of a non-starter - there are some conceptual and performance concerns.  However, there have been numerous attempts and requests with lots of use-cases that people thought they solved, so it’s probably worth discussing whether there is something worth pursuing investigation/further efforts there.  Lots of conversations are attempting to be had via twitter, but with 140 character limit this seems a little unproductive.  Unfortunately I’m tied up and unable to detail things, so I’m going to start this thread and hope that people share use cases and concerns productively to get the ball rolling.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-28</div>
+          <div class="post_content">
+<p>Don’t forget that <code>/TR/</code> links are evil ;). <a href="http://w3c.github.io/webcomponents/explainer/">Latest editors draft</a> does not even contain decorators.</p>
+<p>The explainer tells how decorators could work, but doesn’t say what problem they solve. What problem is it that decorators solve? Especially in light of the <code>is=""</code> attribute for custom elements, which definitely allows you to “enhance or override the presentation of existing elements.”</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-29</div>
+          <div class="post_content">
+<p>Surprised, given all of the twitter hubbub that no one is sharing use cases, so I will share the one I see that is currently unmet and that decorators would (poorly in the current design IMO but at least it was an interesting first waffle) possibly help address/is worth addressing:</p>
+<p>HTML provides DOM structure, CSS deals with presentation - except that despite the promise, CSS and the box tree are actually still pretty intertwined with the HTML… We’ve gotten better over the years and Web Components allow for more expressive markup – that all helps a lot, but the idea that you can really control presentation via CSS once you have your HTML is still kind of – not entirely true.  The CSS WG knows this and it has already introduced some very basic ideas like ::before and ::after which create boxes that aren’t DOM, but can be styled, and has been working for years on things like layouts, pagination, grids, etc.</p>
+<p>In many orgs (like mine) one group is full of engineering minded folk who write JavaScript, another is full of visually minded folk who write CSS - and HTML is something of a battleground.  You need engineering to generate markup and keep it reasonably well synced with the script and designers need to style it… But more than that, designers still need structure that doesn’t really have meaning for purely presentational purposes (today).  This seems wrong.  Web Components help this separation quite a bit, but they don’t solve it.  Creating DOM from CSS seems kinda – well… not great.  But creating and fiddling with the render-tree, that seems totally sane to me.  Part of the issue, as I say, is that the render-tree today has no API or anything other than, DOM.  The great thing about DOM is that it has a serialization that is easily groked - perhaps if there were a simple render-tree serialization that you could apply via CSS to do things like ‘wrap that bit over there so I can style it up’ or something that might make sense?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1369_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">addyosmani</div>
+          <div class="creation_date">2014-05-29</div>
+          <div class="post_content">
+<p>So, decorators were supposed to allow (high performance) dynamic application of presentation to elements regardless of their state. Just one of the challenges I can think of with them actually working out are unapplication. If your decorator happens to care about state in any way at all, the idea of unapplication becomes fundamentally hard - when does it matter? when doesn’t it matter? when are we talking about the same instance?.</p>
+<p>I remember Dimitri once giving an example of you hypothetically wanting to run script inside of your decorator which might force the author to walk down non-obvious paths (event listener registration with any DOM node outside of the decorator caused unwanted effects of the listener sticking around after the decorator was unapplied, storing state of a decorator was hard especially if unapplied/repapplied quickly). Even the notion of separating state of the decorator from the element would cause issues of having to figure out isolation, which could come with performance penalties.</p>
+<p>In 2011, I think there was more favour of exploring a better mode of DOM projection rather than worrying about decorators and the challenges of per-instance DOM with state to hang state off of. Even now, no one seems to quite have the appetite for championing decorators nor seeing them through and I personally don’t see their value (sorry, Brian!).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-29</div>
+          <div class="post_content">
+<blockquote>
+<p>I remember Dimitri once giving an example of you hypothetically
+wanting to run script inside of your decorator…</p>
+</blockquote>
+<p>This is what I was saying above - that idea seems really problematic… But the idea of having CSS that creates/massages the render-tree seems perfectly sensible to me.</p>
+<blockquote>
+<p>In 2011, I think there was more favour of exploring a better mode of
+DOM projection</p>
+</blockquote>
+<p>I’m not sure I understand what you mean here - are you saying render-tree, not DOM?</p>
+<blockquote>
+<p>and I personally don’t see their value (sorry, Brian!).</p>
+</blockquote>
+<p>Definitely don’t be sorry to me… I hear a lot of people saying “What happened to decorators” and “that’s a shame”… I do think there were use cases some people had and I’m just asking to collect them and see if there is something worth pursuing.  Maybe not, and that’s ok too - I was prompted by numerous tweets to bring it here in the first place <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/569_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">slightlyoff</div>
+          <div class="creation_date">2014-06-05</div>
+          <div class="post_content">
+<p>Decorators don’t feel like they should be tied to web components. I there’s some render-tree abstraction at some level that lets us add auto-generation/removal of render-tree decoration to generated DOM, that seems good. But implicating script (which is what we’re doing here) is clearly insane.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-06-09</div>
+          <div class="post_content">
+<p>What if we took a lighter approach where decorators were essentially styled, pseudo-element bundles? Let me illustrate:</p>
+<pre><code>&lt;decorator name="ribbon"&gt;
+  &lt;template&gt;
+    &lt;div&gt;&lt;div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;/template&gt;
+  &lt;style&gt;
+    @decorator ribbon {
+      div {
+        content: attr(title);
+        ...
+      }
+    }
+&lt;/style&gt;
+&lt;/decorator&gt;
+</code></pre>
+<p>We could allow developers to apply decorators like so:</p>
+<pre><code>&lt;section title="Ribbon Title" decorators="ribbon other-decorator"&gt;&lt;/section&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-06-09</div>
+          <div class="post_content">
+<p>As I mentioned - there are numerous CSS proposals to do something like this (for example <a href="http://dev.w3.org/csswg/css-template">http://dev.w3.org/csswg/css-template</a>).  It was actually something that held up regions as well… The one thing that they are all lacking/tend to miss IMO is that CSS is a kind of terrible language/syntax for attempting to describe structure of any kind.  I think that there is something key here - in this case, it decorative structure we are talking about, not semantic (I think).  I have suggested before that perhaps being able to link to a series of templates that use a ML for something like a box tree rather than HTML might be better.  I don’t know, when I look at this I still don’t feel like that approximates the right sort of idea, feels jumbled/convoluted to me: It looks like normal HTML, but… not, the roles don’t seem clear, etc.  Seems like a nightmare of stuff to work out/confusion/complexity still.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-06-09</div>
+          <div class="post_content">
+<p>See, I feel doing structural, element descriptions in CSS is the far more convoluted path that embeds something totally alien in stylesheets. At least with HTML it’s no problem when you included structure, styles, and script in one document.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>One use case that I have in mind is to add functionality to content editors without screwing around with the DOM (too much). Say you want to build an editor that’s richer than the usual dumb “rich text” stuff, and you might want every structural item inside the editing surface to have extra affordances, e.g. for move/delete/insert but also set ID, change whatever properties, etc.</p>
+<p>You could use components for the content of your editing surface, but you then have to serialise the recursive shadow when you want the content, they all need to monitor their ancestors for editability, etc. It’s doable but clumsier.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1015_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eisaksen</div>
+          <div class="creation_date">2014-12-17</div>
+          <div class="post_content">
+<p>true…it does provide performance, design, and security implications and it should not be taken lightly. That said, it is powerful and I can see use cases for content driven sites with JavaScript limitations and visualization enhancements using these with pseudo selectors. I am not saying this is good or bad but I am curious given the use cases I can dream up what others might  dream up as well.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

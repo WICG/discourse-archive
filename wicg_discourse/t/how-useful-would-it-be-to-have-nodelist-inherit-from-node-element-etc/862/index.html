@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>How useful would it be to have NodeList inherit from Node/Element/etc</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">How useful would it be to have NodeList inherit from Node/Element/etc</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-26</div>
+          <div class="post_content">
+<p>So this would allow anything that can be done to a Node, be done to every Node in a NodeList, here’s a <a href="https://github.com/eorroe/NodeList-Prototype-Extension" rel="nofollow noopener">repository</a> on it.</p>
+<p><strong>I apolgize early it’s not the best repository you’ve ever read, first readme I’ve written for others to see, so bare with me</strong></p>
+<p>Here’s a quick example:</p>
+<pre><code>var buttons = document.querySelectorAll(".buttons");
+buttons.addEventListener('click', function(evt) {
+  //do something
+});</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-05-28</div>
+          <div class="post_content">
+<p>The DOM, and JS in general, has avoided this kind of overloaded semantics, where a list of things can be operated on as if it was a single one of the things in the list.  It’s a useful and popular pattern (appearing in jQuery, d3, and plenty more), but it’s also often confusing, and you have to use getter/setter methods rather than properties, which doesn’t match the current DOM design very well.</p>
+<p>With arrow functions this kind of thing becomes a bit easier to write:</p>
+<pre><code class="lang-auto">var buttons = [].slice.call(document.querySelectorAll(".buttons"));
+buttons.forEach(el=&gt;el.addEventListener('click', function(evt) {...});
+</code></pre>
+<p>If NodeLists ever get upgraded to an Array subclass, or if you use the <code>.query()</code> function from DOM instead (which returns an Elements rather than a NodeList, which <em>is</em> an Array subclass), you can avoid the <code>[].slice.call()</code> hack too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<blockquote>
+<p>Which doesn’t match the current DOM design very well.</p>
+</blockquote>
+<p>You’re right about that. But I mentioned in the repository that, my script was sort of a hack.</p>
+<p>So yes in my script I used getters and setters. But that was for it to only work in ES5.</p>
+<p>What I have in mind is to use <code>ES6 proxies</code>(should probably post in readme):</p>
+<p>Where every instance of <code>NodeList</code> is a <code>proxied NodeList</code>:</p>
+<pre><code>var divs = document.querySelectorAll('div');
+// But this is what querySelectorAll would return:
+new Proxy(divs, {
+  set(target, prop, value) {
+    for(var element of target) {
+        if(prop in element) element[prop] = value;
+    }
+  },
+  get(target, prop) {
+    //same thing in my script, doesn't make sense to show here without surrounding context
+  }
+});
+</code></pre>
+<p>Also <code>divs</code> will have the other methods as well. Like inheriting the <code>HTMLElement</code> methods:</p>
+<pre><code>$('div').addEventListener('click', callback);
+$('div').href = 'whatever'; // wont be set because of the `prop in element` check
+$('div').set('randProp', 'randValue'); // this will set it no matter what</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<p>Also looking at the <code>Node.prototype</code> has a lot of <code>getters</code> and <code>setters</code> what’s wrong with <code>NodeList.prototype</code> having <code>getters</code> and <code>setters</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<p>To me the fundamental flaw with this idea is that it goes against the very nature of inheritance in object-oriented programming. That is, the statement “A NodeList <strong>is a</strong> Node” is false, so having NodeList inherit from Node makes no sense. See also: Liskov Substitution Principle.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<p><span class="mention">@domenic</span> I see what you’re saying, but what if it doesn’t inherit, as I mentioned what if they are returned proxies which loop through the nodes and sets those on each <code>NodeList</code>.</p>
+<p>Is it the fact that <code>$('div').textContent = 'Hello';</code> Seems like it’s affecting the <code>NodeList</code> making it seem like a <code>Node</code>. Also the methods <code>$('div').setAttribute()</code>? The reason for that is the following wouldn’t look good for a native implementation as the following:</p>
+<pre><code>$('div').set('textContent', 'Hello'); // It looks like jQuery, which does this already
+</code></pre>
+<p>Now I’m debating with myself whether I’d make this into a library, and I’m thinking no mainly because jQuery already exist and is widely used already.</p>
+<p>So what if everything was defined manually each method (renamed to match a <code>NodeList</code>)?</p>
+<p>The only thing I can think of right now is plurals: <code>addEventListener</code> to <code>addEventListener(s)</code>.</p>
+<p>Perhaps <code>setAttribute</code> to <code>setAttributeOnEach</code>.
+<strong>Ok now that I think of this it looks horrible</strong> but perhaps others have better naming conventions.</p>
+<p>But again I believe it would solve so many problems, Like most people would like <code>jQuery</code> implemented into browsers but I say no because <code>jQuery</code> does a lot more than manipulate the dom. So this would be my proposal for a better <code>NodeList</code> implementation. BTW I’m not sure if you read my <a href="https://github.com/eorroe/NodeList-Prototype-Extension" rel="nofollow noopener">repository</a> so here’s a quick (not useful, but usecase) <a href="http://jsbin.com/cehosinomu/edit?html,js,output" rel="nofollow noopener">jsbin example</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> NodeList is iterable, so using a <code>for-of</code> produces the most readable code, I think.</p>
+<pre><code>let buttons = document.querySelectorAll('button');
+
+for (let button of buttons) {  
+  button.addEventListener('click', (e) =&gt; { /* handler */ });  
+}
+</code></pre>
+<p><strong>Live demo:</strong> <a href="http://jsbin.com/xikise/edit?js,output#J:L2" rel="nofollow noopener">http://jsbin.com/xikise/edit?js,output#J:L2</a> (supported in Firefox and Chrome <em>today</em>, via Babel)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-05-29</div>
+          <div class="post_content">
+<p><span class="mention">@simevidas</span> Sure, reasonable people can differ on what they find most readable. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-30</div>
+          <div class="post_content">
+<p>My main worry with all of this is  that it will then expand into, can we have all DOM APIs available to use. Like not all elements support <code>.submit()</code> but I feel like supporting these would be the thin wedge to making that demand.</p>
+<pre><code class="lang-auto">var elements = document.querySelectorAll('.thing');
+elements.submit();
+</code></pre>
+<p>That is the kind of API you expect from jQuery but not from the DOM.</p>
+<p>If it is enough of an issue why not create your own wrapper to <code>document.querySelectorAll</code> like <code>document.proxiedQuerySelectorAll</code> which returns a modified prototype of <code>NodeList</code> which proxies the function calls over perhaps?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-30</div>
+          <div class="post_content">
+<p>Yes I’ve thought about this and tried. the only thing I had in mind is:</p>
+<pre><code>var elements = document.querySelectorAll('.thing');
+elements.callOnEach('submit'); // but that's very weird and most likely wouldn't be accepted neither would I want it to.
+
+elements.callOnEach('method', args); // So no.
+</code></pre>
+<p>I also tried making a prollyfill for <code>document.querySelectorAll</code>. What I don’t understand is function calls on proxies? So let’s say in my code how would I have a trap for a function call in a proxy:</p>
+<pre><code>elements.setAttribute('class', 'hi');
+</code></pre>
+<p>How would I set a trap for the above, anybody has any reference for specifically function call traps in ES6 proxies?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-30</div>
+          <div class="post_content">
+<p>So this would be what I meant by proxying:</p>
+<pre><code class="lang-auto">NodeList.prototype.setAttribute = function () {
+  var elements = [].slice.call(this);
+  var results = [];
+  for (var i = 0; i &lt; this.length; ++i) {
+    results.push(this[i].setAttribute.apply(this[i], arguments));
+  }
+  return results;
+};
+</code></pre>
+<p>However it would be safer to invent your own method like:</p>
+<pre><code class="lang-auto">document.proxiedQuerySelectorAll = function (){
+  var ret = document.querySelectorAll.apply(document, arguments);
+  ret.setAttribute = function setAttribute() {
+    var elements = [].slice.call(this);
+    var results = [];
+    for (var i = 0; i &lt; this.length; ++i) {
+      results.push(this[i].setAttribute.apply(this[i], arguments));
+    }
+    return results;
+  };
+  return ret;
+};
+
+
+var elements = document.proxiedQuerySelectorAll('div');
+
+elements.setAttribute('height', '200px');
+
+</code></pre>
+<p>This is ‘proxying’ as the Gang of Four call it, however as <span class="mention">@tabatkins</span> said this is also overloading.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-30</div>
+          <div class="post_content">
+<p><span class="mention">@jonathank</span> Have you looked at the actual <a href="https://github.com/eorroe/NodeList-Prototype-Extension/blob/master/nodeList.js" rel="nofollow noopener">source code</a> I already do the first one. What I was talking about for ES6 proxies is not having to use <code>getters</code> and <code>setters</code> because that’s what <span class="mention">@tabatkins</span> wanted :</p>
+<p>So all methods in the DOM that return a <code>NodeList</code> would return something like:</p>
+<pre><code>document.querySelectorAll = function(selector) {
+  var nodes = Document.prototype.querySelectorAll.call(document, selector);
+   var proxiedNodes = new Proxy(nodes, {
+     set(target, prop, value) {
+       for(var element of target) {
+          if(prop in element) element[prop] = value;
+       }
+     },
+     get(target, prop) {
+        //use same method I use in source code, just changed a bit to fit surrounding context
+     }
+   });
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-30</div>
+          <div class="post_content">
+<p>Nope I had not, until just now. However you asked how to proxy setAttribute and I misunderstood what you were getting at.</p>
+<aside class="quote" data-post="10" data-topic="862">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/edwin_reynoso/40/636_1.png" width="20"/> Edwin_Reynoso:</div>
+<blockquote>
+<p>elements.setAttribute(‘class’, ‘hi’);</p>
+<p>How would I set a trap for the above, anybody has any reference for specifically function call traps in ES6 proxies?</p>
+</blockquote>
+</aside>
+<p>Pretty sure the behaviour for doing that is still under discussion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-30</div>
+          <div class="post_content">
+<p>Oh ok thanks. Then that’s why I couldn’t figure it out. I didn’t find anything on function call traps.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-05-31</div>
+          <div class="post_content">
+<p>No, the behavior is not under discussion.</p>
+<p>To intercept a property that happens to be a function, like <code>elements.setAttribute</code>, you use the same trap that you use to intercept any other property: the <code>get</code> trap.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p><span class="mention">@domenic</span> that’s if a object has a method. For example:</p>
+<pre><code>var proxy = new Proxy({
+   m() { console.log('this is called'); }
+}, {
+   get(target, prop) {
+      if(target[prop].constructor == Function) {
+        console.log('it's a function');
+        return target[prop];
+      }
+   }
+});
+
+proxy.m; // would log it's a function and return the method
+proxy.m(); // .m returns it so () calls it logging "this is called"
+</code></pre>
+<p>Now with a proxied nodeList I want to be able to just trap method calls that are not a part of the nodeList (I’ll use an array literal here)</p>
+<pre><code>var p = new Proxy([document.body], {
+  get(target, prop) {
+    if(!target[prop]) {
+       return function() { console.log("it's called"); };
+    }
+  }
+});
+p.m(); // logs it's called;
+p.whatever(); // logs it's called
+</code></pre>
+<p>Ok this works because Im checking if property doesn’t exist yet I’ll be doing that for everything else as well. Like getting textContent it will return an array of textContent for each node which is not a property of the NodeList.</p>
+<p>I could just loop through each node and check if it’s a property or a method of each node, but that would be complicated because what if I query every element and try calling submit I’d have to do something really complicated and confusing? that in the long run would most likely be bad. So perhaps a proposal on function call traps? or is there already a discussion?</p>
+<p>I could also just check <code>HTMLElement.prototype[prop]</code> to see if it’s a method or property but then again with certain elements they have their own methods and properties.</p>
+<p>Proxies would be easier, but I think manually implementing every method and property would be most beneficial.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p>You can have proxies for functions themselves, but methods are just treated as normal properties of objects. There is no separate method-invoke trap from the <code>get</code> trap, and there is no such trap under discussion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p>Ik this:</p>
+<blockquote>
+<p>but methods are just treated as normal properties of objects. There is no separate method-invoke trap from the get trap.</p>
+</blockquote>
+<p>But what do you mean by:</p>
+<blockquote>
+<p>You can have proxies for functions themselves</p>
+</blockquote>
+<p>can you show a quick small example code.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<pre><code class="lang-auto">var p = new Proxy(function () { }, {
+  apply(target, thisArg, args) {
+    // ...
+  }
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p>By just looking at it, seems like you want me to do that for every method, but then again I would end up having to check if <code>$('div').submit()</code> is a method in each node, for that I’d just do everything inside the <code>handler.get</code> of the <code>proxy</code> which again will be very complicated. So right now I’m going to try to write a <strong>prollyfill</strong> for <code>document.querySelectorAll</code> and when I’m done post it here lmk what you think.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

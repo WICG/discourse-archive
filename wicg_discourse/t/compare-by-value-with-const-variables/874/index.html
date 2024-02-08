@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Compare by value with const variables</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Compare by value with const variables</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">danpeddle</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p><strong>tl;dr:</strong> constant values are immutable and could be compared by value not identity…?</p>
+<p>Problem:</p>
+<p><code>let a = new Set([ [1], [1] ]);</code></p>
+<p>This produces a set with two members.</p>
+<p>Proposal:</p>
+<pre><code class="lang-auto">
+const rgb1 = [128,128,128];
+const rgb2 = [128,128,128]; 
+let rgb3 = [128,128,128];
+
+let colors = new Set([ rgb1, rgb2]); 
+let moreColors = new Set([...colors, rgb3])
+
+// prints one color
+// constants could be compared by value, not identity..?
+for (let col of colors){
+  console.log(col);
+}
+
+//  prints two lines, as one constant (read, immutable) and one let bound do not 
+// compare as being equal
+for (let col of moreColors) {
+  console.log(col)
+}
+
+</code></pre>
+<p>Does this make sense?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>It’s an interesting idea, but it’s just not JavaScript compatible. (Say that I’m associating all objects that use the same array, and two separate const-defined arrays, which coincidentally have the same values in this revision of the script, are attached to different objects.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">danpeddle</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>I’m not quite following - could you show me in code what you mean?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<pre><code class="lang-auto">const REDISGREEN_PORTS = [28015, 28016]
+const REDISTOGO_PORTS = [28015, 28016]
+var REDISCLOUD_PORTS = [28015, 28016]
+var OPENREDIS_PORTS = [28015, 28016]
+
+function removeAllConnectionsWithPortSpec(spec) {
+  connections = connections.filter(conn =&gt; conn.spec == spec)
+}
+
+removeAllConnectionsWithPortSpec(REDISCLOUD_PORTS) //removes just the REDISCLOUD connections
+removeAllConnectionsWithPortSpec(REDISTOGO_PORTS) //would remove the REDISTOGO connections *and* the REDISGREEN connections
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p><code>const</code> is not recursive. It prevents the reference from changing, but if the value being referred to is mutable, it can change freely.  So you can’t do compare-by-value.  (Or rather, it’s just as valid/invalid to do it on a const as it is for a let.)</p>
+<p>What you want are Value Objects, which I think are showing up in ES2016.  <a href="http://www.slideshare.net/BrendanEich/extensible-operators-and-literals-for-javascript">Here’s the latest proposal.</a>  They’re build on top of a frozen TypedArray, so you can be sure that they’re recursively immutable.  As a bonus, you get a bunch of other goodies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">danpeddle</div>
+          <div class="creation_date">2015-06-06</div>
+          <div class="post_content">
+<p>Thank you both for your replies, and understand what you mean. I had not grasped the non-recursive aspect of <code>const</code> - it feels a little strange, but, can use this now with more confidence. Appreciate the explanation.</p>
+<p>The proposal here <a href="https://github.com/sebmarkbage/ecmascript-immutable-data-structures" rel="nofollow noopener">https://github.com/sebmarkbage/ecmascript-immutable-data-structures</a> was linked on twitter. Needing new syntax now makes perfect sense.</p>
+<p>Just as a final thought, I suppose another way of doing this could be something like</p>
+<pre><code class="lang-auto">
+const immutable a = [1,2,3]; // or whatever
+const b = [1,2,3];
+Object.freeze(b);
+
+a === b; // true
+
+</code></pre>
+<p>but, the syntax proposed in the link above is more succinct, and I suppose adding another keyword after const might have other pitfalls.</p>
+<p>Regardless, both value types and the immutable data structure proposals are looking really interesting. Thumbs up for compare by value in JS coming soon <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

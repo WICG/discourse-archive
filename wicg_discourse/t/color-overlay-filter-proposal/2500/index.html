@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Color overlay filter proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Color overlay filter proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2018-01-02</div>
+          <div class="post_content">
+<p>Lately I’ve been needing a filter similar to Photoshop’s own layer styles/blending options. My question is if something like this is achievable with the current state of most browsers’ rendering engines.</p>
+<p>The following images are an example of how Photoshop handles this:</p>
+<p>Without color overlay:
+<a href="https://cldup.com/bmgYTOrKSV.png" rel="nofollow noopener"><img alt="" height="441" src="https://cldup.com/bmgYTOrKSV.png" width="690"/></a></p>
+<p>With color overlay:
+<a href="https://cldup.com/522fcNITCj.png" rel="nofollow noopener"><img alt="" height="419" src="https://cldup.com/522fcNITCj.png" width="690"/></a></p>
+<p>As far as I understand, CSS blending modes aren’t able to achieve this sort of behavior, and syntax-wise I’m thinking that something like <code>filter: color-overlay(#ff0000)</code> should be enough.</p>
+<p>This is just a pretty lighweight proposal but if there’s enough attention to this post, and seems achievable, I’ll try and write a full spec for it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1536_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">goatandsheep</div>
+          <div class="creation_date">2018-01-03</div>
+          <div class="post_content">
+<p>So it takes an image and changes the RGB value of the non-transparent pixels to match the given input?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2018-01-04</div>
+          <div class="post_content">
+<p>Yes, basically, but my idea is to use it for other elements as well, not only images.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-01-09</div>
+          <div class="post_content">
+<p>It should be possible to do this today using a custom defined SVG filter, referenced from CSS.</p>
+<pre><code class="lang-xml">&lt;svg …&gt;
+  &lt;filter id="color-overlay"&gt;
+    &lt;feFlood flood-color="red"/&gt;
+    &lt;feBlend in2="SourceAlpha"/&gt;
+  &lt;/filter&gt;
+&lt;/svg&gt;
+</code></pre>
+<pre><code class="lang-css">element {
+  filter: url(#color-overlay);
+}
+</code></pre>
+<p>If you want to propose this as a CSS <code>filter</code> shorthand, the first step would be defining it via SVG <code>&lt;filter&gt;</code>, like the currently-implemented ones.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1395_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vincentriemer</div>
+          <div class="creation_date">2018-01-12</div>
+          <div class="post_content">
+<p>I’m not that familiar with svg filters so I tried this one out verbatim and it didn’t seem to work on a image element with transparency. I haven’t been able to find a working alternative either.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-01-12</div>
+          <div class="post_content">
+<p>Ah, fair enough. Here’s a working CodePen (except Safari, can’t figure out why right now): <a href="https://codepen.io/tigt/pen/d820feb6082472382ec0778063e9ac08?editors=1100" rel="nofollow noopener">https://codepen.io/tigt/pen/d820feb6082472382ec0778063e9ac08?editors=1100</a></p>
+<p>If you wanted to define the filter solely in CSS, you could use a <code>data:</code> URI created with a preprocessor. Here’s a (naïve*) example for Sass:</p>
+<pre><code class="lang-css">@function color-overlay($color) {
+  @return 'url("' + 
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E\
+%3Cfilter id='f'%3E\
+%3CfeFlood flood-color='#{$color}'/%3E\
+%3CfeComposite in2='SourceAlpha' operator='atop'/%3E\
+%3C/filter%3E\
+%3C/svg%3E#f" + '")';
+}
+</code></pre>
+<p>(Escaped <code>\</code> line breaks added for readability on Discourse. Browsers won’t tolerate them.)</p>
+<p>If you need Safari support <em>today</em>, chaining the <code>filter</code> shorthands might work — something like <code>filter: sepia(100%) hue-rotate({some amount});</code>.</p>
+<p>* You would need to URL-encode the <code>$color</code> argument.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1395_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vincentriemer</div>
+          <div class="creation_date">2018-01-13</div>
+          <div class="post_content">
+<p>Awesome, thank you that works great!</p>
+<p>I do also think that this sort of effect deserves to get its own filter shorthand (iOS for example has a first class image property called tintColor that produces the same effect).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2187_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">callumgare</div>
+          <div class="creation_date">2019-01-28</div>
+          <div class="post_content">
+<p>As a web dev this would be so handy. In fact it’s about every 6 months or so that I think surely this must be possible and try to google it only to be bummed to find out it’s still not.
+Right now I’m working the responsive version of a site menu which shows up as an overlay when the view port is under a certain size.
+<div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/019dbdc9351ffcbd5644edddf292f6d8d75fadff" href="//discourse.wicg.io/uploads/default/original/2X/0/019dbdc9351ffcbd5644edddf292f6d8d75fadff.png" title="Screenshot 2019-01-28 13.16.44.png"><img alt="44" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/0/019dbdc9351ffcbd5644edddf292f6d8d75fadff_2_10x10.png" height="500" src="//discourse.wicg.io/uploads/default/optimized/2X/0/019dbdc9351ffcbd5644edddf292f6d8d75fadff_2_504x500.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/0/019dbdc9351ffcbd5644edddf292f6d8d75fadff_2_504x500.png, //discourse.wicg.io/uploads/default/original/2X/0/019dbdc9351ffcbd5644edddf292f6d8d75fadff.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/0/019dbdc9351ffcbd5644edddf292f6d8d75fadff.png 2x" width="504"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screenshot 2019-01-28 13.16.44.png</span><span class="informations">578×573 87.4 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>The icons need to be a different colour to show up on the different background. The site colours are stored in css variables so that they can be changed and previewed in real time when editing with the wordpress customizer editor (this design is a wordpress theme).
+I want to be able to set a colour overlay for an image to the value of a particular css variable.
+The embedded svg filter via preprocessed data string is very clever but loses the ability to use useful css functions like variables. A colour overlay css filter defiantly seems like super useful and quite generic so that it could be used in all sorts of different ways.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3543_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alinnert</div>
+          <div class="creation_date">2022-11-11</div>
+          <div class="post_content">
+<p>I would have needed this today. I wanted to tint a background image to be blue, so white text on top of the image is readable.</p>
+<p>The current workaround is to make the image sepia first and apply hue rotation to make it (a very faint) blue. But that’s very unprecise because I’d need to know the hue value of the applied sepia color. Also, a <code>saturate(9)</code> was needed to make the blue as vibrant as in the mockup. The endresult looks like this:</p>
+<pre><code class="lang-css">filter: contrast(0.2) sepia(1) hue-rotate(190deg) brightness(0.45) saturate(9);
+</code></pre>
+<p>IMO there should be a <code>tint()</code> function that works similar to <code>sepia()</code> with an absolute <code>hue</code> or <code>color</code> value as an additional parameter. Like:</p>
+<pre><code class="lang-css">filter: tint(blue, 0.7);
+</code></pre>
+<p>The second parameter is the “strength” of the effect, similar to how it works in <code>sepia(0.7)</code>. That could become pretty handy.</p>
+<p>I’ve tested the behavior of the tint feature in Affinity Designer. It has the following behavior. I don’t know if there’s a standard behavior but I’d agree if CSS worked the same way:</p>
+<ul>
+<li>Hue, saturation and brightness of the color passed to <code>tint(color, strength)</code> should affect the result</li>
+<li>
+<code>tint(white, 1)</code> and every color with a brightness of 100% would result in a completely white image</li>
+<li>
+<code>tint(black, 1)</code> and every color with a brightness of 0% would result in a completely black image</li>
+<li>
+<code>tint(gray, 1)</code> would remove all colors, similar to <code>grayscale(1)</code>
+</li>
+<li>I don’t know what exactly <code>sepia(1)</code> does but something similar should be achievable with <code>tint(hsl(45, 40%, 50%), 1)</code>
+</li>
+</ul>
+<p>But what should happen with colors that include a non-1 alpha channel? Should it be ignored? I don’t think it’s a good idea to use the alpha channel as the filter strength to drop the need for a second argument. But I might be wrong.</p>
+<p>IMO <code>tint()</code> really should be a thing. What do you think?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>String .surrogateLength to count surrogate pairs of unicode characters</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">String .surrogateLength to count surrogate pairs of unicode characters</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/456_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MerlinMason</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/input-character-class-whitelisting-and-blacklisting/1039">Input character class whitelisting and blacklisting</a>:</p>
+<aside class="quote no-group quote-modified" data-full="true" data-post="1" data-topic="1039">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_2.png" width="20"/><a href="//discourse.wicg.io/t/input-character-class-whitelisting-and-blacklisting/1039/1">Input character class whitelisting and blacklisting</a>
+</div>
+<blockquote>
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/invoke-emoji-input/1030/2">Invoke emoji input</a>:</p>
+<aside class="quote no-group" data-full="true" data-post="2" data-topic="1030">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_2.png" width="20"/><a href="//discourse.wicg.io/t/invoke-emoji-input/1030/2">Invoke emoji input</a>
+</div>
+<blockquote>
+<p>Why wouldn’t you want this to just be part of the browser functionality for every text input?  Most/all text inputs are potential places you could put emoji.</p>
+</blockquote>
+</aside>
+<p>That brings up an interesting point, though: is there a way in the current set of <code>input</code> attributes to really say “don’t present input methods for these classes of character”? Like, we have type hints for <em>overall forms of input</em> to present, like number pads, and we have complex validation expressions to mark certain <em>overall strings</em> as invalid, but there’s no really good hinting mechanism for “don’t even suggest the user be allowed to type this kind of character because I’m just going to reject it” (unless that disallowed set is “everything but digits” or “non-URL/email characters”).</p>
+<p>Sure, a UA <em>could</em> try breaking down <code>pattern</code> to see if it can figure out what characters are contextually allowed by certain rules (although that’s going to fail for a <em>ton</em> of complex <code>pattern</code> values), but I think it’d be better if we had full-on “whitelist” and “blacklist” attributes to explicitly opt-in or opt-out to the inputs to certain well-defined character classes/sets (which could also be expanded to having the UA / polyfill <em>actively filter out</em> those characters, which is buggy code I know I’ve certainly written for more than a few scenarios).</p>
+<p>Granted, restricting the character set is frequently not the best UX (see the way GitHub handles invalid characters when creating repo names, where it just tells you what name it’s going to convert it to) - but it also frequently <em>is</em> the best UX for many <em>other</em> inputs and <code>contenteditable</code>-based controls (namely, ones involving numbers).</p>
+<p><em>Also</em> also, blacklisting and whitelisting by <em>named character classes</em> is a more friendly alternative to validation than <code>pattern</code> in terms of locale-dependent patterns (even though most locale-dependent patterns already have their own <code>type</code> - which can’t be applied to <code>contenteditable</code>).</p>
+</blockquote>
+</aside>
+<p>Counting the length of strings with emoji input can be a tricky… Some (not all) emoji are surrogate pairs of unicode characters, meaning Javascript understands them as two characters, not one.</p>
+<p><img height="81" src="//discourse.wicg.io/uploads/default/original/1X/683a77cbf4b410526fc690ec5477fb8626409332.png" width="137"/> </p>
+<p>While this is technically correct, it’s sometimes useful (validation, hints etc) to present a string length back to a user in a way that’s meaningful to them (one emoji = one character).</p>
+<p>For example…</p>
+<pre><code>"Hello 😃😃".length -&gt; 10
+"Hello 😃😃".surrogateLength -&gt; 8</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<p>Unless I’m misremembering, JS defined that the default String iterator iterates by code point, not code unit, so this will work:</p>
+<pre><code class="lang-auto">[..."Hello 😃😃"].length -&gt; 8
+</code></pre>
+<p>(Note that there’s still a distinction between code points and grapheme clusters. If you used a skin-tone selector to modify an emoji, that’s two code points, tho only one grapheme cluster.  Accented letters might be one or two codepoints, depending on whether they were entered as precomposed or letter + combining character.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1044">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>(Note that there’s still a distinction between code points and grapheme clusters. If you used a skin-tone selector to modify an emoji, that’s two code points, tho only one grapheme cluster.  Accented letters might be one or two codepoints, depending on whether they were entered as precomposed or letter + combining character.)</p>
+</blockquote>
+</aside>
+<p>And, of course, while this can be “solved” by some forms of Unicode normalization, one should note that the notion of the “length” of a Unicode string (rather than the length of the “raw” JS string) is a <em>very</em> tricky subject, and even counting code points post-normalization may not be adequate to address what could be considered its “true” length (due to things like ligatures and Zero-Width Joiners).</p>
+<p>I think more than <code>length</code> or <code>surrogateLength</code>, there should be a <code>utf8ByteLength</code>, which reports the amount of space the string will take up in its most common modern representation (without having to actually reserve the space to do the calculation locally). This may be somewhere in <code>Intl</code> with all the other functions around Unicode string normalization - I don’t actually touch this space in depth that often (mostly owing to its aforementioned hairiness).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

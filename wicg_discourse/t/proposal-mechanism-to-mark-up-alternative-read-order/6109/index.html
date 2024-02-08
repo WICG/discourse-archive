@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Mechanism to mark up &ldquo;alternative&rdquo; read order</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Mechanism to mark up &ldquo;alternative&rdquo; read order</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3939_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brennanyoung</div>
+          <div class="creation_date">2023-01-11</div>
+          <div class="post_content">
+<p>“Content order” is an important design characteristic, especially for accessibility (“a11y”).</p>
+<p>It is intimately connected with ‘good semantics’. WCAG 2.1 specifies several success criteria which pertain to this characteristic:</p>
+<ul>
+<li>1.3.1 <a href="https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships">Info and Relationships</a>
+</li>
+<li>1.3.2 <a href="https://www.w3.org/WAI/WCAG21/Understanding/meaningful-sequence">Meaningful Sequence</a>
+</li>
+<li>2.4.3 <a href="https://www.w3.org/WAI/WCAG21/Understanding/focus-order">Focus Order</a>
+</li>
+</ul>
+<p>Users of Assisitive Technologies (ATs) such as screen readers rely on authors arranging their content in such a way that the most meaningful “next” item appears subsequently in the DOM. Similarly, the “tab sequence” is most reliable when it follows the order of operable elements in the DOM.</p>
+<p>In most cases, this works very well. It is a modest constraint which is relatively easy to follow.</p>
+<p>However, there are classes of content which are <strong>not</strong> well-served by this approach. To generalize, this content is characterised by the potential for (or expectation of) <strong>multiple viable pathways</strong>, to the extent that the information, structure, and relationships conveyed through presentation are neither fully programmatically determined, nor readily reduced to flat text.</p>
+<p><strong>Some Concrete Use Cases</strong></p>
+<ul>
+<li>Mathematical expressions and chemical formulae - where the most appropriate ‘reading’ might traverse the expression in multiple directions.</li>
+<li>Flow Charts - where content is related by connecting lines (which may themselves have labels) that often express branches, jumps and loops.</li>
+<li>Data Views - where the ‘story’ is expressed by how data points relate to the value of other data points (or other arbitrary limits and thresholds), <strong>irrespective of the sequence in which they are plotted</strong> (i.e. irrespective of DOM order).</li>
+<li>Filters and sorting mechanisms which permit subsets of large amounts of data to be approached according to distinct (but arbitrary) criteria.</li>
+<li>CSS flex-direction, grid, floats and absolute position - where content may be deliberately presented visually in a sequence that differs from DOM order.</li>
+</ul>
+<p><strong>Ideal and Necessary Features</strong></p>
+<ul>
+<li>The mechanism should be exposed to user agents’ accessibility APIs in a consistent and predictable way.</li>
+<li>The mechanism should <strong>complement/extend rather than replace</strong> existing accessibility tree implementations.</li>
+<li>It should be possible to ‘browse’ the alternative reading pathways, without switching to a fully operational interaction mode. This is especially relevant for <a href="https://tink.uk/understanding-screen-reader-interaction-modes/" rel="noopener nofollow ugc">assistive technologies that make a distinction</a> between “browse mode” (aka. “document mode”) and “forms mode” (aka. “applications mode”).</li>
+<li>
+<strong>Looped</strong> content pathways should be supported. (A simple tree structure is not enough).</li>
+<li>Going ‘backwards’ should be supported, perhaps requiring some kind of <strong>history stack</strong> logic, that remembers which path was taken, even if multiple alternative paths might otherwise have been taken.</li>
+<li>Connecting lines/paths should permit (but not require) <strong><a href="https://html5accessibility.com/stuff/2020/11/07/not-so-short-note-on-aria-label-usage-big-table-edition/" rel="noopener nofollow ugc">naming</a></strong> (i.e. “accessible names” for assistive technology).</li>
+<li>Nodes should permit <strong>rich text</strong> structures such as lists, headings etc. and not limited to flat/plain text. We have flowchart boxes that contain headings, bullet lists, hints in subscript, emphatic text and so on.</li>
+<li>Branching structures (such as <strong>choice boxes</strong> in a flowchart) should be semantically distinct enough that AT users are appropriately cued about navigating the change in flow.</li>
+</ul>
+<p><strong>Prior Art</strong></p>
+<ul>
+<li>
+<strong>Anchors / hyperlinks</strong>. The primary abstraction of HTML is the <strong>link</strong>, especially including links to anchors within a resource. Links are quite well understood by authors and users, with solid support from assistive technology, although as a downside, the distinction between links and buttons is routinely blurred by web content authors. A real advantage is that <strong>hyperlinks are primarily content</strong>. They do not put screen readers in “<a href="https://tink.uk/understanding-screen-reader-interaction-modes/" rel="noopener nofollow ugc">forms mode</a>”, but instead can be consumed as <strong>part of a flow of text</strong>. They also support or require accessible names (typically the text node inside the <code>&lt;a&gt;</code> element).</li>
+<li>A related semantic, <a href="https://w3c.github.io/aria/#navigation" rel="noopener nofollow ugc">the navigation role</a> (<code>&lt;nav&gt;</code> in HTML5) might be a viable model for grouping alternative read order pathways, but the fact that it is a landmark role make it less appropriate for lower level views where high-level AT shortcuts might add noise or chatter. Perhaps we need a non-landmark version of <code>&lt;nav&gt;</code>?</li>
+<li>Operable elements and roles such as button, so that we “hack” a browsable experience without using “browse mode”. This is a solution that works today, but breaks the tidy but rather dogmatic distinction between operable and non-operable content. Maybe we should officially “bless” the idea of using operable elements for browsing content which may have multiple ‘reading paths’?</li>
+<li>
+<a href="https://w3c.github.io/aria/#aria-flowto" rel="noopener nofollow ugc">aria-flowto</a> - is the part of ARIA which most closely approaches the use cases that this enquiry intends to serve. The existing spec is good, as far as it goes, but has received valid criticism mainly for what it omits. In practice, there are very few implementations (user agents or ATs) that do anything interesting with this attribute. That’s a shame, but it does mean that we do not have to worry about legacy implementations in the wild.</li>
+<li>
+<a href="https://w3c.github.io/aria/#aria-details" rel="noopener nofollow ugc">aria-details</a> - is a relatively recent addition to the ARIA spec, and has been suggested as a candidate for replacing aria-flowto. Some (including me) find it no better (or worse) at meeting the “alternative read order” use cases than the flawed aria-flowto attribute. Piggybacking on this attribute has the disadvantage of adding a different semantic meaning. Flowchart boxes are not each others’ “details”. A datapoint that relates to another datapoint is not a “details” relationship, it’s an alternative reading. Something quite different.</li>
+<li>
+<a href="http://tavmjong.free.fr/SVG/CONNECTORS/index.xhtml" rel="noopener nofollow ugc">SVG Connectors</a> - is an intriguing proposed extension to the SVG spec, which defines ways for elements to be connected. It’s very old, and didn’t go anywhere, but there are some good ideas in the proposal, not least the promise of connecting elements visually using declarative means, rather than pixel-perfect positioning.</li>
+</ul>
+<p>After a deep-dive discussion, we agreed not to deprecate aria-flowto until we have a viable replacement which better serves the use cases mentioned above. We agreed that the best way to approach this was via a WICG proposal, because any solution might potentially become part of in HTML, rather than merely part of ARIA. I hope this Proposal captures the essence of the discussion, now we just have to hash it out and find something that can work.</p>
+<p>Questions, opinions and discussion are very welcome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2023-01-11</div>
+          <div class="post_content">
+<p>See also <a class="inline-onebox" href="https://github.com/w3c/csswg-drafts/issues/7387" rel="noopener nofollow ugc">[css-flexbox][css-grid] Providing authors with a method of opting into following the visual order, rather than logical order · Issue #7387 · w3c/csswg-drafts · GitHub</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3939_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brennanyoung</div>
+          <div class="creation_date">2023-01-23</div>
+          <div class="post_content">
+<p><a href="https://dev.w3.org/SVG/modules/connector/SVGConnector.html">Draft spec for SVG Connectors is here</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3939_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brennanyoung</div>
+          <div class="creation_date">2023-02-06</div>
+          <div class="post_content">
+<pre><code class="lang-auto">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8" /&gt;
+&lt;title&gt;Meaningful Sequence is Important&lt;/title&gt;
+
+&lt;style type="text/css"&gt;
+ol { 
+    display: flex;
+    flex-direction: column-reverse;
+}
+li {
+    flex: 0 0 auto;
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+	&lt;h1&gt;Who is responsible for read order?&lt;/h1&gt;
+    &lt;ol&gt;
+        &lt;li&gt;Accessibility is a waste of time&lt;/li&gt;
+        &lt;li&gt;And I refuse to believe that&lt;/li&gt;
+        &lt;li&gt;I can change the world.&lt;/li&gt;
+        &lt;li&gt;I realize this may be a shock, but&lt;/li&gt;
+        &lt;li&gt;“Accessibility is for everyone”&lt;/li&gt;
+        &lt;li&gt;Is a lie, and&lt;/li&gt;
+        &lt;li&gt;“Accessibility is too costly”&lt;/li&gt;
+        &lt;li&gt;So in thirty years, I will tell my disabled friends, family, colleagues and customers that&lt;/li&gt;
+        &lt;li&gt;They are not the most important thing in my life.&lt;/li&gt;
+        &lt;li&gt;My employer will know that&lt;/li&gt;
+        &lt;li&gt;I have my priorities straight because&lt;/li&gt;
+        &lt;li&gt;Profit&lt;/li&gt;
+        &lt;li&gt;Is more important than&lt;/li&gt;
+        &lt;li&gt;Quality&lt;/li&gt;
+        &lt;li&gt;I tell you this:&lt;/li&gt;
+        &lt;li&gt;Once upon a time&lt;/li&gt;
+        &lt;li&gt;People made efforts to include each other in their societies&lt;/li&gt;
+        &lt;li&gt;But this will not be true in my era.&lt;/li&gt;
+        &lt;li&gt;This is a quick fix society&lt;/li&gt;
+        &lt;li&gt;Experts tell me&lt;/li&gt;
+        &lt;li&gt;Thirty years from now, there will still be people who can't use digital technology&lt;/li&gt;
+        &lt;li&gt;I do not concede that&lt;/li&gt;
+        &lt;li&gt;I will be part of a cyberspace suitable for everyone.&lt;/li&gt;
+        &lt;li&gt;In the future,&lt;/li&gt;
+        &lt;li&gt;Inaccessible websites and apps will remain the norm.&lt;/li&gt;
+        &lt;li&gt;No longer can it be said that&lt;/li&gt;
+        &lt;li&gt;We care about access and inclusion.&lt;/li&gt;
+        &lt;li&gt;It will be evident that&lt;/li&gt;
+        &lt;li&gt;My generation is only interested in themselves.&lt;/li&gt;
+        &lt;li&gt;It is foolish to presume that&lt;/li&gt;
+        &lt;li&gt;There is hope.&lt;/li&gt;
+        &lt;li&gt;And all of this will come true unless we choose to reverse it.&lt;/li&gt;
+    &lt;/ol&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

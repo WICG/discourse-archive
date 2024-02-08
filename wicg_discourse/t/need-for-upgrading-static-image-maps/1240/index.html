@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Need for upgrading static image maps</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Need for upgrading static image maps</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2015-12-17</div>
+          <div class="post_content">
+<p>Greeting to everybody.
+I’d like to discuss with authors an issue about image maps. The thought came to light when I realized that nowadays there is no way to make a native responsive image map (i.e. an image with hyperlinks associated to shaped areas of image itself). HTML spec is clear about that, and its implementation is consistent across legacy and modern user agents: <strong>HTML image maps built with a <code>&lt;map&gt;</code> element are not affected by CSS</strong>. That’s all.</p>
+<p>As I discovered soon, the fact that “image maps” are not responsive is not entirely true, as a similar result can be obtained through SVG. Of course I mean inline SVG, as including it as an <code>&lt;img src=""&gt;</code> attribute would disable hyperlinks, and iframe/object element would not allow the embedded document to be resized. I consider SVG a powerful tool <em>for the purpose it was created to fulfill</em>, but from a theoretical perspective, recurring to it in order to accomplish a native HTML goal seems weird. But there’s more. SVG syntax for such a construct involves having: the SVG subtree, <strong>an element for the image and a double series of elements for map areas</strong>. A double series, because each area has to be represented with a shape nested inside an <code>&lt;a&gt;</code> element. This is not going to change, of course, as SVG shapes are not meant to be hyperlinks and therefore will not have a <code>href</code> attribute. The only change in perspective, for what matters, is that SVG 2.0 is going to have an <code>&lt;a&gt;</code> element on its own (without recurring to <code>xlink</code> language). Also consider that some user agents interpret incorrectly hyperlink “box” borders, especially when more than one shape is nested inside one <code>&lt;a&gt;</code> element.</p>
+<p>Of course SVG allows the application of CSS, so that it can be used not only for responsive images, but probably also in CSS transform context.</p>
+<p>About responsive images, though, I can go a little bit further. HTML today provides authors a new powerful method for embedding adaptive images: the <code>&lt;picture&gt;</code> element. In order to use this feature with SVG for responsive maps with adaptive “context” images, though, a <code>&lt;foreignElement&gt;</code> tag is to be used inside SVG in order to include a  element. This complicates the SVG map subtree even further.</p>
+<p>What we are left with, today, is a <code>&lt;map&gt;</code> element that looks as it was included in living standard for a matter of backward compatibility, and an inefficient way to achieve the purpose for which the map element was meant. And the map element does it neatly (the subtree is ridiculously simple), easily (shapes are essential and consistent to define) and with the advantage of being able to apply the same image map to several images inside a single page. Yes, SVG can be used to produce a similar result. But the <code>&lt;map&gt;</code> element can be a compact, native <code>alternative</code> for it.</p>
+<p>The web is full of examples of JS scripts for making image map elements responsive. Unfortunately I suppose they will fail in applying CSS transform to <code>&lt;map&gt;</code> elements, or to make them work with <code>&lt;picture&gt;</code> elements.</p>
+<p>I proposed this issue to HTML Working Group as a specification bug, though it isn’t properly a bug. I was replied that there were no community/vendor interest about that. I don’t know whether this has ever been proposed, considered and/or discarded.</p>
+<p>I’d like to know what people and vendors think about 3 aspects of the <code>&lt;map&gt;</code> element “upgrade”.</p>
+<ol>
+<li>the map element is to be made responsive to CSS resizing/transform applied on context image.</li>
+<li>the map element is to be extended to <code>&lt;picture&gt;</code> elements, so it can work with adaptive images.</li>
+<li>CSS should apply to map element shapes in order to make them more interactive.</li>
+</ol>
+<p>From the bug I filed to HTML spec on GitHub you can follow links to the original HTML mailing list thread, including objections and example use cases: <br/>
+<a href="https://github.com/whatwg/html/issues/389" rel="nofollow noopener">Unresponsive image maps · Issue #389 · whatwg/html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2015-12-17</div>
+          <div class="post_content">
+<p>In the Maps for HTML Community Group, we are partially motivated by similar concerns about the HTML map element.</p>
+<p>Our objective is to develop a responsive web map element specification, and hopefully, eventually an element that supports cartographic applications.</p>
+<p>Have a look at the (custom element) <a href="http://maps4html.github.io/Web-Map-Custom-Element/" rel="nofollow noopener">prototype page</a>, which has links to the spec, github repos, the community home page etc.  Does that resemble what your needs are?  If so, you should join the Maps4HTML CG.  Also, please note that there is a web-mapping category on this forum, and it would be great to have discussion of the Maps4HTML work in there as well.  I have invited and will continue to invite the Web mapping community to discuss standards issues there, and yours seems to fit that concept, depending on what you’re doing with your image maps.  Thank you for this post.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-17</div>
+          <div class="post_content">
+<p>SVG <em>is</em> HTML, for all intents and purposes.  There’s no reason to be afraid of using it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2015-12-19</div>
+          <div class="post_content">
+<p>You are right, I was not precise when I talked about recurring to a different “language”. But you have to recognize that a SVG image map syntax is a little bit harder than native maps.</p>
+<p>In addition to this, the possible integration of SVG image maps with HTML <code>&lt;picture&gt;</code> element passes through the <code>&lt;foreignElement&gt;</code> tag, so the distinction remains significant. Al least until all SVG elements lose their content model specificity or in case <code>&lt;picture&gt;</code> is defined in the SVG 2.0 spec too.</p>
+<p>SVG is a great language for defining scalable vector images. But probably “easier” image map constructs could benefit of a lower level of complexity.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-19</div>
+          <div class="post_content">
+<p>The <code>&lt;picture&gt;</code> limitations are only temporary. The plan of record is to add <code>srcset</code> to <code>&lt;svg:image&gt;</code>, and let the HTML <code>&lt;picture&gt;</code> and <code>&lt;source&gt;</code> elements be used directly in SVG around an <code>&lt;svg:image&gt;</code>, just like they’re used in HTML around an <code>&lt;img&gt;</code>.  Then there’s no need to indirect through a <code>&lt;foreignContent&gt;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2015-12-20</div>
+          <div class="post_content">
+<p>I just hope that, together with these plans for SVG, an interest for the <code>&lt;map&gt;</code> element being upgraded can be tested with this thread.</p>
+<p>As you said, this is a plan. It seems that using SVG will allow a much wider set of options, but still, as <code>&lt;map&gt;</code> is not flagged as “obsolete” or “deprecated”, I guess that there should be plans for it, too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-12-21</div>
+          <div class="post_content">
+<p>Related <a href="https://github.com/whatwg/html/issues/389#issuecomment-166311161">comment</a> from <span class="mention">@zcorpan</span> on the HTML GH issue:</p>
+<blockquote>
+<p>Here’s a plan:</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>Change coords parsing to be more in line with gecko/blink/webkit instead of IE (bug 28148)</li>
+<li>Actually support non-integers in coords (maybe not really necessary but why not)</li>
+<li>Address use case (1) from the email by adding width and height attributes to map, which give the coordinate space, and this coordinate space is then stretched to fit the image. (This should make it easy to make image maps responsive; just copy the width/height attributes from the img and you’re done, no need to rewrite the coordinates to percentages or anything. It’s also feature-testable.)</li>
+<li>If the above is successful and we also want to address use case (2) from the email, add a usemap attribute to source, and switch image map when images switch.</li>
+</ul>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

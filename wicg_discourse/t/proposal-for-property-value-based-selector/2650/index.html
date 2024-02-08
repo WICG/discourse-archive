@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for property value based selector</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for property value based selector</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gazibara</div>
+          <div class="creation_date">2018-03-12</div>
+          <div class="post_content">
+<p>Hereby I propose a new type of selector, one that is based on used property values.</p>
+<p>Examples:</p>
+<p>There is plenty of ways to select an element based on source (like class selectors, ID selector, attribute selectors, etc.) and structure (siblings, children, descendants). There is plenty of ways to specify values for CSS properties. But there is no way to select an element if the used value of some of its CSS properties matches a given criterion.</p>
+<p>Image you want the set the top margin for the first block element. The :first-child selector matches any child.</p>
+<blockquote>
+<ul>
+<li>
+<blockquote>
+<p>*:first-child { margin-top: 2em; }</p>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<p>Another selector might be:</p>
+<blockquote>
+<ul>
+<li>
+<blockquote>
+<p>*:nth-child(1 of :matches(div,p,aside,…)) { … }</p>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<p>The problem here is that one has to enumerate a quite large list of supposedly block elements. No major implements the ‘of’ qualifier for :nth-child and :nth-last-child, so one would actually have to write a long list of full selectors. The main problem, however, is that the display property is not restricted to any element: display:block may be applied to any inline element while display:inline may be applied to any block element. In addition, some other properties force display to a predefined value (e.g. float forces display to block).
+A quite simple solution would be:</p>
+<blockquote>
+<ul>
+<li>
+<blockquote>
+<p>*:nth-child(1 of :style(display:block)) { … }</p>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<p>Example <span class="hashtag">#2:</span> Imagine you want a table cell to display text vertically but only if the cell is not wide enough to display the text horizontally. This would be quite easy to achieve with a selector like this:</p>
+<blockquote>
+<p>td:style(width &lt; 2.5ch) { writing-mode: sideways-lr; }</p>
+</blockquote>
+<p>A selector like this would match an element only if the used value of the width property (no matter if its fixed in previous declaration or is calculated automatically) is less than 2.5ch converted to pixels. A more sophisticated rule might use a combination of checks, e.g.</p>
+<blockquote>
+<p>:style(height &gt; 1px and width &lt; 2.5ch) { … }</p>
+</blockquote>
+<blockquote>
+<p>:style(1px &lt; width &lt; 2.5ch) { … }</p>
+</blockquote>
+<ul>
+<li>Operators &lt;, &gt;, &lt;=, &gt;=, = and &lt;&gt; would be applicable to properties that calculate to numbers like ‘width’ does;</li>
+<li>For properties whose values are strings the same operators as for the attribute selector would apply;</li>
+<li>For properties whose values are selected from a closed set of keywords, the only syntax allowed would be e.g. :style(display:block) and :not(:style(:block)).</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-03-12</div>
+          <div class="post_content">
+<p>It looks like you main use case here would be covered by element queries. Are there any other (major) use cases that can’t be done with the current proposals?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gazibara</div>
+          <div class="creation_date">2018-03-12</div>
+          <div class="post_content">
+<p>This is in fact a generalized proposal. The issues I have encountered in my practice are the two examples: how to apply styling to the first block child element and how to make a cell text turn sideways if the cell is too narrow and The first issue is easily solved with well structured markup (e.g. never use HTML like &lt;div&gt;some text, then some &lt;i&gt;italic&lt;/i&gt; text and finally &lt;p&gt;a standalone paragraph.&lt;/p&gt;&lt;/div&gt;). The second one, however, requires JavaScript which I would like to avoid.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-03-12</div>
+          <div class="post_content">
+<p>The second example you mentioned would be solved with element queries, once (if) implemented.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

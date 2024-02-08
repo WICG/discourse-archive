@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Whitespace is hard and buggy. Can we normalize it?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Whitespace is hard and buggy. Can we normalize it?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-04-11</div>
+          <div class="post_content">
+<p>Whitespace is a difficult topic for many reasons, not least of which is that it’s hard to see what others are talking about because, well, there’s nothing there to see.</p>
+<p>One pain point I consistently run into is the inconsistency between what HTML calls a “space character” and what JavaScript matches with it’s regex <code>\s</code>.</p>
+<p>In HTML, classes are separated by <a href="https://www.w3.org/TR/html51/single-page.html#space-characters">“space characters”</a>, which are explicitly:</p>
+<ul>
+<li>tab (U+0009)</li>
+<li>line feed (U+000A)</li>
+<li>form feed (U+000C)</li>
+<li>carriage return (U+000D)</li>
+<li>space (U+0020)</li>
+</ul>
+<p>In JavaScript <code>\s</code> matches*:</p>
+<ul>
+<li>character tab (U+0009)</li>
+<li>line feed (U+000A)</li>
+<li>line tab (U+000B)</li>
+<li>form feed (U+000C)</li>
+<li>carriage return (U+000D)</li>
+<li>space (U+0020)</li>
+<li>no-break space (U+00A0)</li>
+<li>ogham space mark (U+1680)</li>
+<li>mongolian vowel separator (U+180E)</li>
+<li>en quad (U+2000)</li>
+<li>em quad (U+2001)</li>
+<li>en space (U+2002)</li>
+<li>em space (U+2003)</li>
+<li>three-per-em space (U+2004)</li>
+<li>four-per-em space (U+2005)</li>
+<li>six-per-em space (U+2006)</li>
+<li>figure space (U+2007)</li>
+<li>punctuation space (U+2008)</li>
+<li>thin space (U+2009)</li>
+<li>hair space (U+200A)</li>
+<li>line separator (U+2028)</li>
+<li>paragraph separator (U+2029)</li>
+<li>narrow no-break space (U+202F)</li>
+<li>medium mathematical space (U+205F)</li>
+<li>ideographic space (U+3000)</li>
+<li>zero width no-break space (U+FEFF)</li>
+</ul>
+<p><sub>* I’ve probably made a mistake with this list, it’s hard to find a definitive source that’s clear.</sub></p>
+<p>And so, because HTML’s definition of “space characters” doesn’t match JavaScript’s implementation of what are essentially “space characters”, there are lots and lots of bugs implementing anything that should be separated by space characters.</p>
+<p>I could try to play whack-a-mole, <a href="https://bugs.jquery.com/ticket/13835" rel="nofollow noopener">such as when I reported the bug in jQuery’s hasClass implementation</a>, but these sorts of issues crop up all over the place, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/classList" rel="nofollow noopener">such as on MDN’s suggested shim for the <code>Element.classList</code> api (oops)</a>.</p>
+<p>Playing whack-a-mole can be fun for a while, but it quickly becomes repetitive and tiresome. In all honesty, I don’t think anyone will ever naturally run into the bugs with the <code>classList</code> shim’s implementation because I don’t think any developer in their right mind would attempt to separate classes with characters other than:</p>
+<ul>
+<li>space</li>
+<li>tab</li>
+<li>line feed</li>
+<li>carriage return</li>
+</ul>
+<p>which is also why jQuery could be so popular for so long while having such a simple bug in what is arguably one of the most-used features of the library (it affected <code>addClass</code> and <code>removeClass</code> in addition to <code>hasClass</code>).</p>
+<p>So, for the sake of simplifying things, can we redefine HTML’s space characters to be equivalent to whatever <code>\s</code> matches in JavaScript? It would simplify things for developers to be able to use <code>\s</code>, and as far as compatibility is concerned it would implicitly “fix” what are currently buggy implementations that naively assumed <code>\s</code> <em>was</em> an acceptable match for HTML’s “space characters”.</p>
+<p>As for the biggest concern about backwards compatibility breaking existing sites, I don’t have the data to support the change either way. If I had to guess, there simply aren’t sites that are making use of unicode whitespace characters as part of class names because it’d be silly, and any that might, are probably doing so as a sort of tech demo.</p>
+<p><strong>tl;dr:</strong><br/>
+“space characters” in HTML should be redefined to be whatever JavaScript uses for its <code>\s</code> regex pattern to simplify implementation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-12</div>
+          <div class="post_content">
+<p>HTML’s “whitespace” is simply the 5 ASCII whitespace characters.  <a href="https://drafts.csswg.org/css-syntax/#whitespace">CSS matches it exactly, too.</a></p>
+<p>JS instead tracks the Unicode definition of whitespace, and theoretically updates its definition as Unicode releases new versions.  It made a different choice, but it’s not necessarily a better one - some of the whitespace chars in Unicode are very non-obvious, particularly when everything else is in ASCII.  There’s a discussion going on right now in JS about whether to lock down the definition of whitespace to a specific set - if that goes thru, then JS’s definition of whitespace won’t match the <code>\s</code> regex class either.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2016-04-14</div>
+          <div class="post_content">
+<p>I don’t think HTML can reasonably change what its space characters are. They are used all over the place, not just in <code>class=""</code>. How about adding a regexp flag or something to JS that redefines <code>\s</code> to be HTML’s space characters?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-04-15</div>
+          <div class="post_content">
+<p>Javascript’s <code>\s</code> seems similar to <code>\p{White_Space}</code> whereas PCRE’s <code>\s</code> is equal to POSIX <code>[:space:]</code>, i.e. <code>[\t\v\f \n\r]</code> – except for vertical tab <code>\v</code> U+000B, this corresponds to the defintion used in HTML and CSS. The actual definition from <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-characterclassescape" rel="nofollow noopener">ECMA-262:2015</a>, however, reads:</p>
+<blockquote>
+<p>The production <em><code>CharacterClassEscape</code></em> <code>:: s</code> evaluates by returning the set of characters containing the characters that are on the right-hand side of the WhiteSpace (11.2) or LineTerminator (11.3) productions.</p>
+</blockquote>
+<p>That’s <code>TAB, VT, FF, SP, NBSP, ZWNBSP, USP</code> and <code>LF, CR, LS, PS</code>, which result in <code>[:space:\xA0\xFEFF\p{GC=Zs}\x2028\x2029]</code>, because <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-white-space" rel="nofollow noopener"><code>WhiteSpace</code></a> actually excludes all other characters that have the <code>White_Space</code> property but are not classified in category <code>Zs</code> “Separator, space”.</p>
+<p>I believe it would be better and more helpful if JS provided a shorthand character class that either exactly matched the HTML/CSS definition of whitespace or the PCRE one. I’m not sure which letters would still be available for that purpose, if any. I think it has been proposed before (and dismissed, for some reason) to include VT in W3C’s whitespace definition.</p>
+<aside class="onebox wikipedia">
+<header class="source">
+<a href="https://en.wikipedia.org/wiki/Regular_expression#Character_classes" rel="nofollow noopener" target="_blank">en.wikipedia.org</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:220/127;"><img class="thumbnail" height="127" src="//upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_river_effect_in_justified_text.jpg/220px-The_river_effect_in_justified_text.jpg" width="220"/></div>
+<h3><a href="https://en.wikipedia.org/wiki/Regular_expression#Character_classes" rel="nofollow noopener" target="_blank">Regular expression | Character classes</a></h3>
+<p>The character class is the most basic regex concept after a literal match. It makes one small sequence of characters match a larger set of characters. For example, [A-Z] could stand for the uppercase alphabet in the English language, and \d could mean any digit. Character classes apply to both POSIX levels.
+ When specifying a range of characters, such as [a-Z] (i.e. lowercase a to uppercase Z), the computer's locale settings determine the contents by the numeric ordering of the character encoding...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-04-15</div>
+          <div class="post_content">
+<p>As a note:</p>
+<p>I’m not against redefining <code>\s</code> to match HTML better, or redefining <code>\s</code> a bit and redefining HTML’s “space characters” a bit (such as to include <code>\v</code>), but the problem I see is that we’ve got this situation of <a href="https://xkcd.com/927/" rel="nofollow noopener">14 competing standards</a>, and I’m pretty certain some of them are good enough to rally around. I’d like to avoid creating an entirely new standard, but even just discussing what standards exist and what benefits they each offer would be advantageous.</p>
+<p>My actual expectations are that nothing will change with the standard excuse of “we might break something so we can’t risk fixing it!”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-04-15</div>
+          <div class="post_content">
+<p>A new character class makes sense here, having <code>\s</code> work differently in different browsers would be a nightmare, I’d suggest rather than coming up with completely our own using the vim class from the link you gave of <code>\_s</code>.</p>
+<p>While looking at the possibility of adding to the Regex classes I’d be up for including \h and \v for horizontal and vertical whitespace too.</p>
+<p>The main downside of changing Regex like this is compatibility and testing, authors need a way of knowing if they can use these functions. The easiest way, and allowing for future Regex changes if needed, would be to add <code>Regex.supports</code> which could be passed a single token and return true or false based on if it’s a token with any given meaning.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/803_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">r12a</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<p>It seems to me also that the needed definition of whitespace depends on the context. For example, it may make sense to treat Mongolian vowel separator as \s for searching or other regex functions (i’m not sure), but i doubt it would make sense to do so for class name separation, since this character is not a word separator (see <a href="http://r12a.github.io/scripts/mongolian/block#char180E">http://r12a.github.io/scripts/mongolian/block#char180E</a>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/r12a/40/803_1.png" width="20"/> r12a:</div>
+<blockquote>
+<p>it may make sense to treat Mongolian vowel separator as \s for searching or other regex functions (i’m not sure), but i doubt it would make sense to do so for class name separation</p>
+</blockquote>
+</aside>
+<p>I’ve wondered about no-break space (U+00A0) which is a space so it makes sense to be matched as a space character (and <em>is</em> matched by <code>\s</code>) but is explicitly not a separator, so it would make sense to <em>not</em> use it for separating values in <code>class</code> attributes.</p>
+<p>That said, at some point we need to move from the theory discussion into a practical discussion. I don’t have the appropriate data to make any significant argument, but I’d like to know how frequently space characters other than <code>[ \t\r\n]</code> are used in <code>class</code> attributes, or anywhere else that HTML’s “space characters” apply. If they’re never used, then changing the spec becomes a “simple” matter of implementation.</p>
+<p>I imagine the number of webpages that rely on such behavior are limited, but I defer to the data.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<p>I’ve just reported <a href="https://github.com/jquery/jquery/issues/3072" rel="nofollow noopener">yet another jQuery bug regarding whitespace handling</a>, and it’s only reaffirming my belief that the current definition of “space characters” doesn’t match practical usage.</p>
+<p>I firmly believe changing the definition so that the theoretical definition (<code>/[\t\n\f\r ]/</code>) matches the practical definition (<code>/\s/</code>) of “space characters” will have negligible negative impact, and will significantly improve the web by reducing bytes in popular libraries which are downloaded millions of times a day.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<p>The other way around is much more likely to be palatable - as others have said, HTML and CSS both agree on whitespace charactes, and there are literally trillions of HTML documents in existence; changing something as fundamental as whitespace is likely to have consequences.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>changing something as fundamental as whitespace is likely to have consequences</p>
+</blockquote>
+</aside>
+<p><span class="mention">@tabatkins</span> So how can we gather data to determine which way is less impactful? More importantly, where do I go from here? I can identify the issue, but I don’t know what information would be necessary to convince people that any change is worthwhile.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<p>If you’re wanting to go the “change regex to match what html/css do”, you’re gonna want to email <a href="mailto:es-discuss@mozilla.org">es-discuss@mozilla.org</a>.  Cite the bugs that people keep having with whitespace, see if it gets you anywhere.</p>
+<p>If you want to do the “get HTML/CSS to change to match regex”, best is to open a bug <a href="https://github.com/whatwg/html">on HTML</a> and start the conversation there. Again, cite the bugs people are having with whitespace.  CSS should be able to follow HTML pretty easily.</p>
+<p>I’m not confident you’ll be able to get either change thru, but I think the first has higher changes than the second.  An alternative approach might be to suggest the addition of a new regex escape that only capture ASCII whitespace, or a flag that reinterprets \s and \S to only care about ASCII whitespace.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="1436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>An alternative approach might be to suggest the addition of a new regex escape that only capture ASCII whitespace</p>
+</blockquote>
+</aside>
+<p>+1.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2016-04-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="1436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>I’m not confident you’ll be able to get either change thru</p>
+</blockquote>
+</aside>
+<p>It’s a good thing I’m stubborn (or is it?).</p>
+<aside class="quote" data-post="12" data-topic="1436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>An alternative approach might be to suggest the addition of a new regex escape that only capture ASCII whitespace, or a flag that reinterprets \s and \S to only care about ASCII whitespace.</p>
+</blockquote>
+</aside>
+<p>That sounds pretty reasonable. Probably would want to suggest two flags given that <code>\u00A0</code> is in the extended ASCII character set. I’d be fine with something like <code>/\s/a</code> and <code>/\s/x</code> for ASCII and extended ASCII matching respectively. Of course, then there’s the question of what happens when you have something like <code>/\s/axu</code>…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-24</div>
+          <div class="post_content">
+<blockquote>
+<p>It’s a good thing I’m stubborn (or is it?).</p>
+</blockquote>
+<p>Yeah, nothing wrong with being stubborn, it’s needed to get difficult things thru. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/>  Just setting up expectations appropriately, that I believe this is a low-success endeavor. Doesn’t mean it’s not worth trying if you’ve got the time.</p>
+<blockquote>
+<p>Probably would want to suggest two flags given that \u00A0 is in the extended ASCII character set.</p>
+</blockquote>
+<p>I’d stay away from anything about U+A0.  It is <em>not</em> a space character in HTML or CSS, so your primary argument (convergence between the web-platform languages) doesn’t apply at all. Arguing for a third category solely because you think it might be useful to recognize an additional character as a space will distract from and weaken your overall position.</p>
+<blockquote>
+<p><code>/\s/x</code></p>
+</blockquote>
+<p>Note that x is already a regex flag, which makes literal whitespace be ignored in the pattern so you can space things out for readability.</p>
+<blockquote>
+<p><code>/\s/axu</code></p>
+</blockquote>
+<p>The u flag just turns on unicode-aware ranges and escapes.  It wouldn’t have any interaction with your “a” flag.  I recommend, again, not even proposing a second flag.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-04-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="15" data-topic="1436">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>/\s/x</p>
+<p>Note that x is already a regex flag, which makes literal whitespace be ignored in the pattern so you can space things out for readability.</p>
+<p>/\s/axu</p>
+<p>The u flag just turns on unicode-aware ranges and escapes.  It wouldn’t have any interaction with your “a” flag.  I recommend, again, not even proposing a second flag.</p>
+</blockquote>
+</aside>
+<p>The other problem I’m seeing with the flag approach versus a new character class is that it wouldn’t be possible to have matches against both HTML whitespace and unicode whitespace (not entirely sure what situations you’d want this, maybe attempting to invoke Zalgol by parsing HTML in it, but still…)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

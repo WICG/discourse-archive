@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A ZIP API in the browser?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A ZIP API in the browser?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-19</div>
+          <div class="post_content">
+<p>I have for a long time heard from certain segments of the community that they would appreciate being able to do various “zip” related things in the browser. The exact ask is fuzzy, often coming in the form:</p>
+<ul>
+<li>
+<p>I’d like to have some version of the capabilities provided by <a href="http://nodejs.org/api/zlib.html">Node’s zlib API</a>. To summarize, that includes:</p>
+<ul>
+<li>GZIP compression/decompression</li>
+<li>DEFLATE compression/decompression</li>
+<li>“Raw” DEFLATE compression/decompression (I don’t know what this is)</li>
+<li>Both streaming versions of these, and binary data chunk versions (i.e. one large ArrayBuffer -&gt; another smaller/larger ArrayBuffer).</li>
+</ul>
+</li>
+<li>
+<p>I’d like to be able to create “.zip” files in my browser, so that I can prompt users to download them.</p>
+</li>
+<li>
+<p>An example use case would be clicking “export these statistics to a zip of csv files”</p>
+</li>
+<li>
+<p>This also allows the creation of .zip-based files, for example Microsoft Office files, or .cbz comic book files, or most Ebook formats</p>
+</li>
+</ul>
+<p>You can accomplish these today using user-space libraries, e.g. <a href="http://gildas-lormeau.github.io/zip.js/">zip.js</a> or zlib.js (“new users can only put two links in a post”). There are probably some Emscripten and/or asm.js versions floating around that are even very fast.</p>
+<p>However, I think it would be valuable to provide these natively for the web platform. To me, it’s especially compelling to think of all that juicy C(++) code being shipped with every browser already, at least for the zlib case, which with just a bit of extra effort could be exposed for web platform authors. That way, you wouldn’t need to include a large script to download, or have to deal with web workers, or anything of the sort.</p>
+<p>I often this kind of API as my favorite example of things that would be perfect to add to the web platform, but nobody has made the time to gather implementer interest or spec them yet.</p>
+<p>As such I was hoping to get the ball rolling on this conversation. What do people think of the above asks and use cases? Are any implementers interested in this? Are there objections stemming from the fact that you can do this in JS today, even if it’s not as fast or seamless as you might like? Has this secretly been something you’ve always dreamed about and never dared to ask for?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2014-05-19</div>
+          <div class="post_content">
+<p>Deflate and inflate are the hard parts to implement.  I’m currently using the pako library from nodeca on github.  It’s fast, smallish, and written in easy-to-consume common-js format.</p>
+<p>If there was such an API in the browser, I would want just the basics.  I would make it sync, but make it available to web workers so that it could be offloaded along with other cpu intensive work that usually surrounds this kind of work.</p>
+<p>For JS-Git I need non-buffered deflate and inflate.  I don’t need raw-deflate or gzip style deflate, but I’m sure others would like these extra formats.  I also need a form of inflate where I can feed it bytes a chunk at a time and the parser tells me when the end of the deflate stream has been reached and gives me back the extra bytes.  I don’t need the output streaming, but others might.  We should probably have streaming inflate and deflate for completeness and symmetry.</p>
+<p>If it is helpful I could draft up a concrete API for discussion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">johnallsopp</div>
+          <div class="creation_date">2014-05-19</div>
+          <div class="post_content">
+<p>A use case I’ve explored is for localStorage. Use of existing JS zip libs for images as dataURLs is unrealistically slow I’ve found. So it’s a +1 from me <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1829_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mathias</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>+1</p>
+<p>Why should this API only be available in the browser, though? I understand browsers currently have things like deflate compression built-in while stand-alone ECMAScript engines don’t, but if feasible, I’d prefer to add these features to ECMAScript so that they’re available in Node.js etc. as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>In the past the feedback on this has been “it can be done in script, even if optimisations are needed we should see what comes up” and “this would need streams”.</p>
+<p>I think we’re at the point where we ought to move ahead with what we have. +1 to get the ball rolling.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p><span class="mention">@mathias</span>: I don’t think this is in any way a language feature. It might be an API that multiple environments implement, like <code>setTimeout</code>, but it wouldn’t be part of the language or VM.</p>
+<p><span class="mention">@creationix</span> given the positive feedback here, I think at least a first-pass draft of a concrete API would be very helpful. Your experience as someone with a concrete use case would be invaluable :). And your tendency to start with just the basics sounds good too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1829_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mathias</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="14">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p><span class="mention">@mathias</span>: I don’t think this is in any way a language feature. It might be an API that multiple environments implement, like setTimeout, but it wouldn’t be part of the language or VM.</p>
+</blockquote>
+</aside>
+<p>Why not? Can you elaborate on this? <code>setTimeout</code> is an interesting example; <a href="https://gist.github.com/annevk/6bfa782752dde6acb379" rel="nofollow noopener">ideally that should just be part of ECMAScript too</a>.</p>
+<p>Every feature that gets standardized is an opportunity to increase interoperability between ECMAScript engines in browsers and non-browser JS engines. It would be a shame to dismiss opportunity right from the start.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>I don’t see why it needs to be either. It can be specified on its own, then if ES wants to make it a language requirement it can just reference it. There’s no reason that specifying it on its own makes it browser-only.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1835_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sindresorhus</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="14">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p><span class="mention">@mathias</span>: I don’t think this is in any way a language feature. It might be an API that multiple environments implement, like setTimeout, but it wouldn’t be part of the language or VM.</p>
+</blockquote>
+</aside>
+<p>It might make sense as a part of the JS standard library:<br/>
+<a class="onebox" href="http://wiki.ecmascript.org/doku.php?id=harmony:modules_standard" rel="nofollow noopener" target="_blank">http://wiki.ecmascript.org/doku.php?id=harmony:modules_standard</a></p>
+<p>For example in the Python standard library: <a href="https://docs.python.org/3/library/archiving.html" rel="nofollow noopener">https://docs.python.org/3/library/archiving.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>Quick question:  What do you want to use for binary data?  “raw” encoded strings where each character is a char-code between 0 and 255 or Unit8Array or something else?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>ArrayBuffer is the general plan.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<pre><code class="lang-auto">// Normal deflate as a simple sync function
+var deflated = zlib.deflate(data);
+var inflated = zlib.inflate(deflated);
+
+// Variants for the other two common encodings
+zlib.deflateRaw(data);
+zlib.inflateRaw(data);
+zlib.gzip(data);
+zlib.gunzip(data);
+
+// Streaming Interface
+var deflater = zlib.deflateStream();
+var out = deflater.write(chunk);
+out = deflater.write(chunk);
+out = deflater.flush();
+
+// When you know how many bytes to send
+var inflater = zlib.inflateStream();
+var out = inflater.write(chunk);
+out = inflater.write(chunk);
+out = inflater.flush();
+
+// When you don't know where the deflate stream ends
+var inflater = zlib.inflateStream(onEnd);
+var out = inflater.write(chunk);
+out = inflater.write(chunk)
+function onEnd(extra) {
+  // extra is the extra bytes from the last chunk that don't belong.
+  // It could be zero-byte if you fed in the exact amount
+}
+// And then variants for the other two formats
+// Or there could be an options hash in all these interfaces if that was
+// perferred over multiple named functions.
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>The exact stream interface isn’t important.  What matters to me is the <code>onEnd</code> in the last example.  I need this in js-git where I have a stream of unknown length and unknown number of bytes in that stream are deflate data.  I don’t know how many bytes to hand off to inflate.  The only way to know is to perform the actual inflate which knows internally when it’s state machine reaches the end state.</p>
+<p>For performance, it might make more sense if the stream didn’t constantly flush output data.  Instead something like:</p>
+<pre><code class="lang-auto">var inflater = zlib.inflateStream();
+inflater.write(chunk);
+inflater.write(chunk);
+var out = inflater.flush();
+inflater.write(chunk);
+out = inflater.end();
+</code></pre>
+<p>Here flush gives you the data that’s ready to be emitted.  End is flush <em>and</em> check to tell the parser there will be no more data.  This will throw if more data is expected, so <code>end</code> is like a validator.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1833_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frkay</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>For your information Deflate is name of the main compression scheme used within ZIP archives.
+Raw Deflate is the bare minimum compressed data stream (no header of any kind, no checksum), usually it is used with Zlib warpers (small header and checksum), GZIP defines the file format associated to .gz files (it adds a GZIP header, a file name, a time stamp and the original file size) the sole compression method used by GZIP is Deflate.
+All these are defined by RFC 1951 (Deflate), RFC 1950 (Zlib) and RFC 1952 (GZIP).
+But Deflate is an aging compression method, over time new ones (producing smaller compressed data, not really faster) have been added to ZIP archives, Deflate64, BZIP2, PPMD and even LZMA. <a href="http://en.wikipedia.org/wiki/Zip_(file_format)#Compression_methods" rel="nofollow noopener">http://en.wikipedia.org/wiki/Zip_(file_format)#Compression_methods</a>
+Supporting only Deflate would thus only cover a subset of ZIP and it the implementation would appear to be stuck in the 90’s.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/89_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">madcampos</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>while i realy like the idea of this i think that with newer methods comming to play we run into the same problems that video, audio, webrtc, picture and all this stuff will have a few years from now.
+As an api i think it should provide basic functions that all this methods use, like low level actions, huffman, dictionaries search and the like. i think that with the ongoing optimizations we can do much but we also need ways to control stuff like memory allocation or types so that this kind of algorithm run as fast as possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>That is a great point. Hmm.</p>
+<aside class="quote" data-post="15" data-topic="14">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/madcampos/40/89_1.png" width="20"/> madcampos:</div>
+<blockquote>
+<p>we also need ways to control stuff like memory allocation or types so that this kind of algorithm run as fast as possible.</p>
+</blockquote>
+</aside>
+<p>This is largely solved already by asm.js and asm.js-like techniques, i.e. using a fixed-size arraybuffer and manipulating the memory there manually instead of using JS’s native memory semantics, and using “type annotations” like <code>x | 0</code> for integers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1827_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brianleroux</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>Ah! was driving me nuts I couldn’t login. Anyhow, that’s fixed. There is a Cordova plugin for this: <a href="http://plugins.cordova.io/#/package/org.chromium.zip" rel="nofollow noopener">http://plugins.cordova.io/#/package/org.chromium.zip</a></p>
+<p>I’ve used it. Its helpful for grabbing assets progressively. (Say: level 2 in a game.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2774_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomByrer</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>How about this API? <a href="http://stuk.github.io/jszip/documentation/api_jszip.html" rel="nofollow noopener">http://stuk.github.io/jszip/documentation/api_jszip.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1824_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mehdishojaei</div>
+          <div class="creation_date">2014-05-25</div>
+          <div class="post_content">
+<p>I think zip functionality must be an ECMAScript feature, as <span class="mention">@mathias</span> mentioned.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2014-05-26</div>
+          <div class="post_content">
+<p>I think it would be interesting to have some metrics about the time it takes to do some basic unzip operations on different systems in JS and natively. It would also be great to have a reference implementation and see how it runs on top of FTLJIT or ASM.js.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

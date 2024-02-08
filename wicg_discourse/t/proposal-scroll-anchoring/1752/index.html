@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Scroll Anchoring</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Scroll Anchoring</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1099_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">skobes</div>
+          <div class="creation_date">2016-10-10</div>
+          <div class="post_content">
+<p>This is a proposal to transfer the <a href="https://github.com/skobes/ScrollAnchoring" rel="nofollow noopener">ScrollAnchoring</a> repo to the WICG.</p>
+<p>Scroll anchoring is a new web platform behavior that adjusts the scroll position to prevent visible jumps when content changes above the viewport (for example, ad insertion or images loading).</p>
+<p>It introduces CSS <code>overflow-anchor</code> as an opt-out for developers.</p>
+<ul>
+<li><a href="https://github.com/skobes/ScrollAnchoring/blob/master/explainer.md" rel="nofollow noopener">Explainer</a></li>
+<li><a href="https://cdn.rawgit.com/skobes/ScrollAnchoring/master/spec.html" rel="nofollow noopener">Draft spec</a></li>
+<li><a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/TbuxbOtyZvk/EwUSJrQ6AQAJ" rel="nofollow noopener">Blink “Intent to Implement”</a></li>
+</ul>
+<p>(A copy of the explainer and draft spec are also available in the WICG <a href="https://github.com/WICG/interventions" rel="nofollow noopener">Interventions</a> repo, but we’d like to make it a separate repo for issue tracking.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-10-11</div>
+          <div class="post_content">
+<p>100% in favor. With regards to the CSS attribute values, I think <em>float</em> and <em>anchor</em>, rather than <em>none</em> and <em>visible</em> could work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chenzx</div>
+          <div class="creation_date">2016-10-22</div>
+          <div class="post_content">
+<p>There are 2 situations which current scroll anchoring mechanism cannot solve：</p>
+<p>1、if the screen(visual viewport) is currently all of text paragraph, that is to say, no DOM nodes happen to stay there inside of screen, scroll anchoring will not work.
+To solve this, better to use some Hit-test mechanism to select a Visible Position based on text characters,  the text-wrap in Opera’s chromium based browser kernel code implements this;</p>
+<p>2、even with switching from DOM node based scroll anchoring to Visible Position based, there is still a usability loss potentially: if current screen doesn’t display any text or dom nodes, but display some CSS generated contents, or borders、blanks、canvas(size bigger than screen size) etc. This corner case will be really difficult.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1099_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">skobes</div>
+          <div class="creation_date">2016-10-27</div>
+          <div class="post_content">
+<p>chenzx: If text fills the viewport, the DOM text node corresponding to that text will be selected as the anchor node.  Scroll anchoring will then adjust correctly for changes to DOM content preceding the text node.</p>
+<p>It won’t adjust in response to changes inside the text node itself, for example adding a sentence at the beginning of the text (even if that part of the text is above the viewport).  But that is not a common scenario.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-05</div>
+          <div class="post_content">
+<p>Is there a provision in the scroll-anchoring spec for the initial scroll position when content is loaded (for instance, to start with the last element in a container scrolled into view, or with scrolling starting in the center of the element)? Could there be?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-11-05</div>
+          <div class="post_content">
+<p>No, that’s an orthogonal issue to the problems that Scroll Anchoring is solving.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2016-12-02</div>
+          <div class="post_content">
+<p>Moved: <a href="https://github.com/WICG/ScrollAnchoring">https://github.com/WICG/ScrollAnchoring</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

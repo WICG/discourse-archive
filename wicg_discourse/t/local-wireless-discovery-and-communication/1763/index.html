@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Local Wireless Discovery and Communication</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Local Wireless Discovery and Communication</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Somnid</div>
+          <div class="creation_date">2016-10-17</div>
+          <div class="post_content">
+<p>The web really needs local networking/discovery abilities to put it at parity with native apps. What I’d like to see is an API that allows the ability to transfer arbitrary data between devices over local wireless.  For example, I’d like to make a podcast app, but that app should sync your subscriptions, listened to items and progress between two devices, say phone and desktop.  Typically this would be accomplished via a web service, however there are a number of problems with this:</p>
+<ul>
+<li>Hosting costs money, perhaps not much for metadata but imagine later I wish to transfer the actual podcast data it can get big quickly.</li>
+<li>The service might be inaccessable (server goes down, user maybe experiencing connectivity issues).</li>
+<li>The host is responsible for privacy considerations, and the user must trust them.</li>
+</ul>
+<p>Currently the web does not provide anything that accomplishes something like this.  There are a few avenues available now:</p>
+<ul>
+<li>Basic fetches to a webserver (issues above)</li>
+<li>Visual data transfer (e.g. QR).  This is not sufficient for anything more than trivial, very short range data transfers and requires considerably complex libraries.</li>
+<li>Audio data transfer (e.g. ultrasonic communication).  This can be prone to error, not suitable for large transfers, and requires complex libraries.</li>
+<li>Web RTC.  This gets us about halfway there.  The hosting goes down considerably and the transfers are between peers.  The main problem is it’s still dependent on some infrastructure, it wouldn’t work where the user has no connectivity or where connectivity is limited.</li>
+<li>Web Bluetooth.  Since this can only connect to peripherals, it cannot be used to communicate arbitrarily between apps on devices.</li>
+<li>Web USB.  This requires that the device itself allows pages to connect to it which the app has no control over.  Also wires.</li>
+<li>Web NFC.  Short range and low bandwidth.</li>
+</ul>
+<p>My example on the surface might seem a little unconvincing but there are plenty of other usecases like:</p>
+<ul>
+<li>Mesh networking (chat, file transfers, IoT etc)</li>
+<li>Perhipheral web apps that communicate to a main app (ie use phone as a remote)</li>
+<li>Local multiplayer in games (handheld consoles have always supported this)</li>
+<li>Privacy focused apps where the user wouldn’t trust a cloud service</li>
+<li>Apps that want good offline tolerance.  Full internet access can be seen as a progressive enhancement to local networks.</li>
+</ul>
+<p>I’m not any sort of expert on wireless networking but I imagine this could be built on Wifi Direct.  It might even be the case that the device must go offline to accomplish this task (depending on capibilities) which seems okay if it’s backed by a service worker.</p>
+<p>I imagine the security model would pose most of the questions.  I envision something like having the pages need to manually signal they want to be discoverable and then requiring that connecting apps on each device must have matching domains but obviously there’s probably a lot more there.</p>
+<p>The API I’d be thinking of would something like:</p>
+<pre><code class="lang-auto">navigator.makeDiscoverable(advertisedMetaData);
+
+navigator.findDevices(advertisedMetaDataFilter).then(listOfDevices =&gt; {
+	listOfDevices[0].connect().then(connection =&gt; {
+		connection.onmessage = () =&gt; {};
+		connection.postMessage(...) //like websocket/broadcast channel etc.
+	})
+})
+</code></pre>
+<p>Anyway I haven’t seen any proposals so far for something like this but I feel it must have at least come up at some point, is there anything out there right now? Now that WebBluetooth and WebUSB are paving the way for more hardware based APIs it sounds like much less of jump to have something like this in the Web toolbox. What would be the interest level?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-10-18</div>
+          <div class="post_content">
+<p>You might want to take a look at: <a href="https://flyweb.github.io/spec/" rel="nofollow noopener">https://flyweb.github.io/spec/</a></p>
+<p>This seems to have similar goals to what you are after, it’s not currently in the WICG but perhaps it could be? /cc <span class="mention">@marcosc</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/583_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinthomson</div>
+          <div class="creation_date">2016-10-18</div>
+          <div class="post_content">
+<p>Flyweb is a long way from ready at this stage, even for incubation.  It turns out to be really hard to get the security and privacy aspects of this nailed down.  <span class="mention">@Somnid</span> wants something less than what flyweb is looking at, but even that is very difficult to achieve on the web.  Start with the question: how do I know that this is really my kettle?</p>
+<p>It’s interesting how most of the pieces have been around for <a href="https://tools.ietf.org/html/rfc6763" rel="nofollow noopener">ages</a>, but the security architecture remains an unsolved mystery.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Somnid</div>
+          <div class="creation_date">2016-10-18</div>
+          <div class="post_content">
+<p>I’d be curious to know more about the particulars of the implementation pain points.  Device identity seems to have been a mostly solved problem for Bluetooth typically via PIN codes, but QR and NFC should work as well.  This may reduce some of the use-cases to initial line-of-sight and to devices of a certain complexity but if we did that does it help at all?  I’d imagine a good starting demo feature set would be just the ability to ad-hoc pair two phones for a local chat app.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1233_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rektide</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>Opera once upon a time shipped the <a href="https://www.w3.org/TR/2014/WD-discovery-api-20140220/">Network Discovery API</a>, which can tell you UPnP and ZeroConf services in the area.</p>
+<p>In a smaller scope, I continue to work to giving a way for services to announce themselves within the browser, allowing them to be discovered by other web pages. I initially proposed discovery for <a href="https://github.com/mkruisselbrink/navigator-connect/issues/1" rel="nofollow noopener">navigator-connect</a> (navigator-connect was replaced latter by foreign-fetch), and have recently been doing a follow-up implementation on that idea.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

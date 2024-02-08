@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] &lt;e&gt;: an alternative to &lt;div&gt; as a generic element for smaller file sizes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] &lt;e&gt;: an alternative to &lt;div&gt; as a generic element for smaller file sizes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alecrios</div>
+          <div class="creation_date">2019-10-17</div>
+          <div class="post_content">
+<p>Consider a web page with several thousand <code>&lt;div&gt;</code> elements, each with an opening and closing tag. The HTML file could be considerably smaller if the tag name had a single letter rather than three.</p>
+<p>I’d like to propose a new element, <code>&lt;e&gt;</code>, which would be functionally identical to <code>&lt;div&gt;</code> but far better suited as a generic DOM node due to its compactness.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2019-10-17</div>
+          <div class="post_content">
+<blockquote>
+<p>Consider a web page with several thousand <code>&lt;div&gt;</code> elements, each with
+an opening and closing tag. The HTML file could be considerably
+smaller if the tag name had a single letter rather than three.</p>
+</blockquote>
+<p>It turns out that gzip-style string-table compression means there’s
+really no difference in transmission data.</p>
+<p>For browser memory, the DOM is so vast that a two-character difference
+is insignificant.</p>
+<p>For disk storage uncompressed on a server, a single image file would
+dwarf any savings you could make.</p>
+<p>A document with, say, ten thousand div elements, would save four octets
+(in start and end tags) for each of them, so 40,000 bytes - but a
+document with only a single paragraph of text per div would be tens of
+megabytes in size. I have such a document in fact: a 32-volume
+encyclopedia of biography, and it’s about 50 MBytes in XML; i use XSLT
+to make a static Web site with one file, one Web resource, for each of
+the approx. 10,000 entries, however [1]. You shouldn’t normally be
+serving up HTML files with 10,000 div elements in them.</p>
+<p>This would be optimizing for an inappropriate use case.</p>
+<blockquote>
+<p>I’d like to propose a new element, <code>&lt;e&gt;</code>, which would be functionally
+identical to <code>&lt;div&gt;</code> but far better suited as a generic DOM node due
+to its compactness.</p>
+</blockquote>
+<p>Well, dotless i (ı) has fewer pixels, isn’t that even better <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/> <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+<p>Less flippantly, it’d be a far bigger win to use server-side parsing
+and parse-event streams [2], and existing Web pages could then benefit
+simply by updating Web servers.</p>
+<p>[1] <a href="https://words.fromoldbooks.org/Chalmers-Biography/" rel="nofollow noopener">https://words.fromoldbooks.org/Chalmers-Biography/</a>
+[2] <a href="https://www.w3.org/TR/2014/REC-exi-20140211/">https://www.w3.org/TR/2014/REC-exi-20140211/</a> (don’t be fooled by
+the “XML” in the name of this compression technique; server-side
+parsing works for pretty much anything)</p>
+<p>Liam</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alecrios</div>
+          <div class="creation_date">2019-10-17</div>
+          <div class="post_content">
+<p>There are certainly benefits to brevity. Otherwise, we’d have a <code>&lt;division&gt;</code> element rather than a <code>&lt;div&gt;</code>. Even if these benefits amount only to fewer keystrokes, shorter line-lengths, and marginally smaller files on disk, I thought it was worth a discussion. A byte saved is a byte saved. There is a reason why we minify our files.</p>
+<p>I do think that introducing a brand new element is quite a major change for such a minor optimization. However, if we were starting all over again, would we really prefer a three-character non-semantic name over a one-character non-semantic name?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2019-10-17</div>
+          <div class="post_content">
+<p>The HTML spec does some things like this because the single page edition is really really giant and browsers expand the zip before parsing, it can matter, I guess.</p>
+<p>That said, what they use are custom elements like  where f is a Boolean attribute and these are for marking up code formatting examples which quickly pile up a huge amount to parse, store and even then read if you’re looking at DOM, I guess. Anyways, I’d suggest like this: convince people to do one, we’ll see it in the http archive reports and can reevaluate… It already means approximately span.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2106_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">M-J-Robbins</div>
+          <div class="creation_date">2019-10-22</div>
+          <div class="post_content">
+<p>In HTML email, files size is generally limited to 100kb (larger files will be clipped by Gmail and likely to raise spam scores across a number of client). So for email devs every character really counts.  Although I realise that is niche and may not be so much of a priority for web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2019-10-22</div>
+          <div class="post_content">
+<p>I’d say that’s pretty niche. And most likely, you won’t be saving even 0.1% of that by changing your <code>&lt;div&gt;</code>s to <code>&lt;e&gt;</code>s, even pre-compression.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

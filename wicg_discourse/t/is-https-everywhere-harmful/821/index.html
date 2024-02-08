@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Is &ldquo;HTTPS Everywhere&rdquo; harmful?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Is &ldquo;HTTPS Everywhere&rdquo; harmful?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/577_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hillbrad</div>
+          <div class="creation_date">2015-04-23</div>
+          <div class="post_content">
+<p><strong>It is the “S” in HTTPS that matters, and it doesn’t break the web.</strong></p>
+<p>Sir Tim Berners-Lee published some notes on design issues around securing the web.<br/>
+<a class="onebox" href="http://www.w3.org/DesignIssues/Security-NotTheS.html" target="_blank">http://www.w3.org/DesignIssues/Security-NotTheS.html</a></p>
+<p>This a response to part 1 of those notes.  Like Sir Tim’s note, it is a personal view only.</p>
+<p>Sir Tim is concerned that moving the web to https: URLs will break the web, and is especially concerned that applications which take links-as-data and use them as links-to-data will be broken by things like strict insecure content blocking.  He argues that the https: URL scheme was a design mistake that “confuses information about security levels with the identity of the resource”.</p>
+<p>I disagree.  https: is a different scheme and it implies a different meaning for resources.  When you take something that is currently available at an http: URL and make it available at an https: URL, it’s no longer the same thing.  It is a new thing, something that makes new promises to the user and to other resources that depend on it.  If that new thing is broken because it has dependencies that don’t keep those promises, it’s not the case that the security-conscious browser vendors broke “back compatibility with old content”.  What happened is that <em>you didn’t finish the job of making your new thing</em>.</p>
+<p>Now, security engineers all over the place are trying their best to make that job easier.  That someone as savvy as Sir Tim can entertain the misapprehension that http: and https: resources are semantically identical shows they were doing a pretty good job of that even back 20 years ago.  But it’s actually difficult to make security happen reliably.  There’s a reason lots of smart people work so hard at it and still fail all the time.  It’s magical thinking to expect that we can just make everything all better without doing careful end-to-end engineering for every part of a system and understanding the abstractions we need and the promises they must keep.</p>
+<p>If we weaken or make uncertain the guarantees of HTTPS for the millions of resources which have done the work, finished the job, and are keeping their promises for billions of users, in order that we might declare half-measures against incompetently-imagined adversaries as “secure”, well, <strong>that</strong>, I would argue, would be breaking the web.</p>
+<p>TLS and HTTPS are not about “creating a separate space…in which only good things happen.” They are about abstracting away the security of the network so we can worry about other things, the same way that TCP/IP abstracts away things like packet routing, loss and reassembly.  HTTPS makes it so you don’t have to worry about being spied on, phished, ad-injected, misdirected or exploited, whether you’ve got a loopback cable to your server, surf from a coffee shop, if your home router has malware, or if powerful government agencies have you in their sights.</p>
+<p>But to succeed in fulfilling the promise of that abstraction, https: resources can’t depend on things that aren’t.  If recent revelations of massive spying have shown us anything, it’s that our adversaries are incredibly capable.  They <em>will</em> exploit any weakness and they <em>can</em> do so at scale. That’s why security is difficult.  A tire with only one hole in it is still a flat tire.  To explain the importance of a potentially incomplete abstraction like this in a non-security way: how useful would TCP be if only some dropped or re-ordered packets got retransmitted and reassembled correctly, and sometimes, you couldn’t tell when – it wasn’t really reliable.  Would you use that?  Should it even still be called TCP?  An abstraction like this must be reliable to be useful – especially in an adversarial context.</p>
+<p>Sir Tim laments that we couldn’t have “one web” with one scheme and a smooth upgrade of HTTP to be more secure, comparing it to the upgrade of, e.g. IPv4 to IPv6.  But we did have exactly that – it just happened inside the https: scheme.  We’ve evolved much better security (5 major protocol revisions from SSLv2 to TLS 1.2 and even things like SPDY and now QUIC Crypto, all over the same https: scheme) and it’s been pretty much perfectly smooth for the link structure of the web.   The critical point about this evolution, however, is that it has always kept the promises of the network security abstraction while making them incrementally stronger.   What we can’t smooth over is the distinction between network security and no/unreliable network security for applications and users that rely on these promises, because the semantic distinction between those resources and how they are used is real. (unlike IP versions, which have no semantic distinction for users)</p>
+<p>We do have avenues available to us to make the web more secure by default.   We can redirect from insecure to secure schemes.  We can build clients that optimistically attempt secure connections, and we can let servers give clients hints about when to do that.  We can even optimistically encrypt HTTP without explicitly promising users or other resources relying on them that anything meaningful has happened, and hope that it raises costs for our adversaries enough that they give up.</p>
+<p>We can silently raise the bar for resources that make no promises.  But we cannot undo the promises security-critical applications have been making to their users, and which those users depend on, and we shouldn’t claim they are “breaking the web” or a threat to it. There’s a reason why so many of the most important information services users interact with on the modern web are HTTPS only.  Those promises don’t break the web – they enable the trust that makes the web possible.</p>
+<p>-Brad Hill</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/580_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bcrypt</div>
+          <div class="creation_date">2015-04-23</div>
+          <div class="post_content">
+<blockquote>
+<p>We can silently raise the bar for resources that make no promises. But we cannot undo the promises security-critical applications have been making to their users, and which those users depend on, and we shouldn’t claim they are “breaking the web” or a threat to it.</p>
+</blockquote>
+<p>It strikes me that some of TBL’s reasons for not wanting “HTTPS Everywhere” can be resolved if the HTTPS scheme stays as-is but HTTP requests are silently upgraded. To summarize Tim’s points:</p>
+<ol>
+<li>Migrating HTTP to HTTPS “breaks the web of links.”</li>
+<li>HTTP and HTTPS resources are, in theory, semantically equivalent. (This is pretty arguable; I more agree with you that they’re not.)</li>
+<li>The upgrade to encrypted, authenticated connections should be as smooth as possible.</li>
+<li>HTTP and HTTPS creates two separate webs</li>
+</ol>
+<p>1 and 3 do not require deprecating HTTPS. The sane way to address 2 and 4 is to migrate the web so that everything is secure, not get rid of the Same-Origin Policy or remove mixed-content blocking.</p>
+<p>My takeaway from Tim’s post is that we should be doing more to “raise the bar for resources that make no promises” (although, admittedly, I don’t understand how breaking the web of links is still a concern given redirects and HSTS). The <a href="http://www.w3.org/TR/upgrade-insecure-requests/">Upgrade Insecure Requests</a> CSP spec is a start; we could explore ways for it to be more aggressive W.R.T upgrading. (For instance: option to upgrade cross-origin navigations, allow user agents to remember successful upgrades so that they work on sites that haven’t set the CSP header, etc.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-23</div>
+          <div class="post_content">
+<p>It strikes me a little that he is after <code>http://</code> to use TLS by default in the browser and downgrade for servers that don’t support the cipher that the browser supports.</p>
+<p>I think from an education stand point that has a lot of merit, asking most internet users what makes a page secure and they will likely tell you something of:</p>
+<ul>
+<li>The <code>s</code> in <code>https</code>
+</li>
+<li>The padlock</li>
+<li>Green bar</li>
+</ul>
+<p>I get the feeling besides the ‘one web’ aspect, he is after improving user understanding of how the page is secure; it’s certainly a hard goal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-23</div>
+          <div class="post_content">
+<p>I am also tempted to say it would be more interesting to define new behaviour for browsers to follow because of the semantic issues around the ‘s’ for users.</p>
+<p>So dropping the protocol for <code>https</code> to the user and defaulting browsers to use <code>https</code> unless the page doesn’t support it:</p>
+<ul>
+<li>When user visits: <code>https://example.com</code> they see:</li>
+<li>
+<img alt=":lock:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/lock.png?v=5" title=":lock:"/> <code>example.com</code>
+</li>
+<li>User still types <code>http://example.com</code> they see:</li>
+<li>
+<img alt=":unlock:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/unlock.png?v=5" title=":unlock:"/> <code>example.com</code>
+</li>
+<li>User types <code>example.com</code> they request over TLS and see:</li>
+<li>
+<img alt=":lock:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/lock.png?v=5" title=":lock:"/> <code>example.com</code>
+</li>
+<li>User types  <code>https://example.com</code> and the ciphers are not secure enough for the browser:</li>
+<li>
+<img alt=":unlock:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/unlock.png?v=5" title=":unlock:"/> <code>example.com</code>
+</li>
+</ul>
+<p>I know it seems odd but I think standardising the UX here and resolving the experience to be as close as possible in all browsers would help users here. That way <code>http</code> could be deprecated in favour of <code>https</code> to solve the other issues mentioned.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">timblviagithub</div>
+          <div class="creation_date">2015-04-23</div>
+          <div class="post_content">
+<p>Brad - thanks for your thoughtful response.</p>
+<aside class="quote" data-post="1" data-topic="821">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/hillbrad/40/577_1.png" width="20"/> hillbrad:</div>
+<blockquote>
+<p>https: is a different scheme and it implies a different meaning for resources.  When you take something that is currently available at an http: URL and make it available at an https: URL, it’s no longer the same thing.  It is a new thing,</p>
+</blockquote>
+</aside>
+<p>Not the same thing? When you design a protocol for the web you have to think not just of the one web page, but of the whole web of links.   <a href="http://www.w3.org">http://www.w3.org</a> is W3C’s home page.  What is <a href="https://www.w3.org">https://www.w3.org</a>?  Something different?  A different node in the web?  If <a href="http://w3.org">w3.org</a> is to move to https:. then will that create new page <strong>with none of the incoming links, none of the facebook likes, none of the tweets, none of the bookmarks, none of the Google karma</strong>?  If you are right about <a href="https://www.w3.org">https://www.w3.org</a> being a different thing, then that is hardly a motivation to move, and lose all to its participation in the web.</p>
+<p>Yes, in fact what would happen is we would put in a redirect, and HSTS header. The HSTS header would indicate to browsers that the site will never use <a href="http://xn--151h">http://𝔁</a> and <a href="https://xn--151h">https://𝔁</a>  to for different things, for any 𝔁.   So a browser can (and should) load the https: version and know it can use that whenever the http: version was called for.  (You said: “… can entertain the misapprehension that http: and https: resources are semantically identical”  …where did I say that?  It is true only when HSTS header has been seen.  It is not true in general e.g famously for <a href="https://forbes.com/">https://forbes.com/</a> . ).    But this header is the only way of dealing with the problem of incoming links which still use “http:”.  And dealing with that is an important part of making sure that the web works.</p>
+<p>Recent clients will understand that. Search engines will figure out that the two things are the same.  The working of the web in practice relies on them being treated from the linking point of view as the same thing.</p>
+<p>Later you say, "  It’s magical thinking to expect that we can just make everything all
+better without doing careful end-to-end engineering for every part of a
+system and understanding the abstractions we need and the promises they
+must keep."   This is indeed true.    You do need of that engineering.  And more. You need not just end-end engineering between a server and a user, you also need a web-aware engineering of how the whole web of references of URIs used in all kinds of ways interact.  And on top of that you need very careful engineering not only of the global system you  design, but of the way it will evolve though a billions of separate transitions  from old to new, and of the motivations which drive that, and the possible unintended  consequences.</p>
+<aside class="quote" data-post="1" data-topic="821">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/hillbrad/40/577_1.png" width="20"/> hillbrad:</div>
+<blockquote>
+<p>Tim laments that we couldn’t have “one web” with one scheme and a
+smooth upgrade of HTTP to be more secure, comparing it to the upgrade
+of, e.g. IPv4 to IPv6.  But we did have exactly that – it just happened
+inside the https: scheme.  We’ve evolved much better security (5 major
+protocol revisions from SSLv2 to TLS 1.2 and even things like SPDY and
+now QUIC Crypto, all over the same https: scheme) and it’s been pretty
+much perfectly smooth for the link structure of the web.</p>
+</blockquote>
+</aside>
+<p>I think you make my point here.  Within the “https:” scheme it has been possible to successively raise the level of security.  This can be done because it has not broken any links.    This just happened within the https: scheme. That was possible. It has not been possible to do this from http: to https:  because changing the URI scheme breaks so much.    Note that this happened without making a uri schemes like https-1.2: or https-ev: or https-spdy:  So I am asking why we can’t  evolve http: the same way.</p>
+<p>For example, something like this strawman. Let a client following an http: link negotiate with the server to upgrade to start a TLS session, and authenticate with all the security of https, including checking the certificate in the same way as for an https: link.  (This more constrained than the rather differently motivated <a href="https://tools.ietf.org/html/rfc7435">opportunistic security</a> spec but a bit similar) If and only if successful, then regard the resource as as being securely retrieved, and if it can come over https:  If and only if all the subresources which a page loads are also secure to the same level, then the security level of the page, then the security of the web application is considered to be that level.  Otherwise, he minimum of the documents loaded.</p>
+<p>You say we can “silently raise the bar for [URLs] that make no promises”. Good: that is what I am asking for.</p>
+<p>You talk a of the “promise” of the “https:”.  As I ask in the original article, to whom is that promise made?  The promise is made to the person who technically makes the link.  The person who writes out the URI.    I agree it it is a nice feature to be able to make a link which promises. This might be someone making a web page linking to a bank.   This promise is a handy feature, but then the ‘s’ gives deployment problems for a secure web, in the wider scheme of things it isn’t worth it.  The person writing the ‘s’ is not the most important agent here.</p>
+<ul>
+<li>
+<p>The link creator may be a user typing it into a URL bar. But here the http: is hidden anyway on browsers, and people don’t type it anyway, they let the browser fill in what it wants, so no promises are being broken.</p>
+</li>
+<li>
+<p>The link following may be a user clicking on a bookmark.  In this case also the user doesn’t actually see the URL at all. The ‘promise’ of “https:” doesn’t make sense there.</p>
+</li>
+</ul>
+<p>The really important promise is to the follower of the link.   It is a promise made to the User by the User Agent.   The promise that the user, when they follow the link,  will have confidentiality and integrity, and authenticity of of the server party.   The user looks for happy green UI, and learns to insist on it, especially when dealing with a bank.</p>
+<p>This allows the security to be increased across the web server by server.     Yes, ‘https’ URLs can spread but by allowing ‘http:’ URLs to be dereferenced securely more and more, we allow the web to become secure server by server, reducing some of the current disincentives.</p>
+<p>The idea of completely deprecating https was not a 100% serious idea, but I hope helped make the point.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noncombatant</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<p>Tim, do you understand the origin concept? The tuple (scheme, host, port) identifies a distinct protection domain. When we wish to make a security guarantee — and we make this guarantee both to site operators and to the people who use the site — we need to characterize and enforce it on that basis. Always, and only. It’s what we have.</p>
+<p>So, it cannot work to use a StartTLS-like mechanism (as you proposed in your original post) for HTTP, because with or without TLS, (http, “<a href="http://example.com" rel="nofollow noopener">example.com</a>”, 80) is the same origin. Thus, web content without confidentiality, integrity, or server authentication would run in the same protection domain as content with those guarantees. And hence, the guarantees would be meaningless.</p>
+<p>The saving grace is that URLs are soft references, and with things like implicit upgrade, HSTS, and explicit upgrade (like 301 Redirected Permanently), links can still work but people who use the web can see and experience a true guarantee.</p>
+<p>We can indeed get from where we are to an HTTPS Everywhere world, with minimal breakage. That’s good, because in fact we must. The web is hugely important — which means it must become (at least minimally) safe. HTTPS is that bare minimum safety guarantee. Many people are working very hard to make the transition safely and with minimal breakage. We’d appreciate your help, but we will soldier on and succeed either way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<p>Let’s try to pursue <span class="mention">@timblviagithub</span>’s strawman and fix <span class="mention">@noncombatant</span>’s objection: Say browsers automatically pinned opportunistic encryption. That is, as soon as an HTTP origin responds to a request with a valid certificate and encryption, the browser henceforth refuses to connect to that origin without a valid certificate. This makes sure that data created in the secure protection domain is never again exposed to insecure script. What goes wrong?</p>
+<ul>
+<li>I say a <em>valid</em> certificate instead of allowing self-signed certificates, because self-signed certificates would make DoS’ing HTTP sites way too easy.</li>
+<li>Clearing an origin’s data could also clear the pin, since that wouldn’t leak confidental data to the next connection.</li>
+<li>If an attacker injects hostile data <em>before</em> the pin is established, they could keep the site exploited after it upgrades to security. Maybe auto-clear the site’s data the first time it encrypts its connection? Or keep marking it as insecure until its data is cleared? For that latter option, it’d be good to give the site an API to request that its data be cleared out.</li>
+<li>Mixed Content still has to be blocked for secure HTTP origins, since it would allow mixing within a single protection domain.</li>
+</ul>
+<p>I think this option is actually worse for migration than making everyone change their links. Specifically, it would mean that a site couldn’t experiment with encryption before they were ready to completely switch over.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">timblviagithub</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<blockquote>
+<p>Tim, do you understand the origin concept?</p>
+</blockquote>
+<p>Basically, yes. (I have also made a <a href="http://www.w3.org/DesignIssues/Security-Origin.html">critique of its granularity</a>, that it should be able to applied to include part of the path too, but that is an orthogonal  issue.).</p>
+<p>Yes, you are right, in a world in which contents can be securely retrieved starting from an ‘http:’ URL, the origin triple has to be changed. One possibility is  to make it (secure, host, port) where the secure flag if true if the web app is loaded securely, whatever the scheme originally was.  Of course would be in the case of a site with an HSTS header everything will be loaded securely and so effectively there will only be one origin for that (host, port) pair.   Presumably we hope that the vast majority of sites will end up getting to the place where they can use HSTS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">timblviagithub</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<aside class="quote">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jyasskin/40/1455_1.png" width="20"/> jyasskin:</div>
+<blockquote>
+<p>I think this option is actually worse for  migration than making everyone change their links. Specifically, it  would mean that a site couldn’t experiment with encryption before they  were ready to completely switch over.</p>
+</blockquote>
+</aside>
+<p>If making everyone change their links means asking a site like <a href="http://w3.org">w3.org</a> which has a million hand-edited linked static HTML pages to re-hand-edit each one, I’m not sure that’s going to fly.</p>
+<p>Why couldn’t a site experiment with encryption until it doesn’t switch over? Well, having HSTS be site-wide and not include a path prefix doesn’t help.  If HSTS could be applied to <a href="http://w3.org/ns">w3.org/ns</a> alone then that for example could be moved straight away.  That sort of thing would unblock the logjam.</p>
+<p>There may be a number of reasons for two http: web sites A and B why A cannot switch to https: until B has.  The most common one is mixed content blocking.   Just imagine all the http: websites as dots in a big diagram, and red arrow from A to B in this case.  What shape are the arrows?  Probably some hubs with a B with many As.  Probably many mutually linked pairs.  And a few cycles of random shape.  Once you have cycles in the graph of prerequisites, your move to ‘https:’ is stuck.  (Or you need an Flag Day when every one changes at once, which is not possible).  So hence this attempt to unblock the logjam by introducing an intermediate state in which a site allows http: to work securely.  This stuff we discussed at the TAG meeting today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="821">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/t/4af34b/40.png" width="20"/> timblviagithub:</div>
+<blockquote>
+<p>Why couldn’t a site experiment with encryption until it doesn’t switch over?</p>
+</blockquote>
+</aside>
+<p>I think your suggestion to add a ‘secure’ bit to the origin avoids this problem with my pinning idea. It still means users will lose all their cookies, localstorage, etc. when a site starts opting into security, but it means browsers will still accept the insecure site if something goes wrong (e.g. it missed some mixed content) and it has to opt back out.</p>
+<aside class="quote" data-post="9" data-topic="821">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/t/4af34b/40.png" width="20"/> timblviagithub:</div>
+<blockquote>
+<p>Well, having HSTS be site-wide and not include a path prefix doesn’t help.  If HSTS could be applied to <a href="http://w3.org/ns">w3.org/ns</a> alone then that for example could be moved straight away.  That sort of thing would unblock the logjam.</p>
+</blockquote>
+</aside>
+<p>I think HSTS is a red herring. You can serve <code>http:</code> and <code>https:</code> pages concurrently, with no redirection or HSTS. Then you can redirect one path at a time from <code>http:</code> to <code>https:</code> without HSTS. And once that’s working for your whole domain, you can enable HSTS. As far as I can see, having most of <a href="https://www.w3.org/">https://www.w3.org/</a> redirect <code>https:</code> to <code>http:</code> is an entirely unforced error. But I might have missed something.</p>
+<aside class="quote" data-post="9" data-topic="821">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/t/4af34b/40.png" width="20"/> timblviagithub:</div>
+<blockquote>
+<p>There may be a number of reasons for two http: web sites A and B why A cannot switch to https: until B has.  The most common one is mixed content blocking.   Just imagine all the http: websites as dots in a big diagram, and red arrow from A to B in this case.  What shape are the arrows?  Probably some hubs with a B with many As.  Probably many mutually linked pairs.  And a few cycles of random shape.  Once you have cycles in the graph of prerequisites, your move to ‘https:’ is stuck.</p>
+</blockquote>
+</aside>
+<p>It’s not stuck: it just takes more steps. If <code>http://b.com/foo.html</code> refers to <code>http://a.com/bar.js</code> which refers back to <code>http://b.com/baz.js</code>, your upgrade path looks like:</p>
+<ol>
+<li>Concurrently:</li>
+</ol>
+<ul>
+<li>
+<code>b.com</code> gets a certificate and starts serving <strong><code>https</code></strong><code>://b.com/baz.js</code> without redirecting it to <code>http://b.com/baz.js</code>. It’s free to redirect top-level resources like <strong><code>https</code></strong><code>://b.com/foo.html</code> to <code>http://b.com/foo.html</code> since they don’t work yet, but the subresources can’t redirect.</li>
+<li>
+<code>a.com</code> gets a certificate and starts serving <strong><code>https</code></strong><code>://a.com/bar.js</code> without redirecting it to <code>http://a.com/bar.js</code>.</li>
+</ul>
+<ol start="2">
+<li>Concurrently:</li>
+</ol>
+<ul>
+<li>
+<code>a.com</code> updates <code>bar.js</code> to refer to <strong><code>https</code></strong><code>://b.com/baz.js</code>.</li>
+<li>
+<code>b.com</code> updates <code>foo.html</code> to refer to <strong><code>https</code></strong><code>://a.com/bar.js</code>. (Note that <a href="https://www.w3.org/TR/mixed-content/">Mixed Content</a> allows <code>http://b.com/foo.html</code> to load <strong><code>https</code></strong><code>://a.com/bar.js</code> which loads <code>http://b.com/baz.js</code>. It does block that sort of back-and-forth between iframes.)</li>
+</ul>
+<ol start="3">
+<li>Now <strong><code>https</code></strong><code>://b.com/foo.html</code> has no mixed content, so folks can start linking to <strong><code>https</code></strong><code>://b.com/foo.html</code> and <code>b.com</code> can start redirecting <code>http://b.com/foo.html</code> to it.</li>
+<li>Once all the resources on <code>b.com</code> have gotten to step 3, <code>b.com</code> can enable HSTS. Similarly for <code>a.com</code>.</li>
+</ol>
+<p>Also note that there’s never an infinite cycle of <em>resources</em>, especially <code>&lt;iframe&gt;</code>able resources, that depend on each other, since that would cause browsers to infinite-loop.</p>
+<p>I’m looking forward to reading the outcome of the TAG meeting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hsivonen</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<blockquote>
+<p>Note that this happened without making a uri schemes like https-1.2: or
+https-ev: or https-spdy:  So I am asking why we can’t  evolve http: the
+same way.</p>
+</blockquote>
+<p><code>https-ev</code> is a great example. EV doesn’t add real security and is mainly a price discrimination mechanism that allows CAs to charge wealthy entities more (and hopefully the less wealthy less) precisely because you can’t signal that the expectation is EV before the connection is made and because EV https and DV https count as the same origin. EV gives warm fuzzies when everything is OK, but that’s not how a security mechanism should be assessed. We should consider the performance under attack.</p>
+<p>Suppose you are being attacked with a fraudulent DV cert (that’s presumably easier to obtain than a fraudulent EV cert if we, for the sake of the argument, provisionally accept the premise that EV has value over DV) when trying to access a site whose legitimate cert is EV. Your connection gets automatically downgraded from EV to DV. DV https and EV https are the same origin, so your cookies (even secure ones) get sent, the DV https origin gets to read IndexedDB data stored by EV https, etc.</p>
+<p>By the time you have an opportunity to notice that you’ve been downgraded, it’s already too late, since private info has already been sent over the downgraded connection to the attacker. More importantly, whether you should expect EV or DV is up to you as a user. Expecting users to mentally keep track of the expected security level of each site and paying attention to the browser UI to see if the expectation is matched is totally unrealistic.</p>
+<p>It seems like a very bad idea to make the distinction between <code>http</code> and <code>https</code> as bogus when under attack as the distinction of EV and DV already is when under attack. Frankly, I’m very disappointed to see the <a href="http://www.w3.org/DesignIssues/Security-NotTheS.html">argument made</a> that security expectation shouldn’t be signaled in addressing and tracking the security level should be left to the user.</p>
+<p>Also consider email as an example of what not to do. Since you can’t encode the expectation of transport security into the email address, the sending software can’t know if something is wrong when an SMTP link lacks STARTTLS. (Additionally, email has the problem that thanks to DNS-based indirection [that the Web fortunately does not have] the name encoded in the address is typically not the name the receiving server presents in its cert even if the server presents a cert, so SMTP encryption is doubly bogus. Trying to fix the problems caused by the lack of the expectation of security and the expectation of the name encoded in the cert in the email address by adding DNSSEC and DANE is way more complex a solution than encoding these expectations in an <code>https</code> URL.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hsivonen</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<blockquote>
+<p>If making everyone change their links means asking a site like <a href="http://w3.org">w3.org</a>
+which has a million hand-edited linked static HTML pages to re-hand-edit
+each one, I’m not sure that’s going to fly.</p>
+</blockquote>
+<p>Legacy links between pages can be upgraded via HSTS in the server config, so that’s already a solved problem. Legacy references to subresources are currently a real problem, but they will become upgradeable in the server config once <a href="https://w3c.github.io/webappsec/specs/upgrade/" rel="nofollow noopener">Upgrade Insecure Requests</a> gets implemented.</p>
+<p>That said, running a find-and-replace to upgrade old outbound links is a good courtesy to users who haven’t yet visited the sites being linked to and, therefore, haven’t picked up HSTS there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/577_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hillbrad</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<p>I suppose when I say that beginning to expose a resource over https creates a new thing, I mean it creates something with additional properties.  Yes, you lose some context as a part of that, but many things can remain - Facebook or Google reputation, even cookies.  Our systems are good at preserving those semantics.  But I do maintain it is a new thing with new meta-properties that are critical to what it means to users.  The “same” banking site I use today, if it were over http, would be a useless lump to me, likewise web email, much social networking, etc.</p>
+<p>I am all for improving the security profile of http, but I am also aware that it is going to be a very long process before every http connection has meaningful guarantees.  For many years browsers will have to allow fallback to insecure states.  This comes back also to the question of how links are used and who they are for.  I think there is a sense in which links have always been for resources and applications, as a means of communication and self organization among each other, and much less so for the user.  A user typically arrives at one of the applications I’ve recently been responsible for by typing a bare name in the browser, and HSTS ensures that https: is tried first.  But after that, keeping them safe is my responsibility.  At the scale of just a few million users, it is a statistical certainty in today’s world that there will be adversarial network elements between my application and some of my users.</p>
+<p>Modern interactive web applications are composed of many parts which interact across security domains.  If I am including 3rd party scripts, using redirect or postMessage based channels to send sensitive information, inlining widgets in iframes or similar, in none of these scenarios will a user be seeing and making a trust decision based on a URL.  But I betray the users’ trust if I leave their information and security to the vagaries of their network environment and unknown best-effort or failure states.  It is vitally important that I be able to unambiguously communicate the security contract the application requires to the user agent for these operations, and I do so by requiring an https: URL.</p>
+<p>We could add an extra bit that says, this is an http: URL, but I want to use it with the same semantics as https: without changing the URL itself.  However, that seems to me pretty much exactly what the ‘s’ does.  And we have a great deal of practical experience over many years now dealing with the special nature of the relationship between those schemes.  Perhaps in a few places we could introduce the http-s-but-not-https bit with little disruption, such as by adding a context flag to fetch().  But on the large scale, adding that bit would have ripple effects through billions of lines of code, introduce additional complexity and error conditions, and probably greatly extend any transitionary period.  It seems much more disruptive of the web as a network, not just of links, but of code, than continuing an orderly transition to https in as many places as possible (while adding foam bumpers to http in the meantime wherever we can).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2015-05-01</div>
+          <div class="post_content">
+<p>Just to level-set discussion – opportunistic security in HTTP is more concrete than the RFC Tim referenced; see <a href="https://httpwg.github.io/http-extensions/encryption.html">https://httpwg.github.io/http-extensions/encryption.html</a> (a current work item of the HTTP WG; note that its intended status is Experimental.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

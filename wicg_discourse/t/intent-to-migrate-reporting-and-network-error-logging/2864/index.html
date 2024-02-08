@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Intent to Migrate: Reporting and Network Error Logging</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Intent to Migrate: Reporting and Network Error Logging</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1653_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dcreager</div>
+          <div class="creation_date">2018-06-28</div>
+          <div class="post_content">
+<p>We would like to migrate the <a href="https://wicg.github.io/reporting/" rel="nofollow noopener">Reporting</a> and <a href="https://wicg.github.io/network-error-logging/" rel="nofollow noopener">Network Error Logging</a> (NEL) proposals from WICG into the Web Performance Working Group.</p>
+<h1>Working group decision to adopt</h1>
+<p><a href="https://w3c.github.io/charter-webperf/" rel="nofollow noopener">Added to proposed working group recharter</a></p>
+<h1>Proposal</h1>
+<p>Reporting: [<a href="https://wicg.github.io/reporting/" rel="nofollow noopener">draft spec</a>] [<a href="https://github.com/WICG/reporting/" rel="nofollow noopener">GitHub repo</a>]</p>
+<p>Network Error Logging: [<a href="https://wicg.github.io/network-error-logging/" rel="nofollow noopener">draft spec</a>] [<a href="https://github.com/WICG/network-error-logging/" rel="nofollow noopener">GitHub repo</a>]</p>
+<h1>Summary</h1>
+<p>Reporting: Provides a best-effort report delivery system that executes out-of-band with website activity</p>
+<p>Network Error Logging: Defines a mechanism enabling web applications to declare a reporting policy that can be used by the user agent to report network errors for a given origin</p>
+<h1>Motivation and Use Cases</h1>
+<h2>Network Error Logging</h2>
+<p>Accurately measuring performance characteristics of web applications is an important aspect in helping site developers understand how to improve their web applications. The worst case scenario is the failure to load the application, or a particular resource, due to a network error, and to address such failures the developer requires assistance from the user agent to identify when, where, and why such failures are occurring.</p>
+<p>Today, application developers do not have real-time web application availability data from their end users. For example, if the user fails to load the page due to a network error, such as a failed DNS lookup, a connection timeout, a reset connection, or other reasons, the site developer is unable to detect and address this issue. Note that these kinds of network errors cannot be detected purely server-side, since by definition the client might not have been able to successfully establish a connection with the server.</p>
+<p>Existing methods (such as synthetic monitoring) provide a partial solution by placing monitoring nodes in predetermined geographic locations, but require additional infrastructure investments, and cannot provide truly global and near real-time availability data for real end users.</p>
+<h2>Reporting</h2>
+<p>Instead of defining the report delivery logic directly in NEL, this logic has been factored out into a separate specification, Reporting.  Reporting can be used by other specs that need out-of-band report delivery, without having to duplicate the report delivery logic in all of them.  For example, Content Security Policy (CSP) is planning to adopt Reporting as a new delivery mechanism.</p>
+<h1>Compatibility Risk</h1>
+<p>The primary compatibility risk is in the format of the <code>Report-To</code> and <code>NEL</code> HTTP response headers, and in the payload format of the reports sent back to Reporting collectors.  Ideally, any future changes to these formats would be backwards compatible (e.g., adding new fields and allowed values).  Any changes that require removing or renaming fields, or changing the interpretation of existing values, will have an impact on already deployed implementations.</p>
+<h1>Ongoing technical constraints</h1>
+<p>User agents will have to hook into their network stack to generate NEL reports about requests to an origin that has provided a NEL policy.  Exactly how this is done will be specific to each user agent implementation.</p>
+<p>User agents will have to maintain a cache of Reporting and NEL policies that they have received.  The specifications recommend, but do not require, this cache to persist across restarts.</p>
+<h1>Link to implementation experience and demos</h1>
+<p>NEL is based on Google’s experience with the <a href="https://docs.google.com/document/u/1/d/14U0YA4dlzNYciq2ke0StEMjomdBUN6ocSt1kN03HJ0s/pub" rel="nofollow noopener">Domain Reliability</a> feature of Chrome, which Google has been using to generate an opt-in client-side reliability signal for traffic to its properties.  Google has found this signal to be very useful for detecting network outages that affect its users’ ability to reach its services.  NEL is an effort to standardize Domain Reliability so that other web operators can take advantage of this signal.</p>
+<h1>Data</h1>
+<p>Reporting and NEL are new features.  They have been <a href="https://www.chromestatus.com/features/5391249376804864" rel="nofollow noopener">implemented</a> in Chrome, and we are <a href="https://groups.google.com/a/chromium.org/d/topic/blink-dev/nNji_u7BRxo/discussion" rel="nofollow noopener">awaiting final approval</a> to ship it in Chrome stable.</p>
+<p>Google will start to use the new NEL standard alongside the existing Domain Reliability mechanism.  We anticipate that many other web operators will activate this feature to collect client-side reliability information about their services.</p>
+<h1>Security and Privacy</h1>
+<p>NEL is intended to generate data equivalent to server-side request logs (e.g., an Apache <a href="https://httpd.apache.org/docs/2.4/logs.html#accesslog" rel="nofollow noopener">access.log</a>).  This has two important security and privacy ramifications:</p>
+<ul>
+<li>
+<p>NEL reports about an origin should <em>only</em> be visible to the operators of the server(s) that receive traffic for that origin.</p>
+<p>To support this, NEL policies are delivered in HTTP response headers, and can only be used for traffic delivered via HTTPS.  This ensures that we only act on NEL policies that are received from the legitimate owner of the server in question.</p>
+<p>This also means that a web page cannot use NEL to collect information about outbound cross-origin requests that it makes.  NEL is used to monitor <em>inbound</em> requests <em>to</em> an origin, and not <em>outbound</em> requests <em>from</em> an origin.</p>
+</li>
+<li>
+<p>NEL reports should only contain information that would be visible to the server receiving a request to the origin.</p>
+<p>As an example, the IP address of the DNS resolver that the client used is <strong>not</strong> present in a NEL report, because server-side monitoring would not be able to see that information, either.</p>
+</li>
+</ul>
+<p>The specifications also require user agents to allow users to opt out of collecting and reporting this information.</p>
+<h1>Accessibility</h1>
+<p>This feature has no direct UI or UX impact, and therefore no accessibility concerns.  The data generated by this feature will be imported into existing monitoring and observability platforms; all accessibility concerns about how to present this data are the responsibility of those other platforms.</p>
+<h1>Internationalization</h1>
+<p>This feature has no direct UI or UX impact, and therefore no internationalization concerns.  The data generated by this feature will be imported into existing monitoring and observability platforms; all internationalization concerns about how to present this data are the responsibility of those other platforms.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-06-28</div>
+          <div class="post_content">
+<p>Thanks for filing an intent. LGTM!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Display Locking</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Display Locking</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1750_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vmpstr</div>
+          <div class="creation_date">2018-07-30</div>
+          <div class="post_content">
+<p>Github repo is <a href="https://github.com/chrishtr/display-locking" rel="nofollow noopener">here</a>. Explainer is below:</p>
+<h1>Display Locking</h1>
+<p>This is a short proposal for Display Locking. For more details, see the
+<a href="https://github.com/chrishtr/display-locking/blob/master/explainer.md" rel="nofollow noopener">detailed explainer</a>.</p>
+<h3>Problem</h3>
+<p>Websites frequently rely on dynamic content to present information. This means
+that DOM is often manipulated using script to present rich and dynamic content.
+There are cases when this can cause slow rendering phase updates, including
+script to update views, style updates, layout, and paint. This, in turn, causes
+jank or noticeable delay when presenting content, because rendering phase is
+updated synchronously with user interactions and requestAnimationFrame script.</p>
+<p>The following are a few of the common patterns that can cause jank:</p>
+<ul>
+<li>Resizing multi-pane UI with complex layout within each pane (e.g. IDEs)</li>
+<li>Adding widgets with complex DOM.</li>
+<li>Dynamically displaying content based on the current value of text input.</li>
+<li>Measuring layout of otherwise hidden DOM with intent of sizing containers.</li>
+</ul>
+<p>Developers are aware of these issues and build systems to avoid adding complex
+DOM at once in order to prevent jank. As an example, ReactJS is <a href="https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html" rel="nofollow noopener">adding the
+ability</a>
+to do async operations to help with this problem.</p>
+<h3>Proposal</h3>
+<p>This document proposes to augment user-agent APIs to help address the problem of
+slow rendering phase updates. Specifically, we propose a concept of display
+locking an element.</p>
+<p>If an element is locked for display, it means that any DOM updates to its
+subtree are not rendered immediately. Instead, when the lock is committed, the
+user-agent processed rendering updates co-operatively, yielding periodically to
+allow script or user interactions to happen.</p>
+<p>The visual content of an element which is locked for display does not change.
+One option is that the visual output is fixed to whatever content was present at
+the time the lock was acquired, and remains this way until the lock is released
+and all associated promises are resolved. Another possiblity is effectively
+making the locked subtree <code>visibility: hidden</code>, meaning that we don’t display
+any content while work is completed.</p>
+<p>There are other possible options here, such as displaying developer specified
+content. The details of this are up for discussion, but the consistent result is
+that the visual representation of the modified DOM is not necessarily rendered
+to screen, affording the user-agent the opportunity to break the work up into
+smaller pieces.</p>
+<h3>Example</h3>
+<pre><code class="lang-auto">async function updateDom() {
+  let element = document.getElementById("container");
+
+  // Get and acquire a lock, causing the element to be locked.
+  let lock = element.getDisplayLock();
+  await lock.acquire();
+
+  // Modify element's subtree. The DOM is modified immediately, same as without
+  // display locking. However, rendering of the element is delayed.
+  element.innerHTML = ...;
+
+  // Commit the lock. This returns a promise. The user-agent starts to
+  // co-operatively process steps required to render the modified subtree,
+  // including style, layout, and painting. When the user-agent is done
+  // with these steps, the promise is resolved.
+  lock.commit();
+}
+
+</code></pre>
+<p>In cases where DOM manipulations would cause jank, this instead allows the
+user-agent to split up the work across several frames, yielding for script and
+user interactions. When the updates are finished processing, the result is
+displayed without jank.</p>
+<h3>Further reading</h3>
+<ul>
+<li><a href="https://github.com/chrishtr/display-locking/blob/master/explainer.md" rel="nofollow noopener">Detailed explainer</a></li>
+<li>
+<a href="https://github.com/chrishtr/display-locking/blob/master/sample-code" rel="nofollow noopener">Sample
+code</a>
+(work in progress)</li>
+<li>
+<a href="http://tabatkins.github.io/specs/layout-transitions/" rel="nofollow noopener">Layout transitions</a> - a
+similar proposal from 2014, with motivating examples that are applicable to
+display locking.</li>
+</ul>
+<p>EDIT: Expanded on the visual content of locked element description.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1061_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leolux</div>
+          <div class="creation_date">2018-08-03</div>
+          <div class="post_content">
+<p>Hi! I haven’t read the detailed explainer yet, but I like to say that I like the idea!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2018-08-09</div>
+          <div class="post_content">
+<p>Just some initial reactions:</p>
+<ul>
+<li>the naming seems very close to orientation lock, which deals with locking the display (to orientations) - that might cause confusion. Similarly with the wake lock API.</li>
+<li>how does this play with css <code>will-change</code> (if at all)?</li>
+</ul>
+<p>Rick Byers and some other folks had proposed a generic mechanism for “web locks”, parts of which look similar to this. Might help to align with that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1750_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vmpstr</div>
+          <div class="creation_date">2018-08-20</div>
+          <div class="post_content">
+<p>We’ve tried to come up with naming that would be unambiguous, hence <em>display</em> lock, but I can certainly see how that is still confusing relative to other locks that lock the display for whatever reason. It might be worth it for us to include something like “raster” or “visual update” terminology to further disambiguate that.</p>
+<p>This change should be pretty agnostic to <code>will-change</code>. That is, it’s not necessary to have a <code>will-change</code> property for this lock to be effective, and its presence also doesn’t interfere with it. <code>contain: paint</code> on the other hand is an important property, since it allows us to reason about the location and visual bounds of the subtree. It also implies a layout containment, which should allow us to move the locked element without incurring any cost for the subtree.</p>
+<p>I haven’t heard about “web locks”, but I’ll ask around about Rick Byers’ proposal. I think this proposal is a manifestation of some of ideas that were previously discussed, let’s hope we’re not stepping on toes here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2018-08-21</div>
+          <div class="post_content">
+<p>Thanks for looking into alternative names and the additional info!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2055_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DominicCooney</div>
+          <div class="creation_date">2018-09-14</div>
+          <div class="post_content">
+<p>This is an interesting, exciting proposal.</p>
+<p>I think buffering events sounds like a bad idea because the rest of the page should expect to continue to receive events. On the other hand delivering events sounds like a bad idea because I can presumably multiply-instantiate an element by hopping it into successive subtrees and freezing each one, and SVG <code>use</code> event dispatch was a source of security bugs. Maybe closed-mode Shadow DOM is a useful model here where you continue doing event dispatch but are able to elide the frozen parts?</p>
+<p>Some naive questions…</p>
+<p>What happens if a locked element enters fullscreen? Or becomes a modal dialog? HTML jumps into unusual, specific layout-like stuff at those points. (<a href="https://html.spec.whatwg.org/#normal-alignment">“Alignment mode.”</a>)</p>
+<p>What happens to screen readers when dynamic properties, like active, and frozen things (presumably content because content depends on style and layout for pseudos and display) interact?</p>
+<p>The explainer says:</p>
+<blockquote>
+<p>… style of the locked subtree will not affect style of elements outside of the locked element. Similarly to layout containment, this ensures that we can process any number of elements on the locked subtree without visually changing the content on the rest of the page.</p>
+</blockquote>
+<p>However I think those things <em>are</em> linked, for example, elements which are not displayed are not focusable which will affect things with <code>:focus-within</code> rules outside of the subtree. I guess HTML’s idea of <a href="https://html.spec.whatwg.org/#being-rendered">“being rendered”</a> is the branching off point here, and tweaking the meanings of these for the frozen world to avoid paradoxes will be tricky.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2402_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrishtr</div>
+          <div class="creation_date">2018-09-28</div>
+          <div class="post_content">
+<blockquote>
+<p>What happens if a locked element enters fullscreen? Or becomes a modal dialog? HTML jumps into unusual, specific layout-like stuff at those points</p>
+</blockquote>
+<p>I think a force-unlock should probably happen in this case. See <a href="https://github.com/chrishtr/display-locking/issues/20" rel="nofollow noopener">https://github.com/chrishtr/display-locking/issues/20</a></p>
+<blockquote>
+<p>What happens to screen readers when dynamic properties, like active, and frozen things (presumably content because content depends on style and layout for pseudos and display) interact?</p>
+</blockquote>
+<p>I think this sounds similar to the question of find-in-page/tab order: <a href="https://github.com/chrishtr/display-locking/issues/18" rel="nofollow noopener">https://github.com/chrishtr/display-locking/issues/18</a>. I think those should not match content under a lock, but also potentially be used as signals for a timeout after which a stale lock is force-evicted.</p>
+<blockquote>
+<p>things with :focus-within rules outside of the subtree</p>
+</blockquote>
+<p>Per issue 18 (linked above) - focus-within will not change due to the locked content, because it is not focusable.</p>
+<blockquote>
+<p>tweaking the meanings of these for the frozen world to avoid paradoxes will be tricky</p>
+</blockquote>
+<p>The cases discussed above <em>seem</em> to be straightforward to handle. Do you think there will be a lot more?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

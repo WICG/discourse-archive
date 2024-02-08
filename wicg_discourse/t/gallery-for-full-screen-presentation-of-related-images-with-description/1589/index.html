@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&lt;gallery&gt; for full screen presentation of related images with description</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&lt;gallery&gt; for full screen presentation of related images with description</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hansschmucker</div>
+          <div class="creation_date">2016-07-14</div>
+          <div class="post_content">
+<p>Initially this was about an issue raised on the whatwg and w3c public mailing lists. So if you want to read the full discussion you can find it here:</p>
+<p><a href="http://lists.w3.org/Archives/Public/public-whatwg-archive/2016Jul/thread.html">http://lists.w3.org/Archives/Public/public-whatwg-archive/2016Jul/thread.html</a>  ( Gallery element &amp; Galleries revisited )
+and here:
+<a href="http://lists.w3.org/Archives/Public/public-html/2016Jul/thread.html">http://lists.w3.org/Archives/Public/public-html/2016Jul/thread.html</a> ( Gallery element &amp; Galleries revisited )</p>
+<p>(There’s not really much point repeating everything here)</p>
+<p>The point is that displaying one or more related images with an optional description in a matter which is appropriate for ALL platforms is far too difficult on the web. So difficult in fact that even big players have pretty much given up on doing it on all platforms and usually direct you to their mobile app. I’m not saying it is impossible, but it is hard work and the result if you fail to do it is extraordinarily unpleasant to use.</p>
+<p>While displaying the overview is something that can be solved with acceptable effort, displaying the images and reacting appropriately to gestures that are standard on the platform (swipe, buttons, zoom gestures), while technically possible, is so much effort that nobody can expect an average web designer (I’m not talking about people working at Facebook or Google, I’m talking about the guys who make sure your plumber has a homepage) to succeed here. Of course, this could be done as a service or with a third party library, but the simple fact that this hasn’t happened so far is telling of how difficult this is.</p>
+<p>While developers are always free to implement a custom solution if they think can do better, what we’re missing is a basic solution that will just work with minimal effort. Something like the controls attribute for video.</p>
+<p>Proposal:</p>
+<p>Standardize a way to declare a union of items which are represented by an image, have (optional) essential descriptions, can be moved outside the context of the page and can offer additional actions by interacting with the page via url and script.</p>
+<p>There are a couple of existing standards which already take care of some of the issues, for example FIGURE, PICTURE and IMAGE. Whether other items like VIDEO or CANVAS can adequately be represented is something I’m not entirely sure about. While it is certainly desirable, the burden of implementing this may be too big. There’s a pretty good chance that we’ll get inconsistent results in that case.</p>
+<p>For the interaction with the page we may want to take a page from FORMs, with each action essentially being a form action which may be performed via a FORM element or captured using appropriate event handlers. No need to reinvent the wheel.</p>
+<p>Invoking the gallery is actually a bit of a problem, since we have no directly visible element which can be used for this purpose. I’d suggest making the gallery handle all clicks, while reminding authors that they can simply stop propagation.</p>
+<p>One major issue that’s still open is how we are going to differate between the content meant for rendering the gallery as a whole and the one meant to be displayed full-size. A UA-rendered gallery overview would have avoided the issue but with custom galleries, there’s going to be a lot of content that is really just styling. On the other hand, we don’t want to punish developers with clean CSS by forcing them to include the same content twice. A single FIGURE element should be sufficient to describe thumbnail and expanded view. I’d suggest simply making the gallery element very strict about what it accepts as valid content, while still giving a defined behavior for cases when there’s “invalid” content. That way “invalid” content can be used for presentation purposes.</p>
+<p>Based on all this I’d suggest the following:</p>
+<p>The gallery is a block element containing figure and/or other content. It has no visible representation aside from its content.
+Each figure which is a direct or indirect descendent of the gallery element represents a frame. Frames can not be nested.
+The viewer is invoked when a click event that was triggered on a FIGURE element bubbles up to the GALLERY.
+The UA presents the frame to the user by performing the following steps:</p>
+<ul>
+<li>The figure element gets a min-width of the full-screen area</li>
+<li>The figure element gets a min-height of the full-screen area</li>
+<li>The figcaption gets a display:none</li>
+<li>All form elements inside the figure element are set to display:none</li>
+<li>A focus event is fired on the figure element</li>
+<li>A fullscreen event is fired with the fullscreen element set to the figure element</li>
+<li>A snapshot of the figure’s DOM is taken</li>
+<li>The UA takes a snapshot of the figcaption’s textContent</li>
+<li>The UA compiles a list of all input type=button and input type=submit elements inside the figure</li>
+<li>The UA may slow down rendering of the page at this point</li>
+<li>The snapshot is rendered to an image (the UA SHOULD choose an appropriate density, at least 2x the display density)</li>
+<li>The UA MAY prerender other frames inside the galleries according to the same rules (except it doesn’t raise another fullscreen event, but sets the fullscreen element)</li>
+<li>The UA MUST update the rendering when new resources become available, for example if a picture has been loaded at a higher resolution</li>
+<li>The UA displays the image with platform-appropriate controls, it SHOULD display controls for navigating among the images and MUST display controls for exiting the viewer mode</li>
+<li>The UA MUST present the figcaption textContent along with the rendered content (however it may hide it after a brief period)</li>
+<li>The UA MUST display the list of INPUT elements. Activating one of these INPUT element closes the viewer and raises the appropriate event on the INPUT element (it MAY however hide the list behind a menu)</li>
+<li>When the user navigates to a different figure, the UA MUST raise a focus event on that element before rendering it</li>
+<li>On close, a full screen exit event is fired</li>
+</ul>
+<p><strong>Example HTML</strong></p>
+<pre><code>&lt;gallery&gt;
+    &lt;div&gt;
+        &lt;figure&gt;
+            &lt;picture&gt;&lt;img src="..." /&gt;&lt;/picture&gt;
+            &lt;figcaption&gt;...&lt;/figcaption&gt;
+        &lt;figure&gt;
+        &lt;div&gt;
+            Additional controls
+        &lt;div&gt;
+    &lt;/div&gt;
+    &lt;figure&gt;
+        &lt;form action="download.php" method="GET"&gt;
+            &lt;input type="hidden" name="pic" value="..." /&gt;
+            &lt;input type="submit" value="Download" /&gt;
+        &lt;/form&gt;
+        &lt;picture&gt;&lt;img src="..." /&gt;&lt;/picture&gt;
+        &lt;figcaption&gt;..&lt;/figcaption&gt;
+    &lt;/figure&gt;
+&lt;/gallery&gt;
+</code></pre>
+<p>Still pretty broad strokes, but I think we’re getting there. I’ll try to write up an implementation for Firefox desktop and mobile during the weekend, so we can play around with it a little more.</p>
+<p>So, are there any issues you can think off? Any reason why implementors may be opposed to this? Anything that will make you think this won’t be accepted by web developers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-07-14</div>
+          <div class="post_content">
+<p>prollyfill it as a custom element - then we can see if devs accept it… if nothing else, they can then use it in real world stuff and there is better incentive for them to try it/provide feedback on what they like or don’t about it and maybe help improve it.  I can tell you that without that I think there is very little appetite for new tags by implementers right now - there’s too much magic left to uncover and incubating ideas in this kind of way provides a clearer path.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

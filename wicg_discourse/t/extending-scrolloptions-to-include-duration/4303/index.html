@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extending ScrollOptions to include duration</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extending ScrollOptions to include duration</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2811_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fernap3</div>
+          <div class="creation_date">2020-03-11</div>
+          <div class="post_content">
+<p>I have a use case for smooth scrolling: I show log file text (potentially many lines) in a container, along with a sort of index alongside.  When a user clicks an entry in the index, we scroll to a given line in the log text.  This is a natural use case for smooth scrolling as provided in the <a href="https://drafts.csswg.org/cssom-view/#valdef-scroll-behavior-smooth" rel="nofollow noopener">CSSOM View Module</a>: I want to scroll to the appropriate line while giving the user context as to where the new scroll position is relative to the original position.  However, if the new scroll position is on a line far down the document from the current scroll position, the smooth scroll operation can take several seconds to complete in Chrome.</p>
+<p>I’d like to propose something like a <code>duration</code> property be added to <code>ScrollOptions</code> to allow a developer to cap the amount of time the user agent spends scrolling to the destination.</p>
+<p>Does anyone know if this is against any original design tenet of “smooth” scrolling in this spec?  I understand from <a href="https://discourse.wicg.io/t/proposal-element-scroll-with-ease-options/1720/12">this conversation</a> that we want to honor the system’s scroll style that the user is presumably used to, but I think my example above demonstrates bad UX.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2020-03-17</div>
+          <div class="post_content">
+<blockquote>
+<p>I think my example above demonstrates bad UX.</p>
+</blockquote>
+<p>If scrolling is set to move too fast, you’ll potentially cause the screen to pass the three flashes-per-second threshold which is an <a href="https://www.w3.org/TR/WCAG21/#seizures-and-physical-reactions">accessibility violation</a>.</p>
+<p>If it’s important for your users to get to the information quickly, consider not using an animation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>Have you filed a bug against chromium? Maybe they agree that it’s universally bad UX, and can fix it for everyone by default.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>Maybe browsers could offer a scroll behavior option that sits between full animation and no animation. For example, the browser could instantly jump 99% of the way but then do a animation for that last ~50 pixels. That way, the user would get a hint in which direction the scroll happened.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2811_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fernap3</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>So, the behavior actually seems to be a lot better in Canary (Chrome 82). <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+<p>Seems to take more or less a constant amount of time to scroll between two offsets after a certain point. Haven’t tried it in other browsers though.</p>
+<p>So maybe this isn’t appropriate for the specification but more on the user agent not to implement in a way that could be bad for the user.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

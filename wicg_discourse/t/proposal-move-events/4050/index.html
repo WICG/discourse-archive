@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Move events</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Move events</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1725_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Adrian_Odeby_Helvik</div>
+          <div class="creation_date">2019-10-30</div>
+          <div class="post_content">
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicon.ico" width="32"/>
+<a href="https://github.com/adrianhelvik/proposal-move-events" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars3.githubusercontent.com/u/7836058?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/adrianhelvik/proposal-move-events" rel="nofollow noopener" target="_blank">adrianhelvik/proposal-move-events</a></h3>
+<p>Contribute to adrianhelvik/proposal-move-events development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>I have a proposal for unifying touch and mouse events in order to make creating drag’n’drop interfaces easier. In the provided proposal I have created a fully functioning polyfill and ponyfill (I have used the ponyfill in production for half a year – and it’s great!)</p>
+<p>The proposal adds multiple elements.</p>
+<ol>
+<li>Move event handlers: Instead of passing a function, you pass a class, which can have the methods onStart, onMove and onEnd. The instance is kept for the duration of a move event (start + move + end).</li>
+<li>Snapshots: You can create a snapshot of an element. Which is a non-interactive clone of the original element that you can place, move and remove. This should not be a real element.</li>
+<li>snapshotX/snapshotY: The coordinates used for placing the snapshot.</li>
+</ol>
+<pre><code class="lang-javascript">import { polyfill } from 'proposal-move-events'
+
+polyfill()
+
+element.moveHandler = class Move {
+  onStart(event) {
+    event.preventDefault()
+    this.snapshot = document.createSnapshot(this.element)
+    this.element.style.opacity = 0
+    this.initialX = event.snapshotX
+    this.initialY = event.snapshotY
+    this.snapshot.place({
+      x: event.snapshotX,
+      y: event.snapshotY
+    })
+  }
+
+  onMove(event) {
+    this.snapshot.move({
+      x: event.snapshotX,
+      y: event.snapshotY,
+    })
+  }
+
+  onEnd(event) {
+    this.snapshot.move({
+      x: this.initialX,
+      y: this.initialY,
+      transition: 300,
+    })
+    setTimeout(() =&gt; {
+      this.element.style.opacity = 1
+      this.snapshot.remove()
+    }, 300)
+  }
+}
+</code></pre>
+<p>What are your thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-10-30</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="4050">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/adrian_odeby_helvik/40/1725_2.png" width="20"/> Adrian_Odeby_Helvik:</div>
+<blockquote>
+<p>I have a proposal for unifying touch and mouse events</p>
+</blockquote>
+</aside>
+<p>Isn’t that what <a href="https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events" rel="nofollow noopener">Pointer Events</a> do?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1725_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Adrian_Odeby_Helvik</div>
+          <div class="creation_date">2019-11-04</div>
+          <div class="post_content">
+<p>That’s true! I guess the text should be changed. The reason I came up with the proposal, and have used the ponyfill for a while is to simplify drag’n’drop interfaces.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">achref_nasri</div>
+          <div class="creation_date">2019-11-13</div>
+          <div class="post_content">
+<p>a cool idea and yeah very usefull but i think you should add multidrag  to the move class :</p>
+<p>the class  events are strongly linked (onStart-&gt; onMove-&gt;onEnd) : the OnEnd  event is sort like a kill switch for the move class  wich mean i can’t drag an element more than one location from A to B if i want for exemple to drag an elemnt from pos A  to pos B then stop in B and drag it to pos C or return to A i can’t do that .(the onMove event can’t be triggered again) it would be very cool if i can do that <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=9" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1725_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Adrian_Odeby_Helvik</div>
+          <div class="creation_date">2019-12-12</div>
+          <div class="post_content">
+<p>Do you mean without releasing? Hmm. Want to sketch out an API, so it becomes clearer? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS function to reference other property&rsquo;s value</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS function to reference other property&rsquo;s value</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-09-22</div>
+          <div class="post_content">
+<p>It would be useful to be able to reference another property’s value similar to how <code>currentColor</code> works for the color property.</p>
+<p>While the following examples would be possible with custom properties (variables), authors of utility classes and third party libraries don’t always know what custom properties are available.</p>
+<h3>
+<a class="anchor" href="#example-1-1" name="example-1-1"></a>Example 1</h3>
+<p>Refer to the current background color to set a text color that has good contrast</p>
+<pre><code class="lang-css">.a11y-text {
+  color: color-contrast(
+    prop(background-color) vs white, black
+  );
+}
+</code></pre>
+<h3>
+<a class="anchor" href="#example-2-2" name="example-2-2"></a>Example 2</h3>
+<p>Refer to inherited margin values in order to swap them</p>
+<pre><code class="lang-css">.card-layout {
+  margin-inline-start: 1em;
+  margin-inline-end: auto;
+}
+
+.card-layout.reverse {
+  --prev-start: prop(margin-inline-start);
+  --prev-end: prop(margin-inline-end);
+
+  margin-inline-start: var(--prev-end);
+  margin-inline-end: var(--prev-start);
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>Yeah, this has been proposed numerous times, unfortunately it cannot be done in such a general way because it can introduce cycles, and cycle detection on that scale is nontrivial.</p>
+<p>In fact, even your Example 2 is cyclical and would not do what you expect it to do: <code>margin-inline-start</code> depends on <code>margin-inline-end</code> and <code>margin-inline-end</code> depends on <code>margin-inline-start</code>.</p>
+<p>A less powerful form of this that doesn’t permit cycles would be the ability to reference a <em>parent’s</em> property value. This was proposed <a href="https://github.com/w3c/csswg-drafts/issues/2864" rel="noopener nofollow ugc">here</a> and accepted by the CSS WG <a href="https://github.com/w3c/csswg-drafts/issues/2864#issuecomment-816280875" rel="noopener nofollow ugc">here</a>, though editorial work is still pending.</p>
+<p>For your first example, there have been <a href="https://github.com/w3c/csswg-drafts/issues/5292" rel="noopener nofollow ugc">discussions</a> for a <code>currentBackgroundColor</code> keyword, akin to <code>currentColor</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-10-31</div>
+          <div class="post_content">
+<p>Would it be possible to at least reference the “current” value of the same property? So we could write something like this:</p>
+<pre><code class="lang-css">* {
+  line-height: max(1.5, current);
+}
+</code></pre>
+<p>This would effectively allow any length property to have a minimum and maximum value without overriding any value between them. For instance:</p>
+<pre><code class="lang-css">p { width: 38rem; }
+
+p.special {
+  width: max(current, 50ch);
+}
+
+</code></pre>
+<p>If this concept of referencing other properties on the same selector target has been proposed several times, then there must be a lot of use cases for it. Is it possible to implement a weaker version that doesn’t introduce cycles?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

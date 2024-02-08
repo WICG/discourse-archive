@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[proposal] - ship browsers with builtin wasm-sqlite3</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[proposal] - ship browsers with builtin wasm-sqlite3</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kaizhu256</div>
+          <div class="creation_date">2019-10-08</div>
+          <div class="post_content">
+<h1>proposal</h1>
+<p>a standardized, easy-to-use client-side sql-database is sorely needed to advance the state of frontend-development beyond its current dependency on backend-servers for state-management.</p>
+<p>my current experience with sql.js (wasm-sqlite3) indicate its suitable for such role.  at our company, we have a frontend-product that no longer relies on sql-server, with all its state-management migrated to sql.js (and persisted as indexeddb blobs).  the product runs sql.js fine on chrome, firefox, and edge (albeit slowly) with the following anecdata performance numbers:</p>
+<p>time to ingest 500,000 row csv (~100 MB) into sql.js web-worker (and persist in indexeddb):</p>
+<ul>
+<li>chrome:  15 seconds</li>
+<li>firefox: 20 seconds</li>
+<li>edge:    90 seconds</li>
+</ul>
+<p>time to run [product-specific] sql-queries on 500,000 row table in sql.js web-worker:</p>
+<ul>
+<li>chrome:  35 seconds</li>
+<li>firefox: 35 seconds</li>
+<li>edge:    65 seconds</li>
+</ul>
+<h1>actionable items:</h1>
+<ul>
+<li>debate on whether including currently released sql.js v1.0.0 (or minor update to it) as a builtin browser/webworker-api is a good-idea</li>
+</ul>
+<h1>security issues:</h1>
+<p>i’m not knowledgeable about security.  but the initial api will not address persistence, to keep the scope manageable – users are expected to manage persistence themselves via indexeddb/kv-storage/localforage.</p>
+<h1>possible future addon proposals (but out-of-scope of initial proposal):</h1>
+<ul>
+<li>allow indexeddb to persist 1gb sqlite3-blobs (chrome currently hard-limits indexeddb to 120 MB blobs).</li>
+<li>add easy-to-use, web-worker builtin-api to ingest 1gb csv</li>
+<li>future release of sql.js should have ability to attach multiple database/csv [1]</li>
+<li>future release of sql.js should properly catch web-worker exceptions and pass them to main thread [2]</li>
+</ul>
+<p>[1] sql.js issue 88 - A way to attach multiple databases?
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/kripken/sql.js/issues/88" rel="nofollow noopener" target="_blank">github.com/kripken/sql.js</a>
+</header>
+<article class="onebox-body">
+<a href="https://github.com/rharder" rel="nofollow noopener">
+<img class="thumbnail onebox-avatar" height="60" src="https://avatars1.githubusercontent.com/u/75600?v=2&amp;s=96" width="60"/>
+</a>
+<h4><a href="https://github.com/kripken/sql.js/issues/88" rel="nofollow noopener" target="_blank">Issue: A way to attach multiple databases?</a></h4>
+<div class="date" style="margin-top:10px;">
+<div class="user" style="margin-top:10px;">
+	opened by <a href="https://github.com/rharder" rel="nofollow noopener" target="_blank">rharder</a>
+	on <a href="https://github.com/kripken/sql.js/issues/88" rel="nofollow noopener" target="_blank">2015-02-05</a>
+</div>
+<div class="user">
+</div>
+</div>
+<pre class="content" style="white-space: pre-wrap;">I can't figure out how to attach multiple databases to run queries across two sqlite files. Something like this:
+ATTACH 'db1.sqlite3' AS...</pre>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">enhancement</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>[2] sql.js issue 288 - fix error-handling in worker
+<aside class="onebox githubpullrequest">
+<header class="source">
+<a href="https://github.com/kripken/sql.js/pull/288" rel="nofollow noopener" target="_blank">github.com/kripken/sql.js</a>
+</header>
+<article class="onebox-body">
+<a href="https://github.com/bryangingechen" rel="nofollow noopener" target="_blank">
+<img alt="bryangingechen" class="thumbnail onebox-avatar" height="90" src="https://avatars3.githubusercontent.com/u/5209952?v=4" width="90"/>
+</a>
+<h4>
+<a href="https://github.com/kripken/sql.js/pull/288" rel="nofollow noopener" target="_blank">fix error-handling in worker</a>
+</h4>
+<div class="date">
+  by <a href="https://github.com/bryangingechen" rel="nofollow noopener" target="_blank">bryangingechen</a>
+  on <a href="https://github.com/kripken/sql.js/pull/288" rel="nofollow noopener" target="_blank">09:42PM - 05 Aug 19 UTC</a>
+</div>
+<div class="github-commit-stats">
+<strong>1 commits</strong>
+  changed <strong>2 files</strong>
+  with <strong>9 additions</strong>
+  and <strong>1 deletions</strong>.
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p><img alt="screenshot%20ingest%20csv" data-base62-sha1="9H9bkJMkyIrMwtyQLfWfWjs8FTN" height="235" src="//discourse.wicg.io/uploads/default/original/2X/4/43f432bf2f10cfc2ab1a419111fb1da2840c5747.png" width="653"/></p>
+<p><img alt="screenshot%20run%20sql-queries" data-base62-sha1="b1TiYAY0ulAQybIRT8TFKJqHP6Q" height="339" src="//discourse.wicg.io/uploads/default/original/2X/4/4d4eaa76d82663edd0513cd56cceadc44fd5911c.png" width="325"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2019-10-08</div>
+          <div class="post_content">
+<p>Unfortunately, shipping a sqlite would have the same problems now that it did in the past, when we effectively did so with Web SQL Database - SQL doesn’t have a web-quality spec (nothing that would allow an independent implementation to be written that would interoperate with content in the wild), and just using SQLite means we’re locked into the quirks and bugs of whatever version of SQLite we use, likely resulting in us at some point having to freeze/fork the web’s version of SQLite from the public version if they try to fix a bug or change a quirk that the web has come to depend on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kaizhu256</div>
+          <div class="creation_date">2019-10-08</div>
+          <div class="post_content">
+<p>can it be different this time around?</p>
+<ul>
+<li>
+<p>unlike websql, sql.js is a more isolated, persistence-free wasm-package with smaller security audit-burden on browsers.</p>
+</li>
+<li>
+<p>you mention idealogical and web-compat reasons for dropping websql, but in order to sell that to the community, a 3rd factor was promise that indexeddb would be a “good-enough” replacement.  its not – as anecdata, i’m rarely aware of real-world scenarios where indexeddb is used as an “indexed” db (as opposed to dumb key-value store with improved quota over localstorage).</p>
+</li>
+</ul>
+<p>part of me feel like web-development has been set-back for nearly a decade after websql was dropped (and my perception of mozilla at time was it pulled a bait-and-switch over community).  so much crap was added to javascript during intervening years to [sub-optimally] solve general-purpose programming issues on frontend/embedded systems that shouldn’t have existed if sqlite3 was accessible.  we could have had truly serverless frontend-apps free from backend hindrances by now.</p>
+<p>sorry for ranting, but i think the websql precedent can be revisited given how disappointing indexeddb turned out to be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2022-08-06</div>
+          <div class="post_content">
+<p>It would be cool to open .sqlite files directly from the browser. Why?</p>
+<ol>
+<li>Makes the user less dependent on proprietary solutions</li>
+<li>This increases the market for portable database like sqlite</li>
+<li>Makes sqlite more usable as it opens in browser as como ‘json’ or ‘html’ - <em>I think if files like csv, sqlite, json can’t be rendered directly in browser</em>
+</li>
+<li>Most of the apps that were built in electron work with a local database like sqlite, localdb etc - this could allow desktop apps to communicate easily with the browser if this solution/proposal is made, link: <a class="inline-onebox" href="https://www.electronjs.org/apps" rel="noopener nofollow ugc">Electron Apps | Electron</a> There are several requests here about the ‘writable file’ - I ask if this could not be applied here, in most cases when we use local database we want to have permanent data for some time.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

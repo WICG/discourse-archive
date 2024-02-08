@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Cross-window Session Storage</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Cross-window Session Storage</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-20</div>
+          <div class="post_content">
+<p>I didn’t realize <code>sessionStorage</code> was limited to a single tab <a href="https://code.google.com/p/chromium/issues/detail?id=42599#c7" rel="nofollow noopener">until right now</a>. I’ve used that before as a quick way of persisting a value when reloading a page, but in general, that is of very limited utility.</p>
+<p>It’s 2015, and the only mechanism web developers have if they want a ephemeral storage for <em>all open tabs on their domain</em> is <strong>document.cookie</strong>. If I want to read data that is shared across tabs in a semi-persistent fashion, my only choice is to <em>deserialize a substring found by linear search through a serialized collection</em> - one that’s going to get <em>sent with every HTTP request</em>. That is just <em>unbelievable</em>.</p>
+<p>(localStorage doesn’t make sense if I’m dealing with things that <em>only apply to the current window configuration</em> - I <strong>don’t</strong> want those values persisted. And I’m not even going to <em>touch</em> ServiceWorker for this problem.)</p>
+<p>I propose we add a Storage value that works <em>exactly the same way</em> as <code>localStorage</code>, <strong>except</strong> that it has the same rules regarding persistence (and lack thereof) as session cookies. Possible names (bikeshed warning):</p>
+<ul>
+<li>
+<code>processStorage</code> (ironically, in process-per-tab browsers, <code>sessionStorage</code> is closer to process storage and <code>processStorage</code> would be closer to session storage)</li>
+<li>
+<code>temporaryStorage</code> (I don’t like it because it makes it sound like it has an arbitrary eviction policy)</li>
+<li>
+<code>crossSessionStorage</code> (I guess this probably the most accurate name, but do we need <em>another</em> thing in the Web platform that abbreviates as CSS or XSS?)</li>
+<li><code>runtimeStorage</code></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

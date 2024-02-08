@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&lt;input type=&ldquo;file&rdquo; maxlength=&ldquo;1024&rdquo; /&gt;</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&lt;input type=&ldquo;file&rdquo; maxlength=&ldquo;1024&rdquo; /&gt;</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>Basically syntactic sugar for <code>&lt;input type="file" onchange="this.setCustomValidity(this.files[0].size &gt; this.maxlength? 'some error about file being too large' : '')"&gt;</code> (ofc for all files if multiple)
+The attribute is already there, we may as well do something with it <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>Just to check, you mean it would produce an error instead of picking the file if you chose a file that was more bytes than <code>maxlength</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>No, it would allow picking the file and make the control invalid with all that that entails.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>ah, yep.</p>
+<p>Sorry for being dense, and thanks for explaining.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>I like it but when using <code>&lt;input type="file" multiple length="1024" /&gt;</code> does length refer to total length or length per file? I can see good use cases for both and would almost want a way to specify both cases (eg an email client that limits to a maximum of 10meg of attachments and an image gallery that limits 2meg per image).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>While the idea itself may make sense (for example, PHP has a similar feature via a hidden form field with <code>name="MAX_FILE_SIZE"</code>), it would probably be somewhat confusing to reuse the existing <code>maxlength</code> attribute with a quite different meaning.</p>
+<p>A potentially more reasonable option is to use a separate attribute with a more specific and clear name like <code>maxfilesize</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>Reusing existing attributes is very much in the spirit of HTML, see multiple attribute on file inputs vs range inputs: You could argue the functionality is even more different there.
+Also, I don’t see how it’s that different. It’s setting the maximum length of the input, in both cases.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-16</div>
+          <div class="post_content">
+<p>Text length is typically measured in characters while file size is measured in <em>bytes</em>.</p>
+<p>Let’s imagine a user uploads a UTF-8-encoded <em>text</em> file. Should <code>maxlength</code> be applied to the file size or to the number of <em>characters</em> in the file? While it’s somewhat obvious for us, <em>in the context of this topic</em>, that it’s about bytes, it may be confusing for authors in general.</p>
+<p>A more clear and specific attribute name would rule out such ambiguity.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

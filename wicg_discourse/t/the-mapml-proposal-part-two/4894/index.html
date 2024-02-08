@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>The MapML Proposal - Part Two</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">The MapML Proposal - Part Two</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2020-10-01</div>
+          <div class="post_content">
+<p>I gave a presentation (<a href="https://www.w3.org/2020/maps/supporting-material-uploads/presentations/Peter_Rushforth-The-MapML-Proposal-Part-One.pptx">slides</a>) that covered the core of the <a href="https://youtu.be/zJkJcvmUA5o?t=1177" rel="noopener nofollow ugc">MapML proposal (video)</a>, but I was unable to go into details that serve to paint a full picture of the proposal as it stands.  While I feel that the proposal is pretty solid from a hypermedia design perspective, opinions seem somewhat divided.</p>
+<p>While I am still working on the deck to improve animations and explanations, I would like to share the video of the presentation that I gave on <a href="https://youtu.be/aqXmbNAaLAU?t=4903" rel="noopener nofollow ugc">Part Two of the proposal</a>. We want (need, actually) your specific feedback about the proposal, whether you are a Web browser developer OR a Web map developer.</p>
+<p>Anyway, I don’t quite understand all the divided opinions about the proposal, so apart from “it’s too complex”, would you please listen and tell us <strong>exactly</strong> what it is about the proposal that does not work or is unfinished, both from the Web browser developer point of view and the Web map developer perspective.  I’m not sure it’s possible to divide the proposal into “primitives” and “high-level features”, but I do believe that if agreed upon, the development of the proposal could be phased to deliver useful pieces incrementally.</p>
+<p>And, could I politely ask you not to say “it’ll never fly because Google”, because I don’t believe that to be true, and it’s been said (many times) before.  Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satakagi</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p><span class="mention">@PeterR</span>
+I have two straightforward questions.</p>
+<p>First,
+Each elements*1 under the mapml element feels pretty close to svg. For example, I’ve heard on gitter that it requires features that svg doesn’t yet have, such as styling and linking to subpaths.</p>
+<p>If you have a document that lists the reasons, including the above, why you decided to create unique  elements instead of svg, please provide it. It could be the page numbers of your slides.</p>
+<p>*1: That’s probably all the elements listed in <a href="https://maps4html.org/MapML/spec/#features" rel="noopener nofollow ugc">chapter 5</a>. However, there is another discussion of the tile element.</p>
+<p>Second,
+Can you tell me why you need mapml instead of GeoJSON? If svg meets the requirements for the map, is it okay as a substitute for mapml?</p>
+<p>P.S.
+It seems to me that the map element and layer element specifications (<a href="https://maps4html.org/MapML/spec/#web-maps" rel="noopener nofollow ugc">section 4</a>) can be considered as another specification separate from the mapml specification (<a href="https://maps4html.org/MapML/spec/#features" rel="noopener nofollow ugc">section 5</a>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p>The <code>&lt;feature&gt;</code> element was conceived as a semantic receiver for GeoJSON: the <code>&lt;properties&gt;</code> child would contain “regular”, styleable, linkable HTML that was intended as metadata for the feature, while the <code>&lt;geometry&gt;</code> element would contain OGC simple features geometries that have more semantic constraints than svg paths do (I think). We can discuss those constraints, but they’re related to real-world feature-ness I believe.</p>
+<p>The GeoJSON model of arrays to describe these geometries has its own semantics, and the arrays can be transformed to SVG, WebGL, etc. by procedural logic (it is required actually).  That’s great, because such procedural logic could also easily generate <code>&lt;geometry&gt;</code> values with very little change.  However, I did not want to have the proposal rely exclusively on procedural logic to be supplied by Web sites.</p>
+<p>In <a href="https://www.youtube.com/watch?v=Vwd5REr-WB8" rel="noopener nofollow ugc">OGC testbed 15, we prototyped the rendering of MapML tiles</a>, in which the geometries that were split by tile boundaries used <code>&lt;span class="noline"&gt; ...&lt;/span&gt;</code>, so that in principle the sub-geometries that should not be drawn, or styled differently, could be targeted by CSS selectors.  This worked quite well, except that the feature geometries had to be broken up and serialized as SVG paths with different DOM nodes representing the  sub-parts, so that they could be targeted by CSS selectors.</p>
+<p>That is a core reason: even though the <a href="https://www.w3.org/TR/html-design-principles/#separation-of-concerns">HTML design principles</a> say that not everything has to be modeled with deep semantic markup, we feel that targeting parts of geometries with CSS selectors is a very common need, even beyond the use case of hiding tile boundaries, and after the workshop, I feel it may have accessibility considerations as well.</p>
+<p>So that is one reason to expose the geometry as semantic markup, but I think that future experiments could show that the best reason may be that geometries can encode links (<code>&lt;a href="..."&gt;&lt;/a&gt;</code>) in maps that can be used to federate map layers in the same way that HTML documents ‘federate’ web sites in a crawlable  manner.  And I also imagine that accessibility needs may demand the ability to mark up <code>&lt;geometry&gt;</code> parts without breaking the geometry integrity.</p>
+<p>Finally, <code>&lt;geometry&gt;</code> as markup has been done before, in KML with some limited success and in GML with less success.  Those two applications failed to deliver the styling and linking, and indeed the accessibility that I have mentioned above, mostly because they weren’t HTML, I think.</p>
+<blockquote>
+<p>If you have a document that lists the reasons</p>
+</blockquote>
+<p>There may be other good reasons, but I can’t think of them at this moment. I tried to make a thorough description of the proposal and it’s reasons <a href="https://github.com/Maps4HTML/MapML-Proposal#the-feature-element" rel="noopener nofollow ugc">here</a>.  It has taken some criticism for being too long already.</p>
+<blockquote>
+<p>Second, Can you tell me why you need mapml instead of GeoJSON?</p>
+</blockquote>
+<p>I think you mean <code>&lt;feature&gt;</code>, because <code>&lt;mapml&gt;</code> is proposed to be a document (root) element for the text/mapml media type, so that it can be referenced by <code>&lt;layer src="..."&gt;&lt;/layer&gt;</code> elements.  So these are different things in the proposal. Please correct me if I’m wrong, but I answered what I thought the question was intended.</p>
+<blockquote>
+<p>P.S. It seems to me that the map element and layer element specifications (section 4 2) can be considered as another specification separate from the mapml specification (section 5 2).</p>
+</blockquote>
+<p>It used to be that way, but that <a href="https://github.com/Maps4HTML/MapML/issues/55" rel="noopener nofollow ugc">was found to be an issue that complicated understanding the proposal</a> as a whole, so we are moving towards a single specification at the current time. The intention is to eventually write the specification as a pull request to the WHATWG HTML specification, once we are ready with sufficient implementation experience, support, feedback etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satakagi</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p><span class="mention">@PeterR</span>
+Thanks for the detailed explanation.
+As you can imagine I wish we could describe geographic information as SVGs.</p>
+<p>If the basic structure of geographic information is what the geo industry considers to be a simple feature, and even if it doesn’t perfectly match the naming and semantics of each of the elements of the SVG, it’s still possible to work out a way to bridge the gap without increasing the complexity and size of the content too much. I feel. Because they are all vector data.</p>
+<p>I don’t know how much the geo industry recognizes the value of svg, but the value of it being a vector data description format that web browsers can draw natively is good enough for me.</p>
+<p>Incidentally, in the framework I’m developing, a mechanism for interconversion between geoJson and SVG elements is included, although it may be a bit sloppy.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

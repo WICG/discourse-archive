@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Return type annotations</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Return type annotations</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michael</div>
+          <div class="creation_date">2015-01-13</div>
+          <div class="post_content">
+<p><a href="http://asmjs.org/spec/latest/#return-type-annotations" rel="nofollow noopener">Section 5.2</a> and <a href="http://asmjs.org/spec/latest/#returnstatement" rel="nofollow noopener">Section 6.5.5</a> both give some meaning for return statements. Section 5.2 tells us that the last return statement in a function MUST be annotated or be NumericLiteralish (the -ish because of const), whereas section 6.5.5 says that any other return statement needs only for EvaluateExpression to give a subtype of the formal return type. Is there any reason why not allow any EvaluateExpression that gives a subtype of signed, double, or float for the last return statement as well? Personally, I would find that a lot more attractive.</p>
+<p>Thinking more, I could see the argument that having formal return type defined in this way would make it easier to throw good error messages (at a return statement that doesn’t match the formal return type) without having to first evaluate the entire formal return statement. So with that, I guess loosening the formal return statement doesn’t look as appealing. Still, I would be interested in hearing the actual reasoning.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-01-13</div>
+          <div class="post_content">
+<p>That’s a great question.  The reasoning behind this peculiarity is that, for the first half year, asm.js didn’t require callsite coercions (f()|0).  Instead, the spec implicitly required you to take make passes over the module: one to collect signatures, and one to type-check bodies.  Only with the signatures collected could you type check call expressions.  In this context, you have a cyclic problem if deriving the return type requires type checking an expression which can include calls to the functions whose signatures you are trying to determine.  Of course, when we added callsite coercions (to avoid the two-pass requirement so that we could parse and discard ASTs function-at-a-time) there ceased to be any benefit to having a limited-form final-return-statement.</p>
+<p>So, getting to your question: I agree we should drop the special syntactic requirements on the final return statement.  I’ll give others a chance to weigh in, though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abchatra</div>
+          <div class="creation_date">2015-01-13</div>
+          <div class="post_content">
+<p>I am +1 for dropping the special syntactic requirement for final return statement (there is no backward compat issue as well)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1838_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dherman</div>
+          <div class="creation_date">2015-01-13</div>
+          <div class="post_content">
+<p>Ah yes, I remember this sequence of events now. Thanks for the historical reminder <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>This makes sense to me. From a spec perspective, I think we could change it to just assert the existence of a return type for the function without saying where that type came from, and then require each return argument expression to typecheck to a subtype of that type (math is allowed to just pull objects out of thin air). IIUC, an actual algorithm would have to collect the synthesized types of all return arguments in the function body in an accumulated list and take their least upper bound to determine the function’s formal return type. Do I have that right?</p>
+<p>Dave</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-01-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="731">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dherman/40/101_1.png" width="20"/> dherman:</div>
+<blockquote>
+<p>IIUC, an actual algorithm would have to collect the synthesized types of all return arguments in the function body in an accumulated list and take their least upper bound to determine the function’s formal return type. Do I have that right?</p>
+</blockquote>
+</aside>
+<p>Yes, at least for Odin.  (Technically, we don’t accumulate a list, but rather a Maybe&lt;RetType&gt;, but in spirit that’s what we’re doing.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1838_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dherman</div>
+          <div class="creation_date">2015-01-13</div>
+          <div class="post_content">
+<p>/me nods</p>
+<p>Thanks!</p>
+<p>Dave</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-01-16</div>
+          <div class="post_content">
+<p>FWIW, <a href="https://hg.mozilla.org/mozilla-central/rev/38ad6d18d2ce" rel="nofollow noopener">landed</a> in FF38 (currently Nightly).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnieper</div>
+          <div class="creation_date">2015-02-15</div>
+          <div class="post_content">
+<p>How is this related with allowing proper tail calls in the future? When all callsite are required to have coercions, this would ban PTCs from asm.js, which would be really bad.</p>
+<p>Now with relaxing the requirements for return statements and collecting all return arguments to form the least upper bound as suggested here, is it doable to allow non-coercing callsites in tail position as long as there are enough coerced ones to deduce a proper upper least bound?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-02-16</div>
+          <div class="post_content">
+<p>This change simply loosens the coercion required by a return, but does not relax the coercions already required for callsites (such that, an int-returning function call must always by immediately coerced with f()|0), so it is not possible to express an int- or double-returning tail-call atm.</p>
+<p>Regardless, the important missing piece of work would be the actual implementation of PTC which is no small piece of work.  At that point, though, we could indeed extend the asm.js subset to drop the callsite-coercion requirement when the return type is implied by a prior return, as you’ve suggested.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnieper</div>
+          <div class="creation_date">2015-02-16</div>
+          <div class="post_content">
+<p>So you mean that after extending the asm.js subset, the way to code tail calls would be</p>
+<pre><code class="lang-javascript">function f() {
+  if (0) return 0;
+  return f();
+}
+</code></pre>
+<p>while</p>
+<pre><code class="lang-javascript">function f() {
+  return f();
+  return 0;
+}
+</code></pre>
+<p>would not be allowed to allow for a linear scan of the function. Did I get it right?</p>
+<p>As to actually implementing proper tail calls, one needs this change to the asm.js grammar before it makes sense to code it. Do PTC will have to be implemented in general in SpiderMonkey first or would their implementation in OdinMonkey be independent (because the asm.js pass collects enough information to detect all calls in tail position)? I am willing to help out by doing some coding and targeting OdinMonkey first sounds like a more manageable piece of work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-02-16</div>
+          <div class="post_content">
+<p>The former would be my default but obviously it’s a little goofy so we could consider variations on the latter.  One would hope for cases of simple recursion that there would actually be a base-case return before the PTC so the if(0) return wouldn’t be necessary in usual cases.</p>
+<p>Thanks for your offer to help!  One way to start out would be to implement the tail-call optimization for almost-tail-position calls in asm.js (e.g., “f() { return +f() }”) and, based on this experience (in particular, I’m eager to see that we don’t need to penalize non-tail-call performance), we could propose an asm.js extension as a new topic on specifiction.</p>
+<p>I’m happy to discuss PTC impl in Odin, but probably this isn’t the right forum for Odin implementation discussion; could you <a href="https://bugzilla.mozilla.org/enter_bug.cgi?assigned_to=nobody%40mozilla.org&amp;bug_file_loc=http%3A%2F%2F&amp;bug_ignored=0&amp;bug_severity=normal&amp;bug_status=NEW&amp;cc=luke%40mozilla.com&amp;cf_blocking_b2g=---&amp;cf_blocking_fennec=---&amp;cf_feature_b2g=---&amp;cf_fx_iteration=---&amp;cf_fx_points=---&amp;cf_status_b2g_1_4=---&amp;cf_status_b2g_2_0=---&amp;cf_status_b2g_2_0m=---&amp;cf_status_b2g_2_1=---&amp;cf_status_b2g_2_1_s=---&amp;cf_status_b2g_2_2=---&amp;cf_status_b2g_3_0=---&amp;cf_status_firefox35=---&amp;cf_status_firefox36=---&amp;cf_status_firefox37=---&amp;cf_status_firefox38=---&amp;cf_status_firefox_esr31=---&amp;cf_status_firefox_esr38=---&amp;cf_tracking_b2g=---&amp;cf_tracking_e10s=---&amp;cf_tracking_firefox35=---&amp;cf_tracking_firefox36=---&amp;cf_tracking_firefox37=---&amp;cf_tracking_firefox38=---&amp;cf_tracking_firefox_esr31=---&amp;cf_tracking_firefox_esr38=---&amp;cf_tracking_firefox_relnote=---&amp;cf_tracking_relnote_b2g=---&amp;component=JavaScript%20Engine&amp;contenttypemethod=autodetect&amp;contenttypeselection=text%2Fplain&amp;defined_groups=1&amp;flag_type-203=X&amp;flag_type-37=X&amp;flag_type-4=X&amp;flag_type-41=X&amp;flag_type-5=X&amp;flag_type-607=X&amp;flag_type-720=X&amp;flag_type-721=X&amp;flag_type-737=X&amp;flag_type-781=X&amp;flag_type-787=X&amp;flag_type-791=X&amp;flag_type-799=X&amp;flag_type-800=X&amp;flag_type-803=X&amp;flag_type-835=X&amp;flag_type-846=X&amp;flag_type-853=X&amp;flag_type-855=X&amp;flag_type-856=X&amp;flag_type-857=X&amp;flag_type-863=X&amp;flag_type-864=X&amp;flag_type-870=X&amp;flag_type-875=X&amp;form_name=enter_bug&amp;maketemplate=Remember%20values%20as%20bookmarkable%20template&amp;op_sys=All&amp;priority=--&amp;product=Core&amp;rep_platform=All&amp;target_milestone=---&amp;version=unspecified" rel="nofollow noopener">file a bug</a> instead?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnieper</div>
+          <div class="creation_date">2015-02-16</div>
+          <div class="post_content">
+<p>I can file a bug so that the OdinMonkey related discussion isn’t happening here. But I think there are three things one has to keep in mind:</p>
+<ol>
+<li>
+<p>Whether or whether not a particular implementation will penalize non tail-call performance (which shouldn’t be the case if done properly), any asm.js compile will eventually have to support PTC (when allowed by the asm.js language subset) because a general ES6 will have to.</p>
+</li>
+<li>
+<p>Optimizing pseudo tail calls like <code>return +f()</code> by just one engine wouldn’t help application programmers/compiler writers a lot as a ES6-compliant implementation does not have to do a tail call here, so they can’t rely on it.</p>
+</li>
+<li>
+<p>The most simple cases of proper tail calls like self-recursion or mutual recursion are not very interesting for compilers targeting asm.js as these use cases can easily be rewritten in an imperative, non-recursive way. Being able to output a form of continuation passing style would, however, be very helpful for compilers or even byte-code interpreters.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-02-16</div>
+          <div class="post_content">
+<p>Yes, of course; I was suggesting “return +f()” as an incremental step.  I actually expect PTC won’t negatively impact non-tail call perf, but it’s possible I’m forgetting an impl constraint.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

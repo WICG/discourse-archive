@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Web Payments Digital Product Management API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Web Payments Digital Product Management API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2020-04-01</div>
+          <div class="post_content">
+<p>Hi WICG,</p>
+<p>I’d like to propose an API for querying and managing digital products to facilitate in-app purchases from web applications, in conjunction with the <a href="https://www.w3.org/TR/payment-request/">Payment Request API</a> (which would be used to make the actual purchases). The API would be linked to a digital distribution service connected to via the user agent.</p>
+<h3>The problem</h3>
+<p>The problem we are trying to solve is that Payment Request by itself is inadequate for making in-app purchases in existing digital stores, because that API simply asks the user to make a payment of a certain amount (e.g., “Please authorize a transaction of US$3.00”), which is sufficient for websites selling their own products, but established digital distribution services require apps to make purchases by product IDs, not monetary amounts (e.g., “Please authorize the purchase of SHINY_SWORD”); the price being configured per-region on the backend.</p>
+<h3>The proposed solution (in very basic terms)</h3>
+<p>So we would like to build a new API, which allows the user agent to expose product-ID-related services from a digital store. This API would allow the web application to make a query, given a product ID, and retrieve the product title, price in local currency, and other information, in a store-specific but browser-agnostic manner. The application would use the Payment Request API with the store as a payment provider, supplying the product ID as metadata. A completed purchase would return a “purchase token”, which the application would be able to transmit to the new Digital Product Management API to “consume” or “acknowledge” the purchase, marking the transaction as complete.</p>
+<p>Such an API is necessary to allow web apps to be listed in various application stores, where apps are typically subject to requirements that digital purchases go through the store’s purchasing flow (and therefore, it would be against policy for apps listed in such stores to implement their own billing flow). Sites using the proposed API would still need to be individually configured to work with each store they are listed in, but having a standard API means they can integrate with a given store, and potentially have that integration work across multiple browsers. This is similar to how the existing Payment Request API works (sites still need to integrate with each payment provider, e.g., Google Pay, Apple Pay, but their implementation is browser agnostic).</p>
+<h3>Some history</h3>
+<p>Note: We originally proposed this API in the form of a proprietary API for Chrome web apps hosted in the Google Play Store (see the proposal on the blink-dev thread: “<a href="https://groups.google.com/a/chromium.org/g/blink-dev/c/vkS3k30lWNs/m/Gt4sKECQEgAJ" rel="nofollow noopener">SKU APIs for Web Apps in the Play Store</a>”). However, in the pursuant discussion, we were convinced to pivot to a standards-track API, so that potentially any browser can integrate with the store on the user’s device. Our basic motivation remains the same as outlined in that post from January, but we would be changing the design of the API to avoid being overly specific to one store (for example, we avoid the Play-Store-specific term “SKU” and instead the generic name “product ID”).</p>
+<p>We’d like to take expressions of interest for both developers who would be interested in a web API for integrating with the on-device store, and browser manufacturers who would like to integrate with a store. In particular, we are looking for ways to design the API to avoid Play-specific idioms. I am planning to put together a more comprehensive explainer document in the WICG.</p>
+<p>Thanks</p>
+<p>Matt Giuca on behalf of the Google Chrome OS and Web Platform teams</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2020-04-02</div>
+          <div class="post_content">
+<p>This sounds great - for us the two main reasons we still have to publish web apps as WebViews inside native apps with frameworks like Cordova is for IAP and ads. Adding support for IAP directly as a web API would be a major step towards being able to publish web apps to stores using the browser only, and not needing to bring in a big and complex third-party framework to handle native/web communication.</p>
+<p>For inspiration for API surface and usage in practice, Cordova plugins that already aim to solve this like <a href="https://github.com/j3k0/cordova-plugin-purchase" rel="nofollow noopener">cordova-plugin-purchase</a> may provide some inspiration (although at first glance the API could probably be modernised for things like async/await).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-04-14</div>
+          <div class="post_content">
+<p>Is it possible to piggy-back this on payment request? then this could just be some kind of payment handler and you could standardize the tokenized payment model… or do we need to change the Payment Request API in some way (e.g., we drop requiring the amount)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2020-04-15</div>
+          <div class="post_content">
+<p>Hi Marcos,</p>
+<p>We’ve looked at Payment Request (we’ve been working with the Payment folks at Google to design this), and determined that yes this <em>can</em> work with PR API, but we need additional APIs on the side to do out-of-band digital product management.</p>
+<p>It’s possible that what we’re proposing ends up making its way into the PR standard, but my feeling is that it’s fairly separable.</p>
+<blockquote>
+<p>do we need to change the Payment Request API in some way (e.g., we drop requiring the amount)?</p>
+</blockquote>
+<p>I think we will <em>also</em> need to drop requiring the payment amount, since if you supply a product ID in the private data to the PR API, you wouldn’t also want the client to redundantly specify the cost. We’ll look at any required changes to PR as part of this.</p>
+<p>(Rest assured, we are not going to duplicate any functionality that’s already in PR, or should be in PR.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2020-05-06</div>
+          <div class="post_content">
+<p>Can you enumerate some of the functions/interactions between the calling website and the store?
+Anything more than:</p>
+<ul>
+<li>Request product purchase</li>
+<li>Exchange “receipt” for digital product</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-05-15</div>
+          <div class="post_content">
+<p>We spun up <a href="https://github.com/WICG/digital-goods">https://github.com/WICG/digital-goods</a> to explore this further…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2020-05-18</div>
+          <div class="post_content">
+<p>Thanks Marcos!</p>
+<p>I have now put up the <a href="https://github.com/WICG/digital-goods/blob/master/explainer.md" rel="nofollow noopener">explainer</a> into that WICG repo. Welcoming further comments and suggestions as <a href="https://github.com/WICG/digital-goods/issues" rel="nofollow noopener">issues</a> or <a href="https://github.com/WICG/digital-goods/pulls" rel="nofollow noopener">pull requests</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2946_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mahesh_Kulkarni</div>
+          <div class="creation_date">2020-06-03</div>
+          <div class="post_content">
+<p>Thank for your work on IAP for webapps  Matt, We from Samsung side would also like to express interest in IAP support for WebApps distributed via Galaxy App store. We will help review and provide feedback by getting right teams involved.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2020-08-17</div>
+          <div class="post_content">
+<p>I think that <strong>IAP for Web Apps</strong> would greatly simplify the selling of <strong>small digital goods / services</strong>.</p>
+<p>In particular it would be useful to have <strong>a Browser Store that collects all the payments from customers, and the PWA developer only gets a monthly payout</strong> (minus a percentage that goes to the Browser Store).</p>
+<p>That would greatly simplify payments and accounting for developers and would be a large source of income for browsers.</p>
+<p>I imagine that the website creates a request (similar to what already happens for the Payment Request API) and then the browser, instead of returning a payment method, completes the payment and simply returns a cryptographically signed receipt to the website (or a token that can be verified). I also imagine that the users interacts directly with a Browser Store (which is not invisible to the user) and thus all the receipts and other legal duties must be completed by that Browser Store.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

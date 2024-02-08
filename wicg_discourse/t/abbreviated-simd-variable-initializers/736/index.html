@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Abbreviated SIMD variable initializers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Abbreviated SIMD variable initializers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sunfish</div>
+          <div class="creation_date">2015-01-20</div>
+          <div class="post_content">
+<p>Currently, the SIMD.js validation in asm.js requires local variables with SIMD type be declared like this:</p>
+<pre><code>var x = SIMD_float32x4(0, 0, 0, 0);
+</code></pre>
+<p>It’s recently been observed that in the non-asm.js SIMD.js API, passing fewer arguments to the SIMD constuctors causes them to use zero values by default, so one can produce an all-zeros vector like this:</p>
+<pre><code>var x = SIMD_float32x4();
+</code></pre>
+<p>Since it’s pretty common to initialize variables to zero values in asm.js programs, it’d be neat if asm.js would accept this abbreviated form. Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JF_Bastien</div>
+          <div class="creation_date">2015-01-20</div>
+          <div class="post_content">
+<p>+0.0 or -0.0? Or maybe uninitialized should be NaN. Which NaN though?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sunfish</div>
+          <div class="creation_date">2015-01-21</div>
+          <div class="post_content">
+<p>And it turns out that I was mistaken. SIMD.float32x4() returns a vector of all NaNs, not all zeros. And for the record, SIMD.js does not canonicalize NaNs in SIMD values, so the payloads of the NaNs are unspecified, as they are everywhere else.</p>
+<p>Also, Alon reminded me that asm.js supports a better way to abbreviate variable initializers, which Emscripten isn’t making use of yet:</p>
+<pre><code class="lang-auto">   "use asm"
+   var SIMD_float32x4 = global.SIMD.float32x4;
+   const zeros = SIMD_float32x4(0, 0, 0, 0)
+   ...
+   function f() {
+       var x = zeros;
+</code></pre>
+<p>this looks nicer than using the zero-argument constructor form that I proposed above, and it’s already in asm.js today, so there’s no need to add anything here.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Compression for form submission/request bodies from the browser</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Compression for form submission/request bodies from the browser</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-06-08</div>
+          <div class="post_content">
+<h2>Problem</h2>
+<p>Submitting lots of form data to the server is often slow because most consumer ISPs have very asymmetrical bandwidth, where the download dwarfs the upload.</p>
+<h2>Proposal</h2>
+<p>In robust HTML, this could work as an attribute patterned after <code>&lt;form&gt;</code>’s existing <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-accept-charset" rel="nofollow noopener"><code>accept-charset</code> attribute</a>.</p>
+<pre><code>&lt;form accept-encoding="br gzip deflate" method="post" enctype="multipart/form-data"&gt;
+  &lt;label&gt;CSV files:
+    &lt;input type="file" name="csv-data" accept=".csv" multiple&gt;
+  &lt;/label&gt;
+  &lt;button&gt;Upload&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+<details>
+<summary>Possible issue with attribute name</summary>
+<p>I seem to recall that hyphenated attribute names have to be special-cased in various parts of the parsing algorithm, so <code>acceptencoding</code> might be more interoperable.</p>
+</details>
+<p>The attribute should contain space-separated compression algorithm tokens — the ones defined for <code>Accept-Encoding</code> and <code>Content-Encoding</code>.</p>
+<p>If the server doesn’t accept compressed request bodies, or if doesn’t support the algorithms the browser sends in the <code>Content-Encoding</code> request header, it would return <code>406 Not Acceptable</code>. The browser then might attempt to send the form data the old-fashioned way.</p>
+<p>I’m not sure what the most idiomatic way to do this for <code>fetch</code> would be; adding a <code>Content-Encoding</code> header in the fetch options? Or is that too much magic?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2018-06-14</div>
+          <div class="post_content">
+<p>See also: <a href="https://httpwg.org/specs/rfc7694.html">https://httpwg.org/specs/rfc7694.html</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Class Constructor - class()</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Class Constructor - class()</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Randy-Buchholz</div>
+          <div class="creation_date">2020-07-20</div>
+          <div class="post_content">
+<h3>Proposed:</h3>
+<p>Provide/expose a constructor for classes - class ();</p>
+<h3>Description:</h3>
+<p>The class constructor is similar to <code>function()</code> in that it allows creating classes from string representations.</p>
+<h3>Use Cases:</h3>
+<h4>Use Case : Mixins</h4>
+<p>A Mixin is a powerful concept. The constructor <code>class()</code> makes mixins and inheritance by composition easy.</p>
+<p>Composition</p>
+<pre><code class="lang-auto">const frag1 = "  
+   commonFunction1(){...}   
+   commonFunction2(){...}  
+";
+
+const frag2 = "  
+   commonFunction3(){...}  
+   commonFunction4(){...}  
+";
+
+class(`Composed { ${frag1}${frag2} }`);
+
+// Result
+class Composed {
+    commonFunction1(){...}
+    commonFunction2(){...}
+    commonFunction3(){...}
+    commonFunction4(){...}
+}
+</code></pre>
+<p>Mixin</p>
+<pre><code class="lang-auto">class MyClass {
+    function1(){...}
+    function2(){...}
+}
+
+class (` NewClass { ${MyClass.toString().slice(16, -1)}, ${frag1} }`);
+
+class NewClass {
+    function1(){...}
+    function2(){...}
+    commonFunction1(){...}
+    commonFunction2(){...}  
+}
+</code></pre>
+<p>Overloads could automate this and take a name and exist class as first arguments and append class contents inside the closing <code>}</code>.</p>
+<pre><code class="lang-auto">class( 'NewClass', MyClass, `${frag1}${frag2}` );
+
+// Result
+class NewClass {
+    function1(){...}
+    function2(){...}
+    commonFunction1(){...}
+    commonFunction2(){...}  
+    commonFunction3(){...}
+    commonFunction4(){...}
+}
+</code></pre>
+<h4>Use Case : Module Workers</h4>
+<p>The upcoming <code>Module Worker</code> capability supports module capabilities in Web Workers. A known class can be imported into a worker - <code> import { MyClass } from '/MyClass.mjs';</code></p>
+<p>Worker messaging supports data objects - <code>postMessage({name : "Me"})</code> and more complex situations with transferables <code>postMessage({ name: "Me", ports:ports }, [ports])</code>. ES even has (very limited) support for the sending side of messaging a class instance. For known classes we can mimic messaging instances.</p>
+<pre><code class="lang-auto">// Class Definition (TestClass.mjs)
+    export class TestClass {
+        name;
+    }
+
+// WorkerConstructor.mjs
+    import { TestClass } from "/TestClass.mjs";
+    
+    globalThis.onmessage = (message) =&gt; {
+        console.log(message.data);
+    
+        const mimic = Object.assign(new TestClass(), message.data);
+        console.log(mimic);
+    }
+
+
+// In Parent
+    import { TestClass } from "/TestClass.mjs";
+
+    const workerPort = new Worker("/WorkerConstructor.mjs", { type: "module" });
+    const instance = new TestClass();
+    instance.name = "Tester";
+
+    workerPort.postMessage(instance);
+
+// Console Output
+{name: "Tester"}
+    name: "Tester"
+    __proto__: Object
+ 
+TestClass {name: "Tester"}
+    name: "Tester"
+    __proto__: Object
+
+
+</code></pre>
+<p>Pretty cool.</p>
+<p>This scenario is limited to “known” classes - classes that can be imported on both sides.<br/>
+Generally this means classes known at design time (using  <code>import {}</code>), or pushed to the server in run time and dynamically imported (using <code>import ()</code>).</p>
+<p>The constructor <code>class()</code> provides another approach. For example.</p>
+<pre><code class="lang-auto">postMessage({
+    type: "TestClass",
+    typeDef: "TestClass { name; constructor(params){...} }",
+    params: { name: "Tester" }
+})
+
+onmessage = (message) =&gt; {
+    class(message.data.typeDef);
+    Reflect.construct(message.data.type,[message.data.params]);
+};
+
+</code></pre>
+<p>Many business classes/functions using specific instances would import the class definitions they use.<br/>
+But framework/middleware components like message buffers and storage’s could benefit from this.<br/>
+Components that operate on class “interfaces” or generic classes are supported by this.</p>
+<h4>Use Case : Generic Services and Interfaces</h4>
+<p>This is an OO, Service Oriented Architecture inspired (and very abstract) example. It is incomplete and just to explore possible use cases.
+Granted, it’s a somewhat non-standard approach.</p>
+<p>Case:
+A Worker is deployed as a generic service that operates on class instance objects of a specific “shape” (i.e., implementing a specific interface). It calls methods specified by an “interface”.</p>
+<p>// Interface (IShape.mjs)</p>
+<pre><code class="lang-auto">export default Symbol.for("IShape");
+export const testMethod = {
+    name: "testMethod",
+    input: {},
+    returns: {}
+};
+</code></pre>
+<p>// Consumer</p>
+<pre><code class="lang-auto">import IShape, * as i from "/IShape.mjs";
+
+class TestClass {
+    static realizes = IShape;
+    realizes() { return TestClass.realizes; }
+
+    [i.testMethod.name]() {
+        this.internalMethod();    
+    }
+    
+    internalMethod(){ }
+}
+
+const instance = new TestClass();
+
+worker.postMessage({
+    type: TestClass.toString(),
+    data: instance
+});
+
+</code></pre>
+<p>// Provider</p>
+<pre><code class="lang-auto">import IShape, * as i from "/IShape.mjs";
+
+// in message handling
+
+const typeHandle = class(message.data.type)
+const instance = Reflect.construct(typeHandle, []);
+
+// Not shown - hydrate instance from message data
+
+operatedOnInterface(instance);
+
+function operateOnInterface(iShape){
+    if(iShape.realizes === IShape){
+        const x = iShape.testMethod();
+    }
+}
+</code></pre>
+<p>The service doesn’t know or care about the specific class. No import is needed or really possible. It only needs to know the instance has some function properties.<br/>
+The <code>class()</code> constructor allows creating an instance of the type from the class definition in the message, checking it against the imported interface specification, and calling the realized method. Because <code>class()</code> allows creating the type, the internal method (<code>internalMethod</code>) is available.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

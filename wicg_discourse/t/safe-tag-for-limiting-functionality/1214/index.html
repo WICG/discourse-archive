@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Safe Tag for Limiting Functionality</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Safe Tag for Limiting Functionality</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1078_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">HyperSpec</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>After conducting some reason, it seems there is not currently any tag, nor reasonable method, for limiting the functionality of the Hyper Markup Text Language.</p>
+<p>In some scenarios, it may be desirable to limit how one section of markup may behave. For example, for user input, it may be that links and images should be allowed, yet not script executing nor applying Cascading Style Sheets.</p>
+<p>Even if one were to create a server-side method for filtering this type of content, for example, the anchor and image tags, there is no guarantee that, as the specifications change, this method will allow the safe generation of content in the future, therefore presenting a security risk.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>It would be useful if you could state a clear and concrete use case: What are you trying to limit? Why?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1078_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">HyperSpec</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>The scenario I am working at the moment is limiting the effected functionality of a certain code block which is generated based upon user submitted content. Specifically, I would like to allow anchor and image tags, but not the application of styles, nor the execution of scripts.</p>
+<p>I believe allowing scripts would put users of the site at risk, for instance a redirect to a look alike site which could be used to gain information under the pretext that they are submitting information to a trusted site, or perhaps the interference of existing scripts, et cetera.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>Have you looked into <a href="http://www.html5rocks.com/en/tutorials/security/content-security-policy/">Content Security Policy</a>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1078_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">HyperSpec</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>I believe that is simply for the loading of external resources. For example, I would like to allow:</p>
+<p><code>&lt;a href="https://focalfuse.com"&gt;Focal Fuse LLC&lt;/a&gt;</code></p>
+<p>but not (assuming jQuery is used):</p>
+
+background-color:#000000;
+
+<p><code>&lt;script&gt;</code>
+<code>$('a').attr('href','https://focalfuse.com');</code>
+<code>&lt;/script&gt;</code></p>
+<p>While still allowing the execution of inline scripts (which have been dynamically inserted on the client side).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>If you’re including user-generated code, and you want to limit its ability to attack the rest of the page, you want <code>&lt;iframe sandbox&gt;</code>. You can control the sandbox more specifically by specifying values in the <code>sandbox</code> attribute, but by default it’ll lock things down nice and safe.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>Actually there is one potentially huge use case for this: user-submitted posts with HTML formatting. Loads of blogs, forums, and comment sections support some kind of de-facto standard BBcode for basic markup, such as by using <code>[b]bold[/b]</code> and <code>[i]italic[/i]</code>, or markdown like <code>**bold** *italic*</code>. These force web developers to re-invent subsets of HTML for security reasons. Using unfiltered HTML itself is incredibly dangerous due to users being able to post arbitrary <code>&lt;script&gt;</code> tags, and even filtering HTML is incredibly difficult given the number of places Javascript can be included in HTML combined with encoding variations, such as <code>&lt;img src=j&amp;#X41vascript:alert('my js')&gt;</code>.</p>
+<p>Something like a <code>&lt;sandbox&gt;</code> tag could solve this. An iframe is probably overkill for including user-submitted content, but a tag could provide similar protections for the content inside of it. Like with the iframe sandbox attribute, by default markup inside <code>&lt;sandbox&gt;</code> would:</p>
+<ul>
+<li>not allow script execution in any way</li>
+<li>not allow forms</li>
+<li>not allow plugins</li>
+</ul>
+<p>The restrictions should probably go beyond iframe sandboxing to also:</p>
+<ul>
+<li>not allow custom CSS styles</li>
+<li>block potentially dangerous tags like <code>&lt;iframe&gt;</code>
+</li>
+<li>block potentially annoying tags like <code>&lt;video&gt;</code>, <code>&lt;audio&gt;</code>
+</li>
+<li>block tags that become useless under the above restrictions, like <code>&lt;canvas&gt;</code>, <code>&lt;dialog&gt;</code>, form controls</li>
+</ul>
+<p>Like iframe sandboxing the restrictions could be customised with attributes, such as <code>&lt;sandbox allow="video"&gt;</code> in case a forum wants to allow videos to be included in posts.</p>
+<p>Ideally the end result is web developers can ultimately paste user-submitted HTML between <code>&lt;sandbox&gt;</code> and <code>&lt;/sandbox&gt;</code> and still have a secure website, without having to use a custom markup engine.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1078_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">HyperSpec</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>I asked this question, and it was said no such tag existed.</p>
+<aside class="onebox stackexchange">
+<header class="source">
+<a href="https://stackoverflow.com/questions/34059135/safe-markup-for-dynamic-insertions-based-upon-user-input" rel="nofollow noopener" target="_blank">stackoverflow.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://stackoverflow.com/users/5335708/anthony-brian-mallgren" rel="nofollow noopener" target="_blank">
+<img alt="Anthony Brian Mallgren" class="thumbnail onebox-avatar" height="128" src="https://www.gravatar.com/avatar/697e496d612b101b66d9868764a4779d?s=128&amp;d=identicon&amp;r=PG&amp;f=1" width="128"/>
+</a>
+<h4>
+<a href="https://stackoverflow.com/questions/34059135/safe-markup-for-dynamic-insertions-based-upon-user-input" rel="nofollow noopener" target="_blank">Safe Markup for Dynamic Insertions Based Upon User Input</a>
+</h4>
+<div class="tags">
+<strong>html, dynamic, markup</strong>
+</div>
+<div class="date">
+  asked by
+  
+  <a href="https://stackoverflow.com/users/5335708/anthony-brian-mallgren" rel="nofollow noopener" target="_blank">
+    Anthony Brian Mallgren
+  </a>
+  on <a href="https://stackoverflow.com/questions/34059135/safe-markup-for-dynamic-insertions-based-upon-user-input" rel="nofollow noopener" target="_blank">06:20AM - 03 Dec 15 UTC</a>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>May not be as fine tuned as I was searching for, but I will see what I’m able to do with it. Thank you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>I wasn’t describing an existing tag, I was suggesting a new <code>&lt;sandbox&gt;</code> tag based on the restrictions of iframe sandboxes. It’s basically a renaming of your proposed <code>&lt;safe&gt;</code> tag with a bit more description of how it works and its use cases.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1078_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">HyperSpec</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>I just checked. I do not believe the iframe method would work in my case. I am attempting something like the following (example with jQuery):</p>
+<pre><code>&lt;sandbox&gt;
+&lt;div id="container"&gt;&lt;/div&gt;
+&lt;/sandbox&gt;
+&lt;script&gt;
+$('#container').append('Text');
+&lt;/script&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>You can mimic that functionality using a <code>data:</code> URI as the <code>&lt;iframe&gt;</code>'s <code>src</code>, if it helps. <code>srcdoc</code> is a nicer way of handling it, but the browser support isn’t there yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1214">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Actually there is one potentially huge use case for this: user-submitted posts with HTML formatting.</p>
+</blockquote>
+</aside>
+<p>This was indeed one of the leading use-cases for sandboxed iframes, yes. (The other was limiting the damage an injected ad can do.)</p>
+<aside class="quote" data-post="7" data-topic="1214">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Something like a &lt;sandbox&gt; tag could solve this. An iframe is probably overkill for including user-submitted content, but a tag could provide similar protections for the content inside of it.</p>
+</blockquote>
+</aside>
+<p>Been discussed to death, doesn’t work, unfortunately.  A quick rundown of some of the reasons:</p>
+<ol>
+<li>
+<p>There are use-cases for running script or CSS inside, just preventing it from attacking the rest of the page. This means you need some strong boundary separating the stuff inside from the stuff outside. Separate documents are the existing and well-proven way to do that, and iframes are the existing way to embed separate documents in each other - it just makes sense to reuse the existing stuff, rather than reinventing something new and subtly different.</p>
+</li>
+<li>
+<p>This is a security primitive. When designing a good security primitive intended to be used by non-experts, you need to make it as hard to screw up as possible. Having a tag that contains the hostile code directly means you need to somehow defend against the hostile code containing a <code>&lt;/sandbox&gt;</code> tag, closing the sandbox early and escaping into the outer page. Only secure way to do that is to have some unpredictable token appearing at the start and end, but that means: (a) inventing some way to put a token into the end-tag, which doesn’t exist yet, and (b) relying on non-expert authors to generate unpredictable tokens, which we know for a fact doesn’t work. (People generate weak tokens, or reuse tokens, <em>constantly</em>.)  Alternately you can try to depend on authors always correctly finding and escaping <code>&lt;/sandbox&gt;</code> tags, which we also know for a fact doesn’t work (correctly escaping content is already something people screw up all the time, and that’s trivial “just escape all the <code>&lt;'"&amp;</code> characters”, not non-trivial escaping of HTML syntax).</p>
+<p>iframes deal with this by, at minimum, requiring you to put the content into a data: url, which needs url escaping to work a lot of the time, and at worst requires just attribute escaping (whatever quoting character you use).  HTML defined the <code>.srcdoc</code> property to make this even easier, by letting you put in raw HTML with no escaping needed whatsoever.</p>
+</li>
+</ol>
+<aside class="quote" data-post="7" data-topic="1214">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>The restrictions should probably go beyond iframe sandboxing to also:</p>
+</blockquote>
+</aside>
+<p>Most of these are available to sandboxed iframes, via the sandboxing options.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Idea] Context Across Tabs/Windows</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Idea] Context Across Tabs/Windows</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ianzlovejoy</div>
+          <div class="creation_date">2021-04-20</div>
+          <div class="post_content">
+<p>Hi all, this is an idea that came out difficulties encountered in a real-world development project. I think the proposed idea would make developing complex web applications that use local persistent storage much easier. I am interested to hear what you think. If there is interest I would be happy to write it up more formally.</p>
+<p>As background, please consider a different environment: native apps. In the usual native app architecture, whether desktop or mobile, multiple windows opened by the same app share a memory space, UI thread, and event loop. The benefits of this are that views can all work from the same in-memory model, multiple views can all be updated synchronously, and there can be no race conditions between views. Synchronizing access to any local persistent store is trivial, and as a result data can be cached without worrying that it will become stale. Even complex derived data can be calculated and updated reliably.</p>
+<p>Web applications, of course, work differently. Multiple tabs/windows share a persistent store (LocalStorage, IndexedDB, etc.) but do not share an event loop or memory space. As a result any data of interest to multiple views has to be loaded into memory multiple times. BroadcastChannel is available to allow windows to tell each other about updates, and SharedWorker (where available) allows running all access to persistent state through a common point, but both of these approaches involve implementing a messaging layer and considering race conditions that can result if a user makes changes in two different windows rapidly. This adds significant complexity to the application to handle a case (multiple windows) that is probably not the common case. But it is not a problem can can simply be ignored because data corruption/loss could result if multiple windows blindly write to the persistent store based on their own independent understanding of the current state.</p>
+<p>The idea I’m proposing is that pages loaded from the same origin could declare themselves to be part of the same app, and in that case would share an event loop and memory space. This is already the case if one page opens another page from the same origin programatically. The two pages can share data, call methods defined in the other page, etc. “All” that would be required is a way to opt in to this behavior for independently opened tabs/windows.</p>
+<p>Example usage:</p>
+<pre><code>// at page initialization time
+if (window.sharedContext.userData == null) { // hypothetical new sharedContext property
+    // guaranteed to only happen once due to shared UI thread
+    window.sharedContext.userData = new MySharedControllerObject();
+}
+const myView = new MyLocalViewObject();
+window.sharedContext.userData.addListener(myView);
+
+// when page unloads
+window.sharedContext.userData.removeListener(myView);
+</code></pre>
+<p>Opting in to this behavior would probably have to be done in the HTML, not JavaScript, because by the time any JavaScript runs the decision has already been made. There are a lot of possible ways to do this but just to have a place to start, you could have a tag along the lines of:</p>
+<pre><code>&lt;meta space="myApp"&gt;
+</code></pre>
+<p>Additional tabs/windows would open more quickly because they would not have to read common data out of the local persistent store. Sharing a WebSocket connection to the server would be trivial. When a window closes, any objects unique to it (such as myView in the example above) could be garbage collected. Security considerations are the same as for IndexedDB. There is the potential concern of responsiveness, but after all, native apps work exactly this way. Another concern is having different versions of the code interact with each other, but I believe that could be easily and reliably handled by the developer using version checks in code such as addListener() above.</p>
+<p>I am interested to hear your thoughts.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

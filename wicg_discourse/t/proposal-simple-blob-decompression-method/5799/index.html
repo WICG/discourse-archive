@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Simple blob decompression method</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Simple blob decompression method</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2022-03-17</div>
+          <div class="post_content">
+<p>If I have a <code>.json.gz</code> file that I’d like to decompress, it currently requires code that looks something like this:</p>
+<pre><code class="lang-auto">let stream = blob.stream().readable.pipeThrough(new DecompressionStream("gzip")).pipeThrough(new TextDecoderStream());
+let reader = stream.getReader();
+let jsonText = "";
+while(1) {
+  let {value, done} = await reader.read();
+  if(value) jsonText += value;
+  if(done) break;
+}
+let json = JSON.parse(jsonText);
+</code></pre>
+<p>I’m sure there are ways to simplify this a bit, but unless I’m mistaken (which I could be), it’s still going to be a bit of a mess.</p>
+<p>It would be lovely if that code could be replaced by something like this:</p>
+<pre><code class="lang-auto">let jsonText = await blob.decompress("gzip").then(b =&gt; b.text());
+let json = JSON.parse(jsonText);
+</code></pre>
+<p>In the above example, <code>blob.decompress("gzip")</code> returns a Promise that resolves to a decompressed blob, but please ignore the specifics of the above syntax/API - the main point I’m intending to get across here is that decompression of blobs could/should be a simple one-liner.</p>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3846_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmywarting</div>
+          <div class="creation_date">2022-03-31</div>
+          <div class="post_content">
+<p>with some response tricks you can shorten the code to something like</p>
+<pre><code class="lang-javascript">// Just to simulate getting a .json.gz
+const chunks = [ `{"a": "${'a'.repeat(1024)}" }` ]
+const blob = new Blob(chunks)
+const ts = new CompressionStream('gzip')
+const blobGZ = await new Response(blob.stream().pipeThrough(ts)).blob()
+
+// To uncompress and parse it to json in one go
+const ts = blobGZ.stream().pipeThrough(new DecompressionStream("gzip"))
+const json = await new Response(ts).json()
+</code></pre>
+<p>But i must admit, it feels abusive to use Response for this kind of conversion things…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3315_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">easrng</div>
+          <div class="creation_date">2022-05-09</div>
+          <div class="post_content">
+<p>Note that DecompressionStream is not supported by non-Chromium browsers.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

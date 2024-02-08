@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allowing Browser find-in-page to find non-DOM text</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allowing Browser find-in-page to find non-DOM text</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2015-11-23</div>
+          <div class="post_content">
+<p>In applications like Google Docs, or <a href="https://discourse.wicg.io/t/name-663399-becca-purple-in-css4-color/">Discourse</a>, off-screen content is removed from the DOM to save memory. This means the browser’s native find-in-page functionality can’t find all the page’s content, which forces these applications to intercept the keyboard shortcut for find-in-page and build their own UI around it.</p>
+<p>Similarly, large documents like the <a href="https://html.spec.whatwg.org/multipage/">HTML standard</a> are split into multiple sub-pages to save memory and loading time, but this sacrifices searchability unless they build their own UI.</p>
+<p>We could design an API that would allow these applications to provide their own results to the native find-in-page UI, without needing to replace the UI entirely.</p>
+<ol>
+<li>Is this already happening somewhere?</li>
+<li>If not, do folks think it’s worthwhile?</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-11-24</div>
+          <div class="post_content">
+<p>I have this exact problem in an app I’m developing - my planned solution is to just hook ctrl+f and implement my own “find in page” functionality. I think any app that needs the complexity of hiding text outside the DOM should also be surfacing its own search control.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2015-11-24</div>
+          <div class="post_content">
+<p>Isn’t this exactly what the <a href="http://w3c.github.io/findtext/">FindText API</a> aims to achieve?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2015-11-24</div>
+          <div class="post_content">
+<p>I believe the <a href="https://w3c.github.io/findtext">FindText API</a> is the other way around: it helps Javascript search DOM text, rather than letting the application help the browser search non-DOM text.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/657_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nemzes</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>The way I understand the <a href="https://w3c.github.io/findtext" rel="nofollow noopener">FindText API</a>, it is meant to allow for both use-cases. It goes in length about a “default search algorithm”, but this is meant to be overwritable by the developer (it is an Interface). Indeed, from the introduction:</p>
+<blockquote>
+<p>In dynamic lazy-loaded (or “infinite-scroll”) content, the text being searched for may not have been loaded into the DOM yet.
+[…]
+To ensure interoperability, this specification describes a default find-text algorithm, but this can be overriden by the developer.</p>
+</blockquote>
+<p>That spec definitely needs more work on the use-cases <span class="mention">@jyasskin</span> mentions, but I think it’s the right place for that work to happen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>This will be nice for browsers to have. ctrl+f, look for text, then Discourse’s UI (for example) would scroll to the right place even though that text wasn’t in the DOM at all before the search. There’s still lots of logic needed to be written by the developer, but essentially it simply eliminates the actual search UI from needing to be made by the developer. Custom UI or not, the search logic would probably remain largely the same. So when searching in Discourse, the native browser’s search feature would behave the same as Discourse’s magnifying glass button does now. A simple implementation would be that the search terms are simply passed to the Discourse’s search field (but the text input is hidden). Pressing enter could take Discourse to the “show more” page. So, really it’s just a shortcut to use the native search UI as an input source, but other than that most logic would still be in the developers hands when it comes to a site like Discourse.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/612_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michiel</div>
+          <div class="creation_date">2015-12-18</div>
+          <div class="post_content">
+<p>This will most likely not happen. Content is supposed to be in the DOM, not added through a stylesheet. “Generated content” should really have been called “generated decoration”.</p>
+<p>See also these messages/threads on the Protocols and Formats WG list:</p>
+<ul>
+<li><a href="https://lists.w3.org/Archives/Public/public-pfwg/2015Oct/0168.html">[css-content] Request for note regarding selection, search, and accessibility of generated content</a></li>
+<li><a href="https://lists.w3.org/Archives/Public/public-pfwg/2015Nov/0102.html">[css-content] Request for note regarding selection, search, and accessibility of generated content (continued)</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-12-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1205">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/michiel/40/612_1.png" width="20"/> Michiel:</div>
+<blockquote>
+<p>This will most likely not happen. Content is supposed to be in the DOM, not added through a stylesheet. “Generated content” should really have been called “generated decoration”.</p>
+</blockquote>
+</aside>
+<p>I think the issue is not CSS generated content, but sparse DOMs, which developers use for efficiency - whether in the way that React.js does it, or the infinite scroll in twitter etc.</p>
+<p>As far as I can tell, the idea of keeping the DOM as small as possible is one that isn’t going away - so being able to find stuff in that situation really means we <strong>need</strong> to enable this… Luckily, as I understand it that is part of the point of the API proposed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/612_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michiel</div>
+          <div class="creation_date">2015-12-23</div>
+          <div class="post_content">
+<p>I’m leaning toward this being a good idea (people put content in it, so that should be searchable). What was said in thread I linked to is that “it’s not meant for content, so we don’t want to encourage it by making it searchable/selectable”. That might be trying to stop a tsunami with a paper towel though…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-12-23</div>
+          <div class="post_content">
+<p><a href="https://w3c.github.io/findtext" rel="nofollow noopener">FindText</a> sounds good to me - I take back what I said about this being something the page should implement, since different user agent use cases have different ways search should be surfaced where the page developer shouldn’t be saddled with the UI for it (eg. screen readers, “find in page” dialogs for mobile vs. desktop).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-26</div>
+          <div class="post_content">
+<p>Yep, the page could get the search string from the search feature of the agent, then use a standardized API to give back the results that tell the agent where the content is and/or how to get that content to appear on-screen (or in-markup for screen readers).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-01-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1205">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/nemzes/40/657_1.png" width="20"/> nemzes:</div>
+<blockquote>
+<p>The way I understand the FindText API, it is meant to allow for both use-cases. It goes in length about a “default search algorithm”, but this is meant to be overwritable by the developer (it is an Interface).</p>
+</blockquote>
+</aside>
+<p>That’s how I understand it too. <span class="mention">@jyasskin</span> do you think that’s a reasonable answer? <span class="mention">@Shepazu</span>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2016-01-11</div>
+          <div class="post_content">
+<p>Extending the FindText API’s <a href="https://w3c.github.io/findtext/#search-algorithm">Search Algorithm</a> to allow page authors to override it, and having the browser use that for its own ^F search, would definitely fulfil my request.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1086_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mitar</div>
+          <div class="creation_date">2016-09-23</div>
+          <div class="post_content">
+<p>I would love this. I have been advocating for this for quite some years now. In fact there are many examples of apps having issues searching over lazily rendered content:</p>
+<ul>
+<li>ACE code editor, so editing online on GitHub has this problem</li>
+<li>Discourse</li>
+<li>Google Docs</li>
+<li>PDF.JS</li>
+</ul>
+<p>Old mailing list posts I made on this topic:</p>
+<ul>
+<li><a href="https://lists.w3.org/Archives/Public/public-webapps/2013OctDec/0640.html">https://lists.w3.org/Archives/Public/public-webapps/2013OctDec/0640.html</a></li>
+<li><a href="https://lists.w3.org/Archives/Public/public-whatwg-archive/2014Feb/0140.html">https://lists.w3.org/Archives/Public/public-whatwg-archive/2014Feb/0140.html</a></li>
+</ul>
+<p>I think reading ideas from there is quite useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>Yeah, ugh, on this exact subject, Discourse (as <span class="mention">@mitar</span> alluded to) apparently implements its own version of “find in page” when you hit Ctrl+F, and it has a noticeable lag relative to Chrome’s, a (pointless) “Search in this thread” <em>checkbox</em> (if I wanted to do anything else, why would I have hit Ctrl+F?), and it <em>rejects search terms that are too short</em> (wanted to find any mentions of the <code>vh</code> unit in a CSS discussion? Too bad!)</p>
+<p>I think this actually makes a decent point about what <em>shouldn’t</em> be allowed in such an API, or at least what should be avoided (ie. it should probably be factored to only <em>augment</em> find-in-page search, in such a way that attempting to needlessly redefine in-page content searching feels <em>extremely dirty</em>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1086_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mitar</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>Not to mention that intercepting ctrl-f is not something which really works on mobile, because users are not using the keyboard shortcut to trigger search there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>Yep, part of what I mentioned in <a href="https://discourse.wicg.io/t/allowing-browser-find-in-page-to-find-non-dom-text/1205/10?u=stuartpb">my last comment</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>Unfortunately, it looks like so far browsers haven’t been interested enough just to see the spec <em>maintained</em> <img alt=":frowning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/frowning.png?v=5" title=":frowning:"/></p>
+<p>Which means it is likely to come back from Working Group land to WICG, if you want to work on it and try and shop it around.</p>
+<p>(I agree that the functionality would actually be very useful for the real web - but it’s somewhere down my personal work priority list <img alt=":disappointed:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/disappointed.png?v=5" title=":disappointed:"/> )</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-10-27</div>
+          <div class="post_content">
+<p><span class="mention">@marcosc</span> is this something WICG could adopt etc? Was just discussing the API in relation to ‘infinate scrolling’ the HTML spec for perf reasons.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-11-15</div>
+          <div class="post_content">
+<p>Sorry for not responding sooner. Yes, if someone is willing to drive it - we could do the off-DOM aspects as part of WICG… However, we should integrate into FindText. FindText is tremendously useful and we should probably help Doug Schepers with that spec.</p>
+<p>Another option is that we adopt FindText outright - as it looks like it stalled (at least, I’ve never seen it discussed before).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

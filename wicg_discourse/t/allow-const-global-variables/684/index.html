@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allow const global variables</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allow const global variables</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-07</div>
+          <div class="post_content">
+<p>It would be useful to allow const global variables in asm.js that could be used in place of numeric literals.  This would allow Emscripten to reduce code size by factoring out frequent long numeric literals, replacing them with a short identifier.  This could be done with a normal global var but, without the const-ness, a single-pass AOT compiler will not know if the var is const or not which makes it hard to avoid emitting a global load instead of a immediate.</p>
+<p>One motivation for this is factoring out common float32 constants (e.g. <code>fround(0)</code>).  Another is a possible heap-access optimization: if Emscripten explicitly masks heap indices (e.g., <code>HEAP32[(i&amp;0xfffffff)&gt;&gt;2]</code>), then the compiler can see that the access must in-bounds (by comparing the mask with the minimum heap size) and avoid bounds checks.  However, heap masks take a lot of characters, so consts allow a significant size reduction.</p>
+<p>The extension is pretty simple:</p>
+<ul>
+<li>Literal-initialized global variables can be declared with <code>const</code> instead of <code>var</code>.</li>
+<li>The <a href="http://asmjs.org/spec/latest/#global-environment" rel="nofollow noopener">Global Environment</a> already records mutability of global variables which is checked by <a href="http://asmjs.org/spec/latest/#assignmentexpression" rel="nofollow noopener">assignment</a>, so <code>const</code> globals are recorded as <code>imm</code>.</li>
+<li>The type of a const global is the precise type of the numeric literal (float, double, signed, fixnum, unsigned), so they can be used exactly where a numeric literal could be used without explicit coercion.</li>
+<li>In addition to being used by <a href="http://asmjs.org/spec/latest/#identifier" rel="nofollow noopener">Identifier</a> expressions, const globals can be used in place of numeric literals in <a href="http://asmjs.org/spec/latest/#variable-type-annotations" rel="nofollow noopener">variable type annotations</a> and <a href="http://asmjs.org/spec/latest/#return-type-annotations" rel="nofollow noopener">return type annotations</a>.</li>
+</ul>
+<p>This is in release Firefox along with the heap-masking optimization.  Emscripten doesn’t emit heap-masked code, though, so this is all considered experimental and feedback is welcome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abchatra</div>
+          <div class="creation_date">2014-11-11</div>
+          <div class="post_content">
+<p>Looks good to me. Is there a scenario for const in variable environment as well?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-11</div>
+          <div class="post_content">
+<p>We didn’t do that initially since it was extra work and there isn’t a good reason to use it (if you are going to hoist a constant, you’d want to hoist it to global scope; intra-procedural analyses don’t need any help from ‘const’ to optimize literals).  There is an argument for regularity, but we also strive for minimality, so it seems like a tradeoff and we’re certainly open to other opinions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michael</div>
+          <div class="creation_date">2014-11-22</div>
+          <div class="post_content">
+<p>How does this relate to Firefox’s implementation of const? Notably, I’m wondering about this:</p>
+<aside class="quote" data-post="1" data-topic="684">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/7ab992/40.png" width="20"/> luke:</div>
+<blockquote>
+<p>In addition to being used by Identifier expressions, const globals can be used in place of numeric literals in variable type annotations and return type annotations.</p>
+</blockquote>
+</aside>
+<p>In FF if I already have in the global scope “var fround = stdlib.Math.fround; const a = fround(0)”, then in a function, the return statement “return a” doesn’t validate (but “return fround(a)” does). Is this an implementation bug, or am I misunderstanding the proposal?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-24</div>
+          <div class="post_content">
+<p>You are correctly understanding the proposal.  While writing up these rules, I realized there were a two places where const belonged but was missing, so I added them in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1095740" rel="nofollow noopener">bug 1095740</a>.  (In addition to ‘return a’, there is also the refinement of the type of a global const literal to be the exact type of the initializer.)  These changes are in FF 36 (currently in the Nighly release channel, to be released in ~14 weeks).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

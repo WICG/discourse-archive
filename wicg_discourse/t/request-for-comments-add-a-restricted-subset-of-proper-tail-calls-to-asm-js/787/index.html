@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Request For Comments: Add a restricted subset of proper tail calls to asm.js</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Request For Comments: Add a restricted subset of proper tail calls to asm.js</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnieper</div>
+          <div class="creation_date">2015-03-24</div>
+          <div class="post_content">
+<p>This is a proposal to add support for proper tail calls to asm.js. Proper tail
+calls are coming to EcmaScript 6, however, the way asm.js currently is spec’ed,
+any code doing proper tail calls does not validate because every function call
+result has to be coerced before it can be returned to the caller.</p>
+<p>As a compilation target, asm.js will benefit from supporting proper tails calls,
+which are simply jumps on the machine-level, at least in the following use
+cases:</p>
+<ol>
+<li>
+<p>Byte code interpreters can currently be handled by a huge while/switch
+construct. With proper tail calls, one could use a function table and indirect
+calls (which are just jumps behind the scenes). The advantage of the latter
+approach is, besides clarity, efficiency (no needless bound checks in the switch
+statement and making better use of the processor’s branch prediction unit), and
+no over-sized functions. Tests with the Emterpreter of the Emscripten projected
+yielded a performance gain up to 40% in certain use cases.</p>
+</li>
+<li>
+<p>Computed gotos in the style of the corresponding GCC extension could be
+implemented with a while/switch as in 1), but implementing them with via
+proper tail calls has the same advantages as in 1).</p>
+</li>
+<li>
+<p>Proper tail calls are needed to make asm.js a natural compilation target for
+languages that demand proper tail calls like Scheme. Otherwise, trampolines and
+other performance-reducing workarounds have to be used.</p>
+</li>
+<li>
+<p>If Emscripten wants to become a full-fledged LLVM backend, it probably has to
+support the musttail modifier so has to be able to compile to asm.js code doing
+proper tail calls.</p>
+</li>
+</ol>
+<p>An alternative to adding proper tail calls could be to formalize certain
+while/switch statements so that the performance overhead as described in 1) does
+not occur. If ES6 didn’t introduce proper tail calls, this would be the only
+way to go as asm.js should be a strict subset of ES6. With proper tail calls,
+however, the alternative of a formalized while/switch is inferior because the
+AOT compiler would have to cope with over-sized functions in case of very
+non-local jumps.</p>
+<p>In order to allow a restricted set of proper tail calls in asm.js it is
+suggested to remove the need of coercing proper tails calls to internal
+functions in asm.js modules under prerequisite that the return type of the
+function at the proper tail call site is already known by a previous return
+statement in that function. For example, the function</p>
+<pre><code>function f() {
+  if (0) return 0;
+  return g();
+}
+</code></pre>
+<p>should validate in an asm.js module, given that the function g returns an
+integer. The statement</p>
+<pre><code>if (0) return 0;
+</code></pre>
+<p>can be seen as a kind of ad-hoc declaration of the function’s return type, and
+will be removed by any optimizing AOT-compiler.</p>
+<p>To make the implementation of proper tail calls possible without change of any
+calling conventions, the restriction that at every tail call site the argument
+vector of the callee has to equal the argument vector of the caller is added.
+This restriction is the same that LLVM has for its musttail calls and what Rust
+will have with its proposed become calls. This restriction does not go against
+the four use cases above. With this restriction in place, adding this proposal
+to any existing asm.js implementation requires minimal work to support.</p>
+<p>This proposal has been implemented as a proof-of-concept
+(<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1133529" rel="nofollow noopener">https://bugzilla.mozilla.org/show_bug.cgi?id=1133529</a>), that adds very few
+changes to the upstream Odin- and IonMonkey code. That implementation uses
+a minimum frame size for every function in a module. This way, a tail call
+between two functions that fit into that minimum frame size can be compiled
+simply as a jump because the callee can reuse the complete stack frame of the
+caller. It is expected from any implementation to compile proper tail calls in
+most cases as something as efficient as a simple jump because proper tail calls
+would be the asm.js way to code a goto. This is in line with Lambda: The
+Ultimate Goto,
+<a href="http://repository.readscheme.org/ftp/papers/ai-lab-pubs/AIM-443.pdf" rel="nofollow noopener">http://repository.readscheme.org/ftp/papers/ai-lab-pubs/AIM-443.pdf</a>.</p>
+<p>More formally, it is suggested to modify the asm.js specification as follows:</p>
+<p>5.2 Return Type Annotations</p>
+<p>The following should replace the existing text.</p>
+<p>An asm.js function’s formal return type is determined by the function’s first
+return statement (in left-to-right AST order). If there is none such return
+statement, the functions formal return type is void. Otherwise, that first
+return statement has to be of the form “return;” or “return expr;”. In the
+former case, the function’s formal return type is void. In the latter case, the
+function’s formal return type is tau if validating “expr” succeeds with type
+tau.</p>
+<p>6.5.5. Return Statement</p>
+<p>The following should be added to the existing text.</p>
+<p>Validating a ReturnStatement node “return expr;” also succeeds if the return
+statement is not the function’s first one (in left-to-right AST order) and
+expr is a CallExpression node referring to a module-internal function that has the same argument vector as the calling function and that validates with actual return type tau where tau is the function’s formal
+return type.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-03-24</div>
+          <div class="post_content">
+<p>Since before asm.js optimizations landed, we’ve had ‘standardize some form of goto’ on the wish list.  What excites me about this proposal is it offers a pretty nice alternative where:</p>
+<ul>
+<li>the basic compilation technique (as demonstrated in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1133529" rel="nofollow noopener">Bug 1133529</a>) yields pretty good code</li>
+<li>the same-signature requirement provides a fairly predictable, low-level building block that compilers of high-level languages with PTCs can use to build up general PTCs (using a heap stack ABI).</li>
+<li>to do the type of global (intraprocedural) optimizations that would come naturally with goto, it should be possible to pick connected PTC callgraphs and merge them into a single compilation unit that can be compiled traditionally.</li>
+<li>PTCs allow expressing even more exotic control flow than goto (like functions with multiple entry points), with the simple implementation fallback of “just compile as separate functions with jumps”.</li>
+</ul>
+<p>Nice work!  I’m interested to hear what others think.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azakai</div>
+          <div class="creation_date">2015-03-24</div>
+          <div class="post_content">
+<p>Very nice!</p>
+<p>One thing I an unclear on: Should the spec say something about the number of arguments being the same? If the number of arguments isn’t the same, would it just silently not optimize it using a tail call, or would it fail to validate as asm.js (the latter seems more robust perhaps)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-03-24</div>
+          <div class="post_content">
+<p>I think the intended proposal (as well as the patch) issue a validation error if the signatures don’t match.  Note that, since PTCs are not expressible in asm.js currently, this is backwards-compatible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnieper</div>
+          <div class="creation_date">2015-03-25</div>
+          <div class="post_content">
+<p>The intended proposal is in fact to issue a validation error if the signatures do not match. I forgot to add this restriction to 6.5.5 and corrected the initial post accordingly.</p>
+<p>Silently not optimizing it using a tail call (in case of argument vectors not matching) would not be an option because ES6 demands tail call optimisation for proper tail calls.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnieper</div>
+          <div class="creation_date">2015-03-25</div>
+          <div class="post_content">
+<p>In addition to the implementation work in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1133529" rel="nofollow noopener">Bug 1133529</a> on SpiderMonkey, I have two experimental modifications of the Emscripten code base.</p>
+<p>In <a href="https://github.com/mnieper/emscripten/tree/emterpreter-ptc" rel="nofollow noopener">https://github.com/mnieper/emscripten/tree/emterpreter-ptc</a>, emcc gets a flag -s PTC=1, which causes the emterpreter to employ proper tail calls instead of a huge while/switch.</p>
+<p>In <a href="https://github.com/mnieper/emscripten-fastcomp/tree/incoming" rel="nofollow noopener">https://github.com/mnieper/emscripten-fastcomp/tree/incoming</a>, the Emscripten llvm-backend emits proper tail calls when the musttail modifier is used.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abchatra</div>
+          <div class="creation_date">2015-03-31</div>
+          <div class="post_content">
+<p>I am not a fan of proper tail call in javascript as it can cause runtime overhead when the signatures don’t match. However I think it makes perfect sense for asm.js as you have validation restriction for matching signature. This is adapting pure goodness of tail calls.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-04-21</div>
+          <div class="post_content">
+<p>I’m in favor of landing this extension in Firefox in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1133529" rel="nofollow noopener">bug 1133529</a>.  I don’t expect Emscripten would emit PTCs by default until PTCs were generally supported in JS engines.  However, it would be useful to land in the interim for experimental purposes.  Also, and especially if IE/Spartan supports it, a reasonable strategy Marc pointed out for performance-intensive use cases like the Emterpreter would be to attempt to use the PTC version (which <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1133529#c54" rel="nofollow noopener">Marc indicates has a 3-40% speedup</a>), catch OverRecursed exceptions, and fall back on while-switch.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

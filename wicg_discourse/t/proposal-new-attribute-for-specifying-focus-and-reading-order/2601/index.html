@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] new attribute for specifying focus and reading order</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] new attribute for specifying focus and reading order</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shwetank</div>
+          <div class="creation_date">2018-02-19</div>
+          <div class="post_content">
+<h2>The problem right now</h2>
+<p>Grid and Flexbox are already mainstream.</p>
+<p>The problem is that of it being possible for DOM source order to not match the visual order. For example, this could mean that while using a keyboard you might tab into something which visually has been changed to someplace far away from the previous entry in the DOM, causing focus to jump around the page. For more info on this problem, see the following:</p>
+<ul>
+<li>Leonie Watson wrote about it here <a href="https://tink.uk/flexbox-the-keyboard-navigation-disconnect/" rel="nofollow noopener">https://tink.uk/flexbox-the-keyboard-navigation-disconnect/</a>
+</li>
+<li>Also Susan Robertson <a href="https://bocoup.com/blog/css-grid-responsive-and-accessibility" rel="nofollow noopener">https://bocoup.com/blog/css-grid-responsive-and-accessibility</a>
+</li>
+<li>And Alastair Campbell <a href="https://alastairc.ac/2017/06/the-responsive-order-conflict/" rel="nofollow noopener">https://alastairc.ac/2017/06/the-responsive-order-conflict/</a>
+</li>
+</ul>
+<p>In almost all of the cases that I’ve seen of flexbox/grid changing visual order, <em>that</em> is the order in which it actually makes sense to consume the content. I.e, the visual order is the way in which most authors intend that the user consume the content.</p>
+<p>Firefox used to have a ‘bug’ where keyboard focus follows the visual order, which actually was welcomed by many in the a11y community even though technically it was a bug. It’s since been ‘fixed’ to match other browsers [1].</p>
+<p>It’s unlikely browsers will change their behaviour, especially to non-spec behaviour. The CSS WG had this discussion already and it’s unlikely that they will change the default behaviour [2]. Besides, I’m pretty sure there are real-world use cases where you want DOM order to always match focus order, so changing existing behaviour to visual order by default seems a bad idea and would break existing sites which rely on this behaviour.</p>
+<h2>Proposed solution</h2>
+<p>The following approach be interesting:</p>
+<p>An attribute named <code>followorder</code> with possible values <code>default</code> and <code>visual</code>. No value for the attribute defaults to <code>default</code> (DOM order).</p>
+<p>If we have it on an element like</p>
+<pre><code>&lt;div followorder="visual"&gt;
+..
+&lt;/div&gt;
+</code></pre>
+<p>Then the child elements will receive focus (and have reading order on virtual cursor) according to the visual order (i.e, that Firefox ‘bug’ behaviour).</p>
+<h2>Benefits</h2>
+<p>This could be good for the following reasons</p>
+<ol>
+<li>Default behaviour is untouched.</li>
+<li>Developers could explicitly choose which portion of the page receives focus in visual order. It’s an opt-in behaviour and won’t automatically affect existing implementation.</li>
+<li>If a different layout mechanism apart from flex and grid come up in the future, this would still work without changing it’s behaviour in that layout mechanism’s spec (hopefully). It’s better than making changes in the individual CSS specs regarding layout.</li>
+</ol>
+<p>In other words, this solution doesn’t break the web and interop between browsers and would probably work better with future additions to layout specs.</p>
+<p>It could solve a huge problem in accessibility which the web (as of now) does not have any clear answers to.</p>
+<p>Feel free to shout at me that it’s a bad idea, in case it is. The details of how the visual ordering could/should work can be discussed and worked on - what I’m more interested is whether it seems like a good idea and whether there would be interest in browsers to consider implementing it.</p>
+<ul>
+<li>[1] <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=812687" rel="nofollow noopener">bugzilla.mozilla.org/show_bug.cgi?id=812687</a>
+</li>
+<li>[2] <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=812687#c29" rel="nofollow noopener">https://bugzilla.mozilla.org/show_bug.cgi?id=812687#c29</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-02-19</div>
+          <div class="post_content">
+<p>But this is in the document and the problem is that the stylesheet is
+changing the presentation order of the document visually but not
+audibly etc.</p>
+<p>Multiple stylesheets for the same document might need different values
+for the attribute.</p>
+<p>So i think it  it should be a CSS property.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shwetank</div>
+          <div class="creation_date">2018-02-19</div>
+          <div class="post_content">
+<p>It’s not just about reading order, but also the order in which elements will recieve focus. So this isn’t just about screen readers, but also about people using keyboard for navigating a page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2018-02-21</div>
+          <div class="post_content">
+<p>agree that this should be in CSS. a way to signal “yes, i’m changing the order of this, and i want the browser to take this into account when working out the correct reading and focus order”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shwetank</div>
+          <div class="creation_date">2018-02-21</div>
+          <div class="post_content">
+<p>Sure. I’m not particularly married to the thought of an html attribute as such - The only things with the CSS that I can see of is that it should need to be scoped independent of one layout spec or another (i.e, not limited to just the grid spec or flexbox etc). It would need to be independent of it, so that no matter what layout solution you’re using, it can apply.</p>
+<p>This is good feedback. Any other thoughts everyone?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/785_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kizu</div>
+          <div class="creation_date">2018-02-23</div>
+          <div class="post_content">
+<p>I’m totally for having this in CSS (something like <code>follow-order</code> property?), but even having some control in HTML would be better than not having it at all.</p>
+<p>One thing I’d want to mention: I think the “visual” keyword can be really hard to implement, as there are too many things to consider, especially when there are animations and transitions.</p>
+<p>What I’d propose is to call it “flow” or something like that — as in most of the cases where we’d have the difference between visual order and DOM order would come from changing the flow: <code>order</code> property, <code>float</code>, <code>flex-direction</code>, swapping stuff in grids via <code>grid-row</code>, <code>grid-column</code> and <code>grid-area</code> (as well as with an auto-placement algorithm, which could be probably the hardest thing for this feature?).</p>
+<p>Optional way to follow the flow should be much easier to implement than to follow the strict visual order, and would be much easier to control as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alastc</div>
+          <div class="creation_date">2018-02-23</div>
+          <div class="post_content">
+<p>Thanks for linking to my article. There are a couple of principles I’d like apply to any solution:</p>
+<ol>
+<li>
+<p>There is one interface. I.e. it shouldn’t be different for keyboard users and screenreader users. Ideally, the accessibility should follow the visual design/priority so there is only one version of any paricular interface.</p>
+</li>
+<li>
+<p>The default code developers use should be accessible. I.e. if the browsers / AT can do something to make standard web-dev code accessible, do that instead of trying to getting web devs to add something just for accessibility ('cause it won’t happen, enough).</p>
+</li>
+</ol>
+<p>So in this case the soution should:</p>
+<ul>
+<li>Use the flexbox order as the keyboard / screenreader order.</li>
+<li>Use a row-by-row, column-by-column approach to the order through grid.</li>
+<li>Have a CSS property to override that default order.</li>
+</ul>
+<p>I’d assume that means the browsers would need to change how ordering works for keyboard focus and in the accessibility tree, but not necessarily the DOM order?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2018-02-23</div>
+          <div class="post_content">
+<blockquote>
+<p>So in this case the solution should:</p>
+<ul>
+<li>Use the flexbox order as the keyboard / screenreader order.</li>
+<li>Use a row-by-row, column-by-column approach to the order through grid.</li>
+<li>Have a CSS property to override that default order.</li>
+</ul>
+</blockquote>
+<p>+1 to the browser matching the keyboard/screen reader order to the
+presentation order, and any attribute/property being “opt out” rather
+than “opt in”.</p>
+<p>Either way the browser is going to need to update both the keyboard tab
+order and the accessibility tree, or to do something similar to the way
+Firefox approached it with the Flexbox “bug” and implement the solution
+somewhere between the DOM and the acc tree.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shwetank</div>
+          <div class="creation_date">2018-02-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="2601">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alastc/40/1084_1.png" width="20"/> alastc:</div>
+<blockquote>
+<p>So in this case the soution should:</p>
+<p>Use the flexbox order as the keyboard / screenreader order.
+Use a row-by-row, column-by-column approach to the order through grid.
+Have a CSS property to override that default order.</p>
+<p>I’d assume that means the browsers would need to change how ordering works for keyboard focus and in the accessibility tree, but not necessarily the DOM order?</p>
+</blockquote>
+</aside>
+<p>I would like that too! As you say it’s always better to have a opt-out solution than opt-in.</p>
+<p>However, unless I’m not fully understanding what you wrote above, browsers (and the CSS WG) have indicated that browsers will follow DOM order and not the flexbox order when it comes to the keyboard/screen reader order… and it doesn’t seem like they are interested in changing it.</p>
+<p>If we can get all browsers to change their default behaviour then great! That would be ideal, but realistically speaking, I don’t think there is much chance of it happening. Hence, this opt-in solution so that we have at least something to fix it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alastc</div>
+          <div class="creation_date">2018-02-24</div>
+          <div class="post_content">
+<p>It depends why they didn’t want to change it. If it is due to overhead then none of the options we are discussing would overcome that. Whatever the default way is, if there is another order the level of work required will be about the same.</p>
+<p>If it is about changing a default way of doing the focus order, perhaps we can persuade them to change it. The evidence will pile up fairly quickly now that grids is well supported and people are starting to use it, but the later it is left, the more sites will be changed because of it.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

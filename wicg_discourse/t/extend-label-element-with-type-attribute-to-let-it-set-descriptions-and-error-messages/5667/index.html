@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extend label element with type attribute to let it set descriptions and error messages</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extend label element with type attribute to let it set descriptions and error messages</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-25</div>
+          <div class="post_content">
+<p>All form elements need labels, but it’s also common for them to have descriptions and inline errors. I propose extending the label element with a type attribute that takes these values:</p>
+<ul>
+<li>label (the default so all old labels are still regular labels)</li>
+<li>description</li>
+<li>error</li>
+</ul>
+<p>A label type=description sets the aria-description instead of the aria-label of its element, so</p>
+<pre><code class="lang-auto">&lt;label for=elm&gt;Label&lt;/label&gt;
+&lt;input id=elm&gt;
+&lt;label type=description for=elm&gt;Description&lt;/label&gt;
+</code></pre>
+<p>is almost equivalent to</p>
+<pre><code class="lang-auto">&lt;label for=elm&gt;Label&lt;/label&gt;
+&lt;input id=elm aria-labelledby=elm-descr&gt;
+&lt;span id=elm-dscr&gt;Description&lt;/span&gt;
+</code></pre>
+<p>with the difference that clicking the description would focus the input in the first example but not the second.</p>
+<p>type=description paves a cowpath and makes a common case simpler while reducing the need for one off <code>id</code> attributes.</p>
+<p>I’m not sure exactly what the appropriate behavior is for a label of type=error.</p>
+<p>There are many considerations here and I’m not informed enough to get them all right, so it would be great if html just did it for me <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=10" title=":smiley:"/></p>
+<p>It would be great if adding (or appending to) a label type=error with javascript managed live announcements automatically and it still did something reasonable when a page loads with an error label already in place due to server side validation failures.</p>
+<p>It should also have an analogue to work for errors that apply to the form in general and to fieldsets not just individual form elements. I have no proposal for that here and am simply noting the related issue.</p>
+<p>Maybe this requires extensions to aria to add special error primitives that just do the right thing? Maybe there is no sensible way to handle this in all cases and type=error is the wrong thing to do. If so, type=description would still be useful but it’s understandable if it’s seen too minor a gain to be worth adding.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

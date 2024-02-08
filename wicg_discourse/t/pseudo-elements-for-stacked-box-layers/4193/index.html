@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Pseudo-Elements for Stacked Box Layers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Pseudo-Elements for Stacked Box Layers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2020-01-15</div>
+          <div class="post_content">
+<p>For more than twenty years, since level 1, CSS has had a <strong>background layer</strong> for each box, controlled by the various <a href="https://drafts.csswg.org/css-backgrounds/" rel="nofollow noopener" title="CSS Backgrounds and Borders"><code>background</code></a> properties. This has been extended from a single image atop a single color to many ones in later levels. However, there is no way to subsequently select any of the multiple stacked layers of a box individually and change their fill color or picture content. Instead, everything is set once by a multitude of properties.</p>
+<p>Lately, CSS began inheriting properties from SVG through the <a href="https://drafts.fxtf.org/" rel="nofollow noopener">Effects Task Force</a>. Among them are <a href="https://drafts.fxtf.org/fill-stroke/" rel="nofollow noopener">fill and stroke-related</a> ones, on the one hand, and properties for <a href="https://drafts.fxtf.org/filter-effects/#FilterProperty" rel="nofollow noopener" title="CSS Filters">filters</a> and, more importantly, <a href="https://drafts.fxtf.org/css-masking-1/" rel="nofollow noopener" title="CSS Masking">masks</a>, on the other hand. The latter effectively generate <strong>foreground layers</strong> and the former are also necessary for this idea to work.</p>
+<p>Nothing is really different about <a href="https://drafts.csswg.org/css-backgrounds/" rel="nofollow noopener" title="CSS Backgrounds and Borders"><code>background-image</code></a>, <a href="https://drafts.fxtf.org/css-masking-1/" rel="nofollow noopener" title="CSS Masking"><code>mask-image</code></a>, <a href="https://drafts.csswg.org/css-backgrounds/" rel="nofollow noopener" title="CSS Backgrounds and Borders"><code>border-image</code></a> and <a href="https://drafts.csswg.org/css-lists" rel="nofollow noopener"><code>list-style-image</code></a>, yet only the latter can be accessed in an alternative way: as the <code>content</code> property of the <a href="https://drafts.csswg.org/css-pseudo-4/#marker-pseudo" rel="nofollow noopener" title="`::marker`"><code>::marker</code> pseudo element</a>, applicable to all boxes that have <code>display</code> set to <code>list-item</code> (and also covering various textual counters, of course).</p>
+<p>Iʼm considering to propose that we extend this pattern to everything that can have backgrounds, masks or borders, i.e. basically every box in CSS would accept new <a href="https://drafts.csswg.org/css-pseudo/" rel="nofollow noopener" title="CSS Pseudo Elements">pseudo-element selectors</a>. Alas, Iʼm lacking convincing use cases that would justify this major change to the fundamentals of CSS. I would therefore very much appreciate any thoughts on practical benefits of this idea, especially about actual problems or world solve.</p>
+<p>All existing <a href="https://drafts.csswg.org/css-backgrounds/" rel="nofollow noopener" title="CSS Backgrounds and Borders"><code>background-</code></a>, <a href="https://drafts.fxtf.org/css-masking-1/" rel="nofollow noopener" title="CSS Masking"><code>mask-</code></a> and, perhaps, <a href="https://drafts.csswg.org/css-backgrounds/" rel="nofollow noopener" title="CSS Backgrounds and Borders"><code>border-</code></a> properties of the basic element box would be mapped to more generic properties of the respective pseudo-element box, with automatic synchronization back and forth, but there would be no dedicated new properties where they are missing. Some of the more specific existing sub-properties, e.g. <code>background-repeat</code> would require new generic counterparts, though.</p>
+<h2>Background bikeshedding and examples</h2>
+<ul>
+<li><a href="https://drafts.fxtf.org/compositing-2/#backdropCalc" rel="nofollow noopener"><em>backdrop</em></a></li>
+<li><a href="https://fullscreen.spec.whatwg.org/#css-pe-backdrop"><code>::backdrop</code></a></li>
+</ul>
+<pre><code class="lang-css">::back, 
+::backdrop, 
+::background, 
+::backstage
+{
+    content: &lt;background-image&gt;;
+    fill: &lt;background-color&gt;;
+}
+</code></pre>
+<h2>Foreground bikeshedding and examples</h2>
+<pre><code class="lang-css">::mask, 
+::filter, 
+::face, 
+::front, 
+::frontstage, 
+::foreground 
+{
+    content: &lt;mask-image&gt;;
+}
+</code></pre>
+<h2>Middleground?</h2>
+<p>It might make sense to also handle default content as a central layer, but Iʼm not sure whether thatʼd be useful at all.</p>
+<pre><code class="lang-css">::content, ::contents, 
+::base, 
+::plane, 
+::ground, ::mainground, ::middleground, ::playground, ::fairground, ::focalground, 
+::stage, ::centerstage, ::mainstage, 
+{;}
+</code></pre>
+<h2>Arbitrary Layers or Stacking Parts</h2>
+<pre><code class="lang-css">::layer(), 
+::level(), 
+::plane(), 
+::ground(), 
+::stage() 
+{;}
+</code></pre>
+<ul>
+<li>
+<code>::layer(0)</code> = <code>::middleground</code>
+</li>
+<li>
+<code>::layer(</code>min &lt; 0<code>)</code> = <code>::background</code>
+</li>
+<li>
+<code>::layer(</code>max &gt; 0<code>)</code> = <code>::foreground</code>
+</li>
+</ul>
+<h2>Borders</h2>
+<p>Furthermore, borders can be considered box edges or lines that do not necessarily come in multiple levels but otherwise behave similarly to backgrounds and foregrounds.</p>
+<pre><code class="lang-css">::border 
+{
+    fill: &lt;border-color&gt;;
+    stroke-width: &lt;border-width&gt;;
+    stroke-color: &lt;border-color&gt;;
+    stroke-pattern: &lt;~border-style&gt;;
+    content: &lt;border-image&gt;;
+}
+::border-top,    ::border:top, 
+::border-right,  ::border:right, 
+::border-bottom, ::border:bottom, 
+::border-left,   ::border:left
+{;}
+
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

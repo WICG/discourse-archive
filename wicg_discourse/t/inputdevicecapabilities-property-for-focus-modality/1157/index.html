@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>InputDeviceCapabilities property for focus modality</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">InputDeviceCapabilities property for focus modality</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/additional-use-cases-for-inputdevicecapabilities/1138/6">Additional use cases for InputDeviceCapabilities</a> just to keep this thread focused on the one specific use case being discussed:</p>
+<aside class="quote" data-post="1" data-topic="1138">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rickbyers/40/503_1.png" width="20"/><a href="//discourse.wicg.io/t/additional-use-cases-for-inputdevicecapabilities/1138/1">Additional use cases for InputDeviceCapabilities</a>
+</div>
+<blockquote>
+<p>When implementing custom focus rings (rather than relying on the browser’s built-in behavior), deciding whether a focus event is due to a device (like a keyboard) that needs focus rings. Related to (perhaps the underlying primitive explaining) this discussion.</p>
+</blockquote>
+</aside>
+<aside class="quote" data-post="6" data-topic="1138">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/><a href="//discourse.wicg.io/t/additional-use-cases-for-inputdevicecapabilities/1138/6">Additional use cases for InputDeviceCapabilities</a>
+</div>
+<blockquote>
+<p>Given this, and known use cases it was thought that a pseudo-class is nearly as good and Mozilla has had an experimental implementation of almost precisely this for a while so it’s possible to slot it into existing selectors specs and move pretty quickly.  The major concern this leaves me with is the DOM side - letting script participate intelligently without re-inventing it all.  Personally I don’t relish the idea of adding another event, figuring out the lifecycle, going through another process, etc – so when I saw this I thought – something like this feels like a simpler solution to that end of it.</p>
+</blockquote>
+</aside>
+<p>Ah, cool.  A pseudo-class in conjunction with this JS API makes perfect sense to me.  Hopefully we can couple their definitions somehow (similar to how :focus and onfocus are coupled).  Can you point me to the proposed semantics for the pseudo class?  I.e. does this new pseudo-class also imply <code>:focus</code> or would you use it together with <code>:focus</code>?  Is it just basically “this element was focused by keyboard”?</p>
+<p>Perhaps we can even do the name bike-shedding together.  Not sure if <code>:direct-focus</code> works (i.e. an element that was focused by a device directly like a mouse) as a parallel to <code>InputDeviceCapabilities.directTargeting</code>.  Other possible name pairs (in both keyboard-positive and keyboard-negative senses):</p>
+<ul>
+<li>
+<code>:sequential-focus</code> and <code>InputDeviceCapabilities.sequentialFocusing</code>
+</li>
+<li>but bad for DPAD (and perhaps voice/assistive?) which is indirect but not really “sequential”.</li>
+<li>
+<code>:planar-focus</code> and <code>InputDeviceCapabilities.planarTargeting</code>
+</li>
+<li>the key here is that pointers target elements at a point on a plane, while keyboard and DPAD do not).</li>
+<li>
+<code>:indirect-focus</code> and <code>InputDeviceCapabilities.indirectTargeting</code>
+</li>
+<li>
+<code>:imprecise-focus</code> and <code>InputDeviceCapabilities.impreciseTargeting</code>
+</li>
+<li>
+<code>:serial-focus</code> and <code>InputDeviceCapabilities.serialFocusing</code>
+</li>
+<li>The more I think of it, I like this one.  The key property is that focusing happens along some path (sequential or not), and so you need a visual affordance to show you were you currently are on that path.</li>
+</ul>
+<p><span class="mention">@aboxhall</span>, I don’t know much about the assistive tooling landscape here.  What sort of DOM events do various accessibility technologies generate?  Eg. if screen readers generate mouse events as they move focus around the page, is it helpful to have those mouse events also have something like <code>sourceCapabilities.serialFocusing==true</code> to make it clear the mouse cursor wasn’t really positioned at a precise co-ordinate by the user?  If so that might influence our semantics / name choice here.  Or do the tools all just emulate a keyboard, and so solving this problem for keyboard is sufficient?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

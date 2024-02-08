@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Exposing input events to worker threads</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Exposing input events to worker threads</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-08</div>
+          <div class="post_content">
+<p><strong>Problem</strong></p>
+<p>Today on the Web Platform only the main thread has access to the DOM elements and receives their related input events. In particular, Web Workers and Worklets do not have access to these. If we allow workers to receive input events for a given DOM node we enable many latency sensitive applications to leverage workers. As a result if developers want to do some event dependent logic like drawing on an off-screen canvas or using fetch in their worker thread they need to listen to those events on the main thread and postMessage them across to the worker thread. Here the worker is not only going to be blocked by the main thread to handle the events first but also suffers from the latency introduced by the extra thread hop. This is particularly unfortunate for the input events where the latency is important.</p>
+<p><strong>Proposal</strong></p>
+<p>We propose a delegation mechanism on the main thread. This way a target will be delegated to a worker (or multiple workers). Then the worker will get the EventTarget and can add any event listener it wants to it. Note that to keep the main thread sanity of event propagation logic we propose to make these listeners on the worker side always passive as well as not letting the worker to preventDefault or stopPropagation on the received event.
+In other words both main thread and worker can get the events at almost the same time (conditioned on the forking point of the event path and the target that is delegated).</p>
+<p><a href="https://github.com/NavidZ/input-for-workers" rel="nofollow noopener">Here</a> is the full explainer for the feature and the exact proposed API.</p>
+<p><strong>Use Cases</strong></p>
+<ul>
+<li>Low-Latency Drawing: <a href="https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas" rel="nofollow noopener">Offscreen Canvas</a> now provides workers with an off-main-thread drawing context. However any input driven drawing is still blocked by the main thread getting the user events/inputs and forwarding them to the worker to be drawn on the off screen canvas. With this latency paper-like drawing cannot be achieved on the web pages via workers.</li>
+<li>Gaming and XR: Similar to the drawing use case, low latency input handling and drawing is important for these applications and they can benefit from access to both input and canvas in worker threads.</li>
+<li>Page Analytics: Analytic scripts that process events without needing to access DOM. Some analytics scripts want to send user input over the network and only need access to the raw coordinates and state of the pointer including the buttons. In this case accessing DOM or knowing whether the default actions were prevented is not important.</li>
+<li>Interactive Animations: <a href="https://github.com/w3c/csswg-drafts/issues/2493#issuecomment-422109535" rel="nofollow noopener">Animation Worklet</a> enables scripted animation off-main-thread. By providing input events to Animation Worklet we enable rich interactive animation driven by the user input to be off-main thread to ensure smoothness and responsiveness. For many such effects passive access to <a href="https://w3c.github.io/pointerevents/" rel="nofollow noopener">pointer input events</a> is sufficient.</li>
+<li>Low-Latency Interactive Audio: Audio Worklet provides a rich off-main-thread audio context which is being used to enable high-fidelity rich audio applications on the web. If audio worklet were able to process user input (including messages from Web MIDI API) directly it may help reduce the latency from user input to audio output which is important for interactive audio applications</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-08</div>
+          <div class="post_content">
+<p><span class="mention">@RickByers</span> <span class="mention">@majidvp</span> <span class="mention">@BoCupp-Microsoft</span> <span class="mention">@smaug</span> <span class="mention">@travisleithead</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-09</div>
+          <div class="post_content">
+<p>This looks useful for web game engines using OffscreenCanvas to host the engine in a worker. Currently we support this in <a href="https://www.construct.net" rel="nofollow noopener">Construct</a> by forwarding all input events with postMessage, and this would simplify that and cut latency. This use case is very simple, since with this proposal there would be no handlers on the DOM, input events would only be used in the worker.</p>
+<p>I have a few questions:</p>
+<ol>
+<li>Currently we attach input event handlers to <code>window</code> to just forward everything. Will we be able to do the same with this API? i.e. <code>worker.addEventTarget(window)</code>
+</li>
+<li>This looks like it covers pointer events, but we also forward keyboard events, mouse events, and device orientation/motion events. Is the intention to also cover these?</li>
+<li>We also forward inputs from the Gamepad API. This is more awkward because as it stands, it does not fire events - so we just poll it and postMessage every frame. Should the Gamepad API itself be exposed in a worker, or should it be modified to fire events and work with this proposal?</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-09</div>
+          <div class="post_content">
+<p>It looks like it’d also be worth covering the “pointerrawmove” proposal with this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smaug</div>
+          <div class="creation_date">2019-04-09</div>
+          <div class="post_content">
+<p>So is the idea that hit-testing for a node which has worker-eventtargets attached would happen on-non-mainthread? Or would the forking happen after event path creation… I guess the text (and looks like the explainer too) seems to hint about latter, but that requires main thread hit-testing and what not, means that busy main thread will block event handling and performance might not get improved at all.
+This doesn’t feel like the right approach to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-10</div>
+          <div class="post_content">
+<p><span class="mention">@AshleyScirra</span>
+1: Sure we can bake that in too. Can you file the GitHub issue for this s well. But out of curiosity. Any particular reason you are doing that on the window instead of the document element? Is there anything particular you get on the window that you don’t on the document?
+2, 3: For the starter we wanted to focus on the pointerevents (including the pointerrawupdate) to make sure we get it right. But we will definitely expand to keyboard and gamepad and whatnot in the near future.</p>
+<p><span class="mention">@smaug</span>
+The explainer does indeed hint at off main thread hittesting and targeting to be able to get the performance benefit. That may potentially cause the hittest to be done on the last state of the DOM tree if the main thread was busy changing the DOM at that very moment. But we thought that is not going to be an issue as the page doesn’t control the timing of the input anyway and the input might have happened before that DOM change as well. So it shouldn’t break the pages in any way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2019-04-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="5" data-topic="3479">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v3/letter/s/ecc23a/40.png" width="20"/> smaug:</div>
+<blockquote>
+<p>So is the idea that hit-testing for a node which has worker-eventtargets attached would happen on-non-mainthread? Or would the forking happen after event path creation… I guess the text (and looks like the explainer too) seems to hint about latter, but that requires main thread hit-testing and what not, means that busy main thread will block event handling and performance might not get improved at all. This doesn’t feel like the right approach to me.</p>
+</blockquote>
+</aside>
+<p><span class="mention">@smaug</span> The forking model is exactly one of the design choices that I hope we get more feedback on. There is  interesting trade-offs in terms of the performance and richness related to participating in event propagation on main thread. We have tried to examine a few options <a href="https://github.com/NavidZ/input-for-workers#considerations-on-fork-point" rel="nofollow noopener">here</a>.</p>
+<p>Option (a) forks the event at root. This provides maximum performance isolation since hit-testing can happen without involving on main thread since it does not case about  the event propagation path to be computed and earlier handler running and not preventing propagation.</p>
+<p>Other options give more ability to the main thread to prevent worker from getting events say by registering a handler that prevents propagation. While we can  do pre-computation and optimize the case when there is no handler registered but it is definitely more complex and a performance footgun which the other model does not have.</p>
+<p>A sensible approach may be to start with (a) to ensure good default performance and then provide ability to opt-into other forking models if needed. I believe a majority of usecases will be fine with this forking model so starting here seems fine.</p>
+<p>An alternative approach maybe to start by allowing event delegation only at root level (window/document) where there is no event propagation path to worry about and leave the question of forking model to the future.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smaug</div>
+          <div class="creation_date">2019-04-12</div>
+          <div class="post_content">
+<p>Forking models can be implemented in JS, so I don’t see strong reasons to add such APIs to the platform.
+So, I think it would be better investigate (a) some more. But it isn’t really (a), since that is
+“Basically fork and delegate the event at the root of propagation path.”. We need to fork sooner. Before we know anything about propagation path in DOM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-13</div>
+          <div class="post_content">
+<p>I looked in to how the Construct engine handles input events with OffscreenCanvas a bit more. We can mix actual DOM elements with input events forwarded to OffscreenCanvas. For example there can be a <code>&lt;button&gt;</code> floating over the canvas; clicks to the button are handled separately to other clicks (to the document/window).</p>
+<p>So I think actually we don’t want to forward all input events - otherwise inputs on other DOM elements could (in the most efficient forwarding model) be forwarded to the worker when they wouldn’t normally.</p>
+<p>I think we can solve this by creating a viewport-sized element floating under everything, and use that as the target to forward input elements to the worker. Then if the user clicks a different DOM element, that element handles it; then the catch-all element behind it forwards everything else.</p>
+<p>Would the browser be able to implement this efficiently? I suppose you only need to work out if the input position is over the target element at the earliest opportunity, and then decide whether to forward on that. Once an input has been forwarded to the worker there’s no opportunity to stop it so it’s effectively passive.</p>
+<p>We also preventDefault() on the DOM in a couple of places to block default browser behavior (e.g. selection, pan-scrolling) for gaming purposes; but these could run in parallel to the input event being forwarded to the worker. In other words we only make a decision about preventDefault() on the DOM and the worker still uses the event in a passive manner.</p>
+<p>So for our case I think it would be sufficient to forward based on the event target only, allow parallel dispatch to the worker and DOM, but only respect the preventDefault() of the DOM. Alternatively if <em>everything</em> was forwarded regardless of the DOM element, we could probably live with that by tracking where DOM elements are located on the worker and ignoring input events that land on them… but it would be more complicated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>I suggest to move the spec proposal under WICG and iterate over that. Feel free to file issues against the spec and send patches.
+<span class="mention">@yoavweiss</span>  could you move <a href="https://github.com/NavidZ/input-for-workers" rel="nofollow noopener">the repo</a> under WICG?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>At</p>
+<blockquote>
+<p>Worker thread:</p>
+<pre><code>// Made up library that given pointer event sequence can compute an active gesture similar to Hammer.js 
+import {Recognizer} from 'gesture_recognizer.js'
+</code></pre>
+</blockquote>
+<p>at the Explainer, are static <code>import</code> statements possible outside of a JavaScript module; i.e., in a <code>Worker</code>?</p>
+<p>Dynamic import <code>import("./gesture_recognizer.js")</code> <a href="https://v8.dev/features/dynamic-import" rel="nofollow noopener">https://v8.dev/features/dynamic-import</a> is possible within a <code>Worker</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>Repo moved to <a href="https://github.com/WICG/input-for-workers" rel="nofollow noopener">https://github.com/WICG/input-for-workers</a></p>
+<p>Happy incubatin’!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

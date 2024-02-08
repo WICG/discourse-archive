@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Exposing hardware pixel density and other screen metrics via window.screen</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Exposing hardware pixel density and other screen metrics via window.screen</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2014-12-06</div>
+          <div class="post_content">
+<p>Hello everyone,</p>
+<p>It’d be great to have screen metrics that include the hardware pixel densities of the screen (average, horizontal, and vertical), along with the ability to explicitly use native hardware pixels instead of “CSS pixels”.</p>
+<p>Please take a look at my proposed community group on w3c, The Hardware Pixel Community Group:</p>
+<p><a class="onebox" href="http://www.w3.org/community/blog/2014/12/05/proposed-group-the-hardware-pixel-community-group/" target="_blank">http://www.w3.org/community/blog/2014/12/05/proposed-group-the-hardware-pixel-community-group/</a></p>
+<p>Please share any thoughts or ideas about this. Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-12-06</div>
+          <div class="post_content">
+<p>Explicitly working on hardware pixels is hard, and it <em>should</em> be hard (though, I agree, it should not be <em>impossible</em>). There are, like, <em>maybe</em> two types of application that <em>legitimately need</em> to address screen pixels, and these types of application <em>should</em> be forced to implement some kind of abstraction inverter to calculate how to do that given only a slight amount of information.</p>
+<p>The web should be future-proof, and that’s what resolution independence is for. By making CSS pixels resolution-independent, every site that declared a size in pixels is getting resolution independence for free. If addressing hardware pixels were made easy, we’d just end up in the same mess as we did when everybody assumed a pixel to mean 1/96 of an inch: UIs that are short-sightedly designed for a class of screen that will go obsolete in 5 years, leaving the entire UI broken and miniscule.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2014-12-08</div>
+          <div class="post_content">
+<p>If you want to propose something for CSSOM View, I suggest sending an email to www-style with [cssom-view] in the subject line or filing a bug in W3C bugzilla. No need to create a community group.</p>
+<p>The only use case I can find is “For example, suppose I want to make a push menu that is <em>always</em> 1 physical inch wide.”. But you have not explained why you want to do that. Please elaborate on this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-01-27</div>
+          <div class="post_content">
+<p>Apps that want to flash stuck pixels can benefit from addressing actual screen pixels. This is essentially the <em>only</em> legitimate use for direct-pixel addressing I know of.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>UIs that are short-sightedly designed for a class of screen that will go obsolete in 5 years, leaving the entire UI broken and miniscule.</p>
+</blockquote>
+</aside>
+<p>True. That is why I think the default should be that it behaves like it does now, but that advanced developers can tap into the details and take advantage of it.</p>
+<p>I’m needing this info so that I can develop more device-independently than the current CSS standards allow, so I’d be a user who would benefit from this and not shoot himself in the foot like what you described.</p>
+<p>I legitimately believe that if I had ultimate control of pixels in DOM (we already do in WebGL), along with knowing hardware pixel density, that I’d be able to make amazingly device-independent things.</p>
+<p>For example, with a CSS pixel to hardware pixel ratio of 1, along with knowing pixel density, I’d know the exact size of the screen in the real world, the world that the user lives in. Then I could decide how big things to be on screen. For example, if I detect a device that’s like 2.5" by 4.5" or something, I can appropriately fit a sliding menu on the side that is 2" wide, and be confident that it will look the same on all devices where that menu fits (and by “look the same” I mean "be the same exact real-world dimensions in the real world of each user (we all exist in one real world, and the UI would exist in that real world too, not scaled behind some virtual glass)).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/zcorpan/40/733_1.png" width="20"/> zcorpan:</div>
+<blockquote>
+<p>But you have not explained why you want to do that. Please elaborate on this.</p>
+</blockquote>
+</aside>
+<p>Because I want complete control of how my app looks and feels. That’s something simple that I can already do in “native” frameworks. Why not in the web?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-14</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="4" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>Apps that want to flash stuck pixels can benefit from addressing actual screen pixels. This is essentially the only legitimate use for direct-pixel addressing I know of.</p>
+</blockquote>
+</aside>
+<p>Addressing actual screen pixels is only half the problem, which we can already do in browsers. The missing part is we need to know the hardware pixel density to do anything meaningful with the pixels (for example, making something exactly 2 real-world inches wide no matter what device it is rendered on).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-10-15</div>
+          <div class="post_content">
+<p>If you need two real-world inches, use <code>2in</code>. That’s what it’s there for. You’re not going to get any more accurate size from the reported device hardware pixel density.</p>
+<p>Remember: all CSS units, including <code>px</code>, are defined <em>in terms of real-world units in the first place</em>. Hence what I said above about device-pixel-addressing not being a meaningful addition.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-10-15</div>
+          <div class="post_content">
+<p>Of course, browsers <em>are</em> allowed/required to make the <code>in</code> unit (and all the other physicals) slightly deviate from true, either for perf/rendering reasons (ensuring that the CSS <code>px</code> unit, which is 1/96th of the <code>in</code> unit, lines up with hardware pixel boundaries) or due to lack of information (no way to know how big a projector will project to; monitors often give incomplete or incorrect sizing information; etc).</p>
+<p>But yeah, other than that, <code>2in</code> is as close to 2 inches as you’ll be able to get on the machine.  The sole use-case that’s ever been presented for needing something more exact is to render a ruler on the screen, and that’s sufficiently small that we don’t consider it to counterbalance the other issues.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-10-15</div>
+          <div class="post_content">
+<p>And yeah, due to the factors <span class="mention">@tabatkins</span> mentioned, if rendering real-world sizes is truly important to your use case, your best bet is to have the user calibrate your display scale by holding an object of known size (eg. a credit card) directly up to the display and having the user make adjustments until it is exactly covered.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-17</div>
+          <div class="post_content">
+<p>My usecases for exposing physical pixels in CSS:</p>
+<p>decided to move to a <a href="//discourse.wicg.io/t/display-raster-images-with-device-s-physical-resolution/1150"><strong>new thread</strong></a> as related to CSS rather than JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>If you need two real-world inches, use 2in.</p>
+</blockquote>
+</aside>
+<aside class="quote" data-post="9" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>But yeah, other than that, 2in is as close to 2 inches as you’ll be able to get on the machine.</p>
+</blockquote>
+</aside>
+<p>From experience, rending a DIV that has width and height of CSS <code>2in</code> doesn’t actually render at that size. It varies across devices, which to me, indicates that browsers haven’t taken proper care to use EDID properly (because I can do it manually in native frameworks and get the expected results, so I know that it can be done).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>(no way to know how big a projector will project to; monitors often give incomplete or incorrect sizing information; etc).</p>
+</blockquote>
+</aside>
+<p>Those are valid points, but in most cases, the device has a hardware display (f.e. most phones, and most of them (at least the quality ones) have EDID). When a phone has EDID and a physical display, it should simply be easy to use such info. I don’t really see why it should be hidden from web app authors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>The sole use-case that’s ever been presented for needing something more exact is to render a ruler on the screen, and that’s sufficiently small that we don’t consider it to counterbalance the other issues.</p>
+</blockquote>
+</aside>
+<p>That’s a completely valid use case, and should be easily doable. Why not? It’s easy to do if you know the code paths in the browser, so why not just add it? I like native frameworks, like Qt, because in those frameworks I can make things render exactly how I want when I want (if the information is available).</p>
+<p>Why not let the web be as powerful?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="709">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>your best bet is to have the user calibrate your display scale by holding an object of known size (eg. a credit card) directly up to the display and having the user make adjustments until it is exactly covered.</p>
+</blockquote>
+</aside>
+<p>That’s one way, but unnecessary if the display has proper EDID info. This method you describe can be used as a double-check. “Hey, user, double check these dimensions are correct” and then they wont have to make adjustments if the EDID info is already accurate.</p>
+<p>Why not just include the info, and let web developers have more power, while defaulting to the defaults we have now for those developers that don’t care?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-02-08</div>
+          <div class="post_content">
+<p>I’d like to add that with false pixels (i.e. CSS pixels) we lose the power to position things precisely (like we can in “native”). For example, <code>left:1px</code> positions something at 2 actual pixels if the devicePixelRatio is 2. That limits our precision. As an alternative, we can position things with CSS translation, which accepts floating point values, but we cannot have a 1-hardware-pixel wide border, etc, with devicePixelRatio as 2.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-02-09</div>
+          <div class="post_content">
+<p>Another downside to the non-real units/pixels is that events like touchmove, mousemove, etc, are limited to a lower resolution grid when the devicePixelRatio is greater than one. Movement events will fire only after passing over two hardware pixels if devicePixelRatio is two. Animations could be twice as precise (smoother, better, less janky) with events based on hardware pixels, when it comes to dragging/moving.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2016-02-17</div>
+          <div class="post_content">
+<p>isn’t this a completely separate issue (about allowing fractional / floating point values in CSS)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2016-02-17</div>
+          <div class="post_content">
+<p>and for events like touchmove etc, note that some browsers already do return fractional values (Chrome for certain, there’s movement on doing that in Webkit <a href="https://bugs.webkit.org/show_bug.cgi?id=133180" rel="nofollow noopener">https://bugs.webkit.org/show_bug.cgi?id=133180</a> … others, not checked)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-03-04</div>
+          <div class="post_content">
+<p>Could be! fractional values would help if they fire on at least the <code>0.5</code> of a pixel. I’m not sure if it’s a separate issue, but I know that overall these things combine together and would allow some precision like what we’ve always had in native.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

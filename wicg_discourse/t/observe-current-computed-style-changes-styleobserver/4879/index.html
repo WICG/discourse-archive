@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Observe current/computed style changes (StyleObserver)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Observe current/computed style changes (StyleObserver)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-09-30</div>
+          <div class="post_content">
+<p>Not sure if this falls here or under APIs…
+This is related to <a class="inline-onebox" href="https://discourse.wicg.io/t/a-way-to-observe-changes-in-css-custom-properties/2738">A way to observe changes in CSS custom properties</a>
+The idea is to have an observer, similar to Resize/Intersection/Mutation(Observer) that gets triggered when certain computed CSS properties of an elements are changed.</p>
+<p>It’s very difficult to implement this with MutationObservers without a big performance penalty, while internally the browsers already track these changes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p>Could you describe a use-case?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-10-03</div>
+          <div class="post_content">
+<p>Yes, the use case is describing new behaviors using custom CSS properties, and even using them to polyfill not-yet-supported standard properties.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2020-10-13</div>
+          <div class="post_content">
+<p>Just came here to suggest the same thing.</p>
+<p>Polyfills are indeed one use case. But IMO the main one is custom elements that need to propagate such changes to the appropriate child / shadow DOM node, or even rewrite them completely.</p>
+<p>Examples:</p>
+<ul>
+<li>Implementing a custom element that works like <code>&lt;fieldset&gt;</code>, where border isn’t applied to the whole element, but to the shadow DOM element wrapping the contents.</li>
+<li>Similarly, a <code>border</code> on a tabs component wouldn’t be useful around the whole component, but should set the border of the tabs and the tab panels.</li>
+<li>To direct where a <code>background</code> declaration should be applied. E.g. right now there are dialog/popup components, where setting the background sets the backdrop color instead of the dialog background because of how they were implemented.</li>
+<li>To implement high-level custom properties that control multiple declarations, e.g. <a href="https://shoelace.style/components/tab-group?id=tabs-on-left" rel="noopener nofollow ugc"><code>--tabs-placement: [top | right | bottom | left ]</code></a>, <a href="https://shoelace.style/components/input?id=sizes" rel="noopener nofollow ugc"><code>--size: [small | medium | large]</code></a>, <a href="https://shoelace.style/components/input?id=pill" rel="noopener nofollow ugc"><code>--pill: [on | off ]</code></a> which are currently typically implemented as attributes <a href="https://w3ctag.github.io/webcomponents-design-guidelines/#:~:text=Don%E2%80%99t%20use%20custom%20attributes%20for%20styling" rel="noopener nofollow ugc">against TAG guidelines</a>. I linked to Shoelace, but other component libraries are no different, Shoelace just has more linkable docs. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/> This is not something that can be solved with <code>::part()</code>.</li>
+</ul>
+<p>Besides propagating declarations to the appropriate child, there is also the opposite: listening to style changes on the children and adjusting ancestors appropriately. E.g. imagine a <code>&lt;pie-chart&gt;</code> component that uses <code>&lt;pie-slice&gt;</code> children to define the different segments, where a shadow <code>&lt;canvas&gt;</code> or conic-gradient background on the parent was used to render the pie chart. This is not implementable without the ability to listen to background changes on <code>&lt;pie-slice&gt;</code> and redraw the chart. And unlike propagating to children, this is not something that can be hacked via <code>inherit</code> and <code>display: contents</code>.</p>
+<p>If a generic observer would be too hard, perhaps there could be something specifically for custom elements and slotted elements, like <code>attributeChangedCallback</code> but for CSS properties.</p>
+<p><a href="https://github.com/w3c/css-houdini-drafts/issues/1010" rel="noopener nofollow ugc">Cross posted to Houdini</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/4059_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gmurray81</div>
+          <div class="creation_date">2023-05-23</div>
+          <div class="post_content">
+<p>IMO the most important scenario for this is canvas based web components. <code>HTMLElement</code>s can generally interact well with CSS as long as they let CSS do its thing. But when you hit the boundary of a <code>canvas</code>, we need to turn the autonomic and declarative behaviors of the style system into imperative instructions to an immediate mode rendering system.</p>
+<p>Trying to join these two systems manually either results in a lot of performance overhead, or a lot of compromises (needing to be manually told of a styling environment change). And avoiding performance overhead is generally why you chose to work with <code>canvas</code> in the first place rather than SVG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2023-05-23</div>
+          <div class="post_content">
+<p>It’s very easy to get CSS to respond to JS. Just change an attribute on the appropriate element and bam.</p>
+<p>Being able to listen to a custom property change would let JS respond to CSS.</p>
+<p>It’s easy to do a lot quickly in CSS, especially now with container queries, preference queries, and :has. But if your JS state needs to synchronize with that CSS state you’re out of luck and need to move everything into JS where it gets a lot wordier.</p>
+<p>For a concrete example I’ve run into more than once: say you have a menu that’s a row of disclosure popups on big screens and a hamburger on small screens.</p>
+<p>You can do almost all of this in CSS except for stuff like setting aria-expanded on the buttons. If you’re careful you can keep your JS mostly agnostic of the CSS state but you’re going to need to know about when the transition from/to small/large screen happens just to make sure everything gets reset and focus doesn’t get lost anywhere. That means moving the MQ into the JS to know when the changeover happens even though the JS doesn’t really care why this is happening or at what breakpoint.</p>
+<p>It’s not clear how to update this to CQs and without custom MQs this means either duplicating the MQ in the CSS and JS, an additional build step to keep it synched, or putting it in JS and communicating the visual change by toggling a <code>.hamburger</code> class or somesuch.</p>
+<p>It would be much cleaner, imo, if the JS could just listen to some custom prop and let the CSS control when that prop gets updated and why.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

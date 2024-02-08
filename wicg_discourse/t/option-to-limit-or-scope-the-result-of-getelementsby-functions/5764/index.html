@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Option to limit or scope the result of getElementsBy*() functions</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Option to limit or scope the result of getElementsBy*() functions</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3543_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alinnert</div>
+          <div class="creation_date">2022-02-15</div>
+          <div class="post_content">
+<p>I’d like to propose an option to all DOM functions that select multiple elements (i.e. <code>getElementsBy*</code>, maybe also <code>querySelectorAll</code>?) to limit which elements they can find.</p>
+<p>As a simple example:</p>
+<pre><code class="lang-auto">&lt;div id="context"&gt;
+  &lt;ul&gt;
+    &lt;li id="A"&gt;&lt;/li&gt;
+    &lt;li id="B"&gt;&lt;/li&gt;
+    &lt;li id="C"&gt;
+      &lt;ul&gt;
+        &lt;li id="CA"&gt;&lt;/li&gt;
+        &lt;li id="CB"&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li id="D"&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+<p>I’d like to select all <code>&lt;li&gt;</code> elements inside <code>&lt;div id="context"&gt;</code> but not <code>&lt;li&gt;</code> inside other <code>&lt;li&gt;</code>. Maybe like so:</p>
+<pre><code class="lang-auto">const contextElement = document.getElementById('context')
+contextElement.getElementsByTagName('li', { flat: true })
+</code></pre>
+<p>A more flexible variation could allow you to specify elements whose descendants should be ignored, if those elements are very different:</p>
+<pre><code class="lang-auto">contextElement.getElementsByTagName('li', { ignoreDescendantsOf: 'li' })
+</code></pre>
+<p><em>It would be nice if <code>ignoreDescendantsOf</code> was a CSS selector. Otherwise just another tag name.</em></p>
+<p>This is useful if one wants to select all conceptual children of a recursive structure even if the elements aren’t children in a technical sense.</p>
+<p>One good example (and also one of my potential use-cases) would be the following XML Schema:</p>
+<pre><code class="lang-xml">&lt;xs:schema&gt;
+  &lt;xs:element name="element-a"&gt;
+    &lt;xs:complexType&gt;
+      &lt;xs:sequence&gt;
+        &lt;xs:element name="element-a-a"&gt;
+          &lt;xs:complexType&gt;
+            &lt;xs:sequence&gt;
+              &lt;xs:element name="element-a-a-a" /&gt;
+              &lt;xs:element name="element-a-a-b" /&gt;
+            &lt;/xs:sequence&gt;
+          &lt;/xs:complexType&gt;
+        &lt;/xs:element&gt;
+        &lt;xs:choice&gt;
+          &lt;xs:element name="element-a-b" /&gt;
+          &lt;xs:element name="element-a-c" /&gt;
+        &lt;/xs:choice&gt;
+        &lt;xs:element name="element-a-d"&gt;&lt;/xs:element&gt;
+        &lt;xs:element name="element-a-e"&gt;&lt;/xs:element&gt;
+      &lt;/xs:sequence&gt;
+    &lt;/xs:complexType&gt;
+  &lt;/xs:element&gt;
+&lt;/xs:schema&gt;
+</code></pre>
+<p>When I parse this using the <code>DOMParser</code> and get a reference to “element-a” I could select all element definitions that define immediate children of “element-a” like this:</p>
+<pre><code class="lang-auto">elementA.getElementsByTagNameNS(ns, 'element', { flat: true })
+</code></pre>
+<p>The result would only include <code>element-a-a</code> to <code>element-a-e</code>, but not <code>element-a-a-a</code> and <code>element-a-a-b</code> because they are located inside another <code>&lt;xs:element&gt;</code>.</p>
+<p>Using the alternative implementation you could select all <code>&lt;xs:element&gt;</code> elements that are not somewhere inside a <code>&lt;xs:choice&gt;</code> element:</p>
+<pre><code class="lang-auto">elementA.getElementsByTagNameNS(ns, 'element', { ignoreDescendantsOf: 'choice' })
+</code></pre>
+<p>Although it seems CSS selectors don’t support namespaces. So, I see at least a problem with this particular combination.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2022-02-20</div>
+          <div class="post_content">
+<p>You can do what you want with CSS selectors already. E.g. for your first example:</p>
+<pre><code class="lang-javascript">document.querySelector("#context li:not(#context li li)");
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3543_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alinnert</div>
+          <div class="creation_date">2022-02-27</div>
+          <div class="post_content">
+<p>Hm… I was about to say: this only works if the context element has an <code>id</code>. But after thinking this through I think this could be flexible enough for more use-cases. Although, I don’t know if it’s still faster to use the <code>getElementsBy*</code> functions and filter the results. It’s often said that the <code>getElementsBy*</code> functions are faster than <code>querySelector(All)</code>. But thanks for this tipp nonetheless.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2022-02-27</div>
+          <div class="post_content">
+<p>It works with any selector, nothing specific to ids. The performance difference of more specialized functions vs selector queries is negligible today, and is likely offset by the fact that <code>getElementsByTagName()</code> and friends return a Live <code>NodeList</code>.</p>
+<p>Your first example (and thus, your proposed <code>flat</code> option) can also be achieved via:</p>
+<pre><code class="lang-auto">document.getElementById('context').querySelector(":scope li:not(:scope li li)");
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3543_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alinnert</div>
+          <div class="creation_date">2022-03-02</div>
+          <div class="post_content">
+<p>Sorry, the part with the id was poorly described by me. But never mind that, because <code>:scope</code> solves so many problems I’ve had in my mind. I’ve never seen this before. Thank you a lot for pointing that out.</p>
+<p>I also forgot that <code>querySelectorAll</code> and <code>getElementsBy*</code> actually return different results (live vs. not-live). But wouldn’t that actually be a reason to add this feature? It would be the only way to get a live <strong>and</strong> “scoped” collection of elements. Or would a live version of <code>querySelectorAll</code> be a viable alternative?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

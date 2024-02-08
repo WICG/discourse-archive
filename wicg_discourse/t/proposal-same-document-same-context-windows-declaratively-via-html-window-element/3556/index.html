@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[proposal] Same-document same-context windows, declaratively via HTML &lt;window&gt; element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[proposal] Same-document same-context windows, declaratively via HTML &lt;window&gt; element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-14</div>
+          <div class="post_content">
+<p>There could be some use cases that become simple to achieve if we could have browser windows that rendered as part of the same document with the same JS context.</p>
+<p>F.e., imagine the following opens a new window:</p>
+<pre><code class="lang-auto">&lt;body&gt;&lt;!-- this renders in the parent window --&gt;
+  &lt;div&gt;Take a look at the content in the window.&lt;/div&gt;
+  &lt;window opened width="800" height="600"&gt;
+    &lt;!-- this renders in a child window that pops open --&gt;
+    &lt;div&gt;I am content in another window, but in the same DOM and JS context.&lt;/div&gt;
+  &lt;/window&gt;
+&lt;/body&gt;
+</code></pre>
+<p>Then in the same context, we can easily work with it:</p>
+<pre><code class="lang-auto">const d = document.querySelector('window &gt; div')
+d.innerHTML = 'I am in another window and my content was edited from the parent window context.'
+</code></pre>
+<p>Not only would multi-window applications become super simple to orchestrate…</p>
+<p>… It would also solve the complexity of rendering Custom Elements across windows (see <a href="https://stackoverflow.com/questions/56016173/how-to-copy-customelementregistry-to-a-child-window?noredirect=1#comment98720313_56016173" rel="nofollow noopener">this StackOverflow question</a>).</p>
+<p>It is (or at least seems) very difficult to make multi-window applications using the same (or subsets of) the custom elements that are in the parent Window.</p>
+<p>With this feature, we can do the following with Custom Elements:</p>
+<pre><code class="lang-auto">&lt;script&gt;
+  class MyEL extends HTMLElement { /* ... */ }
+  customElements.define('my-element', MyEL)
+&lt;/script&gt;
+&lt;body&gt;
+  &lt;!-- my-el works in the parent window --&gt;
+  &lt;my-el&gt;Take a look at the content in the window.&lt;/my-el&gt;
+  &lt;window opened width="800" height="600"&gt;
+    &lt;!-- my-el also works in the child window --&gt;
+    &lt;my-el&gt;&lt;/my-el&gt;
+  &lt;/window&gt;
+&lt;/body&gt;
+</code></pre>
+<p>Because we’re using the same DOM, note that CSS styling also applies in the child window.</p>
+<p>With the current API (using <code>window.open</code>) styles need to be manually copied over or linked in the child window. Custom Elements need to be re-defined in the child window, event needs to be wired up via <code>postMessage</code>, etc. It’s a lot of pain and easy to do it wrong and leaves a big surface area for bugs to infest.</p>
+<p>The new <code>&lt;window&gt;</code> feature would solve all of that. F.e., here’s a complete example, including CSS:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  my-el { background: pink }
+&lt;/style&gt;
+&lt;script&gt;
+  class MyEL extends HTMLElement { /* ... */ }
+  customElements.define('my-element', MyEL)
+&lt;/script&gt;
+&lt;body&gt;
+  &lt;!-- my-el works in the parent window, has a pink background --&gt;
+  &lt;my-el&gt;Take a look at the content in the window.&lt;/my-el&gt;
+  &lt;window opened width="800" height="600"&gt;
+    &lt;!-- my-el also works in the child window, also has a pink background --&gt;
+    &lt;my-el&gt;I am content in another window, but in the same DOM and JS context.&lt;/my-el&gt;
+  &lt;/window&gt;
+&lt;/body&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-14</div>
+          <div class="post_content">
+<p>This would allow even more awesome things to be possible, f.e. imagine ShadowDOM distribution, where a component can distribute children into another window:</p>
+<pre><code class="lang-auto">&lt;!-- windowable-sidebar-layout has a &lt;window&gt; element in its shadow root --&gt;
+&lt;windowable-sidebar-layout windowed&gt;
+  &lt;menu slot="header"&gt;...&lt;/menu&gt;
+  &lt;main slot="main"&gt;...&lt;/main&gt;
+  &lt;aside slot="sidebar"&gt;...&lt;/aside&gt;
+&lt;/windowable-sidebar-layout&gt;
+</code></pre>
+<p>which would distribute the <code>&lt;aside&gt;</code> element into the child window. To tell the web component to render the sidebar back in the main window, the user would just remove the <code>windowed</code> attribute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>Basically, <code>&lt;window&gt;</code>s would open OS windows that are simply just render targets for the HTML engine. Portions from the main window’s DOM are simply painted inside the child window, nothing more. There’s no new DOM or JS context anywhere, there’s no new origin, it’s all the same context as far as user code goes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>Oh! And events would be simple! You could click on an element, and catch the bubbling event anywhere in the main window’s DOM. It’d make multi-window apps <em><strong>super easy</strong></em>!</p>
+<p>Example:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  my-el { background: pink }
+&lt;/style&gt;
+
+&lt;script&gt;
+  class MyEL extends HTMLElement { /* ... */ }
+  customElements.define('my-element', MyEL)
+&lt;/script&gt;
+
+&lt;body&gt;
+  &lt;!-- my-el works in the parent window, has a pink background --&gt;
+  &lt;my-el&gt;Take a look at the content in the window.&lt;/my-el&gt;
+  &lt;window opened width="800" height="600"&gt;
+    &lt;!-- my-el also works in the child window, also has a pink background --&gt;
+    &lt;my-el id="foo"&gt;I am content in another window, but in the same DOM and JS context.&lt;/my-el&gt;
+  &lt;/window&gt;
+&lt;/body&gt;
+
+&lt;script&gt;
+  // do something when the user clicks on the element in the window!
+  const el = document.querySelector('#foo')
+  el.addEventListener('click', () =&gt; {
+    console.log('user clicked inside the window')
+  })
+&lt;/script&gt;
+</code></pre>
+<p>And also, clicking anywhere in the window:</p>
+<pre><code class="lang-auto">  const win = document.querySelector('#foo')
+  win.addEventListener('click', () =&gt; {
+    console.log('user clicked on the window')
+  })
+</code></pre>
+<p>and bubbling:</p>
+<pre><code class="lang-auto">  document.addEventListener('click', e =&gt; {
+    if (e.target.id === 'foo') {
+      console.log('user clicked inside the window')
+    }
+  })
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2318_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oliverdunk</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>I have mixed feelings. I can see the power this brings, but the window element does seem slightly strange. A few questions:</p>
+<ol>
+<li>What would happen when the window is closed? Is the element removed from the DOM?</li>
+<li>What happens when you add the window element to the DOM, but the browser has popups disabled?</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="3556">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/oliverdunk/40/2318_2.png" width="20"/> oliverdunk:</div>
+<blockquote>
+<p>What would happen when the window is closed? Is the element removed from the DOM?</p>
+</blockquote>
+</aside>
+<p>The <code>opened</code> state becomes false. Similar to <code>checked</code> on input elements. Note the <code>opened</code> attribute in the examples.</p>
+<p>When the window gets closed, it renders relative to it’s location in the DOM (perhaps a window element is styled with <code>display:content</code> by default).</p>
+<p>This leads to concepts like “windowable widgets” that can be popped out into windows, and popped back in, on demand.</p>
+<aside class="quote no-group" data-post="5" data-topic="3556">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/oliverdunk/40/2318_2.png" width="20"/> oliverdunk:</div>
+<blockquote>
+<p>What happens when you add the window element to the DOM, but the browser has popups disabled?</p>
+</blockquote>
+</aside>
+<p>It’s going to handle exactly the same as it does with <code>window.open</code>, which may be specific to each browser.</p>
+<p>In Chrome, it opens in a new tab unless you specify width and height. Chrome has heuristics for detecting spammy ads. At worse, the blocked pop-up icon will appear in the address bar.</p>
+<p>But because the window uses the same DOM and JS Context, that already eliminates a whole class of spam which opens windows with other origins.</p>
+<p>In Chrome, a user can disable the pop-up blocking for a specific site if Chrome heuristics are wrong.</p>
+<p>PWAs will be more trusted. If a user finds a PWA misbehaving, the user can uninstall it.</p>
+<p>Etc</p>
+<p>Browsers would have new rules specifically for windows opened from <code>&lt;window&gt;</code>s. F.e., maybe</p>
+<ul>
+<li>A maximum of 10 can be opened at once, or something</li>
+<li>When switching to another main window (or tab), perhaps all <code>&lt;window&gt;</code> windows of the previous main window are hidden</li>
+<li>etc</li>
+</ul>
+<aside class="quote no-group" data-post="5" data-topic="3556">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/oliverdunk/40/2318_2.png" width="20"/> oliverdunk:</div>
+<blockquote>
+<p>I can see the power this brings</p>
+</blockquote>
+</aside>
+<p>Yeaaaas.</p>
+<p>Imagine for example a tool panel, like those in well-known apps such as Photoshop or Gimp or Blender, and imagine individual sections in the tool bars can be popped into separate windows, dragged between windows, etc.</p>
+<p><a href="https://www.gimp.org/" rel="nofollow noopener">Gimp</a> has a single-window mode and a multi-window mode that you can toggle, where panels pop in or out of the main window.</p>
+<p>These sorts of things would <em><strong>super easy</strong></em> to achieve with this <code>&lt;window&gt;</code> feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>I updated my above reply, in case you’re reading email or already read it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>By the way, this is somewhat possible to do with React components.</p>
+<p>With React, we can use a “portal” (<code>React.createPortal</code>) to render to any arbitrary element, even one from another window.</p>
+<p>The thing is, this works well when</p>
+<ul>
+<li>not also using custom elements, because they then need to be defined in the child window</li>
+<li>using a CSS-in-JS styling system which applies all styles via <code>style</code> attributes, that way we don’t need to think about how to copy styles over.</li>
+<li>Using React components that do not rely on event bubbling (because they stop at the window boundary).</li>
+</ul>
+<p>But this still involves opening the window manually, and also spins up a new context, and event bubbling would require more hacking, 3rd party libs like jQuery won’t simply work, etc. It’s just <em><strong>plain difficult</strong></em>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-05-18</div>
+          <div class="post_content">
+<p>Could you describe the use cases?</p>
+<p>What are the advantages of Gimp’s multi-window mode? Could you share a screenshot?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-06</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="3556">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Could you share a screenshot?</p>
+</blockquote>
+</aside>
+<p>Here’s a video showing Gimp going from multi-window mode to single-window mode: <a href="https://www.youtube.com/watch?v=bsZYBMvSNhw" rel="nofollow noopener">https://www.youtube.com/watch?v=bsZYBMvSNhw</a>.</p>
+<p>The use cases of multi-window applications are already discussed in many other places besides here. This thread is about how to make implementation of multi-window apps easier for HTML developers (regardless what for).</p>
+<p>Linux Tomboy is an example of a highly-multi-window app:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/daa6304a51335943b05b1b0a96a84722a3534808" href="//discourse.wicg.io/uploads/default/original/2X/d/daa6304a51335943b05b1b0a96a84722a3534808.png" title="Screenshot from 2016-06-04 16-10-46.png"><img alt="Screenshot%20from%202016-06-04%2016-10-46" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/d/daa6304a51335943b05b1b0a96a84722a3534808_2_10x10.png" height="249" src="//discourse.wicg.io/uploads/default/optimized/2X/d/daa6304a51335943b05b1b0a96a84722a3534808_2_690x249.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/d/daa6304a51335943b05b1b0a96a84722a3534808_2_690x249.png, //discourse.wicg.io/uploads/default/optimized/2X/d/daa6304a51335943b05b1b0a96a84722a3534808_2_1035x373.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/d/daa6304a51335943b05b1b0a96a84722a3534808.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screenshot from 2016-06-04 16-10-46.png</span><span class="informations">1169×423 132 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>The reasons for wanting to make multi-window applications aren’t so relevant, I’m only suggesting that there can be an easy way of doing it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-06</div>
+          <div class="post_content">
+<p><span class="mention">@simevidas</span> Another example is gmail, it can pop chats out into separate windows:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/1f2a6711d2cad20d069574eb5a4aa681c634c23f" href="//discourse.wicg.io/uploads/default/original/2X/1/1f2a6711d2cad20d069574eb5a4aa681c634c23f.png" title="Screen Shot 2019-06-05 at 6.38.20 PM.png"><img alt="20%20PM" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/1/1f2a6711d2cad20d069574eb5a4aa681c634c23f_2_10x10.png" height="423" src="//discourse.wicg.io/uploads/default/optimized/2X/1/1f2a6711d2cad20d069574eb5a4aa681c634c23f_2_690x423.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/1/1f2a6711d2cad20d069574eb5a4aa681c634c23f_2_690x423.png, //discourse.wicg.io/uploads/default/original/2X/1/1f2a6711d2cad20d069574eb5a4aa681c634c23f.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/1/1f2a6711d2cad20d069574eb5a4aa681c634c23f.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screen Shot 2019-06-05 at 6.38.20 PM.png</span><span class="informations">866×532 212 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>Obviously there’s ways to make it work with current APIs, but something like what I’m suggesting would make it super easy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-06-06</div>
+          <div class="post_content">
+<p>I think that describing the use cases is the most important part of a proposal. I’m trying to understand why a web app would need multiple windows.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-06</div>
+          <div class="post_content">
+<p>Not why does a “web app” need windows (they already do by the way). Why does <em>any</em> app need windows.</p>
+<p>This simply makes a feature easier to achieve. All the use cases of apps with multiple windows are already in place, and it’d be great to be able to achieve it easily with web tech. (f.e. publishing desktop apps with Electron)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-06-08</div>
+          <div class="post_content">
+<p>I still don’t understand why a web app wold need multiple windows. If you can explain that, I would appreciate it. Otherwise, I won’t be able to contribute to this discussion anymore.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-09</div>
+          <div class="post_content">
+<p>Hello <span class="mention">@simevidas</span>, I posted an example screenshot, above, of a well-known web app with multiple windows.</p>
+<p>At work, we are making our 3D editor’s UI panels pop out into separate windows. It’s a web app, written with React and Three.js. It can run in the web, or in Electron as a standalone application.</p>
+<p>Making multi-window desktop applications is a valid desire in general, and some devs might choose to make a desktop application using web tech because that generally makes the process easier (except the windowing part can be tricky).</p>
+<p>Having an same-document windowing feature would make the dev experience much simpler for certain cases (like popping widgets out into separate windows).</p>
+<p>Here are a couple more example use cases:</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/13910421/developing-a-multi-screen-web-interface-such-as-the-bloomberg-terminal" rel="nofollow noopener">https://stackoverflow.com/questions/13910421/developing-a-multi-screen-web-interface-such-as-the-bloomberg-terminal</a></li>
+<li>
+<a href="https://golden-layout.com" rel="nofollow noopener">https://golden-layout.com</a> (this one support widgets that can pop out into separate windows)</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-09</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="3556">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>why a web app wold need multiple windows</p>
+</blockquote>
+</aside>
+<p>The way I look at is not “why a web app would need multiple windows”, but “why any app would need multiple windows”. The latter is a question that is already backed by many examples of real-world applications.</p>
+<p>Here is my co-worker, with many windows across only a few applications. Multi-windowing is a first-class citizen in his workflow:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/38f97c94c428303e098ed507006d75d2f7ef8ecb" href="//discourse.wicg.io/uploads/default/original/2X/3/38f97c94c428303e098ed507006d75d2f7ef8ecb.jpeg" title="IMG_20190606_122223.jpg"><img alt="IMG_20190606_122223" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/3/38f97c94c428303e098ed507006d75d2f7ef8ecb_2_10x10.png" height="388" src="//discourse.wicg.io/uploads/default/optimized/2X/3/38f97c94c428303e098ed507006d75d2f7ef8ecb_2_690x388.jpeg" srcset="//discourse.wicg.io/uploads/default/optimized/2X/3/38f97c94c428303e098ed507006d75d2f7ef8ecb_2_690x388.jpeg, //discourse.wicg.io/uploads/default/optimized/2X/3/38f97c94c428303e098ed507006d75d2f7ef8ecb_2_1035x582.jpeg 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/3/38f97c94c428303e098ed507006d75d2f7ef8ecb_2_1380x776.jpeg 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">IMG_20190606_122223.jpg</span><span class="informations">1920×1080 646 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6" href="//discourse.wicg.io/uploads/default/original/2X/c/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6.jpeg" title="IMG_20190606_130918.jpg"><img alt="IMG_20190606_130918" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/c/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6_2_10x10.png" height="388" src="//discourse.wicg.io/uploads/default/optimized/2X/c/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6_2_690x388.jpeg" srcset="//discourse.wicg.io/uploads/default/optimized/2X/c/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6_2_690x388.jpeg, //discourse.wicg.io/uploads/default/optimized/2X/c/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6_2_1035x582.jpeg 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/c/ca04992935b94cf5bd8ff50d1fd2148d4e85b5f6_2_1380x776.jpeg 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">IMG_20190606_130918.jpg</span><span class="informations">1920×1080 742 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>The following is a screenshot of a multi-window flow in Gimp (even with multi-window UI turned off). All of Gimp’s dialogs are made with custom windows. In the screenshot, a custom window is opened for saving a file, then a third window is opened for tweaking output parameters before performing the save:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/8f6822831a80957c834c8a4ae169ef72cc85bd2b" href="//discourse.wicg.io/uploads/default/original/2X/8/8f6822831a80957c834c8a4ae169ef72cc85bd2b.jpeg" title="gimp.jpg"><img alt="gimp" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/8/8f6822831a80957c834c8a4ae169ef72cc85bd2b_2_10x10.png" height="411" src="//discourse.wicg.io/uploads/default/optimized/2X/8/8f6822831a80957c834c8a4ae169ef72cc85bd2b_2_690x411.jpeg" srcset="//discourse.wicg.io/uploads/default/optimized/2X/8/8f6822831a80957c834c8a4ae169ef72cc85bd2b_2_690x411.jpeg, //discourse.wicg.io/uploads/default/optimized/2X/8/8f6822831a80957c834c8a4ae169ef72cc85bd2b_2_1035x616.jpeg 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/8/8f6822831a80957c834c8a4ae169ef72cc85bd2b_2_1380x822.jpeg 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">gimp.jpg</span><span class="informations">1490×888 272 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>My examples show the generic multi-window need that application developers have, not specific to web technology. Web tech is only one technology, of many, that can be chosen for making applications with. Some technologies have better windowing abilities.</p>
+<p>I’m simply suggesting an improvement for existing and valid desires that application developers have, when they choose to make applications with web technology.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-09</div>
+          <div class="post_content">
+<p><span class="mention">@simevidas</span> Here’s some other benefits that multi-windowing can have:</p>
+<ul>
+<li>A developer who only knows basic HTML and CSS can already make fully-working forms with inputs. Now if they want to stick the forms in a separate window (for whatever reason the application needs windows), they can’t. A simple <code>&lt;window&gt;</code> element could solve the problem.
+<ul>
+<li>I’ve worked with web designers (HTML/CSS developers with ability to copy/paste jQuery) in design agencies that would simply give up making multi-window applications with the current JS APIs.</li>
+</ul>
+</li>
+<li>accessibility: screen readers, search engines, and other devices can easily understand what is happening by reading the HTML/DOM. Content is still reachable even if rendered in another window.</li>
+</ul>
+<p>Multi-windowing is already a feature of web applications and applications in general. The goal I have with my suggestion is simply to make the <em>existing</em> possibilities easier to achieve.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-06-09</div>
+          <div class="post_content">
+<p>Ah, multi <strong>monitor</strong>. Now I get it. (I only use a laptop, and I never open multiple windows of the same app side by side, so I didn’t think of the possibility of there being multiple monitors.)</p>
+<p>From looking at your images, I can see two <em>different</em> scenarios:</p>
+<ul>
+<li>multiple windows of the same app open on different screens</li>
+<li>multiple smaller windows of the same app open on the same screen</li>
+</ul>
+<p>Regarding the latter scenario, is there really a need for those windows to be actual windows? Can’t they just be elements on the same web page that are styled like windows and have window-like behavior?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-06-09</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="18" data-topic="3556">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Can’t they just be elements on the same web page that are styled like windows and have window-like behavior</p>
+</blockquote>
+</aside>
+<p>In that case, my co-worker (for example) can’t use his OS-level window management.</p>
+<p>But it depends on the app needs. A one-time prompt, blocking the underlying app, might make sense in a modal dialog. On the other hand, a UI component that is frequently visited in a separate window could be a different case.</p>
+<p>A more complicated example can be a 3D design studio, with many tools. A designer might have multiple monitors, and will want to arrange all the tools in the arrangement that satisfies their workflow. Imagine tools as complicated as <a href="https://www.blender.org" rel="nofollow noopener">Blender</a> or <a href="https://www.maxon.net/en-us/products/cinema-4d/overview" rel="nofollow noopener">Cinema 4D</a> (which is sort of the type of stuff we’re making, but for a specific industry, and not yet as complicated).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2019-07-25</div>
+          <div class="post_content">
+<p>I was observing another designer, who uses Adobe tools, and I was observing how she likes to place her tools (f.e. Illustrator panels) in separate windows wherever she wants across her monitors. This is a real thing that people do. I believe I’ve given plenty of valid examples.</p>
+<p>What I’m wishing for is an easy way to achieve multi-window applications.</p>
+<p>We can already do it currently, but it is currently painful and complicated.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

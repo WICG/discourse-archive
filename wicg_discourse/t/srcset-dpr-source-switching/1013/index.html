@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Srcset DPR source switching</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Srcset DPR source switching</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lletnek</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>Found something interesting when I was playing around with srcset and retina sizing 1x, 2x etc.</p>
+<p>When having an img element with srcset with 1x &amp; 2x images, they behave mostly as you’d expect. If your DPR is 1, then you get the 1x image. If it’s 2, you get 2x.</p>
+<p>However, as I was playing around with various DPRs to see how it worked out the logic of whether to serve the 1x or 2x in between those DPRs. I found something interesting. I’m not sure if this is a bug, or how it’s intended to work and I’m just unaware of the logic going on.</p>
+<p>So, if I set the DPR to 1.41. Then I’m served the 1x image. If I set it to 1.42. Then I’m served the 2x image.</p>
+<p>I’m not sure if it’s relevant, but the image in question was 182 x 142px wide, and the 2x exactly double that.</p>
+<p>Any thoughts? <span class="mention">@yoavweiss</span> in particular?</p>
+<p>Cheers.</p>
+<p>Edit: This is in Chrome 43</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>If the device pixel ratio is between two available resolutions, you want to use the larger image and downsample its details - that’s the whole point of providing a larger image, to not lose detail the device is capable of displaying (but avoid transmitting detail the device is <em>not</em> capable of displaying). Without looking, I would expect this is explicitly codified as part of the <code>&lt;picture&gt;</code> spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lletnek</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>Absolutely, I’m just curious as to why it’s switching sources at 1.41 &amp; 1.42. Just wondering what the logic is there and if that’s correct.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>Oh wow, I missed that, I thought you were saying it switched above 1x. Yeah, that’s weird.</p>
+<p><a href="https://html.spec.whatwg.org/multipage/embedded-content.html#the-picture-element">Link to the <code>&lt;picture&gt;</code> spec.</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>It sounds like it’s switching around the square root of 2 - can you confirm if this also happens between 1.413 and 1.415?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lletnek</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>Bang on sir! 1.413 = 1x. 1.415 = 2x.</p>
+<p>Cheers <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-08-01</div>
+          <div class="post_content">
+<p>Chrome uses a geometric mean based algorithm to detect which of the provided resources is “closer” to the DPR. In you case, the geo-mean of 1 and 2 is the square root of 2, as you guessed <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+<p>The resource selection is not part of the spec (the spec defines this as UA specific).</p>
+<p>We’ve had complaints in the past that caused this algorithm to change, from “never upscale” to “geo-mean” and now to “geo mean if the screen’s DPR is higher than 1”. It’s trade-off between quality and bandwidth, and I think we’re still looking for the sweet-spot.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-01</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1013">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>The resource selection is not part of the spec (the spec defines this as UA specific).</p>
+<p>We’ve had complaints in the past that caused this algorithm to change, from “never upscale” to “geo-mean” and now to “geo mean if the screen’s DPR is higher than 1”. It’s trade-off between quality and bandwidth, and I think we’re still looking for the sweet-spot.</p>
+</blockquote>
+</aside>
+<p>It would be nice if there were a non-normative note in the spec that describes the implementors/RICG’s progress in this vein, so devs looking at the spec know what to expect (though it would also be nice if content authors <a href="//discourse.wicg.io/t/resurrecting-webplatform-org/1018">didn’t have to go as far out as to the specs to find this information</a>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lletnek</div>
+          <div class="creation_date">2015-08-01</div>
+          <div class="post_content">
+<p>Might be useful to introduce operators… e.g.</p>
+<p><code>&lt;img srcset="/graphic.jpg &lt;= 1x, /graphic@2x.jpg &gt; 1x &amp;&amp; &lt;= 2x" /&gt;</code></p>
+<p>I know that looks hideous, but something along those lines might be interesting. It would give you finite control over what resources are displayed, rather than leaving it up to logic, which may or may not be defined and the same across vendors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lletnek</div>
+          <div class="creation_date">2015-08-01</div>
+          <div class="post_content">
+<p>Or something less insane, maybe.</p>
+<p><code>&lt;img srcset="/graphic.jpg *-1x, /graphic@2x 1.01-2x"&gt;</code></p>
+<p>Again, not pretty, but along those lines</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-01</div>
+          <div class="post_content">
+<p>Or maybe make the upscaling behavior exposed and configurable via a CSS property. (Or a <code>&lt;meta&gt;</code> tag or JS API, but I think the CSS property would be the best solution here.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p><code>x</code> descriptors are not shorthand media queries. They do not describe the <code>device-pixel-ratio</code> that the resource is intended for. They <em>do</em> describe the resource’s size <em>relative to it’s <code>img</code>’s layout size</em>, and the browser is given explicit permission to choose whichever resource it wants, given that information.</p>
+<p>This is good, because the browser knows a lot more about its context than you do. Describing, rather than proscribing, resources lets the browser make good decisions in contexts that authors haven’t or couldn’t anticipate; <code>srcset</code>, as specced, is future friendly.</p>
+<p>If you <em>do</em> want explicit control, use media queries with <code>picture</code> &amp; <code>media</code>:</p>
+<pre><code class="lang-auto">&lt;picture&gt;
+  &lt;source srcset="/graphic@3x" media="(min-device-pixel-ratio: 2.01)" /&gt;
+  &lt;source srcset="/graphic@2x" media="(min-device-pixel-ratio: 1.01) and (max-device-pixel-ratio: 2)"
+  &lt;img src="/graphic.jpg" alt /&gt;
+&lt;/picture&gt;
+</code></pre>
+<p>But I would think long and hard about using markup like this when all you want to do is send crisp images to HiDPI screens. Browsers have a wealth of info about user preferences, connection speed… what resources may already be in the cache… don’t rob them of their ability to use it!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

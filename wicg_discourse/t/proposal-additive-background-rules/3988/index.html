@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Additive background rules</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Additive background rules</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2610_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ferdy_Christant</div>
+          <div class="creation_date">2019-10-16</div>
+          <div class="post_content">
+<p>This is admittedly a pretty raw idea, but I’m still curious what the community thinks of it.</p>
+<p>Currently, the CSS background rule allows for passing in multiple background layers (color, image, gradient) as part of a single declaration.</p>
+<p><strong>Problem statement</strong></p>
+<p>Imagine a design system. Which is not hard to do as design is increasingly systemic in our industry. Often such design systems make use of flexible CSS utility classes.</p>
+<p>Imagine we have 20 classes for colors, making up our brand.
+We also have 5 texture classes (repeating backgrounds). We apply these single purpose classes to markup to compose UI.</p>
+<p>In this particular scenario, we want to be able to apply a background color to an element. Or, to give it a background image (example: noise pattern). And here comes the heart of the matter: we also want to be able to apply <strong>both</strong>. Example: a noise pattern on a gray background.</p>
+<pre><code>&lt;div class="gray noise"&gt;
+&lt;/div&gt;
+</code></pre>
+<p><strong>Edit</strong>: <em>I realize this is not the best example as it could be solved using background-color and background-image separately. The issue may still occur though in several other situations such as combining multiple background images, gradients, etc.</em></p>
+<p>This is not a far-fetched scenario, yet currently inefficient to implement. If either utility class uses the background-image property, they would overwrite each other. The only way to solve this currently is to have classes for every possible combination of layers. In this case: 5 x 20 = 100 classes.</p>
+<p>We can easily dramatize the problem by introducing utility gradient classes. Now we would require several hundreds of classes.</p>
+<p><strong>Idea for a solution</strong></p>
+<p>The idea of additive backgrounds is that you can declare a background on an element which will be <strong>added</strong> to the existing declaration (that may exist elsewhere), if any. I haven’t really thought much about the syntax, so this is just to illustrate the idea:</p>
+<pre><code>.gray {
+background: #ccc;
+}
+
+.noise {
++background: url('noise.gif');
+}
+</code></pre>
+<p>When both of the above classes are applied to an element, the end result will be that the background consists of the color and the image background combined.</p>
+<p><strong>Notes</strong></p>
+<p>I imagine the order of declaration to be a potential source of confusion. In the example shown, one would probably want the image before the color. It may be tricky to reason about by developers.</p>
+<p>Finally, should the idea have some merit, it could be considered for other CSS properties that expect multiple values. I have thought of filters and box shadows but don’t really see a practical use case there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-16</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="3988">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ferdy_christant/40/2610_2.png" width="20"/> Ferdy_Christant:</div>
+<blockquote>
+<p>And here comes the heart of the matter: we also want to be able to apply <strong>both</strong> . Example: a noise pattern on a gray background.</p>
+</blockquote>
+</aside>
+<p>One means of achieving the requirement using CSS is to utilize pseudo elements and <code>mix-blend-mode</code>, and <code>opacity</code></p>
+<pre><code>h1 {
+  --text: "Text";
+  --width: 300px;
+}
+
+h1 {
+  width: var(--width);
+  mix-blend-mode: normal;
+  background: grey;
+}
+
+h1:before {
+  opacity: .25;
+  content: var(--text);
+  width: var(--width);
+  color: transparent;
+  position: absolute;
+  background: linear-gradient(to left, rgba(222, 111, 99, 1), rgba(22, 33, 44, 0));
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2019-10-21</div>
+          <div class="post_content">
+<p>There have been various proposals around this, the most recent that I am aware of being: <a href="https://github.com/w3c/csswg-drafts/issues/1594" rel="nofollow noopener">https://github.com/w3c/csswg-drafts/issues/1594</a></p>
+<p>It’s slightly different to the proposal here but the rough idea is to add <code>!add</code> at the end of a property declaration similar to <code>!important</code>. Addition then takes place using specificity order.</p>
+<p>The rules for addition for many common types are already defined in <a href="https://drafts.csswg.org/css-values-4/" rel="nofollow noopener">CSS Values and Units Level 4</a> since this is needed for animation already.</p>
+<p>For list-type properties like background-image, addition means appending to the list so it works for things like adding adding multiple filters, or transform functions etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2610_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ferdy_Christant</div>
+          <div class="creation_date">2019-10-21</div>
+          <div class="post_content">
+<p>Wow, thanks so much. I had no idea about this already being a proposal, funny I accidentally used the same “additive” term. Really liking the !add proposal, very simple and elegant solution.</p>
+<p>The proposal does more than I ever hoped for so thanks again, no follow-up needed for this one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2019-11-07</div>
+          <div class="post_content">
+<p>I would solve this use case with a different, more radical approach: backgrounds/<a href="https://drafts.fxtf.org/compositing-2/#backdropCalc" rel="nofollow noopener">backdrops</a>/box-shadows, contents and <a href="https://drafts.fxtf.org/css-masking-1/#positioned-masks" rel="nofollow noopener">masks</a>/<a href="https://drafts.fxtf.org/filter-effects/#FilterProperty" rel="nofollow noopener">filters</a> effectively create a multitude of <em>stacked box layers</em>, which, a bit like <a href="https://drafts.csswg.org/css-pseudo-4/#marker-pseudo" rel="nofollow noopener"><code>::marker</code></a> that is generated by <code>list-item</code> properties, should be accessible with pseudo-elements.</p>
+<h2>Relative Box Layers</h2>
+<pre><code class="lang-css">.noise::background {content: url('noise.gif');}
+.gray::background {fill: #ccc;}
+</code></pre>
+<p>wherein new backgrounds are deeper (and new foregrounds are higher) than all existing ones, or</p>
+<pre><code class="lang-css">.gray::last-background {fill: #ccc;}
+.noise::first-background {content: url('noise.gif');}
+</code></pre>
+<h2>Absolute Box Layers</h2>
+<pre><code class="lang-css">.gray::layer(-2) {fill: #ccc;}
+.noise::layer(-1) {content: url('noise.gif');}
+</code></pre>
+<p>wherein negative layers are backgrounds, positive layers are foregrounds, and the main content is in <code>::layer(0)</code>.</p>
+<p>By the way, there are also some reasons for introducing <code>::border</code> pseudo elements which would use SVG/FXTF <code>stroke</code> properties.</p>
+<pre><code class="lang-css">::border 
+{
+    fill: &lt;border-color&gt;;
+    stroke-width: &lt;border-width&gt;;
+    stroke-color: &lt;border-color&gt;;
+    stroke-pattern: &lt;~border-style&gt;;
+    content: &lt;border-image&gt;;
+}
+::border-top,    ::border:top, 
+::border-right,  ::border:right, 
+::border-bottom, ::border:bottom, 
+::border-left,   ::border:left
+{
+    ...;
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

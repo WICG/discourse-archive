@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>What’s the standard way to render an element’s outline above its siblings in CSS?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">What’s the standard way to render an element’s outline above its siblings in CSS?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-03-17</div>
+          <div class="post_content">
+<p>I’ve shared the following CSS tip on Twitter:</p>
+<blockquote>
+<p>You can apply <code>transform: rotate(0)</code> to an element’s <code>:focus</code> state to ensure that the element’s focus outline isn’t concealed by adjacent elements (e.g., the next sibling).</p>
+</blockquote>
+<p>Source: <a href="https://mobile.twitter.com/WebPlatformNews/status/1106577402799505414" rel="nofollow noopener">https://mobile.twitter.com/WebPlatformNews/status/1106577402799505414</a></p>
+<p>This has lead to a discussion about the different ways to achieve this in CSS. I would like to know what the <em>standard</em> way is to do this in CSS.</p>
+<p>Fore example, <code>position: relative</code> seems “more standard” than <code>transform: rotate(0)</code> (which is a hack) but we’re not offsetting the element, so it seems like a hack as well.</p>
+<p>P.S. This question probably has an obvious answer but I am easily confused when it comes to CSS, so I need to ask.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2019-03-18</div>
+          <div class="post_content">
+<p>MDN has a <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context" rel="nofollow noopener">list of things that will trigger a new stacking context</a>. Of those <code>isolation</code> seems like the one most directly intended to create a new stacking context.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-03-18</div>
+          <div class="post_content">
+<p>Wow, what a hidden gem! <img alt=":exploding_head:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/exploding_head.png?v=6" title=":exploding_head:"/> I’m pretty sure I haven’t read anything about this property in the last 4 or more years. The last (and only) mention of it that I’ve found is this intent-to-ship discussion from November 2014:</p>
+<p><a class="onebox" href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/WoLwgoPB-GE/C2ZRNt-4h3wJ" rel="nofollow noopener" target="_blank">https://groups.google.com/a/chromium.org/d/msg/blink-dev/WoLwgoPB-GE/C2ZRNt-4h3wJ</a></p>
+<p>It seems to be related to compositing (something about combining shapes).</p>
+<p>The only downside is that it’s not supported in IE and Edge.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2255_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iamnewton</div>
+          <div class="creation_date">2019-03-30</div>
+          <div class="post_content">
+<p>Is there any reason you’d have to use <code>outline</code>?  I’ve been zeroing that out in my own projects and using <code>box-shadow</code> instead and it doesn’t suffer from the same issues as far as I’ve tested.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-03-30</div>
+          <div class="post_content">
+<p>Do you mean an <code>inset</code> box shadow? Otherwise, it still appears beneath the next the next sibling from what I see.</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/ff045c6153e0b77d0958592a26ff77a68ca6c262" href="//discourse.wicg.io/uploads/default/original/2X/f/ff045c6153e0b77d0958592a26ff77a68ca6c262.png" title="Screen Shot 2019-03-30 at 11.48.11 PM.png"><img alt="11%20PM" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/f/ff045c6153e0b77d0958592a26ff77a68ca6c262_2_10x10.png" height="331" src="//discourse.wicg.io/uploads/default/optimized/2X/f/ff045c6153e0b77d0958592a26ff77a68ca6c262_2_690x331.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/f/ff045c6153e0b77d0958592a26ff77a68ca6c262_2_690x331.png, //discourse.wicg.io/uploads/default/optimized/2X/f/ff045c6153e0b77d0958592a26ff77a68ca6c262_2_1035x496.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/f/ff045c6153e0b77d0958592a26ff77a68ca6c262.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screen Shot 2019-03-30 at 11.48.11 PM.png</span><span class="informations">1142×548 43.6 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2255_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iamnewton</div>
+          <div class="creation_date">2019-03-31</div>
+          <div class="post_content">
+<p>yeah, thats what I’m doing.</p>
+<pre><code class="lang-auto">box-shadow: 0 0 0 .1875rem rgba(blue, .5);
+outline: 0;
+</code></pre>
+<p><a href="https://codepen.io/chrisopedia/pen/ZZExBz" rel="nofollow noopener">https://codepen.io/chrisopedia/pen/ZZExBz</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Aha. The box shadow appears above the next sibling because you’re applying <code>z-index: 100</code> in the focus state, which establishes a new stacking context.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2255_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iamnewton</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>yeah, sorry, I guess thats the trick.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

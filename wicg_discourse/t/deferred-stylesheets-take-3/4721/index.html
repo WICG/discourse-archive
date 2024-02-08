@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Deferred stylesheets - take 3</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Deferred stylesheets - take 3</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-08-11</div>
+          <div class="post_content">
+<p>A recent blink-dev <a href="https://groups.google.com/a/chromium.org/d/msgid/blink-dev/CACuPfeSgvQbnV3Pp8ouhSy3XK9DtPGNPsLrMR7XxfZ-p_anMrQ%40mail.gmail.com?utm_medium=email&amp;utm_source=footer">intent</a> and ensuing discussion got me thinking about the current ways we load styles.</p>
+<p>This was heavily discussed in the past (<a href="https://discourse.wicg.io/t/a-standard-method-for-loading-style-sheets-asynchronously/542">#1</a>, <a href="https://discourse.wicg.io/t/support-async-loading-stylesheets-with-low-priority/3760/8">#2</a>), but those discussions seemed focused on one case, where I think we can benefit from a more holistic discussion.</p>
+<p>AFAIU, we have a few different cases for styles loaded today:</p>
+<ol>
+<li>Critical CSS - required for the page’s initial rendering. Should block rendering.</li>
+<li>Non-critical CSS - needed for the current page’s hidden parts. May or may not need to block the rendering of those hidden parts.</li>
+<li>Non-matching CSS - not required for current page unless conditions change. (e.g. print)</li>
+</ol>
+<p>(1) is implemented through regular  style links today, and currently (at least in Chromium), blocks the rendering, but not the HTML’s parsing. One side effect of that is that async scripts defined after the style (with no blocking scripts in the way) can still execute before the stylesheet finished downloading, enabling <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/TPkgQj2gmiI/SdQse_ZBAwAJ">interesting loading patterns</a>.
+The intent above wants to change that, in order to reduce code complexity, but at the expense of those patterns.</p>
+<p>(2) can be implemented in multiple ways. One such way is to have the <a href="https://jakearchibald.com/2016/link-in-body/">style links be embedded in the body</a>, right above the content which they impact.
+Another is to use <a href="https://www.filamentgroup.com/lab/load-css-simpler/">script-driven CSS loading patterns</a>.
+Those 2 approaches have different characteristics. The former <a href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-dev/QC5iefctcag/kkoBNliBAgAJ">blocks the parser</a> (at least in Chromium[1]), meaning that async scripts defined after it will not run before it finished loading. On the other hand, it also means that it will block rendering of everything below it.
+The latter approach doesn’t impact rendering at all, until the style finished loading, so can result in FOUC, but on the other hand, might be faster, as parsing is not paused.</p>
+<p>Seems like it would be good to document:</p>
+<ul>
+<li>The use-cases for running async scripts while styles are loading
+<ul>
+<li>If it’s just for timing out blocking styles, maybe we can come up with a better API</li>
+</ul>
+</li>
+<li>The use-cases for non-critical styles that shouldn’t block rendering at all
+<ul>
+<li>AFAICT, that’s the use case for deferred stylesheets beyond the current in-body behavior, but it’s not clear to me what it is…</li>
+</ul>
+</li>
+</ul>
+<p>[1] Browsers <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/QC5iefctcag/ie0OWG19CgAJ">disagree</a> on many things related to style loading. It would be good to try and coalesce behaviors here, but that may be a tangent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2020-08-11</div>
+          <div class="post_content">
+<p>Thanks for starting this discussion. My use of non-blocking styles include:</p>
+<ul>
+<li>Content below-the-fold that cannot be seen by the user initially.
+<ul>
+<li>This <em>should</em> block if the user scrolls to the content before the stylesheet is loaded however.</li>
+</ul>
+</li>
+<li>Content that is not visible to the user until after an interaction. For example content that is inside of a closed summary/detail. Or content that is for another “page” that will be displayed via SPA routing.</li>
+<li>Similar to above, content that requires JavaScript to have loaded, for example design system components. I might do something like opacity: 0; transition opacity; in the blocking main stylesheet and then set opacity: 1 in the non-blocking sheet.</li>
+<li>Less common, but occasionally I have divided stylesheets into critical, such as page structure and sizing values (margin, opacity), and less critical such as colors, border radiuses and box shadows.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-08-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="4721" data-username="matthewp">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/matthewp/40/1159_2.png" width="20"/> matthewp:</div>
+<blockquote>
+<ul>
+<li>Content that is not visible to the user until after an interaction. For example content that is inside of a closed summary/detail. Or content that is for another “page” that will be displayed via SPA routing.</li>
+<li>Similar to above, content that requires JavaScript to have loaded, for example design system components. I might do something like opacity: 0; transition opacity; in the blocking main stylesheet and then set opacity: 1 in the non-blocking sheet.</li>
+</ul>
+</blockquote>
+</aside>
+<p>Those are helpful use-cases for “deferred styles” that don’t match the in-body style behavior. Thanks for that!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-08-12</div>
+          <div class="post_content">
+<p>Trying to sum up responses from <a href="https://twitter.com/yoavweiss/status/1293179365186887682">Twitter</a> here:</p>
+<ul>
+<li>Font loading for external font providers (like Google Fonts) requires loading CSS that then loads fonts.
+<ul>
+<li>Loading fonts late triggers layout shifts, which is bad (bad CLS scores). But blocking the entire rendering on styles that <em>just</em> fetch fonts is also bad (bad FCP scores).</li>
+<li>The font-loading CSS’s desired blocking behavior depends on the defined font-display, but the browser doesn’t know that ahead of time.
+<ul>
+<li>Maybe it <a href="https://twitter.com/cramforce/status/1293213945197625349">should</a>?</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Links in the body can be hard to maintain.</li>
+<li>There are performance benefits to running scripts in parallel to style download regardless of the specific “timeout” functionality.</li>
+<li>Blocking the parser is not great. FOUC is arguably worse…</li>
+</ul>
+<p>Reflecting on all the above:</p>
+<ul>
+<li>It seems like there are strong use-cases for deferred styles, which shouldn’t block rendering at all. Today’s patterns to do that work, but are clunky. Having a direct syntax for it would be helpful.</li>
+<li>Font loading is <a href="https://twitter.com/jaffathecake/status/1293250032632844294">broken</a>.</li>
+<li>Supporting deferred styles won’t help avoid the parser blocking behavior, as some styles need to avoid FOUC</li>
+<li>What Chromium does today for in-head styles is to block rendering without parsing. That significantly complicates the rendering code.
+<ul>
+<li>Is there a third option?</li>
+</ul>
+</li>
+<li>We could provide opt-ins to stylesheets that indicate that their styles are not referred to by following scripts, and therefore their download shouldn’t block those scripts. That wouldn’t solve the complexity issues around continuing to parse without rendering. I’m also not sure that is something developers can easily predict (but maybe tools can help us, if it’s beneficial).</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

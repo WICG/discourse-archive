@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>All siblings selector</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">All siblings selector</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/788_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">piotrkulpinski</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>This is a thing that I needed so many times, that I’m sure many of you would benefit from it as well.</p>
+<p>We do have next-sibling “+” and following-sibling “~” combinators, but there’s no way to get all of the siblings (previous and next).</p>
+<p>I don’t have any character to propose as a combinator ("*" would be the best I think but it’s already used for something else).</p>
+<p>If this breaks any rules or something please just remove the topic.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Are you suggesting you would like to select all the elements that are siblings of element A or all the elements that are siblings of element A plus element A itself?</p>
+<p>CSS has several proposals which would make either of these more plausible than they are today, but if you provide some code samples/use case we can see if we’ve missed something or explain how you can write them given proposals, as well as the state of those proposals.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/788_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">piotrkulpinski</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Just the A siblings (without the A itself).</p>
+<p>The perfect use case for this would be a situation, where you hover over an element, and you want to dim all other siblings (excluding the one you’re currently hovering).</p>
+<p>Let’s say you have such markup:</p>
+<pre><code>&lt;div class="gallery"&gt;
+  &lt;div class="gallery-item"&gt;...&lt;/div&gt;
+  &lt;div class="gallery-item"&gt;...&lt;/div&gt;
+  &lt;div class="gallery-item"&gt;...&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Then in CSS:</p>
+<pre><code>.gallery-item:hover X .gallery-item {
+  opacity: 0.5
+}
+</code></pre>
+<p>Where <strong>X</strong> would be all siblings selector.</p>
+<p>I hope that clarifies a little.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Kind of like this? <a href="http://codepen.io/bkardell/pen/GpyeXG">http://codepen.io/bkardell/pen/GpyeXG</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/788_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">piotrkulpinski</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Yes, kinda. But what you’re doing is triggering hover on parent element which is not always a good solution for this use case. For example if you have children positioned absolutely on the page and you can hover the parent but not hover any of the children.</p>
+<p>Like this: <a href="http://codepen.io/piotrkulpinski/pen/pjpBJj" rel="nofollow noopener">http://codepen.io/piotrkulpinski/pen/pjpBJj</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>The issue that usually stops selectors like this from happening is that most of CSS is designed so browsers can display pages as they stream in from the network. (Usually called “single flow,” or something.) If you had code like this, for example:</p>
+<pre><code class="lang-css">li:siblings(.featured) {
+  display: inline;
+}
+</code></pre>
+<p>And while receiving the HTML from the network, <code>&lt;li class="featured"&gt;</code> came in, the browser would have to lay out and paint that part of the document again.</p>
+<p>That said, this isn’t as true as it used to be. <code>table-layout: auto</code> and Flexbox requires more than one layout pass, and so do other proposed advanced layout modules. So this might be more plausible to implement than the last time CSS Selectors was being drafted.</p>
+<p>Observation of those in the wild has shown us some problems, though:</p>
+<ol>
+<li>
+<p><a href="https://jakearchibald.com/2014/dont-use-flexbox-for-page-layout/" rel="nofollow noopener">The layout can jump all over the place during loading</a>, disorientating the user. And considering scripted DOM changes, user actions like resizing, and animations, it would be trivial for the layout to start thrashing around in deep corners of a large site’s codebase.</p>
+</li>
+<li>
+<p>Or like automatic table layout, the browser doesn’t render <em>anything</em> until that particular area is done, which is also terrible.</p>
+</li>
+<li>
+<p>Layout calculations can very easily get complex and slow; it makes it really easy for authors to write horribly-performing CSS that they might not notice on beefy desk/laptops. (This isn’t far-fetched; see <a href="https://bocoup.com/weblog/text-rendering" rel="nofollow noopener">the saga of <code>text-rendering: optimizeLegibility</code></a>.)</p>
+</li>
+</ol>
+<p>The CSS Working Group is pretty staunch about withholding powerful features that are easy to shoot yourself in the foot with. It sucks to hear it, but the language was designed from day one to limit the developer’s powers for better user experience on average. The expectation was most CSS would be written badly, and that’s pretty true. If 50% of all developers are below average, given the scale of the Web, that’s a lot of below-average CSS, and a lot of surface area for unintended disaster. By limiting how much a developer can do, it also limits how bad a developer can screw up.</p>
+<p>To be clear, <strong>I would love this selector myself,</strong> I’m just pointing out why this sort of thing hasn’t succeeded in the past.</p>
+<p>We just need to figure out how to solve these issues, kind of like how Container Queries evolved out of Element Queries. Maybe we could steal some concepts from <a href="http://gridstylesheets.org/" rel="nofollow noopener">GSS</a>, since constraint-based layout usually has safety valves built in.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2083_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Vitaliy_Soroka</div>
+          <div class="creation_date">2018-10-05</div>
+          <div class="post_content">
+<p>Thank you! Your answer is pretty informative.
+Is JavaScript the best option for such task of choosing all siblings?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-10-05</div>
+          <div class="post_content">
+<p>Yep, pretty much. The easiest way of getting all sibling elements of <code>yourElement</code> would probably be:</p>
+<pre><code class="lang-auto">Array.from(yourElement.parentNode.children).filter(el =&gt; el !== yourElement)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

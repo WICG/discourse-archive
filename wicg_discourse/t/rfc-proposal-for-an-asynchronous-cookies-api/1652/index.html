@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>RFC: Proposal for an asynchronous cookies API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">RFC: Proposal for an asynchronous cookies API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2016-08-11</div>
+          <div class="post_content">
+<p>Sketch for an asynchronous cookies API: <a href="https://github.com/WICG/async-cookies-api;" rel="nofollow noopener">https://github.com/WICG/async-cookies-api;</a> excerpt from <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md" rel="nofollow noopener">the explainer</a>:</p>
+<blockquote>
+<h1>Async cookies API explained</h1>
+</blockquote>
+<blockquote>
+<p>This is a proposal to bring an asynchronous cookie API to scripts running in HTML documents and <a href="https://github.com/slightlyoff/ServiceWorker" rel="nofollow noopener">service workers</a>.</p>
+</blockquote>
+<blockquote>
+<p><a href="https://tools.ietf.org/html/rfc6265" rel="nofollow noopener">HTTP cookies</a> have, since their origins at Netscape <a href="https://web.archive.org/web/0/http://wp.netscape.com/newsref/std/cookie_spec.html" rel="nofollow noopener">(documentation preserved by archive.org)</a>, provided a <a href="http://www.montulli-blog.com/2013/05/the-reasoning-behind-web-cookies.html" rel="nofollow noopener">valuable state-management mechanism</a> for the web.</p>
+</blockquote>
+<blockquote>
+<p>The synchronous single-threaded script-level <code>document.cookie</code> and <code>&lt;meta http-equiv="set-cookie" ...&gt;</code> interface to cookies has been a source of <a href="https://lists.w3.org/Archives/Public/public-whatwg-archive/2009Sep/0083.html">complexity and performance woes</a> further exacerbated by the move in many browsers from:</p>
+<ul>
+<li>a single browser process,</li>
+<li>a single-threaded event loop model, and</li>
+<li>no general expectation of responsiveness for scripted event handling while processing cookie operations</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>… to the modern web which strives for smoothly responsive high performance:</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>in multiple browser processes,</li>
+<li>with a multithreaded, multiple-event loop model, and</li>
+<li>with an expectation of responsiveness on human-reflex time scales.</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>On the modern a web a cookie operation in one part of a web application cannot block:</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>the rest of the web application,</li>
+<li>the rest of the web origin, or</li>
+<li>the browser as a whole.</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>Newer parts of the web built in service workers <a href="https://github.com/slightlyoff/ServiceWorker/issues/707" rel="nofollow noopener">need access to cookies too</a> but cannot use the synchronous, blocking <code>document.cookie</code> and <code>&lt;meta http-equiv="set-cookie" ...&gt;</code> interfaces at all as they both have no <code>document</code> and also cannot block the event loop as that would interfere with handling of unrelated events.</p>
+</blockquote>
+<blockquote>
+<h2>A taste of the proposed change</h2>
+</blockquote>
+<blockquote>
+<p>Although it is tempting to <a href="https://discourse.wicg.io/t/rethinking-cookies/744">rethink cookies</a> entirely, web sites today continue to rely heavily on them, and the script APIs for using them are largely unchanged over their first decades of usage.</p>
+</blockquote>
+<blockquote>
+<p>Today writing a cookie means blocking your event loop while waiting for the browser to synchronously update the cookie jar with a carefully-crafted cookie string in <code>Set-Cookie</code> format:</p>
+</blockquote>
+<blockquote>
+<pre><code class="lang-auto">document.cookie =
+  '__Secure-COOKIENAME=cookie-value' +
+  '; Path=/' +
+  '; expires=Fri, 12 Aug 2016 23:05:17 GMT' +
+  '; Secure' +
+  '; Domain=example.org';
+// now we could assume the write succeeded, but since
+// failure is silent it is difficult to tell, so we
+// read to see whether the write succeeded
+var successRegExp =
+  /(^|; ?)__Secure-COOKIENAME=cookie-value(;|$)/;
+if (String(document.cookie).match(successRegExp)) {
+  console.log('It worked!');
+} else {
+  console.error('It did not work, and we do not know why');
+}
+</code></pre>
+</blockquote>
+<blockquote>
+<p>What if you could instead write:</p>
+</blockquote>
+<blockquote>
+<pre><code class="lang-auto">cookieStore.set(
+  '__Secure-COOKIENAME',
+  'cookie-value',
+  {
+    expires: Date.now() + 24*60*60*1000,
+    domain: 'example.org'
+  }).then(function() {
+    console.log('It worked!');
+  }, function(reason) {
+    console.error(
+      'It did not work, and this is why:',
+      reason);
+  });
+// Meanwhile we can do other things while waiting for
+// the cookie store to process the write...
+</code></pre>
+</blockquote>
+<blockquote>
+<p>This also has the advantage of not relying on <code>document</code> and not blocking, which together make it usable from <a href="https://github.com/slightlyoff/ServiceWorker" rel="nofollow noopener">service workers</a>, which otherwise do not have cookie access from script.</p>
+</blockquote>
+<blockquote>
+<p>This proposal also includes a power-efficient monitoring API to replace <code>setTimeout</code>-based polling cookie monitors with cookie change observers.</p>
+</blockquote>
+<p>There is also a <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/cookies.js" rel="nofollow noopener"><code>document</code>-only polyfill</a> which works in recent Chromium and Google Chrome developer builds with the Experimental JavaScript chrome://flags/<span class="hashtag">#enable-javascript-harmony</span> flag active.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/917_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">craig.francis</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>I like the idea of a <code>set()</code> function with name, value, and options - it would be much better than creating the cookie string.</p>
+<p>I assume there will be a <code>get()</code>, and <code>remove()</code> or <code>delete()</code> as well? like the <a href="https://docs.angularjs.org/api/ngCookies/service/%24cookies" rel="nofollow noopener">Angular JS $cookies API</a>.</p>
+<p>Also, what happens with HttpOnly cookies? I assume no access at all, even for Service Workers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>Glad you like it!</p>
+<p>Yes, I was trying to keep the excerpt here short but <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md" rel="nofollow noopener">the linked explainer</a>
+includes <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#reading" rel="nofollow noopener">get</a> and <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#clearing" rel="nofollow noopener">delete</a> too, along with <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#single-execution-context" rel="nofollow noopener">a CookieObserver</a> for more
+persistent monitoring from a document and interest registration+an event
+for <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#service-worker" rel="nofollow noopener">service worker cookie change monitoring</a> with no persistent execution
+context. HttpOnly cookies are <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#security" rel="nofollow noopener">writable but not readable - just as with
+document.cookie - using this interface</a>, regardless of whether the reader is
+a document or a service worker.</p>
+<p>Although there are some similarities to $cookies this API is
+asynchronous/Promise-based to prevent blocking the event loop while the
+browser reads or writes its internal cookie storage, which is generally
+mutex-protected and may be managed by a separate process than the one
+running the content scripts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2016-08-12</div>
+          <div class="post_content">
+<p>Thanks for your <a href="https://github.com/WICG/async-cookies-api/issues/31#issuecomment-239370923" rel="nofollow noopener">expression of interest on GitHub</a> for moving this API discusson to WICG, <span class="mention">@addyosmani</span>! <strong>Edit:</strong> moved, thanks <span class="mention">@cwilso</span> !</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>As currently explained in the “script-visibility” part of the explainer <a href="https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#script-visibility" rel="nofollow noopener">https://github.com/WICG/async-cookies-api/blob/gh-pages/explainer.md#script-visibility</a> the proposal would not allow reading of HttpOnly cookies. However, there is an issue tracking the possibility to add this: <a href="https://github.com/WICG/async-cookies-api/issues/37" rel="nofollow noopener">https://github.com/WICG/async-cookies-api/issues/37</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/917_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">craig.francis</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@bsittler</span></p>
+<p>I’ve added a note on <a href="https://github.com/WICG/async-cookies-api/issues/37" rel="nofollow noopener">Issue 37</a>, as I’d like to vote against the reading of httpOnly cookies (unless there was a good reason, which I cannot see at the moment).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@craig.francis</span> ! I think I’m inclined the same way (no HttpOnly cookie reading/monitoring access for scripts) and would rather see dual-cookie session pairs in these cases, but I created the issue because some developers I’ve spoken with have expressed interest in the capability. I’m hoping that <a href="https://github.com/WICG/async-cookies-api/issues/37" rel="nofollow noopener">Issue 37</a> can</p>
+<ul>
+<li>explain the rationale for not permitting this</li>
+<li>provide enough information that developers who want this capability can learn about viable alternatives and mention any additional useful techniques</li>
+<li>help us collect data on whether the capability truly is needed and</li>
+<li>(should the capability prove necessary after all) provide guidance on how best to restrict this capability so that any resulting security vulnerability would be minimized</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/917_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">craig.francis</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>That sounds good to me.</p>
+<p>And I would be intrigued to see what their use cases would be - and hopefully we can find solutions that keep everyone happy (ish).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2017-06-05</div>
+          <div class="post_content">
+<p>In case anyone interested finds the discussion here at WICG Discourse, I have started a <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/gU-tSdjR4rA/hAYgmxiHCAAJ" rel="nofollow noopener">Blink intent-to-implement discussion thread</a> for this proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2017-11-10</div>
+          <div class="post_content">
+<p>Repo is renamed to <a href="http://wicg.github.io/cookie-store/" rel="nofollow noopener">http://wicg.github.io/cookie-store/</a> to increase future findability should this proposal reach standardization and adoption; the new name reflects the name by which web developers are expected to know the API.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

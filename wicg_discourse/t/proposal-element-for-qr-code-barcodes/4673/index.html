@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Element for QR code/barcodes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Element for QR code/barcodes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Somnid</div>
+          <div class="creation_date">2020-07-19</div>
+          <div class="post_content">
+<p>QR codes are pretty standard for transmitting small amounts of data.  They can be seen many web-based applications especially for tasks like ticketing, payment, pairing devices, and printing labels.  It would be nice to natively support this in the platform.</p>
+<ul>
+<li>QR codes are one of the few ways in which web pages can communicate data (albeit small) with local devices.  Making this easier helps open up more opportunities in this area (I’m currently looking at sharing WebRTC SDP via QR to pair devices without a server).</li>
+<li>There’s a lack of symmetry with ShapeDetector API which can read barcodes and QR codes but we can’t generate them.</li>
+<li>Existing 3rd party libraries can be large and complex.  Large enough that in many cases it’s easier to generate the image server-side and send it.  This is disappointing because we could be decreasing the amount of data sent.</li>
+<li>QR is supported by most devices, especially ones that might not support NFC and is a good low-tech fallback for it.</li>
+<li>Better accessibility, so that users can understand that the element is displaying a scannable code and what type.</li>
+<li>This seems like low-hanging fruit.  Especially with other means of device communication this does not create significant security problems, only makes using it simpler.</li>
+</ul>
+<p>A simple API sketch:</p>
+<p>User Agents could provide a “imagecode” element.</p>
+<ul>
+<li>This would have a <strong>type</strong> attribute that could be one of any number of visual barcode that the UA supports though I would say this list should match the ones supported by ShapeDetection API.</li>
+<li>The element could also have a <strong>encodeparams</strong> attribute that would take a query param style string of values specific to the encoding type, for example QR error correction levels, desired size etc (there might be better ways to do this but I can’t think of any existing elements that take variable inputs to model it after).</li>
+<li>
+<strong>width</strong> and <strong>height</strong> attributes for the display size.</li>
+<li>
+<strong>data</strong> attribute would be the string (or string encoded) data to display.</li>
+<li>Inside the element, an img could be provided as a fallback for UAs that do not support the imagecode tag.</li>
+<li>Alternate barcode types could also be supported as fallbacks using something like the source tag for videos and pictures.</li>
+<li>Disagreement with parameters, data too large etc would trigger an error and cause the element not to render.</li>
+<li>Element is a valid CanvasImageSource and can be used with canvas drawing API for branded display.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Somnid</div>
+          <div class="creation_date">2020-08-17</div>
+          <div class="post_content">
+<p>Some other accessibility ideas:</p>
+<p>Screen reader users usually keep their screen off.  Interaction with a QR/bar code could allow them to quickly turn on the screen for scanning and then turn it off again.</p>
+<p>Interacting the the QR/bar code could full size it and increase the brightness on the screen making it easier to scan.</p>
+<p>The UA could provide “copy payload” functionality to extract data from the QR code.  This might be handy if a page or app happens to have a QR code and you want to grab its contents, for instance a URL.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2021-11-09</div>
+          <div class="post_content">
+<p>see also <a class="inline-onebox" href="https://github.com/w3c/csswg-drafts/issues/6544">[css-images][css-values][css-gcpm] qrcode() for generating QR code images from URLs · Issue #6544 · w3c/csswg-drafts · GitHub</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-09</div>
+          <div class="post_content">
+<p>Hi all! I am thinking about it:</p>
+<h4>
+<a class="anchor" href="#h-1-reason-1" name="h-1-reason-1"></a>1. Reason</h4>
+<p>Usually qrcode or barcode are images that you upload or scan… so they should be the img element with the type attribute corresponding to the type of image they are</p>
+<h4>
+<a class="anchor" href="#h-2-concept-img-with-attribute-type-2" name="h-2-concept-img-with-attribute-type-2"></a>2. Concept - Img with attribute type</h4>
+<h4>
+<a class="anchor" href="#h-21-syntax-attribute-src-with-url-and-typecode-3" name="h-21-syntax-attribute-src-with-url-and-typecode-3"></a>2.1 - Syntax: attribute src with url and type=“code”</h4>
+<pre><code class="lang-auto">&lt;img src="url" type="code"/&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#h-22-sample-4" name="h-22-sample-4"></a>2.2 Sample</h4>
+<h4>
+<a class="anchor" href="#h-221-sample-qrcode-5" name="h-221-sample-qrcode-5"></a>2.2.1 - sample: qrcode</h4>
+<pre><code class="lang-auto">&lt;img src="qrcode://" type="qrcode"/&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#h-222-sample-barcode-6" name="h-222-sample-barcode-6"></a>2.2.2 sample: barcode</h4>
+<pre><code class="lang-auto">&lt;img src="barcode://" type="barcode"/&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#h-223-sample-qrcode-7" name="h-223-sample-qrcode-7"></a>2.2.3 sample: qrcode</h4>
+<pre><code class="lang-auto">&lt;img src="index.png" type="qrcode"/&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#h-224-sample-barcode-8" name="h-224-sample-barcode-8"></a>2.2.4 sample: barcode</h4>
+<pre><code class="lang-auto">&lt;img src="index.png" type="barcode"/&gt;
+</code></pre>
+<h3>
+<a class="anchor" href="#h-3-other-case-9" name="h-3-other-case-9"></a>3 - Other case</h3>
+<h5>
+<a class="anchor" href="#h-31-generate-or-read-barcodeqrcode-10" name="h-31-generate-or-read-barcodeqrcode-10"></a>3.1 - Generate or read barcode/qrcode</h5>
+<pre><code class="lang-auto">&lt;barcode type="qr"&gt;
+  &lt;a href:"mailto:exapmle@test.com"&gt;Mail Me&lt;/a&gt;
+  &lt;a href:"tel:+11111111"&gt;Call Me &lt;/a&gt;
+&lt;barcode&gt; 
+</code></pre>
+<h5>
+<a class="anchor" href="#h-31-read-qrcode-in-mode-remote-11" name="h-31-read-qrcode-in-mode-remote-11"></a>3.1 - Read qrcode in mode remote</h5>
+<pre><code class="lang-auto">&lt;img src="www.examplesiteqrcode.com/helloworld.qrcode" type="qrcode"/&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#h-32-read-barcode-in-mode-remote-12" name="h-32-read-barcode-in-mode-remote-12"></a>3.2 - Read barcode in mode remote</h5>
+<pre><code class="lang-auto">&lt;img src="www.examplesiteqrcode.com/helloworld.barcode" type="barcode"/&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#h-33-read-barcode-in-mode-local-13" name="h-33-read-barcode-in-mode-local-13"></a>3.3 - Read barcode in mode local</h5>
+<pre><code class="lang-auto">&lt;img src="helloworld.barcode" type="barcode"/&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#h-34-read-qrcode-in-mode-local-14" name="h-34-read-qrcode-in-mode-local-14"></a>3.4 - Read qrcode in mode local</h5>
+<pre><code class="lang-auto">&lt;img src="helloworld.qrcode" type="qrcode"/&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#h-35-read-qrcode-in-mode-remote-15" name="h-35-read-qrcode-in-mode-remote-15"></a>3.5 - Read qrcode in mode remote</h5>
+<pre><code class="lang-auto">&lt;img src="www.examplesiteqrcode.com/helloworld.png" type="qrcode"/&gt;
+</code></pre>
+<h5>
+<a class="anchor" href="#h-36-read-barcode-in-mode-remote-16" name="h-36-read-barcode-in-mode-remote-16"></a>3.6 - Read barcode in mode remote</h5>
+<pre><code class="lang-auto">&lt;img src="www.examplesiteqrcode.com/helloworld.jpeg" type="barcode"/&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#notes-17" name="notes-17"></a>Notes</h4>
+<ol>
+<li>Hope this helps, some of the ideas are yours and not mine.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

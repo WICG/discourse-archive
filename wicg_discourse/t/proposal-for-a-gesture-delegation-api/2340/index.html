@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for a Gesture Delegation API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for a Gesture Delegation API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2017-09-04</div>
+          <div class="post_content">
+<p>We are working on a proposal to allow a frame to allow delegating a user gesture from an embedder to an embeddee. In other words, to allow a main frame to delegate to an iframe. This API is to answer for some features that start requiring a user gesture on the document in order to be used like the Vibration API or autoplay in some browsers. The intent is to prevent the embeddee to request to run as part of the embedder; we would like to make sure the embedders have the right tools to avoid this situation.</p>
+<p>The repository is available here: <a href="https://github.com/mounirlamouri/gesture-delegation/blob/master/README.md" rel="nofollow noopener">https://github.com/mounirlamouri/gesture-delegation/blob/master/README.md</a></p>
+<p>The explainer with more details and a concrete proposal is available here: <a href="https://github.com/mounirlamouri/gesture-delegation/blob/master/explainer.md" rel="nofollow noopener">https://github.com/mounirlamouri/gesture-delegation/blob/master/explainer.md</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-09-04</div>
+          <div class="post_content">
+<p>AFAIK Google was planning to significantly simplify the user gesture model by simply having a global flag that is enabled after the first user gesture. Does this proposal assume that model is in use as well? Or is it separate to that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2017-09-05</div>
+          <div class="post_content">
+<p>It is based on that mechanism. We have had discussions internally to maybe have this delegation work with the current model but it’s not sure we would want to do it.</p>
+<p>The idea is that the “global” flag would actually be a “document” flag. We call this “document activation”. This API will allow iframes to use the flag from their parents if the parents allowed it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-09-05</div>
+          <div class="post_content">
+<p>That sounds good to me. My only thought would be maybe there could be an attribute on the iframe tag to do the same? (Or is that already part of this?)</p>
+<p>Going further, there seem to actually be a bunch of permission attributes on iframe: sandbox, allowfullscreen, IIRC feature policy was defining “allow” - maybe this should tie in to something like the existing “allow” attribute rather than adding more piecemeal attributes?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1362_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Norman_Robinson</div>
+          <div class="creation_date">2017-09-07</div>
+          <div class="post_content">
+<p>Does this use case interfere with or consider gestures used when enabled for system accessibility?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2017-09-08</div>
+          <div class="post_content">
+<p>We initially considered merging that with Feature Policy but the spec editor recommended otherwise. This isn’t quite a permission and because one would need to have the context of “gesture”, it’s not more verbose (ie. <code>allow="gesture-media gesture-vibrate"</code> vs <code>gesture="media vibrate"</code>).</p>
+<p>I’m not sure what’s your first question about. The idea is for that attribute to live on the iframe tag. That will allow it to propagate down to sub-sub-frames. It would look like <code>&lt;iframe gesture=media&gt;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2017-09-08</div>
+          <div class="post_content">
+<p>I would expect this to be orthogonal and any accessibility gesture recognised as a gesture for “document activation” would automatically work with the system.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2017-09-25</div>
+          <div class="post_content">
+<p>The idea seems pretty cool.</p>
+<p>But rather than an attribute called gesture - which I think will make many people ask the questions above about whether it is something about a specific user interaction such as “swipe-left”, I would paint the bikeshed in some colour whose name carries the idea of delegating, or sharing, permission.</p>
+<p>As you note, it isn’t a permission in itself, but it is in some ways about sharing them, and potentially opening the security protection they are designed to provide.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2017-10-12</div>
+          <div class="post_content">
+<p>FWIW, we are renaming the proposal to “activation” as gesture is indeed a bit too vague. We don’t intend for websites to specify what type of activation would be delegated but activations have a real meaning in the HTML specification.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

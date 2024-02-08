@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A pseudo-class for when an element is stickily (spec term) positioned</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A pseudo-class for when an element is stickily (spec term) positioned</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-07-21</div>
+          <div class="post_content">
+<p>With <code>position: sticky;</code> now in <code>CSS</code> there are times where we want to transform an element when it hits the position where it’s sticky.</p>
+<p><a href="http://drafts.csswg.org/css-position/#sticky-pos" rel="nofollow noopener">Position Sticky Spec</a></p>
+<h1>Proposal</h1>
+<p>Let’s do a simple element changing from a circle to a square</p>
+<pre><code class="lang-auto">#sticker {
+ position: sticky;
+ top: 15px;
+ width: 100px;
+ height: 100px;
+ background: red;
+ border-radius: 50%;
+}
+
+#sticker:sticky {
+  border-radius: 0;
+}
+</code></pre>
+<p>Yup we need this, or we still have to rely on Javascript.</p>
+<p>Sorry if this has already been discussed? <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/></p>
+<p>Or will we be using <a href="//discourse.wicg.io/t/element-queries/26">Element Queries</a> for this?</p>
+<p>I believe Element Queries will only be the same that we use for media queries, I could be wrong?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>I’m guessing <span class="mention">@tabatkins</span> would know more about the history of position: sticky</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<pre><code class="lang-auto">:stuck {
+  position: static;
+}
+</code></pre>
+<p>…which is why we can’t do <code>:stuck</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/656_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pontus</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>A <em>theoretically</em> simple solution would be to simply invalidate position declarations inside rules where the selector subject includes the :stuck pseudo-class, but of course that might have issues in practice. AFAIK no other selectors impose restrictions on which declarations are valid.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>I need to write a blog post for this, since I keep having to bring it up, but that doesn’t work.  As soon as there is more than one instance of this kind of circularity, you can loop them together and run into the same problem:</p>
+<pre><code class="lang-auto">:based-on-a {
+  b: on;
+}
+:based-on-b {
+  a: off;
+}
+</code></pre>
+<p>No direct circularity - the rule with <code>:based-on-a</code> doesn’t contain the <code>a</code> property, and same for <code>b</code>, but the exact same loop nonetheless.  You have to outlaw <em>all</em> selector-affected properties from appearing in rules using <em>any</em> property-affected selectors, which quickly starts wiping out large swathes of CSS and renders the whole thing useless.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>Well <span class="mention">@tabatkins</span> the reason I’d say <code>sticky</code> over <code>stuck</code> is:</p>
+<ol>
+<li>We have already <code>position: sticky;</code> Which were familiar with so no need of a different word</li>
+<li>I’m kind of comparing to <code>:active</code> and <code>:hover</code>
+</li>
+</ol>
+<p>The word <code>:hover</code> in future tense. Instead of past tense <code>:hovered</code>, meaning <code>:stuck</code> is like past tense. Now <code>active</code> because it’s the word <code>active</code> it could be used:</p>
+<p>When it was active, when it’s active, it is active.</p>
+<p>So yea idk what you wanna do we could use <code>stuck</code> which makes sense but we could also use <code>sticky</code> and not have two words <code>sticky</code> for <code>position: sticky;</code> and <code>:stuck</code> for the pseudo class</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>What I posted has nothing to do with the name we use.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>Oh crap, I read that horribly wrong. I thought it said why not use <code>:stuck</code>. Holly crap how the hell did I read that. Wow my bad that was dumb. <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/785_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kizu</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<blockquote>
+<p>renders the whole thing useless.</p>
+</blockquote>
+<p>I disagree. If we’d allow only those properties that don’t affect layout to be redefined for the <code>:stuck</code> pseudoclass, we’ll get infinitely more control over what we have now (<em>nothing</em>).</p>
+<p>And those properties that don’t affect layout are those that are used for sticky elements in real world use cases. I guess the most popular property to redefine on the stuck state would be a box-shadow.</p>
+<p>The layout-changing properties could be useful too, but why can’t we go iteratively and allow just a subset of properties from the start, and think out the solutions to enhance it later?</p>
+<p>Developers need position sticky already and need this pseudoclass for them too, saying “there are issues, so you won’t get it in any form” is not productive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Can we use the behavior for when other pseudo-classes get into infinite loops? For example:</p>
+<pre><code class="lang-css">div {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+div:hover {
+  height: 0;
+  width: 0;
+}
+</code></pre>
+<p>I’m having flashbacks to <em>Web Pages for Dummies</em> where they warn against using <code>font-size</code> for <code>a:hover</code> for this exact reason. Is it still an unsolved problem?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="947">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/kizu/40/785_1.png" width="20"/> kizu:</div>
+<blockquote>
+<p>I disagree. If we’d allow only those properties that don’t affect layout to be redefined for the :stuck pseudoclass, we’ll get infinitely more control over what we have now (nothing).</p>
+</blockquote>
+</aside>
+<p>That’s not sufficient; or rather, it’s only sufficient <em>once</em>.  As soon as you add a second selector linked to properties, even if relies on a disjoint set of properties, you can force a circularity by having <code>:A</code> set the <code>B</code> property, and have <code>:B</code> respond to that and set the <code>A</code> property.  You have to exclude <em>all</em> properties that affect selectors from being used in a style rule using <em>any</em> selector affected by properties.  That quickly rules out most/all of CSS, and requires breaking old content that (correctly at the time) used some property that affects the new selector.</p>
+<p>The right thing is to just avoid the problem. Find tricksy ways to make it not screw with things, or just leave it and use JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="947">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tigt/40/639_1.png" width="20"/> Tigt:</div>
+<blockquote>
+<p>Can we use the behavior for when other pseudo-classes get into infinite loops?</p>
+</blockquote>
+</aside>
+<p>No.  <code>:hover</code>-based loops are “wide” - they start at style computation, move through layout and rendering, and get all the way to user interaction before they loop back around.  The entire page is “done” by the time the loop spins around, so, while the flicker is annoying, it doesn’t prevent the rest of the page from working.</p>
+<p>These kinds of property/selector loops are “tight” - they start and end within style computation, and prevent the browser from moving on to layout/rendering/etc at all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/785_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kizu</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>Can you provide a meaningful example for the conflicting behaviour you’re mentioning in regards of this example:</p>
+<pre><code class="lang-auto">.sticky {
+  position: sticky;
+  top: 0;
+  background: red;
+  box-shadow: 0 1px #000;
+}
+
+.sticky:stuck {
+  background: lime;
+  box-shadow: 0 10px 10px -7px rgba(0, 0, 0, 0.5);
+}
+</code></pre>
+<p>How this (or any other external styles) could trigger any kind of circularity there? What do I miss?</p>
+<p>Also, there is no way to avoid this using CSS only, and it far from trivial when trying to emulate using JS (btw, would there be/are there already any events in JS to tell when the element become stuck or not?).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>Again, the issue is that we can’t ever introduce a <em>second</em> selector that’s affected by properties.  (And we can’t ever add a layout-affecting value to one of the “safe” properties.)</p>
+<p>Something that we can only do once, ever, and that will affect our ability to evolve CSS in the future, is probably a bad idea for the language.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/785_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kizu</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<blockquote>
+<p>we can’t ever introduce a second selector that’s affected by properties</p>
+</blockquote>
+<p>I still think this could be handled in some way (like using only one pass (I don’t remember how this mechanism is called now), as we already do for fit-to-content blocks with more than one line). This looks like “this is hard, we won’t ever try”.</p>
+<blockquote>
+<p>we can’t ever add a layout-affecting value to one of the “safe” properties.</p>
+</blockquote>
+<p>We can, if we’d make those values not to work in this context.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>All of the solutions I can think of start getting into procedural territory, and I doubt that’s a road the CSSWG wants to go down. Unless we can mark a declaration as “nonvital” or something, and even then I’m not sure that would actually accomplish the right thing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<p>What if <code>:sticky</code> selects elements which are within a <code>position: sticky</code> element that has been stuck, but does not match the <code>position: sticky</code> element itself?</p>
+<pre><code class="lang-auto">#sticker {
+  position: sticky;
+}
+#sticker div {
+  background: red;
+  border-radius: 50%;
+  height: 100px;
+  width: 100px;
+}
+#sticker div:sticky {
+  border-radius: 0;
+}
+</code></pre>
+<ol>
+<li>would it run into any looping issues?</li>
+<li>would it still be useful enough to be worthwhile?</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ruben</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>If the main problem is creating tight loops, instead of a CSS class, we could have events. For example:
+Element.onEnterSticky
+Element.onLeaveSticky</p>
+<p>Now javascript code can still create loops, but wide ones, that don’t block the style computation.</p>
+<p>Adding and removing CSS classes on the event handlers would be trivial. Much simpler and therefore less error prone than the alternative of computing manually whether the element is stuck or not.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<p>I’m wondering if we could perhaps also allow <code>:stuck</code> in the JS profile for use with <code>querySelector</code>. This wouldn’t have the tight loop issues of allowing it in a stylesheet and there’s precedent for allowing selectors in the JS only profile already (<code>:matches()</code> I believe).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1338_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">usrbowe</div>
+          <div class="creation_date">2017-07-13</div>
+          <div class="post_content">
+<p>Any update on this feature?
+This feature is really important, because we can finally get rid off onScroll event for adding <code>.is-stuck</code> classes.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

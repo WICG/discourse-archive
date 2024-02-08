@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A standard way to lazy load images</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A standard way to lazy load images</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-10-20</div>
+          <div class="post_content">
+<p>Lazy loading images is currently achieved via JavaScript libraries; see <a href="http://developer.telerik.com/featured/lazy-loading-images-on-the-web/" rel="nofollow noopener">this post</a> for a recent overview of such libraries. Wikimedia is even <a href="https://twitter.com/rakugojon/status/644259692563185665" rel="nofollow noopener">experimenting</a> with using a service worker for this.</p>
+<p>Are there any proposals to enable image lazy loading declaratively in HTML (or even HTTP)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1801_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">plehegar</div>
+          <div class="creation_date">2015-10-20</div>
+          <div class="post_content">
+<p>The Web Perf group went through several attempts in doing so. The latest one is
+<a class="onebox" href="https://w3c.github.io/resource-hints/" target="_blank">https://w3c.github.io/resource-hints/</a></p>
+<p>Past attempts include
+<a class="onebox" href="http://www.w3.org/TR/resource-priorities/" target="_blank">http://www.w3.org/TR/resource-priorities/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/766_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Fabio_Santos</div>
+          <div class="creation_date">2015-10-20</div>
+          <div class="post_content">
+<p>This is a subject I’m very passionate about, because I feel that if there’s no need to use javascript libraries (which are unable to completely do this task because there’s no way to subscribe to a ‘print’ event and download the images then, and don’t work without javascript without a cumbersome <code>&lt;noscript&gt;</code> section), we can have a really fast web because more people will lazy load their images.</p>
+<p>This is especially important in mobile browsers, where downloading images comes at a performance (uses up paralell connections to a server, delaying other important resources) and actual monetary cost.</p>
+<p>I’ve drafted this proposal a few days ago:</p>
+<aside class="onebox githubgist">
+<header class="source">
+<a href="https://gist.github.com/fabiosantoscode/8fbdaf244425040050ba" rel="nofollow noopener" target="_blank">gist.github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://gist.github.com/fabiosantoscode/8fbdaf244425040050ba" rel="nofollow noopener" target="_blank">https://gist.github.com/fabiosantoscode/8fbdaf244425040050ba</a></h4>
+<h5>readme.md</h5>
+<pre><code class="Markdown"># img[lazy]
+
+This is a proposal to extend HTML to provide a new way to implement lazy-loading images on the web.
+
+
+# Motivation
+
+The ever-growing mass of mobile devices, with tiny screens and limited processing power, are unable to access the web at decent speeds and reasonable prices. Old browsers die hard, and it gets harder and harder to cater to their every need. It is very, very hard, as a web developer, to cater to both mobile browsers and ancient browsers, especially when it comes to those problems which cannot ever have a permanent, one-size-fix-all solution: sticky headers, footers that don't float awkwardly when there's not enough content on the page, and lazyly loaded images. Sticky headers are getting their permanent, one-size-fix-all solution through the `position:sticky` proposal. Footers are slowly being replaced with taller footers, and infinite scroll, which is a growing trend, makes them disappear from designers' canvases. A problem that's not truly solved is lazy-loaded images.
+
+Lazy-loading images is obviously important when there are lots of images on the page. But it is also crucial in the mobile environment. When a user is not on a wifi connection, it is unfair to make them waste their money downloading images they might never see. Also, since there is a limited amount of parallel requests that can be made at any time, it is best to avoid loading too many images up front, to prevent queuing of future asynchronous requests for more resources.</code></pre>
+This file has been truncated. <a href="https://gist.github.com/fabiosantoscode/8fbdaf244425040050ba" rel="nofollow noopener" target="_blank">show original</a>
+<p>
+</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Ian Hickson also tackled this a year+ ago with a proposal that seems to have gone nowhere:</p>
+<p><a class="onebox" href="https://lists.w3.org/Archives/Public/public-whatwg-archive/2014Aug/0177.html" target="_blank">https://lists.w3.org/Archives/Public/public-whatwg-archive/2014Aug/0177.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Semi-related, here’s a proposal that would make doing this sort of thing much easier in Javascript:</p>
+<p><a class="onebox" href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-dev/eLxh8xUp3j4/m7RH4_nLBgAJ" rel="nofollow noopener" target="_blank">https://groups.google.com/a/chromium.org/forum/#!msg/blink-dev/eLxh8xUp3j4/m7RH4_nLBgAJ</a></p>
+<p>The arguments for a declarative (or at least non-Javascript) solution are strong, though:</p>
+<ol>
+<li>It’s an evidently important use case that keeps coming up</li>
+<li>Javascript solutions require keeping content images out of the HTML on first load, which is bad.</li>
+</ol>
+<p>Wikipedia’s Service Worker experiments are super interesting!</p>
+<p>Here’s a crazy idea: what if this were solved at the browser level, and users could opt-in (or maybe, eventually, out) of lazyloading-by-default?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>This is implemented in Internet Explorer 11 (and maybe Edge) as</p>
+<pre><code class="lang-auto">&lt;img src="whatever.jpg" lazyload&gt;
+</code></pre>
+<p>Which I believe was taken from the aforementioned (and dead, sadly) Resource Priorities spec. Sadly, the replacement, Resource Hints, has scaled back and is only about giving URLs to the lookahead preparser ahead of time.</p>
+<p>Should the exact behavior be specifiable? Do you want to load images when the network is otherwise idle, or only once the image approaches the viewport? Something like <code>lazyload="visible"</code> or <code>lazyload="idle"</code> could work. Such behavior might require <code>width</code>, <code>height</code>, and <code>sizes</code> attributes so the browser doesn’t have to reflow after fetching the image.</p>
+<p>We have a few attributes already designed for loading and execution behavior. Maybe they should get expanded to all request-making elements, like:</p>
+<pre><code class="lang-auto">&lt;img async&gt;
+&lt;link rel="stylesheet" defer&gt;
+&lt;script lazyload&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p><code>async</code> and <code>defer</code> determine when a script is executed, not loaded, so I don’t know if they make much sense applied to <code>&lt;img&gt;</code> (which, if you equate execution with display, are already kinda <code>async</code>?).</p>
+<p>There are two, related goals here:</p>
+<ol>
+<li>Load critical bytes first (aka, bring the SpeedIndex down)</li>
+<li>Don’t load unnecessary bytes at all (aka bring the
+bytes-over-the-wire down)</li>
+</ol>
+<p>Anything that did <span class="hashtag">#2</span> well enough would also achieve <span class="hashtag">#1</span>, but it seems hard to do perfectly. Trying to load images Just-In-Time™ is going to mean some images get loaded noticeably late or not at all in at least some edge cases (e.g. initial load on a train, scroll in a tunnel).</p>
+<p>All of the JavaScript libraries in the link up top, and every library I’ve seen, go for <span class="hashtag">#2</span>, so it feels more important?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>Loading them just-in-time isn’t as common, but it’s one of the reasons why <a href="https://github.com/ampproject/amphtml/blob/master/builtins/amp-img.md" rel="nofollow noopener">AMP HTML makes you use <code>&lt;amp-img&gt;</code> with mandatory sizing attributes</a>:</p>
+<blockquote>
+<p>The runtime may choose to delay or prioritize resource loading based on
+the viewport position, system resources, connection bandwidth, or other
+factors.</p>
+</blockquote>
+<p>I think the idea is, if the user decides they aren’t interested in an article while reading it, they’re not penalized for loading images they’d never see.</p>
+<p>Still, it’s worthwhile just trying to get Goal <span class="hashtag">#1</span> by itself, so if this complicates matters unnecessarily, just leave it for later.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-22</div>
+          <div class="post_content">
+<p><em>With respimg hat on</em></p>
+<p>Pros for a <code>lazy</code> attribute:</p>
+<ul>
+<li>Developer convenience would mean this pattern is more often used</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Fear of abuse that would cause overall perf regressions.</li>
+</ul>
+<p>All in all:</p>
+<ul>
+<li>A <code>lazy</code> attribute has no (significant) perf advantage over script-based solutions</li>
+</ul>
+<ul>
+<li>The browser would have to wait until layout is complete in order to know if a certain resource should be fetched or not.</li>
+</ul>
+<ul>
+<li>A ServiceWorker based solution can resolve the problem for the “JS is not running” case, even if with some overhead</li>
+<li>IntersectionObserver would make it easier to implement a JS loading scheme without scroll-related hacks</li>
+</ul>
+<p>The main problem with both a JS based solution and a <code>lazy</code> attribute, is that both would require you to add to <em>markup</em> which images should be lazy loaded, which is something that can change based on the viewport <img alt=":disappointed:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/disappointed.png?v=5" title=":disappointed:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-22</div>
+          <div class="post_content">
+<p>Also, in terms of</p>
+<aside class="quote" data-post="7" data-topic="1153">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/eeeps/40/662_1.png" width="20"/> eeeps:</div>
+<blockquote>
+<p>Load critical bytes first (aka, bring the SpeedIndex down)</p>
+</blockquote>
+</aside>
+<p>there’s a good chance that having a commonly used lazy-loading solution (native or JS based) would result in regressions on that metric if overly used, since in-the-viewport images are likely to be marked as lazyload and delayed.</p>
+<p>On that front, the browser should prioritize in-the-viewport images over out-of-viewport ones, and download everything needed for visual completeness first. I’m not sure lazy loading would help here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-22</div>
+          <div class="post_content">
+<p>Sometimes (eg, in a carousel) the author definitely knows that certain images won’t be visible on first load, no matter what the viewport looks like. A non-hacky way to explicitly request deferred loading for just those images (without marking up <code>img</code>s-without-<code>src</code>es or whatever) would be useful.</p>
+<p>But my hunch is that it’s much more common for some authors to want to slap <code>data-lazy</code>s onto large swaths of maybe-visible or probably-not-visible images by default, which would sometimes result in the SpeedIndex regressions which you describe (with the tradeoff being that people who don’t see all of the images on the page don’t load them).</p>
+<p>I should compile some links of popular sites that lazily load to better understand how it’s being used in the wild, now, and why… but I’m about to leave for a weeklong vacation.</p>
+<blockquote>
+<p>On that front, the browser should prioritize in-the-viewport images over out-of-viewport ones, and download everything needed for visual completeness first. I’m not sure lazy loading would help here.</p>
+</blockquote>
+<p>This sounds ideal, but would be impossible without waiting for layout, which would probably cause regressions?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p>To start, let’s clarify what “lazy load” means… I see different folks using different definitions on this thread.</p>
+<ol>
+<li>As a prioritization signal that affects <em>the order</em> in which images are loaded.</li>
+<li>As an ‘on-demand loading’ signal that allows the user agent to skip loading and/or load image when some criteria are met (e.g. visibility).</li>
+</ol>
+<p>For (1), I’d argue that “lazyload” is the wrong concept; this is prioritization, plain and simple. We need an API that will allow developers to customize the network-layer priority of any given resource fetch:</p>
+<ul>
+<li>override default UA prioritization logic - e.g. not all images are same priority; some images are just as important as blocking CSS; some CSS is less important than images; etc.</li>
+<li>this API <em>is not</em> restricted to images, it applies to all fetches initiated by the browser.</li>
+<li>this API allows developers to downgrade <em>and</em> upgrade priority of fetches.</li>
+</ul>
+<p><em>(Side note: IE’s implementation of <code>lazyload</code> is prioritization… All it does is downgrade the priority of the image in their net-stack.)</em></p>
+<p>For (2), I remain very skeptical that this is something that browsers should take on. There is a lot of magic assumptions here that don’t stand up to scrutiny of being a platform feature…</p>
+<ul>
+<li>Deferred resource loading is <em>not</em> an unconditional win for the user. Waking up the mobile radio is very costly and will consume more energy; it can cause delayed rendering; it can cause more reflows, etc. Perhaps you’re willing to sacrifice some of these if the user is sensitive to amount of downloaded data, but that’s just one consideration of many - e.g. type of network, type of resources being fetched, etc, can change the balance of the equation.</li>
+<li>Deferred resource loading “done well” is highly application specific. For example, if you’re building an infinite scroller you may want to tweak how far you prefetch based on users scroll position - e.g. preload next item vs three screens ahead vs … whatever logic makes sense for your app.</li>
+<li>Deferred resource loading use cases are <em>not</em> restricted to images. As Yoav pointed out earlier, the logic may change based on current layout and active breakpoint – element attributes can’t account for this, at least not easily.</li>
+</ul>
+<p>Long story short, <strong>I think this space is too complex to reduce it to one or several keywords that you sprinkle on your elements</strong>. The platforms’ job here is to give developers the tools to build own “deferred loading” logic. Some of these building blocks are:</p>
+<ul>
+<li>A way to efficiently query element visibility information - see <a href="https://github.com/slightlyoff/IntersectionObserver/blob/master/explainer.md" rel="nofollow noopener">intersection observer</a>.</li>
+<li>A way to prioritize fetch requests via ~fetch prioritization API - addresses (1), helps (2).</li>
+<li>A way to preload / prefetch resources - see <a href="https://w3c.github.io/resource-hints/" rel="nofollow noopener">resource hints</a>, <a href="https://w3c.github.io/preload/" rel="nofollow noopener">preload</a>.</li>
+<li>A way to determine if user is sensitive to data use - see <a href="http://igrigorik.github.io/http-client-hints/#the-save-data-hint" rel="nofollow noopener">save-data</a>.</li>
+<li>A way to determine connectivity information - see <a href="http://w3c.github.io/netinfo/" rel="nofollow noopener">NetInfo</a>.</li>
+<li>A way to schedule processing/decoding/whatever without causing jank - see <a href="https://w3c.github.io/requestidlecallback/" rel="nofollow noopener">requesIdleCallback</a>.</li>
+<li>…</li>
+</ul>
+<p>The above is not a complete list, but those are some of the most critical building blocks that enable developers to build own ‘deferred loading’ implementations that make sense for their particular use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p>One frustration that comes up a lot is that we can’t have things like</p>
+<pre><code class="lang-auto">&lt;object type="image/svg+xml"&gt;
+  &lt;img&gt;
+&lt;/object&gt;
+</code></pre>
+<p>without penalizing users with a double-download. The ability to “turn off the preparser” might not be an ability browsers want to give to developers, but it’s definitely frustrating that the built-in, scriptless, semantic fallback abilities of HTML are rather useless when preparsers clobber any performance benefits from using them.</p>
+<p>I personally have talked with a few people who want <code>lazyload</code> for a reason like that, so maybe that’s yet another tangentially-related thing that is getting lumped in.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="13" data-topic="1153">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tigt/40/639_1.png" width="20"/> Tigt:</div>
+<blockquote>
+<p>One frustration that comes up a lot is that we can’t have things like</p>
+<p>&lt;object type=“image/svg+xml”&gt;
+&lt;img&gt;
+&lt;/object&gt;</p>
+<p>without penalizing users with a double-download. The ability to “turn off the preparser” might not be an ability browsers want to give to developers, but it’s definitely frustrating that the built-in, scriptless, semantic fallback abilities of HTML are rather useless when preparsers clobber any performance benefits from using them.</p>
+</blockquote>
+</aside>
+<p>That sounds like a bug. Can you file bugs on <a href="http://crbug.com">crbug.com</a> and <a href="http://wkbug.com">wkbug.com</a> and send them my way? (You should probably also file ones on other browsers :D)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1153">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/eeeps/40/662_1.png" width="20"/> eeeps:</div>
+<blockquote>
+<p>This sounds ideal, but would be impossible without waiting for layout, which would probably cause regressions?</p>
+</blockquote>
+</aside>
+<p>That is already what Blink/Chrome does. Images start their lives at lowest priority, and get upgraded as they become visible. That means that if there aren’t more important resource, images will get requested according to their order, but if there are, they are requested only once their priority gets bumped.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p>It’s per-spec that <code>img</code> still loads even inside <code>object</code>, but we could change the spec (assuming it’s Web-compatible enough). Similarly for <code>img</code> in <code>video</code> and <code>audio</code> probably.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p><span class="mention">@zcorpan</span> - didn’t know that. Let’s fix it. (and in any case, no need to preload these images)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p><span class="mention">@yoavweiss</span>, <span class="mention">@zcorpan</span> – previously, re: <code>&lt;img&gt;</code> in <code>&lt;object&gt;</code>/<code>&lt;audio&gt;</code>/<code>&lt;video&gt;</code>:</p>
+<ul>
+<li><a href="https://ircbot.responsiveimages.org/bot/log/respimg/2014-10-08#T95286" rel="nofollow noopener">discussion</a></li>
+<li><a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=27000">spec bug</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p>A little browsing through a <a href="https://gist.github.com/eeeps/2c28d79bf8d3aa612525" rel="nofollow noopener">the results of a hacky HTTPArchive query</a> shows that the most popular pages using anything called “lazyload” are all doing deferred loading, either because they are long pages stuffed with images (lots of catalog-style shopping sites and news sites) <em>or</em> they have carousels.</p>
+<p>Here’s my argument for ‘deferred’ lazyloading in a nutshell: images that definitely or very-probably won’t be visible on pageload shouldn’t be loaded until they’re needed. There should be a simple way for authors to achieve this without invalid markup or transparent gifs. Tens of thousands of sites are currently using <a href="https://github.com/tuupola/jquery_lazyload" rel="nofollow noopener">this library</a> or something like it to serve up <code>&lt;img&gt;</code>s without <code>src</code>s. That’s a problem!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2015-10-23</div>
+          <div class="post_content">
+<p><span class="mention">@yoavweiss</span></p>
+<blockquote>
+<p>That is already what Blink/Chrome does.</p>
+</blockquote>
+<p>So let me see if I understand: the speculative pre-parser combs through a page and compiles a list of all of the external resource URLs. It sticks images at the bottom of this the list and kicks off loading as many of these resources as it can. If the queue still exists after layout is complete, images that are in the viewport are bumped up.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

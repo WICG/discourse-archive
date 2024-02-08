@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allow disabling of automatic scroll restoration on navigation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allow disabling of automatic scroll restoration on navigation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2015-07-29</div>
+          <div class="post_content">
+<p><strong>Note</strong>: This has already been proposed on <a href="https://lists.w3.org/Archives/Public/public-whatwg-archive/2015Mar/0070.html">whatwg</a> mailing list. The consensus so far has been that it is a important problem to fix and I have incorporated several round of feedback on the API design. I am hoping to cast a wider net here and get additional feedback (and hopefully buy in) from other vendors and interested parties.</p>
+<h2>TL;DR</h2>
+<p>Add <a href="http://majido.github.io/scroll-restoration-proposal/history-based-api.html" rel="nofollow noopener">a new boolean attribute</a> to history in order to allow web developer to opt out of automatic scroll restoration that occurs during navigation. This allows developers to get rid of their brittle hacks around it. We are very interested to solve this issue in blink and I have a <a href="https://code.google.com/p/chromium/issues/detail?id=477353" rel="nofollow noopener">working patch</a> behind a flag.</p>
+<h2>Problem Summary</h2>
+<p>History spec does not specify the scroll position persistence and
+restoration and leaves it up to user agents to implement. All major
+browsers provide scroll restoration functionality for both traditional document
+navigations and entries create via History API (i.e., pushState, and
+replaceState). Despite its prevalence there is currently no reliable and cross-
+browser solution for developers to opt out of this behaviour or control any of
+its aspects.</p>
+<p>The default scroll restoring behaviour works well for document style web sites
+but it is often not appropriate for single-page web applications. Precise
+controlling of the scroll restoration is particularly important for single-page
+applications due to the following reasons:</p>
+<ol>
+<li>
+<p>They may be re-constructing the page content onpopstate every time and
+often asynchronously. The user agent does not know when page is fully
+constructed so it may attempt to restore scroll position on a partially
+constructed page which has an incorrect size causing the scroll to land on an
+unintended incorrect position due to clamping.</p>
+</li>
+<li>
+<p>They may want to provide consistent scroll restoration regardless of how
+the page is entered e.g., via history navigation or vanilla links clicks.</p>
+</li>
+<li>
+<p>They may want to control the details of visual transition between UI states
+for example using a specific scrolling animation to transition instead of an
+instant jump, or even restoring scroll position of inner scrollers.</p>
+</li>
+</ol>
+<h2>Proposed Solution</h2>
+<p>We propose to modify History API and make it possible for web authors to explicitly disable the default scroll restoration behavior. This is achieved by adding a new attribute, <code>scrollRestoration</code>, to <code>window.history</code>. This new attribute can take two values: ‘auto’, ‘manual’ with ‘auto’ being the default.</p>
+<p>Setting scrollRestoration to a new value updates the current entry in history session. Also any future entry that is added to history session for the same document will use this new scrollRestoration value. However, changing this value does not impact any previous entries in sessions history including those that belong to the same document. Furthermore, any navigation to a new page with a different document resets the <code>scrollRestoration</code> to its default value.</p>
+<p>Note that this ensures that changes to scrollRestoration only affect entries that will be created for the same document (e.g., entries created using pushState, or due to fragment navigation).</p>
+<pre><code>enum ScrollRestoration {
+    "auto",
+    "manual"
+};
+
+partial interface History {
+     attribute ScrollRestoration scrollRestoration;
+};
+</code></pre>
+<p><strong><code>scrollRestoration</code></strong>: Indicates whether the user agent should restore scroll position when traversing to this entry. Anytime this attribute is modified the current entry in joint session history should be updated to reflect the change.</p>
+<h2>Open issues</h2>
+<p>I am keeping track of open issues on github repo. Here are the current ones:</p>
+<ol>
+<li><a href="https://github.com/majido/scroll-restoration-proposal/issues/5" rel="nofollow noopener">Expose recorded scroll position</a></li>
+<li><a href="https://github.com/majido/scroll-restoration-proposal/issues/4" rel="nofollow noopener">Consider supporting scale restoration as well</a></li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2015-07-29</div>
+          <div class="post_content">
+<h2>References</h2>
+<ul>
+<li>
+<a href="http://majido.github.io/scroll-restoration-proposal/history-based-api.html" rel="nofollow noopener">Specification</a> for proposed API</li>
+<li>
+<a href="http://majido.github.io/scroll-restoration-proposal/tests/" rel="nofollow noopener">Tests</a> for the API</li>
+<li><a href="https://code.google.com/p/chromium/issues/detail?id=477353" rel="nofollow noopener">Chromium launch bug</a></li>
+<li><a href="http://majido.github.io/scroll-restoration-proposal" rel="nofollow noopener">Additional background of the problem</a></li>
+<li>Whatwg mailing list <a href="https://www.w3.org/Search/Mail/Public/search?keywords=Allow+disabling+of+default+scroll+restoration+behavior&amp;hdr-1-name=subject&amp;hdr-1-query=&amp;index-grp=Public_FULL&amp;index-type=t&amp;type-index=public-whatwg-archive">dicsussions</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>What’s up with there being <a href="//discourse.wicg.io/t/disabling-automatic-scroll-restoration-on-navigation/1012">two threads for this</a>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>Aaah, it is a mistake and should be removed. This was my original post which was blocked as spam (I think it had too many links to my github). It has now been re-posted.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

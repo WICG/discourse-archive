@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add Event for changing current timezone?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add Event for changing current timezone?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2792_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">littledan</div>
+          <div class="creation_date">2017-03-20</div>
+          <div class="post_content">
+<p>JavaScript includes several pieces of functionality which are based on the current timezone. For example, <code>new Date().getHours()</code> will get the hour of the day in the current timezone, and <code>Intl.DateTimeFormat().resolvedOptions().timeZone</code> will get the IANA timezone descriptor. Multiple browsers keep track of changes in the current timezone within a single page load, so if you have a long-running page and go to a different place, the timezone is adjusted without a reload (modulo bugs).</p>
+<p>This is useful for any long-running web site which renders dates. For example, imagine having your mail or calendar open on your phone, putting it in airplane mode, going somewhere, and then resuming use with network after landing. It’s nice to have everything updated appropriately.</p>
+<p>Currently, the only API for finding out about this timezone change is to poll one of these information sources. Polling is a little suboptimal–what if we made an event for it? This would be something that fires on <code>window</code>, with no data in the event (since there’s already an API to read the timezone). In IDL, I guess that would be</p>
+<pre><code class="lang-auto">partial interface WindowEventHandlers {
+   attribute EventHandler ontimezonechange;
+}
+</code></pre>
+<p>Any thoughts/opinions? cc <span class="mention">@domenic</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2017-03-25</div>
+          <div class="post_content">
+<p>Couple of relevant discussions:</p>
+<ul>
+<li><a href="https://discourse.wicg.io/t/navigator-timezone/152/9">Navigator.timeZone</a></li>
+<li><a href="https://esdiscuss.org/topic/exposing-system-time-zone" rel="nofollow noopener">https://esdiscuss.org/topic/exposing-system-time-zone</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1281_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">McMurphy</div>
+          <div class="creation_date">2017-05-08</div>
+          <div class="post_content">
+<p>IMHO You are really asking for background GeoLocation with timezone merely a derivative.</p>
+<p>That is, for a given Lat/Lng on a given date you’re in timezone X. If it’s different to what it was last time then trigger the timeZoneChange event.</p>
+<p>Either way you’ll need background processing which seems anathema to those creating specs.</p>
+<p>“Background GeoLocation” the font from all goodness flows!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

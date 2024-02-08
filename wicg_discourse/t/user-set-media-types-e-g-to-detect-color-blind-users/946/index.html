@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>User-set media types (e.g. to detect color-blind users)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">User-set media types (e.g. to detect color-blind users)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/646_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Fyrd</div>
+          <div class="creation_date">2015-07-20</div>
+          <div class="post_content">
+<p>Currently media queries are applied based on what the browser already knows, width, height, screen resolution, print mode, etc.</p>
+<p>I’d love to see support for queries where the user can set some browser preference to request certain types of styles, ones not detectable by the device or browser itself.</p>
+<p>Primarily, I’m thinking of color-blind users that would be able to one time select for example to enable “deuteranopia” styles. Authors could then write something like <code>@media deuteranopia</code> to offer styling for red-green color blind people. Another example would be a <code>high-contrast</code> media type.</p>
+<p>Outside of accessibility, these media types could also be used to inform the browser of other undetectable circumstances, for example the distance the user is away from the screen or simply that a browser is being used on a TV. There’s a number of people who have a PC hooked up to their living room TV and use it from a distance, but there’s currently no way to tell the browser it’s being used that way.</p>
+<p>I realize the combination of total users interested in these settings + developers interested in adding these styles + users aware of these settings reduce the effectiveness here, but it seems better to have the options and make it possible in some cases than to not have them at all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-20</div>
+          <div class="post_content">
+<p>Already in the hopper from last TPAC, I just haven’t spent the time to actually write up all the a11y MQs we talked about.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>There is also a concern, which came up with the <a href="https://dvcs.w3.org/hg/IndieUI/raw-file/tip/src/indie-ui-context.html">user-context specification</a> proposals, that people are reluctant to expose data related to having a disability to random websites.</p>
+<p>Teaching authors to assume they can get such data is probably a <strong>bad</strong> idea.</p>
+<p>So we need to think hard - because it is obviously useful to provide things that can work for deuteropia, or users who have a white-on-black displays, etc.</p>
+<p>I suspect that making the media queries isn’t the right mechanism… although not being able to find out how useful the work you do actually is might also be a problem for developers…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>That’s the precise spec that I was talking about; there’s a set of things that we want to move to MQ proper.</p>
+<p>Yeah, there’s an issue, but what it comes down to is that you either expose the information, or you don’t get special treatment. We can’t try and adjust the styles but hide it from the page.  (:visited is terrible, still somewhat leaky, and constrains our ability to innovate in the future, like listening for paints)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-07-25</div>
+          <div class="post_content">
+<p>The user-context specification has a security model to deal with that, which seems sane to me. As Tab said, either you expose information, or you don’t get special treatment, but you get to choose, site by site, as you do with geolocation or getUserMedia(), and the web developer can never tell the difference between a user who does not have a particular condition / accessibility related preference, and one who does but choses to keep it private.</p>
+<p>Do you have an idea on how to do better than that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-05</div>
+          <div class="post_content">
+<p>There is something fundamentally different in most cases between producing a service that relies on functionality like your location being available, or a camera working, and the use of colour as a requirement for communication.</p>
+<p>It may be that we <em>can</em> do something different. Telling authors that the only way we will help them provide an equal experience to people is by breaking privacy on things that are important seems worth trying to avoid, even if it takes some harder thinking.</p>
+<p>Telling people that “unless they are prepared to explicitly note they are different, we don’t expect authors to bother catering for their relatively common need” makes me uneasy.</p>
+<p>I understand that colour plays a valuable role in communication, and doing without it can seriously reduce functionality and expressivity. On the other hand I am also nervous about dividing the world along lines of colour perception - in part because the reality isn’t very clear-cut, when we deal with devices whose ability to render in the environment they are used varies more than actual people do.</p>
+<p>Beyond the issue of revealing personal information, one of the things that makes me uneasy is that we will repeat what I consider the major failing of ARIA, which is that it really only works for the small set of people who have accessibility requirements and happen to use a screen reader to help meet those requirements, while somehow the message we have given developers at large is “ARIA pretty much solves accessibility”. Deuteranopia is relatively straightforward - a continuum of degradation in the ability to distinguish blue from white is far less tractable with media queries. (It isn’t intractable - we already deal with breakpoints in sizes, and device sizes are now so varied that those are chosen as arbitrary values in sensible bands. We <em>can</em> do the same here…).</p>
+<p>To return to <span class="mention">@fyrd</span>’s comments, the people likely to engage with, and benefit from this should be considered. I suspect an unfortunately large proportion of the relevant developers will be motivated by a requirement to comply with some rule - a situation which encourages the tendency to make what I called “the ARIA mistake” above. Paving that cowpath seems like an anti-pattern to me.</p>
+<p>Sorry this comes across as really negative. I think it is worth exploring this space. I suffer regularly from design decisions about colour, based on a fairly minor need for higher-than-average contrast. (The most recent example is in writing this). And I have seen a lot of mistakes in proposing solutions whose unintended consequences are worse than the problem they aim to solve - some of them things that I proposed. Obviously that means I am not infallibly clever (no surprise to those who know me), but sometimes I might have learned something painful and useful…</p>
+<p>I note that a number of the technical issues that come up are ones of granularity - something we are also grappling with in the stop-start work on accessibility within <a href="http://schema.org">schema.org</a> …</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

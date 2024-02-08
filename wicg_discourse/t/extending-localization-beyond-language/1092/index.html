@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extending localization beyond language</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extending localization beyond language</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-29</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/communicating-your-home-location/1087/3">Communicating your home location</a>:</p>
+<aside class="quote" data-full="true" data-post="3" data-topic="1087">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/npdoty/40/690_1.png" width="20"/><a href="//discourse.wicg.io/t/communicating-your-home-location/1087/3">Communicating your home location</a>
+</div>
+<blockquote>
+<p>An interesting question though is why the <code>Accept-Language</code> header is not more widely used. In many cases, we find that a site uses rough IP geolocation to guess our language more than they use an explicit set of languages from the user. Is it just too difficult to get users to choose this in the UI and so sites don’t check or trust this header value? Do site implementers not know about it?</p>
+</blockquote>
+</aside>
+<p>Browsers (or at least Chrome) <em>do</em> have mechanisms that select a language for a site, or at least Chrome does: <a href="//discourse.wicg.io/t/communicating-your-home-location/1087/5?u=stuartpb">the “Translate this page” popup</a>. I propose that browsers can start using Accept-Language headers (or possibly another new header if Accept-Language has been devalued by UAs sending it without regard for user preference) with an interface like this, which may have new triggers for being exposed (like perhaps an “internationalizable” attribute on <code>&lt;html&gt;</code> alongside <code>lang</code>, or a <code>&lt;meta name="localizations"&gt;</code> tag that can contain a list of available localizations/languages as its <code>content</code> attribute).</p>
+<p>A new header could also address the fact that internationalization/localization is <a href="http://www.w3.org/International/questions/qa-accept-lang-locales">more than just language</a>: <a href="https://en.wikipedia.org/wiki/Internationalization_and_localization" rel="nofollow noopener">https://en.wikipedia.org/wiki/Internationalization_and_localization</a> notes things like currency and units of measurement, which, when considered at all in the current Web contexts, is usually conflated with language (and/or, as mentioned in the linked thread, IP block).</p>
+<p>Some additional thoughts on a Locale header:</p>
+<ul>
+<li>It could provide granularity for each kind of locale category that is currently configurable in native locale settings, though it should also have an <em>overall</em> locale (that can be easily parsed out) for sites that can’t handle the developer burden of more granular localization.</li>
+<li>If a header is present that addresses these non-language localization concerns, that could be used as a kind of semaphore that the Accept-Language header can be trusted (if browsers are currently misrepresenting it).</li>
+</ul>
+<p>There’s also the matter of time zone / UTC offset, which can be exposed from the host OS (and, since that’s generally the only place the user will adjust this, should be), and should be treated as separate from these other concerns (since when people travel, their time zone will change but their language generally won’t). This has <a href="//discourse.wicg.io/t/navigator-timezone/152">been talked about here before</a>, but discussion of a request-level header that is exposed to the server, despite being requested and something implementations could distinctly benefit from (<a href="http://stackoverflow.com/questions/13/determining-a-web-users-time-zone" rel="nofollow noopener">this StackOverflow answer</a>, asking how to accomplish such a thing, has over 360 upvotes at time of writing), discussion didn’t really continue past the initial stages.</p>
+<p>Of course, all this comes together to be a vector for fingerprinting (eg. tracking the one anonymous user on your site who speaks German on the East Coast of Mexico), but when the experience this can solve is so useful, it’s not worth holding back for that concern, especially when there are <a href="//discourse.wicg.io/t/suspicion-based-counter-fingerprinting/655">other ways to counter fingerprinting</a>.</p>
+<p>TLDR: What I’m proposing:</p>
+<ul>
+<li>Browsers expose the localization settings of the user via headers, including Accept-Language as they currently do, in addition to two new headers like Accept-Locale and User-Timezone.</li>
+<li>Sites expose the localizations they provide as part of their returned HTML. Sites provide content based on either stored user preferences or the headers on the request; if the preferences on the request do not match the preferences for the site (and the site provides the preferences offered in the request), the site should ask the user if they wish to change their user-localization preferences to match the request. (Sites may also choose to only use user preferences as a fallback, or allow users to override their global browser-specified preferences.)</li>
+<li>Browsers store the user’s localization preferences (where the defaults are determined from a mechanism like a setting provided by the host OS environment), as they currently do (partially) for mechanisms like Translation popups.</li>
+<li>When the page’s stated/detected language does not match the user’s localization settings, browsers present a popup suggesting translation (including localization) if the current page does not match the user’s localization settings, as Chrome does now. If they offer automated translation services (as Chrome does), they may present their automated options, with some kind of signifier to distinguish which translations would be presented by the site.</li>
+<li>To accommodate sites which unwittingly provide sub-par localizations, browsers may also surface mechanisms to request an alternative localization for the current site, and optionally translate from that alternative “source” language using their automated translation facilities.</li>
+<li>When the page’s stated/detected language <em>does</em> match the user’s localization settings (which may not be accurate, for whatever reason), but sites expose the localizations they provide, browsers expose an icon for their Translation interface (as Chrome does now for pages where the Translation dialog is presented and dismissed), which opens the Translation / Localization dialogue described in the last item.</li>
+</ul>
+<p>What I’m looking for feedback on here is:</p>
+<ul>
+<li>What do browser vendors think of exposing better i18n/l10n preferences to the user as part of the browser interface?</li>
+<li>What would be a good structure for HTTP and/or HTML extensions to solve the most pressing use cases for this spec? (Mostly in terms of structural / syntax bikeshedding.)</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

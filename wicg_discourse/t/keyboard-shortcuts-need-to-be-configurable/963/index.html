@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Keyboard shortcuts need to be configurable</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Keyboard shortcuts need to be configurable</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>(this is because a <a href="//discourse.wicg.io/t/nascent-proposal-keyboard-navigation-of-headings-and-html5-landmark-elements/948/13">different discussion</a> started morphing)</p>
+<p>Keyboard shortcuts need to be configurable, for various reasons. They are important to various users. Common use case for them include</p>
+<ul>
+<li>“Enterprise apps”. Things that are heavy on “button pressing” like email systems, data management, accounting, etc.</li>
+<li>Browser extensions. Simple functions that are meant to enhance the browser functionality for some pages</li>
+<li>“Accessibility” use cases - for various reasons many users rely heavily on the keyboard (can’t see the mouse, don’t have the body strength to keep moving it around all day, etc).</li>
+</ul>
+<p>Current mechanisms for describing keyboard shortcuts fall into two groups:</p>
+<ol>
+<li>
+<p>Javascript listeners
+These are the common approach now. A big benefit is that it allows for real shortcuts (rather than 3- or 4-key combinations). A major drawback is that there is virtually no way to determine what assigned listeners actually do, which makes it very hard to reconfigure anything based on them.</p>
+</li>
+<li>
+<p>accesskey
+This much-maligned attribute has been somewhat improved in HTML5. It’s big benefit is that it is declarative - it is always visible through the DOM, which means it is easy for two or more scripts that interact to determine what has been assigned already. It is easy for browsers to make accesskeys configurable, allowing a user to reassign an accesskey to a shortcut that is useful although current browser implementation is generally not very helpful. Fortunately, the worst problems which caused it sometimes to be harmful have generally been fixed.</p>
+</li>
+</ol>
+<p>I recently <a href="https://vivaldi.net/en-US/blogs/entry/when-will-keyboards-work-on-the-web">wrote about this issue</a> at more length, so I am not going to repeat it here, but think it is worth looking at further work on accesskey. The HTML Accessibility Task Force is also looking at the issue of <a href="https://www.w3.org/WAI/PF/HTML/wiki/Keyboard">focus management</a> including keyboard (but there are other issues such as voice control).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>For what it’s worth, Chrome <em>does</em> have a page for configuring extension shortcuts.</p>
+<p>Beyond that, I think their mindset is “don’t make behaviors like this something that can vary from user to user”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/650_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">deborahgu</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<p>The right thing to do is move back to accesskey. It was maligned in the old days for a reason, but many of those reasons have gone away, and others are easy fixable in the browser / AT / add-on pool.</p>
+<ol>
+<li>It needs to be a standard, so AT and user agents all deal with the keystrokes in the same way.</li>
+<li>And please can we not do that thing because there were problems in speccing and implementing the standard 10 years ago, we scrap it all and start from scratch.</li>
+<li>Accesskeys have always had some conflicts with AT, yes. But it has way fewer than it used to in modern implementations, and it has <em>nothing</em> on the clashes between random homegrown Javascript keyboard navigation. There are entire sites I’ve been unable to use because the keyboard navigation can’t be turned off and my AT shortcuts conflict all over the place. Anything that uses unmodified numbers as keyboard shortcuts causes massive problems. And then there’s the way it’s become a pattern to use “/” to get to site search, breaking Firefox and Opera’s wonderful single-key page search.</li>
+</ol>
+<p>Asking every webdev to reinvent the wheel because we couldn’t get it together making accesskey work is the opposite of a solution. It’s similar to how everyone hated the problems which happened with target=_blank, so instead of coming up with a standard replacement, every site implements its own modal lightboxes, never accessibly, never with standard ways of getting rid of them, still deeply problematic on mobile or high magnifaction, and we’ve managed to invent <a href="http://www.nngroup.com/articles/most-hated-advertising-techniques/" rel="nofollow noopener">the web’s most loathed advertising mechanism</a>.</p>
+<p>When individual sites each reimplement the wheel, we get the web we have today, with:</p>
+<ul>
+<li>
+<p>Completely undocumented keyboard shortcuts on many sites. YouTube, for
+example, hides an <em>inaccurate</em> list of current keyboard shortcuts on
+its screen reader page. Accesskey, on the other hand, is self
+documenting.</p>
+</li>
+<li>
+<p>Keystrokes that can’t be exposed to user agent or to AT. Accesskey, which is, can be manipulated, navigated,  examined, reported on by
+browsers, AT, and extensions. In theory, accesskeys could be
+user-configurable via extension.</p>
+</li>
+<li>
+<p>Commands which conflict heavily with some AT, yet which can only be disabled by turning off Javascript – likely to break many modern websites, let alone the single-page apps on which JS keyboard commands are nigh-ubiquitous. Accesskeys, on the other hand, can easily be disabled; I have an extension installed right now which will do just that.</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/650_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">deborahgu</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="963">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>don’t make behaviors like this something that can vary from user to user</p>
+</blockquote>
+</aside>
+<p>I think in this world of add-ons and extensions – that horse has long since dopplered away from the barn, alas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<p>Worth noting for devs who didn’t read the other thread and aren’t familiar with the space that “AT” stands for “assistive technologies” like text-to-speech engines / non-visual navigation systems.</p>
+<p>Also, for people (like me) who weren’t already familiar with it: accesskey <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/accesskey" rel="nofollow noopener">on MDN</a>, <a href="https://en.wikipedia.org/wiki/Access_key" rel="nofollow noopener">on Wikipedia</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-07-28</div>
+          <div class="post_content">
+<p>More to the point, we effectively need it to vary from user to user, although I understand why that is not an ideal situation.</p>
+<ul>
+<li>As <span class="mention">@deborahgu</span> mentioned, people who are using extensions already have a “non-standard” setup, and browsers compete on user interface which seems like a reasonable thing.</li>
+<li>People with screenreaders tend to have a massive set of shortcuts (pages of them, if you read them as a list).</li>
+<li>People who swap keyboard regularly (e.g. working in a non-latin language and having to do anything so backward as write code that only works with latin characters, or hopping around reading email from other people’s computers, or just being used to an AZERTY or a QWERTZ or something because they were born in a large European country) have different shortcuts available depending on what they are doing now.</li>
+</ul>
+<p>Effectively web developers <em>should not</em> document the behaviour they expect from the user - in particular because they have no way of knowing if the user can do that, let alone whether it is helpful or causes a crash in a critical system someone has.</p>
+<p>Web developers <em>should</em> be identifying things that should have shortcuts, providing a <strong>suggestion</strong> - that user agents may well ignore, although probably only with a good reason, since it implies extra work - and focus on ensuring that there is a way to know what an assigned shortcut will trigger.</p>
+<p>For things with <code>accesskey</code> set, this would match the “accessible name computation”. There is a <a href="http://w3c.github.io/aria/accname-aam/accname-aam.html">draft spec</a>, and since 80% isn’t necessary it is easier to read than it looks, if not wonderful.</p>
+<p>What is interesting, by which I mean “can’t easily be done today”, is giving a javascript function an accessible name. It isn’t terribly difficult to find a dirty hack or two, but it would be nice if there were a clean standard way to do this task.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-03</div>
+          <div class="post_content">
+<p>I went away and did some thinking and writing: Now there is <a href="//discourse.wicg.io/t/improving-accesskey/1177">a proposal</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p>One technique I’ve had success with is using a single key to activate “keyboard mode”, which then listens for the next keypress (or combo) and fires that. It’s usually implemented with a seldom-used input key, like <kbd>;</kbd>.</p>
+<p>When that key is pressed, use JavaScript to announce “keyboard mode” to both visual users and assistive technology, label each <code>accesskey</code>ed element with its shortcut and function, and place <code>role="application"</code> on the body, so the next keypress doesn’t get filtered by assistive technology.</p>
+<p>As long as users can remap the “enable keyboard mode” key if it conflicts, this usually works about as well as it can within the constraints provided.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p><span class="mention">@tigt</span></p>
+<p>Is the application role applied temporarily to the body in order to capture the next keystroke after keyboard mode is invoked?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p>Yes, this is how Opera 12 works. By default it used shift-esc to activate an accesskey menu, which was then navigable with the mouse as well as being able to press the keys directly. Personally I would remap the command to “,” since that was bound to something I didn’t use.</p>
+<p>I had an extension for it (the code is still on Bitbucket, and I would like to update it for modern browsers including the new Opera, although Yandex.browser is my primary target) that let the user select keys to be used, and then accesskeys were reassigned from among that set if they weren’t in it already.</p>
+<p>I think this is going to be the way forward if systems want to support sensible keyboard interaction for web apps.</p>
+<p>I suspect the sensible approach for e.g. screen readers that already use a lot of the keyboard is to provide their own pass-through keys allowing the user into accesskey mode - which can in turn either be a one-off or continuous for the “gaming” use case.</p>
+<p>I’ll raise all these as issues against <a href="//discourse.wicg.io/t/user-interaction-with-web-apps/1177/">my proposal "for <code>accesskey</code>"</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p>Yep, and then promptly removed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p>One problem that comes up a lot: <code>accesskey</code> is fine for alphanumerics, and works “okay” for common punctuation, but there’s no way to indicate more functional keys are used by the web application. Keys like:</p>
+<ul>
+<li><kbd>Esc</kbd></li>
+<li><kbd>Tab</kbd></li>
+<li><kbd>Shift</kbd></li>
+<li>
+<kbd>Backspace</kbd>/<kbd>Delete</kbd>
+</li>
+<li>
+<kbd>Enter</kbd>/<kbd>Return</kbd>
+</li>
+<li>The spacebar (the enumerated keys in <code>accesskey</code> are space-separated, so…)</li>
+<li>Arrow keys</li>
+</ul>
+<p>For games, these could be critical. The best suggestion I’ve seen is using <a href="https://en.wikipedia.org/wiki/Control_Pictures" rel="nofollow noopener">the Control Pictures Unicode block</a>, which indicate such keys without actually invoking them:</p>
+<ul>
+<li>␛ (Escape)</li>
+<li>␉ (Horizontal Tab)</li>
+<li>␎ (Shift Out, maps to <kbd>Shift</kbd>)</li>
+<li>␈ (Backspace)</li>
+<li>␊ (Linefeed, maps to <kbd>Enter</kbd>)</li>
+<li>␠ (Space)</li>
+</ul>
+<p>However, this leaves some leftovers without a Control Picture assigned:</p>
+<ul>
+<li>The Function row of keys (<kbd>F1</kbd>, <kbd>F2</kbd>, etc.)</li>
+<li><kbd>Caps Lock</kbd></li>
+<li>The modifier keys: <kbd>Fn</kbd>, <kbd>Ctrl</kbd>, <kbd>Alt</kbd>, and <kbd>Cmd</kbd>
+</li>
+<li>Which <em>side</em> of the keyboard some keys are on, such as Left and Right <kbd>Shift</kbd>
+</li>
+<li>Laptop “hardware function” keys. The media control keys that send “Play/Pause” commands would be especially useful, and I think there’s a spec already in the works for those.</li>
+<li>The arrow keys have no shortage of Unicode arrows to choose from, but is that correct?</li>
+</ul>
+<p>Complicating the issue is that <code>accesskey</code> values can only be a single code point, despite already being space-separated.</p>
+<p>Did <a href="http://www.w3.org/TR/xhtml2/mod-access.html#s_accessmodule">the XHTML Access Module</a> solve any of these problems, or did they just modularize it for its own sake?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="963">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tigt/40/639_1.png" width="20"/> Tigt:</div>
+<blockquote>
+<p>One problem that comes up a lot: accesskey is fine for alphanumerics, and works “okay” for common punctuation, but there’s no way to indicate more functional keys are used by the web application.</p>
+</blockquote>
+</aside>
+<p>Yes. And those keys are indeed important.</p>
+<p>This is one reason I propose changing the “acceptable values”.</p>
+<p>In any event, the current crop of browsers don’t recognise a space-separated list of tokens anyway, so whatever we do we are talking about a change in implementations and that constraint is only theoretical.</p>
+<p>The XHTML access module didn’t directly solve this problem, but it seems (on a quick skim - it is years since I read it carefully) to have taken the same approach I do of allowing the shortcut to be anything, not just a keyboard interaction.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-11-18</div>
+          <div class="post_content">
+<p>Agreed. One problem is the variety of keyboards and input methods out there; this is a topic browser vendors are way more experienced on. (Microsoft’s full support matrix for languages/input methods/assistive technology is <em>dizzying</em>.) We’ll need them involved for results that don’t bite everyone in the butt.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

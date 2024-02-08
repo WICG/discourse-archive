@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extending .classList methods to allow RegExp</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extending .classList methods to allow RegExp</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>Ana Tudor <a href="https://twitter.com/thebabydino/status/506713395262140416">shared a though</a>t on Twitter this morning that she was thinking it would be handy if .contains and .remove could take a RegExp - as in:</p>
+<pre><code>element.classList.contains(/_foobar/)
+</code></pre>
+<p>This seems reasonable, handy and, I think actually prollyfillable by simply capturing the call, checking if it is a RegExp and if so, basing it off of the .className property which contains all of it as text… Any thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>I presume this would be for <code>.contains()</code> and <code>.remove()</code>, right?  Obviously not <code>.add()</code>. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>I don’t see a problem with it, but I’m also not sure of its great value.  I wouldn’t oppose it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>I’d suggest it’d make a good unofficial draft with a prollyfill - only the dev community is a good judge of it’s usefulness.  I’m way tied up at the moment, anyone want to do it?  Github FTW?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/430_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">claudiopro</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p><code>.toggle(/_foobar/)</code> could work by removing all matching classnames <em>and</em> returning them as an array, thus allowing the caller to toggle (<em>i.e. add)</em> them again later:</p>
+<pre><code>var c = element.classList.toggle(/_foobar/)
+&gt; _foobar, _foobarHover
+c.forEach(element.classList.toggle, element.classList)
+</code></pre>
+<p>BTW, just tried this on Chrome which adds a literal <code>class="/_foobar/"</code>, is this expected behavior?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>That is the expected behavior given the current definitions, yes, because it stringifies its argument, and the stringification of a regex the regex itself, as a string.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>This would change the signature of toggle which returns boolean, an empty array isn’t the same as false even with coercion, right?</p>
+<p>I’m not sure we could really make that work without potentially breaking something.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/436_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feeela</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>This is already possible using <code>element.className</code> as this property is a string. As far as I understood it, the intention of <code>element.classList</code> is to provide an alternate way besides a regex search on a string to access an elements class names.</p>
+<p>I don’t see the benefit of repeating an already existing behavior on yet another object property.</p>
+<pre><code>// A contains() example:
+element.className.match(/_foobar/);
+</code></pre>
+<p>See: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element.className" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/API/Element.className</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>Yeah, I think I said it was possible and should be prollyfillable above… I think that the ask was about ergonomics and developer expectations - if developers minds tend to think that contains should accept a regexp and that is easy to accommodate then it’s actually worth it.  The only way to really know is to write it up and throw out a prollyfill that sugars it up as it would work and then see if it gets popular.</p>
+<p>I’d like to point out, just for the sake of argument, that classList methods actually add no real new capabilities, all methods were established in libraries in a manner similar to the above and it was their popularity and better ergonomics that led to their addition.  I agree that this is pretty one to one, but there is  literally no harm in someone writing a prollyfill and draft.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/436_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feeela</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="585">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>classList methods actually add no real new capabilities</p>
+</blockquote>
+</aside>
+<p>These methods are finally native implementations of what was possible with several JS libraries before. They are much faster than any JS polyfill. Using yet another regexp logic in a method like <code>contain</code> would decelerate their performance. As far as I can see it, this is primarily a performance issue. In most cases you don’t need the capabilities of a regular expression to find an element by its class name.</p>
+<p><a href="https://developer.mozilla.org/media/uploads/demos/p/a/paulrouget/8bfba7f0b6c62d877a2b82dd5e10931e/hacksmozillaorg-achi_1334270447_demo_package/classList/" rel="nofollow noopener">Firefox 3.6 Benchmarks</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>Ok, I don’t want to beat a dead horse here - but I don’t think that performance is why we did classList as much as ergonomics.  The perf stuff you link to is measuring <em>thousands</em> of operations.  Of course it’s faster, and good.  And if you simply delegate to the native in the case that it is not a regexp, yes it will still be slower, but it’s actually very close - you can measure it yourself.  And it would be about the same price <em>for</em> a regexp of doing tests on classname… And of course, if it was popular and ergonomic, that would become native too… So - I don’t see a perf argument to be had here, personally.   I think we can agree to disagree if necessary though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-09-04</div>
+          <div class="post_content">
+<p>(+1) I think if your intent is to work with a regular expression, you’d better work with a string and not an array.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2014-09-05</div>
+          <div class="post_content">
+<pre><code class="lang-auto">(function (prototype, slice, nativeContains, nativeRemove) {
+	function contains(token) {
+		if (typeof token === 'object' &amp;&amp; typeof token.test === 'function') {
+			return slice.call(this).filter(function (item) {
+				return token.test(item);
+			});
+		}
+
+		return nativeContains.apply(this, arguments);
+	}
+
+	function remove(token) {
+		if (typeof token === 'object' &amp;&amp; typeof token.test === 'function') {
+			return slice.call(this).filter(function (item) {
+				return token.test(item) &amp;&amp; !nativeRemove.call(this, item);
+			}, this);
+		}
+
+		return nativeRemove.apply(this, arguments);
+	}
+
+	nativeContains = prototype.contains;
+	nativeRemove = prototype.remove;
+
+	prototype.contains = contains;
+	prototype.remove = remove;
+})(DOMTokenList.prototype, Array.prototype.slice);
+</code></pre>
+<p>Something like this? If there’s actually any demand for this, consider it CC0, and I’ll throw it on GitHub. My feature-creep brain says this is just one step away from accepting your own methods.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

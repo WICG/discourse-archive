@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Enhance HeroElement</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Enhance HeroElement</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-05-22</div>
+          <div class="post_content">
+<h1>Proposal: Enhance HeroElement</h1>
+<p><a href="https://docs.google.com/document/d/1yRYfYR1DnHtgwC4HRR04ipVVhT1h5gkI6yPmKCgJkyQ/edit#" rel="nofollow noopener">HeroElement</a> is proposed by <span class="mention">@panicker</span>. We extend it a bit here. In short, HeroElement is an important element in web page which is specified by web developer.</p>
+<h2>Why HeroElement?</h2>
+<p>With HeroElement, user agent could easily distinguish critical part of web page and optimize it. Web developer could have a clear picture of the important element.</p>
+<h2>The basic idea of HeroElement</h2>
+<ul>
+<li>
+<p>For User Agent:</p>
+<ul>
+<li>Get the element that named as HeroElement</li>
+<li>Optimize and monitor
+<ul>
+<li>Speed up: speed up the process of HeroElement</li>
+<li>Monitor and generate events
+<ul>
+<li>Dom constructed</li>
+<li>All subresource loaded</li>
+<li>Fully layouted</li>
+<li>Fully painted</li>
+</ul>
+</li>
+<li>
+<a href="https://github.com/w3c/charter-webperf/issues/30" rel="nofollow noopener">ElementTiming</a>: Had been discussed at TPAC 2016</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>For web developer:</p>
+<ul>
+<li>Specify a HeroElement, listen to the corresponding events</li>
+<li>The HeroElement will be speed up</li>
+<li>Trigger other movement when events fired</li>
+<li>Analysis the performance of HeroElement by ElementTiming</li>
+</ul>
+</li>
+</ul>
+<h2>How to use?</h2>
+<ul>
+<li>
+<p>HTML grammar:</p>
+<pre><code>  &lt;div heroElement="needspeedup needTiming" onFullPainted="foo()"&gt;
+  // or
+  &lt;div markAsHeroElement="true" speedup="true" elementTiming="..." onFullPaintted="foo()"&gt;
+</code></pre>
+</li>
+<li>
+<p>HeroElementAttr:</p>
+<ul>
+<li>element
+<ul>
+<li>The element specified as HeroElement</li>
+</ul>
+</li>
+<li>needspeedup
+<ul>
+<li>According to HeroElement，control the parsing process of HeroElement. E.g. Once HeroElement be parsed don’t break parsing until got its end tag, after that, stop parsing immediately and do next process: layout, paint…</li>
+<li>Record the sub-resource of HeroElement as key-point sub-resource，high priority them, or cache them before hand.</li>
+<li>others</li>
+</ul>
+</li>
+<li>needTiming
+<ul>
+<li>ElementTiming</li>
+</ul>
+</li>
+<li>events
+<ul>
+<li>finish dom constructing: Got the end tag of HeroElement</li>
+<li>finish loading: All relevant subresources downloaded</li>
+<li>finish layouting： The first layout pass after finishing load</li>
+<li>finish painting： The first paint after finishing layout</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Use cases</h2>
+<ul>
+<li>
+<p>Use case 1:</p>
+<ul>
+<li>
+<p>Speed up the process of first screen paint. The time of first screen paint is when the first screen content fully painted. From first screen paint users could read web content. User agent would speed up the first screen paint. User agent guesses which elements belong to first screen content. That isn’t accurate usually. With HeroElement, user agent could easily know that.</p>
+<pre><code>  &lt;!-- All the nodes inside heroElement will be handled in one parse pass --&gt;
+  &lt;!-- or &lt;div markAsHeroElement="true" speedup="true"&gt;first meaningful paint&lt;/div&gt; --&gt;
+  &lt;div heroElement="true false"&gt;
+    &lt;!-- First screen content begin --&gt;
+    &lt;h1&gt;first meaningful paint&lt;h1&gt;
+
+    &lt;!-- This image will be speed up --&gt;
+    &lt;img src="..."&gt;
+
+    &lt;!-- Lots of element --&gt;
+    ...
+    &lt;!-- First screen content end --&gt;
+  &lt;/div&gt;
+</code></pre>
+<p>QQBrowse has implemented speedup optimization of first screen paint by HeroElement. Cooperating with <a href="https://m.sogou.com/web/searchList.jsp?pid=sogou-clse-2996962656838a97&amp;e=1427&amp;g_f=123&amp;keyword=%E5%A4%A7%E4%B8%BB%E5%AE%B0" rel="nofollow noopener">sogou search page</a>, this optimization speed up the first screen paint of sogou search page in wifi by ** 25% ** on average. See the comparing video <a href="http://res.imtt.qq.com///qqbrowser_x5/cathiechen/HeroElement/hev.html" rel="nofollow noopener">here</a></p>
+<p>Tracing data screenshot compare:</p>
+<ul>
+<li>
+<p>without HeroElement Optimization
+<div class="lightbox-wrapper"><a class="lightbox" href="http://i.imgur.com/MoSVgkJ.png" rel="nofollow noopener" title="without HeroElement Opt"><img alt="without HeroElement Opt" height="225" src="http://i.imgur.com/MoSVgkJ.png" width="690"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">without HeroElement Opt</span><span class="informations">1878×615</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div></p>
+</li>
+<li>
+<p>with HeroElement Optimization
+<div class="lightbox-wrapper"><a class="lightbox" href="http://i.imgur.com/nWrJRkg.png" rel="nofollow noopener" title="with HeroElement Opt"><img alt="with HeroElement Opt" height="224" src="http://i.imgur.com/nWrJRkg.png" width="690"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">with HeroElement Opt</span><span class="informations">1880×613</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Use case 2:</p>
+<ul>
+<li>
+<p>Show the HeroElement on screen after it finish paint. With a mask this could reduce the appearance of white screen. But it couldn’t be sure if the images has been drawn. “FullPaintFinished” fired when all subresouces finish loading. So “FullPaintFinished” could be a signal of HeroElement been fully painted. This solution used a lot in hybrid apps which listened “onPageFinished” of webview to switch views. However, “onPageFinished” is not the exact time of content fully painted. Go a little further, maybe WebViewClient could consider of adding a “FullPaintFinished” API too.</p>
+<pre><code> &lt;!-- Mask --&gt;
+ &lt;div id="mask" style="position:fixed; width:100%; height:100%; background-color:blue;"&gt;&lt;/div&gt;
+
+ &lt;!-- Content --&gt;
+ &lt;!-- or &lt;div markAsHeroElement="true" onFullPaintFinished="foo()" id="hero" style="visibility: hidden;"&gt; --&gt;
+ &lt;div heroElement="false false" onFullPaintFinished="foo()" id="hero" style="visibility: hidden;"&gt;
+   &lt;!-- Contains lots of images --&gt;
+   ...
+ &lt;/div&gt;
+
+ ...
+
+ &lt;script&gt;
+ 	function foo() {
+ 		document.getElementById("mask").style.display="none";
+ 	}
+ &lt;/script&gt;
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Continue</h2>
+<ul>
+<li>Specify sub-resources that involved in “finish loading”</li>
+<li>Others</li>
+</ul>
+<h2>Related</h2>
+<p>We found the optimizing of first screen content paint will be more effective if we know the exact elements which are shown in the first screen. The concept of HeroElement proposed by panicker@ is used in ElementTiming. We add speeding-up into HeroElement. According to QQBrowser’s experiences we know web developers care about the first screen content paint’s finishing time. So we add the event notification into HeroElement. Baidu once proposed <a href="https://www.w3.org/Submission/first-screen-paint/">first screen paint optimization with render optimization policy</a> in 2014. After discussing with them, we think we could work in this direction further.</p>
+<p>I’m not sure if this stuff about HeroElement has been discussed before. Any suggestion is welcomed:) <span class="mention">@igrigorik</span>, <span class="mention">@panicker</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-05-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="2163">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/258eb7/40.png" width="20"/> cathiechen:</div>
+<blockquote>
+<p>Speed up: speed up the process of HeroElement</p>
+</blockquote>
+</aside>
+<p>Aren’t browsers already processing every element as fast as they can? What should the browser do differently to speed up the element?</p>
+<p>This sounds like it could be simplified to a straightforward priority system. It sounds like you just want to assign “high priority” to an important element. It might also be useful to assign low priority to less important elements. As it stands you only have a boolean priority (hero element, or not), whereas I think more control would be useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-05-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="2163">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Aren’t browsers already processing every element as fast as they can? What should the browser do differently to speed up the element?</p>
+</blockquote>
+</aside>
+<p>We could try these two ways speed up the element:</p>
+<ol>
+<li>
+<p>Control the process of parse:
+As we want to show “HeroElement” on screen as soon as possible. After the begin tag of HeroElement being parsed we could stop parsing when meet the end tag of HeroElement, so that HeroElement will be layout and painted immediately after its sub dom tree constructed. As we could see from “use case 1”, this optimization could save 183ms for the first parse pass.</p>
+</li>
+<li>
+<p>High priority of sub-resource related HeroElement.</p>
+</li>
+</ol>
+<aside class="quote" data-post="2" data-topic="2163">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>This sounds like it could be simplified to a straightforward priority system. It sounds like you just want to assign “high priority” to an important element. It might also be useful to assign low priority to less important elements. As it stands you only have a boolean priority (hero element, or not), whereas I think more control would be useful.</p>
+</blockquote>
+</aside>
+<p>Priority system of elements is very thorough. We could make good use of resource during the early stages of navigation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-05-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="2163">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/258eb7/40.png" width="20"/> cathiechen:</div>
+<blockquote>
+<p>Control the process of parse:
+As we want to show “HeroElement” on screen as soon as possible. After the begin tag of HeroElement being parsed we could stop parsing when meet the end tag of HeroElement</p>
+</blockquote>
+</aside>
+<p>I don’t think you ever want the browser to stop parsing. That would slow down the overall page load. It sounds like you just want to force a layout after that element is loaded.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2807_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kinuko</div>
+          <div class="creation_date">2017-05-23</div>
+          <div class="post_content">
+<p>I think I basically agree with AshleyScirra, associating prioritization thing into the Hero Element idea seems to limit several potentially interesting usage scenarios, it feels that problem should be separately addressed by the Hero Element idea that was inherently designed for different purpose-- i.e. measurement?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="2163">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>It sounds like you just want to force a layout after that element is loaded.</p>
+</blockquote>
+</aside>
+<p>Yes, that’s right:) Besides speeding up, the content of next paint could be forecast.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-05-23</div>
+          <div class="post_content">
+<p>Yes, I do agree with priority system idea.</p>
+<p>I’m thinking the scenarios of using low priority(Suppose we have 3 priorities: high\middle\low). Such as: We could ‘low priority’ comments, folded content… With a certain parse policy, the whole page load could be speedup. Or other interesting scenarios?
+Besides changing parse policy and sub resouce priorities, do we have other ways to optimize?
+<span class="mention">@AshleyScirra</span> <span class="mention">@kinuko</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-05-23</div>
+          <div class="post_content">
+<p>If this is a hint to browsers for rendering wouldn’t it fit more into CSS?</p>
+<p>CSS already has <code>will-change</code> so there’s precedent for these sort of attributes there. It also means we’re not having to make changes to our documents for presentation purposes.</p>
+<p>Even more useful is that you may actually want to change your prioritization based on media queries.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-05-23</div>
+          <div class="post_content">
+<p>Thanks for replying:)</p>
+<aside class="quote" data-post="8" data-topic="2163">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/ce7236/40.png" width="20"/> chaoaretasty:</div>
+<blockquote>
+<p>If this is a hint to browsers for rendering wouldn’t it fit more into CSS?</p>
+</blockquote>
+</aside>
+<p>As we want to optimize the process of parse, we need to distinguish “the important element” during parsing, so we should use element attribute instead of CSS for CSS could locate an element only after it has been applied.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-05-27</div>
+          <div class="post_content">
+<p>List some scenarios of element priorities here:
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/cathiechentx/ElementPriorities" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="420" src="https://avatars2.githubusercontent.com/u/28649232?s=400&amp;v=4" width="420"/>
+<h3><a href="https://github.com/cathiechentx/ElementPriorities" rel="nofollow noopener" target="_blank">cathiechentx/ElementPriorities</a></h3>
+<p>Scenarios of ElementPriorities. Contribute to cathiechentx/ElementPriorities development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2017-05-29</div>
+          <div class="post_content">
+<p>similar to the discussion about “call to action” links <a href="https://discourse.wicg.io/t/proposal-optional-role-for-a-to-indicate-if-it-is-a-call-to-action-to-a-screenreader-user/2119/7">Proposal - optional role for &lt;a&gt; to indicate if it is a ‘call to action’ to a screenreader user</a>, i’d say that instead of making one specific new element or attribute to denote a hero, it would be far more sensible and flexible to allow for a more generalised way to define importance/priority (as an attribute, rather than new element type)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1115_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jpdevries</div>
+          <div class="creation_date">2017-05-29</div>
+          <div class="post_content">
+<p>I’d be worried about misuse. I can already see developers wrapping every element with HeroElement because they think or were told it would “speed things up”. But of course if everything is a hero, nothing is a hero.</p>
+<p>It sounds like the idea here is mostly for things like “hero slideshows” at the top of the page, some sort of way for speeding up the performance of sites that utilize that pattern because those can get heavy. First I’d examine what patterns are available today to not run into such a optimization bottleneck in the first place (lazy loading).</p>
+<p>I feel like a lot of emphasis is put into rendering “above the fold” content, but there is no fold in web design. If your websites supports the URL hash to deep link half way down pages, which it should, then a user might not land at the top of the page at all. So I would be considered with an element that is off canvas being “sped up” because that means the things I’m actually viewing are slowed down.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-05-30</div>
+          <div class="post_content">
+<p>I think web components and progressive rendering should also be considered in this discussion. It is possible that within the next few years, modern web apps will become much more modular. The app could consist of independent components, each with their own top-level custom element, JavaScript module tree and set of style sheets (no more global bundles), and these components would then be sequentially rendered, as they’re encountered in the HTML document.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-05-30</div>
+          <div class="post_content">
+<p>I think the risk with even just a prioritization system is that browsers already have pretty good heuristics around how to prioritize the requests and rendering of a page. I think there’s a good chance a dev will naively make some big element a high priority, and actually end up de-optimising the page, because it blocks something <em>actually</em> more important like the CSS for it. We should try to avoid performance primitives that are easy to use incorrectly. But I don’t know how this could be adjusted to be difficult/impossible to use incorrectly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cathiechen</div>
+          <div class="creation_date">2017-06-05</div>
+          <div class="post_content">
+<p>Agree. Using priority is more generic. “Call to action” link looks like a perfect use case to element priority system.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

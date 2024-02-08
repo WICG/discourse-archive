@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for asTokenList(attr)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for asTokenList(attr)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<p>I posted a piece with a proposal/rationale here: <a href="https://briankardell.wordpress.com/2016/03/29/tokenlists-missing-web-dna/">https://briankardell.wordpress.com/2016/03/29/tokenlists-missing-web-dna/</a></p>
+<p>TL;DR: There are several properties that hold space delimited values - the class="" attribute used by CSS is the most well understood/widely encountered… Working with them as simple attributes is painful, so we created .classList which is a DOMTokenList that is reflective on the class attribute.  This is great, but the more I run into similar cases because of increased focus on A11Y (several aria attributes are similar) the more I wish that we had access to DOMTokenLists for those… I’m proposing (and providing a prollyfil linked in the article) that we add an accessor method in the DOM API</p>
+<p>asTokenList(‘attributeName’)</p>
+<p>Which returns you a DOMTokenList that you can work with…  Full details in the linked piece.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<p>So, the main use case here is for data-<em>/aria-</em> attributes?</p>
+<p>If so, could we define something that’s applicable to these attributes, and doesn’t concern other attributes where a DOMTokenList may not make sense? (e.g. <code>id</code>, <code>src</code>, <code>srcset</code>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<p>Or maybe I’m missing your point and the intent here is to have a unified API for all DOMTokenLists wherever they’re applicable: <code>classList</code>, <code>relList</code>, <code>sandbox</code>, etc</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TzviyaSiegman</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<p>The more one works with the accessibility tree, the more one realizes that it stands apart from other object models. If I’m understanding correctly, this strives takes the pain out of cross-OM communication. Brilliant. One of the biggest pain points I see today. (See also forthcoming work on CSS Generated Content Module)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<p>Yes, to have a unified API that you can use for any DOMTokenList-able attributes (including all of the above, ones in the future and custom elements, etc).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2016-03-30</div>
+          <div class="post_content">
+<p>Would love something like that as a standard (+polyfill). Using jQuery we end up abusing the <code>class</code> attribute because <code>.removeClass</code>, <code>.addClass</code> and <code>.hasClass</code> and <code>.toggleClass</code> are just easier to work with. <code>Element.classList</code> reproduces this same problem.</p>
+<p>This borders on bikeshedding, but doesn’t <code>element.asTokenList</code> suggests that it would return the element itself as a token list (which doesn’t make much sense). Perhaps this would be better:</p>
+<ul>
+<li><code>element.tokenList(attrName)</code></li>
+<li><code>element.tokenListFor(attrName)</code></li>
+</ul>
+<p>On a different topic, is there an issue tracker for your prollyfill? It has a few issues.</p>
+<pre><code class="lang-auto">var el = document.createElement('p');
+el.setAttribute('class', ' a   b      c ');
+var no_classList = el._asTokenList('class');
+
+console.log( el.classList.length ); // 3
+console.log( no_classList.length ); // 12
+
+console.log( '' + el.classList ); // " a   b      c "
+console.log( '' + no_classList ); // "[object Object]"
+
+Array.prototype.join.call(el.classList) // "a,b,c"
+Array.prototype.join.call(no_classList) // ",,,,,,,,,,,"
+
+el.classList[ el.classList.length - 1 ] // "c"
+no_classList[ no_classList.length - 1 ] // undefined
+</code></pre>
+<p>Perhaps you could create a <code>_DummyDOMTokenListPrototype</code> object and use <code>Object.create(_DummyDOMTokenListPrototype)</code> and perhaps protect the <code>length</code> property too if possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-03-30</div>
+          <div class="post_content">
+<p>re: an issue tracker: I created <a href="https://github.com/bkardell/tokenListFor">https://github.com/bkardell/tokenListFor</a> - I used <code>_tokenListFor(attr)</code> as suggested, that’s better, good feedback.</p>
+<aside class="quote" data-post="6" data-topic="1418">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/fvsch/40/130_1.png" width="20"/> fvsch:</div>
+<blockquote>
+<p>var el = document.createElement(‘p’);
+el.setAttribute(‘class’, ’ a   b      c ');
+var no_classList = el._asTokenList(‘class’);</p>
+<p>console.log( el.classList.length ); // 3
+console.log( no_classList.length ); // 12</p>
+<p>console.log( ‘’ + el.classList ); // " a   b      c "
+console.log( ‘’ + no_classList ); // “[object Object]”</p>
+<p>Array.prototype.join.call(el.classList) // "a,b,c"
+Array.prototype.join.call(no_classList) // “,”</p>
+<p>el.classList[ el.classList.length - 1 ] // "c"
+no_classList[ no_classList.length - 1 ] // undefined</p>
+</blockquote>
+</aside>
+<p>I’ve resolved all but the last one of your examples - not sure that is resolvable?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>By the way, a standalone <em>function</em> (method of <code>Document</code>?) like <code>parseTokenList()</code> or <code>createTokenList()</code> would probably be more useful since we then could parse any token string, not just a value of an attribute of an existing element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>It may <em>also</em> be useful, but I would argue that not more so because the token list isn’t generated and disconnected, it remains connected…</p>
+<pre><code>// gets the token list
+var tokenList = document.body.classList;
+
+// uses setAttribute after the token list is created...
+document.body.setAttribute("class", document.body.className + " bar");
+
+// the token list does contain bar
+console.log("contains bar? %s", tokenList.contains("bar"))
+</code></pre>
+<p>So, yeah, it might be interesting to have that, but that’s pretty trivial to implement with just one or two lines if you have this because all you would have to do is create an element and ask for an attribute as a token list.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>Good point. By haven’t live collections proven they are actually almost useless in practice?</p>
+<p>To deal with items (e. g. looping), live collections are almost always converted to static <code>Array</code>, while there is nothing preventing us from having a static token list that would still be able to <code>add()</code>/<code>remove()</code>/etc. its tokens.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>In this case, I’m not so sure - they seem to work pretty well and prevent a lot of footguns for dealing with a single serialization of N values, like the one I illustrated.</p>
+<p>There is nothing preventing us from creating a new fundamental primitive like this, but that isn’t what I’m currently advocating here and I think Array.from(…) is already basically this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>Live collections of <em>elements</em> are problematic for a number of reasons.  This is not that.</p>
+<p>This is just elevating the X/XList pattern to something generic.  The XList object is just a useful interface over the string, letting you query/manipulate it in a more convenient way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>Arrays don’t have methods like <code>add()</code> / <code>remove()</code> to manipulate tokens. The token list is not just about splitting a string to parts, isn’t it? <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+<p><code>Array.from()</code> was exactly a consequence of the need to convert DOM collections to <code>Array</code> everyday.</p>
+<p>FWIW, I’m not sure we would necessarily have to introduce a new object class for static token list. <code>DOMTokenList</code> could just be either live or static depending on how it has been created.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<blockquote>
+<p>Live collections of elements are problematic for a number of reasons.  This is not that.</p>
+</blockquote>
+<p>Could you provide some usecases that would really benefit from token list being <em>live</em>?</p>
+<blockquote>
+<p>The XList object is just a useful interface over the string, letting you query/manipulate it in a more convenient way.</p>
+</blockquote>
+<p>Yes, I agree with that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>Are you trying to argue that, for example, <code>el.classList.add('foo')</code> would have been better as <code>el.class = el.classList.add('foo');</code> (or <code>el.class = TokenList(el.class).add('foo')</code>)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>Absolutely no. It would just be nice to have a <em>generic</em> way (as long as we are going to make token lists <em>more</em> generic anyway) to convert a string to token list regardless whether the string is an element-attribute value or just a standalone literal (without creating a dummy element). Both ways could coexist.</p>
+<p>For example:</p>
+<pre><code>var a = element.classList; // Predefined token list based on class attribute.
+var b = element.tokenListFor('data-foo'); // Token list based on arbitrary attribute.
+var c = document.createTokenList('foo bar'); // Also token list, but based on string.
+var d = 'foo bar'.toTokenList(); // Possible alternate syntax.
+var e = DOMTokenList.from('foo bar'); // Possible Array.from()-like syntax. Eureka!</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>We already have a way to create unconnected token lists from any string:</p>
+<pre><code class="lang-auto">var tl = new Set(str.split(/\s+/));
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-04</div>
+          <div class="post_content">
+<p>Good point. But we are then forced to deal explicitly with regular expressions as well as we would also need to use <code>trim()</code> before splitting:</p>
+<pre><code>var f = new Set(' foo bar '.trim().split(/\s+/));
+</code></pre>
+<p>And this looks far less clean and clear than a straightforward function/method with clear purpose like <code>DOMTokenList.from()</code>. Similar to how <code>Array.from()</code> is better than <code>[].slice.call()</code> used before.</p>
+<p>// Thoughts aloud: it’s a shame we have so similar things with incompatible syntax (e. g. <code>remove()</code> and <code>contains()</code> for <code>DOMTokenList</code> versus <code>delete()</code> and <code>has</code>() for <code>Set</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-04-05</div>
+          <div class="post_content">
+<p>Can I ask though: why would you want to create a disconnected token list? at that point, wouldn’t you simply use an array/set?  Like - what is the use case for a DOMTokenList that isn’t part of DOM?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-05</div>
+          <div class="post_content">
+<p>I suspect disconnected token lists could be useful e. g. for some virtual-DOM implementations like in React.js. Didn’t work with this library myself though.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

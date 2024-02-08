@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Is CSS @import still considered as an anti-pattern?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Is CSS @import still considered as an anti-pattern?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1107_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">malyw</div>
+          <div class="creation_date">2017-01-22</div>
+          <div class="post_content">
+<p>Many years ago it was clear, that CSS “<span class="mention">@import</span>” was an antipattern because of many problems:</p>
+<ul>
+<li>some browsers (e.g. old IE) included CSS <span class="mention">@import</span> styles not in the right order</li>
+<li>import() requests were made not in parallel</li>
+<li>with HTTP1, in many cases, it was easier for performance/development to avoid additional CSS requests, and simply concatenate the CSS files into one</li>
+</ul>
+<p>Here are some links with descriptions:
+<a class="onebox" href="http://www.stevesouders.com/blog/2009/04/09/dont-use-import/" rel="nofollow noopener" target="_blank">http://www.stevesouders.com/blog/2009/04/09/dont-use-import/</a>
+<a class="onebox" href="https://gtmetrix.com/avoid-css-import.html" rel="nofollow noopener" target="_blank">https://gtmetrix.com/avoid-css-import.html</a></p>
+<p>But today we are switching to HTTP/2 and native ECMAScript modules “imports”, which have a bit similar behavior.
+All the modern browsers fixed the CSS <span class="mention">@import</span> problems, mentioned before, loading them in parallel and including styles in the right order.</p>
+<p>The only concerns, I see so far, may be loading concerns, but it depends on the app architecture and will work kinda same as native ES6 modules.
+The additional requests problem will be solved by HTTP/2.</p>
+<p>Of course, the difference with native ES6 modules is that you can use <span class="mention">@import</span> only at the beginning of the CSS file, but in the case of JS they are hoisting, but use “import” in JS only on the top level of the code- so there are still similar limitations.</p>
+<p>What issues am I missing and what do you think, is CSS <span class="mention">@import</span> still considered as an anti-pattern?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<p>I’ve messed around with this before, and as far as I can tell, they’re equivalent in modern browsers. <code>@import</code> is shorter for multiple stylesheets:</p>
+<pre><code class="lang-auto">&lt;link rel="stylesheet" href="a.css"&gt;
+&lt;link rel="stylesheet" href="b.css"&gt;
+&lt;link rel="stylesheet" href="c.css"&gt;
+</code></pre>
+<pre><code class="lang-auto">&lt;style&gt;
+@import "a.css";
+@import "b.css";
+@import "c.css";
+&lt;/style&gt;
+</code></pre>
+<p><code>@import</code> can take a media query, just like <code>link[media]</code>, so that use-case is already accounted for. It may not work with alternate stylesheets, but that feature is pretty dead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>Also even without H2 necessarily, <code>&lt;link rel="preload" href="/styles/other.css" as="style"&gt;</code> will do the trick loading up the resource before the import is hit to save the time. However, too many preload links and the UA may start ignoring them. There is a fine balance here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>I think this is only partially true. If you add an <code>@import</code> in another stylesheet, the browser first has to download this stylesheet and can only then download the imported stylesheet. This can only happen sequentially and this behavior is obviously unfixable.</p>
+<p>So using <code>@import</code> inside of blocking head stylesheet is still a anti pattern. For an async loading stylesheet it might be not.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>That’s true of <em>any</em> stylesheet in the <code>&lt;head&gt;</code> that isn’t async. No matter where they come from, stylesheets are considered critical content and block rendering since they all must be parsed before any rendering can continue.</p>
+<p>The issue with <code>@import</code> before these preload/multiplexing features existed was the delayed time for the extra network requests to occur and then the time for them to happen. Now we have plenty of ways to work around those issues.</p>
+<p>I wouldn’t say <code>@import</code> is necessarily an antipattern still, however it is something that should still be implemented with caution, care, and plenty of perf testing to make sure users do get the best experience.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>If I put two stylesheets in my <code>head</code> they are loaded in parallel. But if I put one stylesheet in my head and this one references another one using <code>@import</code> they are loaded in sequence. This is the problem that I was talking about and this sequential loading is by no means true for all blocking stylesheets in the <code>head</code>.</p>
+<p>Of course you can use preload/push techniques to workaround this problem. But this doesn’t justify to say: <code>@import</code> is not a problem anymore. The fact that you need to <strong>actively</strong> work around with other techniques, shows that there are still problems with this technique.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-01-27</div>
+          <div class="post_content">
+<p>The question with using preload as a workaround is that if you’re going to use preload you’ve added another tag into your head, if you know at that point you need the other stylesheet why not just add the stylesheet there instead of <code>@import</code>?</p>
+<p>Also unless you have the preloading injected during build you’re going to be manually adding/changing them which just gives another potential place to forget to update if you change your imports.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

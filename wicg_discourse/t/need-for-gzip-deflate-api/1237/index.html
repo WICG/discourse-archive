@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Need for GZIP deflate API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Need for GZIP deflate API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-12-15</div>
+          <div class="post_content">
+<p>For RUM providers, there’s a clear need for native compression APIs.
+Demonstration of such use-cases are <a href="http://calendar.perfplanet.com/2015/compressing-usertiming/">User timing compression</a> and <a href="http://nicj.net/compressing-resourcetiming/">ResourceTiming compression</a>.</p>
+<p>While gzip can be <a href="https://github.com/nodeca/pako">implemented</a> in JS, there are performance costs to both downloading the script as well as runtime efficiency.</p>
+<p>Other compression types (e.g. brotli) as well as inflate support could be interesting to expose as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-12-16</div>
+          <div class="post_content">
+<p>Sounds good to me, As you mention supporting other formats would be interesting so making the API as such would be a lot more future proof.</p>
+<pre><code class="lang-auto">let gzipFile = await navigator.compress(file, {format: 'gzip'});
+</code></pre>
+<p>Where the compress method returns a promise and accepts options on format etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2015-12-16</div>
+          <div class="post_content">
+<p>Encoders/decoders such as this should be built as transform streams.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/4_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">myakura</div>
+          <div class="creation_date">2015-12-16</div>
+          <div class="post_content">
+<p>there has been discussions in the past. <a href="//discourse.wicg.io/t/a-zip-api-in-the-browser/14">A ZIP API in the browser?</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-12-16</div>
+          <div class="post_content">
+<p>Yup, totally forgot the streams spec even mentions it in example uses. <img alt=":+1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/+1.png?v=5" title=":+1:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-12-16</div>
+          <div class="post_content">
+<p>This would actually be very useful. I’ve changed my view a bit since my comments in the other thread: zip.js works pretty nicely, but can often end up janking on synchronous manipulation of blobs (copying/slicing/creating etc). It also does not seem to be able to take advantage of multiple cores, only offloading work in to a single web worker (although I don’t know how many compression algorithms can be effectively loaded across multiple cores). I think moving this in to the browser would make it easier to take advantage of in a fully asynchronous way.</p>
+<p>I’d also point out I think the ability to compress and decompress data should be treated separately to the support for archive file formats, such as the .zip format. Both are useful and they are of course related, but compression of raw data doesn’t obligate support for an archive format.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/966_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nic_Jansma</div>
+          <div class="creation_date">2017-01-20</div>
+          <div class="post_content">
+<p>I certainly would love to see some progress on this!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

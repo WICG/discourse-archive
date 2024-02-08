@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extend submit events: add the button/element, that triggered the submit</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extend submit events: add the button/element, that triggered the submit</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-14</div>
+          <div class="post_content">
+<p><a href="http://stackoverflow.com/q/2066162/113195" rel="nofollow noopener">This StackOverflow question</a> asks to find the button, that triggered a <code>submit</code> form event <em>from within</em> an <code>submit</code> event handler. Use cases for this are a dime a dozen, when you think of serializing the form data for AJAX requests and more than one submit buttons in the <code>&lt;form&gt;</code>.</p>
+<p>My answer was to use <code>document.activeElement</code> for this, but it has some shortcomings, like any of the other answers, too.</p>
+<p>Therefore adding a property to the dispatched <code>submit</code> event that links to the initiator of the submission would help here. The property references the DOM element, that was activated for the form submission. Something along the following lines:</p>
+<blockquote>
+<h3>Property <code>submitter</code> on an event of type <code>submit</code>
+</h3>
+<p>When a form is submitted, the <code>submit</code> event created according to <a href="http://www.w3.org/html/wg/drafts/html/master/forms.html#form-submission-algorithm">HTML5.1, Form submission algorithm</a> contains a property <code>submitter</code>.</p>
+<ol>
+<li>If the form was submitted via click on a submit button, <code>event.submitter</code> references the button.</li>
+<li>If the form was submitted implicitly, e.g., by hitting <code>enter</code> in a text input field, <code>event.submitter</code> references the form’s <strong>default button</strong> as defined in <a href="http://www.w3.org/html/wg/drafts/html/master/forms.html#implicit-submission">Implicit submission</a>
+</li>
+<li>If the form was submitted with its <code>submit()</code> method, set <code>event.submitter = null</code>.</li>
+</ol>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-15</div>
+          <div class="post_content">
+<p>Please!</p>
+<p>The trick I use is to append a dummy <code>input[type=hidden]</code> to the form on button click. That way any handler using a generic <code>$(form).serialize()</code> will pick up those values. Obviously has its downsides.</p>
+<aside class="onebox githubblob">
+<header class="source">
+<a href="https://github.com/josh/rails-behaviors/blob/master/remote_submit.coffee#L45-L51" rel="nofollow noopener" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/josh/rails-behaviors/blob/master/remote_submit.coffee#L45-L51" rel="nofollow noopener" target="_blank">josh/rails-behaviors/blob/master/remote_submit.coffee#L45-L51</a></h4>
+<pre class="onebox"><code class="lang-coffee"><ol class="start lines" start="45" style="counter-reset: li-counter 44 ;">
+<li># Insert a dummy input so $.fn.serialize picks up the value</li>
+<li>input = document.createElement 'input'</li>
+<li>input.setAttribute 'type', 'hidden'</li>
+<li>input.setAttribute 'name', name</li>
+<li>input.setAttribute 'value', value</li>
+<li>input.setAttribute 'class', 'js-submit-button-value'</li>
+<li>form.prepend input</li>
+</ol></code></pre>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p><code>event.relatedTarget</code> might be an option too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>Yes, your solution like mine and almost all others out there specifically lack the correct behavior for implicit submission, especially pressing <code>enter</code> in a text input field. Other problems arise, when something happens between <code>click</code> and <code>submit</code>, like other event handlers.</p>
+<p>Therefore my conclusion was, that the problem can reliably only solved by browsers, that happen to know this detail already. They just have to announce it somewhere.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>Countless times I have needed this; it is a shame that buttons don’t get serialised with forms too.</p>
+<p>It is also a shame how loosely defined how implicit submission is; That the form designer gets no control over which is the default button is and that fieldset’s have no impact on which button is submit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/436_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feeela</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="406">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/boldewyn/40/1262_1.png" width="20"/> Boldewyn:</div>
+<blockquote>
+<p>If the form was submitted implicitly, e.g., by hitting enter in a text input field, event.submitter references the form’s default button</p>
+</blockquote>
+</aside>
+<p>I would prefer to get the actual input that was focused when the form submit was triggered. That means, if the focus is on a text input field and the user hits enter, the <code>event.submitter</code> should refer to that input field.</p>
+<p>Also be aware that the specification allows to submit forms without submit buttons (through implicit submission).</p>
+<p>Mozilla has already implemented something like the requested feature using <a href="https://developer.mozilla.org/en-US/docs/Web/API/event.explicitOriginalTarget" rel="nofollow noopener">the property <code>event.explicitOriginalTarget</code></a>. (<a href="http://stackoverflow.com/a/2066309/341201" rel="nofollow noopener">See this answer to the SO question linked above.</a>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>I’d be fine with that, too. One can deduce the <em>default button</em> from that knowledge herself.</p>
+<p>Thanks for mentioning <code>explicitOriginalTarget</code>! Yes, that’s the best, although Firefox-only solution right now. But it shows, that implementation should be a cake.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

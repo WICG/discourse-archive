@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>DOM APIs to expose (accessible) role,states, properties</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">DOM APIs to expose (accessible) role,states, properties</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>There has been recent discussion/proposals on various lists;
+<a href="http://lists.w3.org/Archives/Public/public-pfwg/2014Oct/0173.html">Expanded ARIA APIs for custom elements and more</a> from <span class="mention">@domenic</span></p>
+<blockquote>
+<ul>
+<li>An expansion of ARIA’s vocabulary to cover all things currently exposed to the accessibility tree by native elements: e.g. adding a
+caption and paragraph role, but presumably lots more that I have not
+yet discovered.</li>
+<li>A way to customize an element’s “implicit role”.</li>
+<li>A way to control an element’s “enforced states and properties”.</li>
+<li>A way to customize an element’s accessible name and description.</li>
+</ul>
+</blockquote>
+<p><a href="http://lists.w3.org/Archives/Public/public-pfwg/2014Oct/thread.html#msg120">Element.getComputedRole()</a> thread October and
+<a href="http://lists.w3.org/Archives/Public/public-pfwg/2014Nov/thread.html#msg105">Element.getComputedRole()</a> continued in November</p>
+<blockquote>
+<p>We have an issue to add a getComputedRole() function on  Element. This
+would help application developers as well as accessibility test tools.</p>
+</blockquote>
+<p>This has <a href="http://lists.w3.org/Archives/Public/public-pfwg/2014Oct/0123.html">implementer interest (chrome)</a>:</p>
+<blockquote>
+<p>Sure, I think it’s a good idea.
+How about getComputedAccessibleText next?</p>
+</blockquote>
+<p>also interest from Mozilla and Apple (see threads).</p>
+<p>Bugs filed on HTML spec:</p>
+<ul>
+<li><a href="http://lists.w3.org/Archives/Public/public-html-admin/2014Nov/0031.html">[Bug 27294] New: DOM needs a way to get element’s computed ARIA
+role  and computed label string</a></li>
+<li><a href="http://lists.w3.org/Archives/Public/public-html-admin/2014Nov/0032.html">[Bug 27295] New: role and
+aria-* content attributes should be  reflected DOM attributes</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>Yes, this would be extremely helpful for extension development, for instance. Currently, if I want to create a simple extension that, say, gives an overview of landmark regions, my code has to iterate over anything with a role="…" attribute in the markup AND through a list of HTML elements that have built-in roles (nav, header, etc). It would be much slicker to be able to just iterate once over the DOM, based on the computed role.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>This is only semi-related, but aria-labeledby could also use an api IMO as it can contain N labels it’s actually pretty salty and underlying it you should be able to ask the same conceptual question of anything referenced by label for="".   Something like class/classList maybe because it’s somewhat similar might be helpful at one level.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/715_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboxhall</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>Regarding the proposals themselves:</p>
+<ul>
+<li>I like the idea of exposing the <code>computedRole</code> and <code>computedLabel</code> (<code>computedName</code>?) attributes as read-only properties (similar to something like <code>element.scrollHeight</code>).</li>
+<li>Would we consider bundling all of the ARIA attributes (including role?) into one property on the element, of some new type named something like ARIAProperties, which could contain all possible ARIA properties for an element (but still reflect anything which is non-empty). Something like <code>myElement.aria.checked = 'true'</code> --&gt; <code>&lt;my-element aria-checked="true"&gt;</code>. This would allow us to avoid ballooning out the set of possible attributes on Element.</li>
+</ul>
+<p>The bugs filed don’t fully solve the problem Domenic raised, as far as I can tell (although I certainly believe they’re worthwhile anyway).</p>
+<ul>
+<li>Reflecting ARIA attributes in the DOM Element API doesn’t solve the following problem:</li>
+<li>Suppose I am trying to recreate <code>&lt;button&gt;</code> as a custom element. I’ll need some way of specifying that this thing is <em>always</em> a button, unless its <code>role</code> gets overridden. However, if I just set the <code>role</code> attribute, someone could come along to my element and set <code>element.role = ''</code>, at which point it would lose all its semantics. If I set <code>role = ''</code> on a <code>&lt;button&gt;</code>, it’s still a button. So, we need some non-reflected mechanism which is only available to the custom element layer (scoped similarly to lifecycle callbacks, perhaps) in order to provide this.</li>
+<li>Similarly, we need non-reflected mechanisms for specifying the <em>default</em> state, value, and computed text for an element (i.e. those which will be present even if a user removes all of the reflected ARIA attributes - note that these may vary over time). So, as well as having a mechanism for <em>getting</em> the computed text of an element, we need a mechanism for custom elements to specify what that should return. Consider trying to implement this logic <a href="http://rawgit.com/w3c/aria/master/html-aam/html-aam.html#accessible-name-and-description-calculation" rel="nofollow noopener">http://rawgit.com/w3c/aria/master/html-aam/html-aam.html#accessible-name-and-description-calculation</a> using only custom elements (i.e. if we were <em>re-implementing</em> the native elements from scratch using the custom elements layer).</li>
+</ul>
+<p>Domenic sketched out some proposals here: <a href="https://github.com/domenic/html-as-custom-elements/blob/master/docs/accessibility.md" rel="nofollow noopener">https://github.com/domenic/html-as-custom-elements/blob/master/docs/accessibility.md</a> - although I’m not sure whether discussing those is on topic for this thread, so I’ll leave my slight tangent there for now.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@aboxhall</span> note the core acc name and description calculation definition has been split out from ARIA and reworked (in progress): <a href="http://rawgit.com/w3c/aria/master/accname-aam/accname-aam.html" rel="nofollow noopener">Accessible Name and Description: Computation and API Mappings 1.1</a>. Work is needed on the HTML accessible name stuff to reflect this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/715_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboxhall</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p><span class="mention">@SteveF</span> That link is a 400 for me…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p><span class="mention">@aboxhall</span> sorry, link now fixed</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/715_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboxhall</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>Right, so the issue is with step 2D:</p>
+<blockquote>
+<p>Otherwise, if the current node’s native markup provides an attribute or element that defines a text alternative, return that alternative as a flat string</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2018-01-17</div>
+          <div class="post_content">
+<p>just to close the loop a bit for anybody stumbling across this. was further also discussed on list here <a href="https://lists.w3.org/Archives/Public/public-html/2014Dec/0027.html">https://lists.w3.org/Archives/Public/public-html/2014Dec/0027.html</a></p>
+<p>and most of this has morphed into AOM <a href="http://wicg.github.io/aom/" rel="nofollow noopener">http://wicg.github.io/aom/</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Intent to Migrate: Feature Policy</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Intent to Migrate: Feature Policy</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ian_Clelland</div>
+          <div class="creation_date">2018-11-28</div>
+          <div class="post_content">
+<h2>Intent to Migrate: Feature Policy</h2>
+<h3>Working group decision to adopt</h3>
+<p>The Web Application Security WG has agreed to adopt this proposal. (Mailing list thread split over two months; both links provided here for completeness)</p>
+<p><a class="onebox" href="https://lists.w3.org/Archives/Public/public-webappsec/2018Oct/0040.html" target="_blank">https://lists.w3.org/Archives/Public/public-webappsec/2018Oct/0040.html</a></p>
+<p><a class="onebox" href="https://lists.w3.org/Archives/Public/public-webappsec/2018Nov/0005.html" target="_blank">https://lists.w3.org/Archives/Public/public-webappsec/2018Nov/0005.html</a></p>
+<h3>Proposal</h3>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="16" src="https://assets-cdn.github.com/favicon.ico" width="16"/>
+<a href="https://github.com/wicg/feature-policy/" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="60" src="https://avatars3.githubusercontent.com/u/13145324?s=400&amp;v=4" width="60"/>
+<h3><a href="https://github.com/wicg/feature-policy/" rel="nofollow noopener" target="_blank">WICG/feature-policy</a></h3>
+<p>A mechanism to selectively enable and disable browser features and APIs - WICG/feature-policy</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<h3>Summary</h3>
+<p>Feature Policy provides a mechanism for defining "features" on the web platform, and a uniform way for site authors to declare which of these features should be available on their pages, and on the documents they embed.</p>
+<h3>Motivation and Use Cases</h3>
+<p>From the introduction in the spec (<a href="https://wicg.github.io/feature-policy/#introduction" rel="nofollow noopener">https://wicg.github.io/feature-policy/#introduction</a>):</p>
+<p>The web-platform provides an ever-expanding set of features and APIs, offering richer functionality, better developer ergonomics, and improved performance. However, a missing piece is the ability for the developer to selectively enable, disable, or modify the behavior of some of these browser features and APIs within their application:</p>
+<ol>
+<li>The developer may want to selectively disable access to certain browser features and APIs to "lock down" their application, as a security or performance precaution, to prevent own and third-party content executing within their application from introducing unwanted or unexpected behaviors within their application.</li>
+<li>The developer may want to selectively enable access to certain browser features and APIs which may be disabled by default - e.g. some features may be disabled by default in embedded context unless explicitly enabled; some features may be subject to other policy requirements.</li>
+<li>The developer may want to use the policy to assert a promise to a client or an embedder about the use—or lack thereof—of certain features and APIs. For example, to enable certain types of "fast path" optimizations in the browser, or to assert a promise about conformance with some requirements set by other embedders - e.g. various social networks, search engines, and so on.</li>
+</ol>
+<p><span class="hashtag">#1</span> is currently only possible through iframe sandboxing, and only for those features which are covered by that. Adding new features to that set is very difficult due to the opt-out nature of the sandbox.</p>
+<p><span class="hashtag">#2</span> is either handled on with per-feature mechanisms (like &lt;iframe allowfullscreen&gt;) or through developers explicitly passing data or delegating control of features through something like postMessage. There is no standard mechanism for simply making the feature available in child frames.</p>
+<p><span class="hashtag">#3</span> is currently not possible at all.</p>
+<h3>Compatibility Risk</h3>
+<p>As a "meta-feature" of sorts, removing feature policy from a web which has adopted it would have different effects, depending on the features which end up relying on it. The end result would likely be a return to the current ad-hoc feature availability state that we have today.</p>
+<p>Features with a default allowlist of <code>*</code> would likely become available to all web content with no other restrictions (except for those which are also subject to iframe sandbox restrictions, which would still apply).</p>
+<p>For permission-gated features, we would probably end up coming up with a new model for permission delegation, or reverting to a state where subframes are allowed to request permission going back to quire the specs which define features to either come up with new ways of allowing use in subframes</p>
+<p>Other powerful features (those with a default allowlist of <code>'self'</code>) would likely go back to being allowed only in top-level documents, and not available in subframes at all, unless, like fullscreen, they implement their own delegation mechanism.</p>
+<h4>Current Support:</h4>
+<ul>
+<li>Chrome: Implemented</li>
+<li>Firefox: Under development (Implementation at <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1390801" rel="nofollow noopener">https://bugzilla.mozilla.org/show_bug.cgi?id=1390801</a>, support as "Worth Prototyping" at <a href="https://mozilla.github.io/standards-positions/" rel="nofollow noopener">https://mozilla.github.io/standards-positions/</a>)</li>
+<li>Safari: Limited development (support for <code>&lt;iframe allow="camera; microphone"&gt;</code> currently)</li>
+<li>Edge: Public support for the spec (<a href="https://github.com/WICG/feature-policy/issues/62" rel="nofollow noopener">https://github.com/WICG/feature-policy/issues/62</a>), no active development.</li>
+</ul>
+<h3>Ongoing technical constraints</h3>
+<h4>What technical constraints will be added to user agents implementing this feature?</h4>
+<p>User agents will need to recognize the feature policy header and iframe attributes, and to construct policies, and check them when various features are requested by web content.</p>
+<h4>Will this feature be supported in all environments (desktop, mobile, tablets, TV, eBooks, automotive, etc.)?</h4>
+<p>Ideally, yes.</p>
+<h3>Link to implementation experience and demos</h3>
+<h4>Demos:</h4>
+<ul>
+<li><a href="https://feature-policy-demos.appspot.com" rel="nofollow noopener">https://feature-policy-demos.appspot.com</a></li>
+<li>
+<a href="http://fullscreen.featurepolicy.rocks/" rel="nofollow noopener">http://fullscreen.featurepolicy.rocks/</a> (old fullscreen demo)</li>
+<li>
+<a href="http://fullscreen.featurepolicy.rocks/allow.html" rel="nofollow noopener">http://fullscreen.featurepolicy.rocks/allow.html</a> (old fullscreen demo with allow attribute)</li>
+<li>
+<a href="http://xhr.featurepolicy.rocks/" rel="nofollow noopener">http://xhr.featurepolicy.rocks/</a> (old sync-xhr demo)</li>
+</ul>
+<p>YouTube embeds using this for autoplay and encrypted-media (No URL, but select "embed" after clicking "share" on any video on <a href="http://youtube.com" rel="nofollow noopener">youtube.com</a>):</p>
+<p>&lt;iframe width="560" height="315" src="<a href="https://www.youtube.com/embed/igHvSUrLqXc" rel="nofollow noopener">https://www.youtube.com/embed/igHvSUrLqXc</a>" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen&gt;&lt;/iframe&gt;</p>
+<p>The YouTube JS API uses this as well; instructions at <a href="https://developers.google.com/youtube/iframe_api_reference#Loading_a_Video_Player" rel="nofollow noopener">https://developers.google.com/youtube/iframe_api_reference#Loading_a_Video_Player</a></p>
+<p>AMP uses Feature Policy to disable synchronous XHR in ad iframes: <a href="https://github.com/ampproject/amphtml/pull/14481" rel="nofollow noopener">https://github.com/ampproject/amphtml/pull/14481</a></p>
+<h3>Data</h3>
+<p>As of November 2018, the iframe ‘allow’ attribute is being used in approximately 14% of all page loads, as measured by Chrome’s opt-in user metrics.</p>
+<p>Of these, much of the usage is for the features ‘encrypted-media’ and ‘autoplay’ (roughly 35% each), with significant usage (between 1.5 and 10% each) by ‘accelerometer’, ‘camera’, ‘fullscreen’, ‘geolocation’, ‘gyroscope’, ‘microphone’, ‘midi’, ‘picture-in-picture’ and ‘sync-xhr’.</p>
+<h3>Security and Privacy</h3>
+<p>See <a href="https://wicg.github.io/feature-policy/#privacy-and-security" rel="nofollow noopener">https://wicg.github.io/feature-policy/#privacy-and-security</a> for the more complete writeup. From that section:</p>
+<p>"This specification standardizes a mechanism for an embedding page to set a policy which will be enforced on an embedded page. Similar to iframe sandbox, this can be done without the express permission of the embedded page, which means that behaviors of existing features can be changed in published web sites, by embedding them in another document with an appropriate container policy.</p>
+<p>As such, the biggest privacy and security concerns are:</p>
+<ul>
+<li>Exposure of behavior in a cross-origin subframe to its embedder</li>
+<li>Unanticipated behavior changes in subframes controlled by the embedder</li>
+</ul>
+<p>To a degree, these concerns are already present in the web platform, and this specification attempts to at least not make them needlessly worse."</p>
+<h3>Accessibility</h3>
+<p>This feature can be used to control access to accessibility features (see proposal at <a href="https://github.com/WICG/feature-policy/issues/175" rel="nofollow noopener">https://github.com/WICG/feature-policy/issues/175</a>, for instance,) but does not otherwise intersect with accessibility concerns.</p>
+<h3>Internationalization</h3>
+<p>This feature does not impose any internationalization requirements on implementers or site authors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2018-11-28</div>
+          <div class="post_content">
+<p>With my webappsec chair’s hat on, this LGTM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2018-11-29</div>
+          <div class="post_content">
+<p>LGTM.  Let me know which org to transfer it to.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ian_Clelland</div>
+          <div class="creation_date">2018-11-30</div>
+          <div class="post_content">
+<p>On the github side, I presume it gets transferred to the <code>w3c</code> org – I’m not sure if it should be renamed <code>webappsec-feature-policy</code> as part of that; all of the other repos seem to use that prefix.</p>
+<p><span class="mention">@mikewest</span>, do you know?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wseltzer</div>
+          <div class="creation_date">2018-12-01</div>
+          <div class="post_content">
+<p>I just created <a href="https://github.com/w3c/webappsec-feature-policy" rel="nofollow noopener">https://github.com/w3c/webappsec-feature-policy</a> for it. We can blow that away if it’s easier to transfer directly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ian_Clelland</div>
+          <div class="creation_date">2018-12-03</div>
+          <div class="post_content">
+<p>It looks like we may have to do it in two steps – (1) migrate to w3c/feature-policy, and then (2) rename to w3c/webappsec-feature-policy.</p>
+<p>(actually, I suppose we can do it the other way around, too – I don’t know if it matters, but we could rename to wicg/webappsec-feature-policy, and then move <em>that</em> to w3c.)</p>
+<p><span class="mention">@wseltzer</span>, I don’t think we can move issues and pull requests into that empty repo, we’ll probably have to blow it away so that we can use the name when we rename in step 2.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2022-08-12</div>
+          <div class="post_content">
+<p>We could be warned with a popup about the site’s permissions just like you install an android app and in this case as I show here the google chrome webauthn popup as:</p>
+<pre><code class="lang-auto">&lt;script&gt;
+function confirmOkay() {
+   var result = window.prompt("Permissions-Policy: geolocation?", "Yes");
+   var text;
+   if(result === null){
+      text = "policy geolocation cancel..."
+   }else{
+      text = "policy geolocation(true): " + result;
+   }
+   var resultDiv = document.getElementById('result')
+   resultDiv.innerHTML = text;
+}
+&lt;/script&gt;
+
+&lt;input type="button" value="Permissions-Policy: geolocation?" onclick="confirmOkay()"/&gt;
+&lt;div id="result"&gt;Permissions-Policy: geolocation=*.&lt;/div&gt;
+
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

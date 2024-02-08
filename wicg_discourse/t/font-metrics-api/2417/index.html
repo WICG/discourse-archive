@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Font Metrics API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Font Metrics API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1479_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eae</div>
+          <div class="creation_date">2017-11-02</div>
+          <div class="post_content">
+<p>This is a proposal for adding a text measurement and font metrics API.</p>
+<p>In many ways it is similar to the Canvas TextMetrics API however it is designed to match the text rendering capabilities of the DOM and allows either in-document or out-of-document measurements.</p>
+<p>An accurate and fast text measurement API is something that current generation web applications have been asking for and the alternatives aren’t great. Without CSS Custom Layout this is likely to become an even bigger problem.</p>
+<p>Current alternatives:</p>
+<ul>
+<li>In-document measurements. Accurate but slow, requires mutating the DOM and forcing layout.</li>
+<li>Canvas TextMetrics API. Limited API and results aren’t guaranteed to match DOM measurements.</li>
+<li>Using opentype.js. Very low level, requiring a lot of extra work by author. Bypasses entire text stack in browser and as such measurements are not guaranteed to match.</li>
+</ul>
+<p>The proposed API provides a high-level API without any of the drawbacks mentioned above.</p>
+<p><strong>Proposed API</strong></p>
+<pre>
+partial interface Document {
+    FontMetrics measureElement(Element element);
+    FontMetrics measureText(DOMString text, StylePropertyMapReadOnly styleMap);
+};
+</pre>
+<p>Two methods are provided for measuring text, one for in-document measurements
+and another for out-of-document measurements. Both return a <code>FontMetrics</code> object.</p>
+<p><code>measureElement()</code> takes an <code>Element</code> and returns a <code>FontMetrics</code> object. If the <code>Element</code> is not in the document or isn’t rendered an empty <code>FontMetrics</code> object is returned.</p>
+<p><code>measureText()</code> takes a <code>DOMString</code> and an optional
+<code>StylePropertyMapReadOnly</code>, returning a <code>FontMetrics</code> object. Unless a font is specified as a part of the styleMap the user agents default will be used.</p>
+<p>Note: The only styles that apply to the <code>measureText()</code> method are
+those that are passed in as a part of the styleMap. Document styles do not apply.</p>
+<h2>FontMetrics object</h2>
+<pre>
+interface FontMetrics {
+  readonly attribute double width;
+  readonly attribute sequence&lt;double&gt; advances;
+
+  readonly attribute double boundingBoxLeft;
+  readonly attribute double boundingBoxRight;
+
+  readonly attribute double height;
+  readonly attribute double emHeightAscent;
+  readonly attribute double emHeightDescent;
+  readonly attribute double boundingBoxAscent;
+  readonly attribute double boundingBoxDescent;
+  readonly attribute double fontBoundingBoxAscent;
+  readonly attribute double fontBoundingBoxDescent;
+
+  readonly attribute Baseline dominantBaseline;
+  readonly attribute sequence&lt;Baseline&gt; baselines;
+  readonly attribute sequence&lt;Font&gt; fonts;
+};
+</pre>
+<p>Full <a href="https://github.com/w3c/css-houdini-drafts/blob/master/font-metrics-api/Overview.bs" rel="nofollow noopener">Proposed API</a> with further details.</p>
+<p><strong>Minimal Example</strong></p>
+<p>Example of out-of-document text measurement.</p>
+<pre>
+  let metrics = document.measureText('Hello WICG');
+  let width = metrics.width;
+</pre>
+<p><strong>Middle-truncation Example</strong></p>
+<p>Using the measurement API to implement a very simple middle-truncation method. Unlike text-overflow this truncates from the middle of a string which is often useful for things like URLs and phone numbers where the leading and trailing ends tends to be more important than the middle.</p>
+<p>This example demonstrates the use of the advances field in the metrics object.</p>
+<pre>
+function truncateMiddle(textNode, maxWidth) {
+  var string = textNode.textContent;
+  let metrics = measureText(string);
+  if (metrics.width &lt; maxWidth)
+    return;
+
+  let ellipsis = '\u2026';
+  let ellipsisWidth = measureText(ellipsis).width;
+  let availableWidth = maxWidth - ellipsisWidth;
+
+  // Allow at maximum half the available width before the ellipsis.
+  let availableLeadingWidth = availableWidth / 2;
+  let leadingOffset = 0;
+  for (let i = 0; i &lt; metrics.advances.length; i++) {
+    if (metrics.advances[i] &gt; availableLeadingWidth)
+      break;
+    leadingOffset = i;
+  }
+  let leadingWidth = metrics.advances[leadingOffset];
+
+  // Allow all remaining width after the ellipsis.
+  let availableTrailingWidth = availableWidth - leadingWidth;
+  let trailingOffset = string.length - 1;
+  for (let i = metrics.advances.length - 1; i &gt; leadingOffset; i--) {
+    let width = metrics.width - metrics.advances[i];
+    if (width &gt; availableTrailingWidth)
+      break;
+    trailingOffset = i;
+  }
+  let trailingWidth = metrics.width - metrics.advances[trailingOffset];
+
+  // Replace text content with truncated string.
+  let truncatedString = string.substr(0, leadingOffset) +
+      ellipsis +
+      string.substr(trailingOffset, string.length - trailingOffset);
+  textNode.textContent = truncatedString;
+}
+</pre>
+<p>Note: This work started as a part of the Houdini Task Force before it was decided to move it to WICG for incubation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kevinbarabash</div>
+          <div class="creation_date">2018-05-13</div>
+          <div class="post_content">
+<p>I’m really excited for this API specifically for how it can benefit math typesetting library likes KaTeX and MathJax.</p>
+<p>Some high-level feedback:</p>
+<ul>
+<li>the <code>writing-mode</code> CSS property support vertical layouts so the Font Metrics API should handle that situation</li>
+<li>there should be some way to get font wide values such as underline thickness, underline position, italic angle from the HHEA table and other values like strikethrough position, strikethrough thickness, superscript/subscript positioning, etc. from the OS/2 (and windows) table.</li>
+</ul>
+<p>Some lower-level feedback</p>
+<ul>
+<li>I assume that dominantBaseline.value is always 0, it might be good to include that in the docs</li>
+<li>How is the dominantBaseline determined?</li>
+<li>boundingBoxAscent &lt;= fontBoundingBoxAscent &lt;= emHeightAscent</li>
+<li>boundingBoxDescent &gt;= fontBoundingBoxDescent &gt;= emHeightDescent</li>
+<li>I found “Positive numbers indicating that the {{FontMetrics/dominantBaseline}} is below
+the bottom of that em square (so this value will usually be negative).” to be hard to parse in the description of <code>emHeightDescent</code>.  Maybe “Positive numbers indicating that em square is above the dominantBaseline (so this value will usually be negative).”</li>
+<li>emHeightAscent and emHeightDescent sound a little weird b/c I’ve never heard of em “height”, it’s usually em “box” or em “size” (at least in my experience), also using emBoxAscent, emBoxDescent will allow for emBoxLeft and emBoxRight for vertical <code>writing-mode</code> support</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kevinbarabash</div>
+          <div class="creation_date">2018-12-18</div>
+          <div class="post_content">
+<p>How does a person construct a <code>StylePropertyMapReadOnly</code> in order to pass to <code>measureText(DOMString text, StylePropertyMapReadOnly styleMap);</code>?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

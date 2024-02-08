@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Adding priority when you attach a listener to a specific node - priority event in HML</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Adding priority when you attach a listener to a specific node - priority event in HML</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-02-14</div>
+          <div class="post_content">
+<p>There case in which you have a component receiving multiple events and you can not know what is the order  but you have  the necesssity to execute a block of code on the top of events sequence.</p>
+<p>you have 2 different components completely decoupled and indipendent so you cant touch the code in the other component but i d like to change just to force that a event is executed before of another is collected in a specific node.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-02-19</div>
+          <div class="post_content">
+<p>Could you provide an example scenario?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-02-20</div>
+          <div class="post_content">
+<p>The need appairs when you work using a high number of jQuery plugins and you use a high modularity and usability level . You can have a conflict in the action executed by a event in different plugins. You have a not controlled sequence in the events queue attached to a node so it is difficult to handle this problem . In general for every event the state of a plugin can change, so if you have a order in the events you can foresee also the state without patch a indipendent block code . If you have a priority in the event sequence you can solve better this occurrences . JQuery is just a example .</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>See this proposal -
+<aside class="quote quote-modified" data-post="1" data-topic="2015">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="/user_avatar/discourse.wicg.io/leaverou/40/1843_2.png" width="20"/>
+<a href="https://discourse.wicg.io/t/proposal-eventtarget-prototype-geteventlisteners/2015">[Proposal] EventTarget.prototype.getEventListeners()</a> <a class="badge-wrapper bullet" href="/c/html"><span class="badge-category-bg" style="background-color: #fc0;"></span><span a="" all="" also="" attaches="" but="" class="badge-category clear-badge" data-drop-close="true" directly="" fit="" it="" markup.="" most="" natural="" notably="" related="" s="" style="" that="" title="For all HTML-related discussions. Not just the HTML standard (though that" to="">HTML</span></a>
+</div>
+<blockquote>
+    Purpose: This would provide a way to get all event listeners added to an element via addEventListener. 
+Signature: element.getEventListeners([type]) 
+Returns: Array of objects. Each object contains properties for type, callback, options for the arguments that registered the corresponding event listener. Events registered via inline event handlers are not included. 
+Use cases: This would enable removing events based on arbitrary criteria, instead of requiring a reference to the callback, which ca…
+  </blockquote>
+</aside>
+</p>
+<p>Using this mechanism, you can get the event listeners, remove them and re-add them in the order you want.</p>
+<p>Regarding your specific idea, event properties, like <code>element.onclick</code> cannot specify priority - I guess they will have a specific priority.</p>
+<p>(Regarding jQuery, you can probably already mess with the order of event listeners, at least those that were added using jQuery)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>No I think there is actually a simple queue/array… the listeners are called in the order of array.
+My proposal is if no priority exist … if assign a default priority 0.
+node_events.sorts(function(e1,e1){ e1.priority-e2.priority })</p>
+<p>execute listeners.</p>
+<ol>
+<li>The proposal above is not working for my opinion because i can understand what is the plugin loaded before so i could dont see that there are a plugin loaded after.</li>
+<li>JQuery directives is to remove internal events managements for passing to native one.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>In my opinion, a priority is too fragile. If you want to control the order, you have to see the order and sort it (using the proposed mechanism I pointed out above).
+Say a few pieces of code think they need to run first, so all of them set priority 0 (or whatever). The first one that called it with priority 0 will be the first, the others will not.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>no if you dont use stop backpropagation in event X all plugins receive event X. But if i defined event prority 1 for plugin A in X  and priority 2 for plugin  B in X<br/>
+plugin A knows to be thr first in the dom manipulation and B to be the last . If i define pririty +Infinity i know to be aways the last in processing.
+if when  the event X on node N  plugin A hide  N and plugin  B call width on node N … the result is for B</p>
+<ol>
+<li>0 if the order is  plugin A, plugin B</li>
+<li>100px if the order is plugin B , plugin A</li>
+</ol>
+<p>in the case 1) there is a error!</p>
+<p>having a casual order the error can occurs, using a priorty error dont occur. This is the difference <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>I understand the need for event ordering, I was not debating the need.
+My point in the last post is that I do not think a priority parameter is a better answer then the suggestion I pointed out above (<code>getEventListeners</code>, <code>removeEventListener</code> all of the listeners and <code>addEventListener</code> listeners in the desired order).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>your solution would be ok if i know the order in which the plugins are installed. Your code works just for the last plugin installed. nor for all. The last plugin can get all the listeners set before. But the first plugin installed how can get the listeners insstalled if the second one is not yet installed? Your solution could work if you add a additional event telling when the ready function is completed. so i m sure to get listeners when all are installed.
+another solution elegant is not to use priority but bind “a bind”</p>
+<p>if i attach a listener i can notify a function that another block code is attaching in the same node for the same event. If i bind the same event inside the function of the bind listener i put this new handler before in the array order.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>While this is true, it can (perhaps) do it on load, but I understand your point… However, again, you have, say, five plugins on your page and all of them add event listeners to a certain element (say, <code>&lt;body&gt;</code>) and all of them need to be the first, so all of them set the priority to 0. That does not solve the problem and plugins will likely not coordinate and negotiate the priority with other plugins as a standard practice…</p>
+<p>I do not see this as a very useful feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>i submitted another solution …
+(jquery language like just for simplicity)</p>
+<p>$node.on(‘bind:click’,function A (){
+$node.on(‘click’,function B()…)</p>
+<p>}) this is a listener not to click event but to bind on click event.</p>
+<p>if i execute on(‘click’) inside a a function listener of bind:click … the function B is put before in the priority because the clousure in higher level (or using your api get listners removelistners)
+in this way i can solve the problem without using priority by developers</p>
+<p>in this way:</p>
+<ol>
+<li>i know another plugin is attached in the same node</li>
+<li>i can change behaviour of listeners</li>
+</ol>
+<p>Maybe this solution is more elegant. It is handled internally</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

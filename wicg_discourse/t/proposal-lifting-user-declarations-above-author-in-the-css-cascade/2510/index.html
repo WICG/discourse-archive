@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Lifting &lsquo;user&rsquo; declarations above &lsquo;author&rsquo; in the CSS cascade</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Lifting &lsquo;user&rsquo; declarations above &lsquo;author&rsquo; in the CSS cascade</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1418_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">silverwind</div>
+          <div class="creation_date">2018-01-05</div>
+          <div class="post_content">
+<p>The <a href="https://www.w3.org/TR/css-cascade-3/#cascade-origin">CSS cascade</a> includes <code>user</code> origin declarations which are rules provided by the user itself, for example user stylesheets applied by web extensions. The current priority of <code>user</code> over <code>author</code> origins is specced as follows:</p>
+<ul>
+<li>
+<code>user !imporant</code> &gt; <code>author !important</code> &gt; <code>author</code> &gt; <code>user</code>
+</li>
+</ul>
+<p>A author’s declaration wins over a same-specificity user declaration except when <code>!important</code> is involved at which point the priority is reversed. This issue has in the past lead to browser extensions to insert their userstyles as the last <code>author</code> sheets which introduces the issue that two author sheets (the page’s own and the userstyle) have to fight for specificity which is a source of issues.</p>
+<p>I propose that the ordering of <code>user</code> origin sheets to be put above <code>author</code> sheets like this:</p>
+<ul>
+<li>
+<code>user !imporant</code> &gt; <code>author !important</code> &gt; <code>user</code> &gt; <code>author</code>
+</li>
+</ul>
+<p>This new ordering would banish having to use <code>!important</code> everywhere in userstyles and would also remove the necessity to fight for specificity with the target page’s styles.</p>
+<p>Note that <code>user</code> origin stylesheets are a mostly unused concept today, only Firefox &gt;= 53 allows web extensions to insert such sheets, Chrome will likely get the API option on <code>tabs.insertCSS</code> for it in 66, but until then, extensions can only insert <code>author</code> origin stylesheets.</p>
+<p>Some more detail about the behaviour of extensions <a href="https://github.com/stylish-userstyles/stylish/wiki/Overwriting-page-styles" rel="nofollow noopener">here</a>. It’s a pretty old page, but most info on there is still valid today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1418_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">silverwind</div>
+          <div class="creation_date">2018-01-05</div>
+          <div class="post_content">
+<p>Interesting fact: The <a href="https://www.w3.org/TR/REC-CSS1/#cascading-order">CSS1 cascading order</a> specifies</p>
+<blockquote>
+<p>the author’s style sheets override the reader’s style sheet</p>
+</blockquote>
+<p>This order was then reversed in the CSS2 spec, but only for <code>!important</code> declarations. I think it’s time to be consistent also do it for normal declarations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SoniEx2</div>
+          <div class="creation_date">2018-01-06</div>
+          <div class="post_content">
+<p>Does font style (configurable in browser) set what kind of style?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2018-01-09</div>
+          <div class="post_content">
+<p>The current ordering does allow users to set styles as default unless the author has explicitly set other styles. i.e. it allows a sort of “complementary” styling that works together with author styles. Then, if a user absolutely wants to set something, they make it “!important”. That reduces the likelihood of user styles overriding some author-set styles that would otherwise result in potentially completely broken end results.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2018-01-10</div>
+          <div class="post_content">
+<p>I did a lot of work to make the change between CSS1 and CSS2. Chris Wilson can explain better than I why it wasn’t nearly as useful as we had hoped, but more importantly I think it would be a mistake to do this for the reasons Patrick outlined.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

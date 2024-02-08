@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Onscreen keyboard : API to obtain dimensions &amp; presence of the keyboard</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Onscreen keyboard : API to obtain dimensions &amp; presence of the keyboard</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/484_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bdavey</div>
+          <div class="creation_date">2014-10-15</div>
+          <div class="post_content">
+<h1>Overview</h1>
+<p>There are a number of scenarios in web development on touch devices where particular content may be obscured or behave differently when there is an onscreen keyboard present. This becomes particularly prevalent in the case of web text editors such as TinyMCE, when content that is being written by a user falls behind the onscreen keyboard.
+The only non-browser-implemented solutions thus far can be described as <a href="http://stackoverflow.com/questions/2593139/ipad-web-app-detect-virtual-keyboard-using-javascript-in-safari" rel="nofollow noopener">hacks at best</a>, and tend to break on Operating System or browser updates.</p>
+<p>With coordinates and sizes of onscreen onscreen keyboard components, a developer could create functionality that adapted to their presence.</p>
+<p><span class="hashtag">#Proposed</span> API (rough)
+<code>window.keyboard</code>: Object attributes &amp; functions:</p>
+<ul>
+<li>
+<code>window.keyboard.type : String</code> The type of keyboard being used by the browser. It is proposed this returns <code>virtual</code> if there is an onscreen/virtual keyboard or <code>physical</code> if there is a hardware keyboard being used</li>
+<li>
+<code>window.keyboard.visible : Boolean</code>. Returns <code>true</code> if there is a virtual keyboard in an ‘up’ state (i.e. the keyboard can be seen, and is focused on an element). Returns <code>false</code> if the keyboard cannot be seen, or <code>null</code> if a physical keyboard is attached</li>
+<li>
+<code>window.keyboard.getDimensions : function</code>. When called, returns an <em>array</em> of <code>Rect</code> objects (similar to the HTML canvas implementation), where <code>top</code> and <code>left</code> are the coordinates of the keyboard fragment relative to the browser window</li>
+<li>If no keyboard is visible, the coordinates of the last positions of the onscreen keyboard when it was shown are returned</li>
+<li>If a hardware keyboard is connected, an empty array (<code>[]</code>) is returned</li>
+<li>This function would cater for the use-case where there is an onscreen keyboard that has been <a href="http://www.redmondpie.com/the-ipads-split-keyboard-in-ios-5-has-6-invisible-keys-which-you-dont-know-about/" rel="nofollow noopener">split</a>
+</li>
+</ul>
+<p><code>window</code> DOM events:</p>
+<ul>
+<li>
+<code>keyboardVisibilityChanged</code> - Fired when the keyboard is shown or hidden. The event should contain reference to the keybard visibility variable (<code>window.keyboard.visible</code>)</li>
+<li>
+<code>keyboardDimensionsChanged</code>- Fired when the keyboard’s dimensions change- this may occur when a user switches keyboard types to a 3rd party keyboard, or when they split the keyboard into several segments).</li>
+<li>
+<code>keyboardTypeChange</code> - Fired when a hardware keyboard is connected or disconnected. The event should contain reference to the keyboard type (<code>window.keyboard.type</code>)</li>
+</ul>
+<p>#<span class="hashtag">#About</span> us
+We’re <a href="http://www.ephox.com" rel="nofollow noopener">Ephox</a>, developers of <a href="http://textbox.io" rel="nofollow noopener">Textbox.io</a>, and TinyMCE - The world’s most popular WYSIWYG HTML editor component.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1817_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">root</div>
+          <div class="creation_date">2014-10-18</div>
+          <div class="post_content">
+<p>I can’t comment on iOS, but on Android the API has a limitation where even the native applications (which includes browsers) have to do a “best effort hack” by taking a wild guess based on the window size.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-10-28</div>
+          <div class="post_content">
+<p>I think adding a name as general as <code>keyboard</code> to <code>window</code> would be <em>bad</em>. It seems like this would be more appropriate on <code>navigator</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-10-31</div>
+          <div class="post_content">
+<p>Sorry if I’m missing something, but isn’t this precisely what the IME API is supposed to address?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>AFAICT IME is about the composer UIs, not the basic on-screen keyboard.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-11-06</div>
+          <div class="post_content">
+<p>But should we distinguish the two? In native UI toolkits various parts can collaborate to not overlap. If your screen gets cluttered with on screen keyboards, composition UIs, spellchecking, etc. it would be nice if you could position your own components accordingly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2014-12-18</div>
+          <div class="post_content">
+<p>We’re exploring these scenarios on the chromium input team, but its more complex than this proposal allows.  Often if an app wants to know where the keyboard is, it also wants things to stick just above it while its animating in/out.  To make that work reliably, you can’t  just have an API that gives the current position.  We’ve talked about exposing an animation curve, but that’s not implementable on all platforms.  I think something like IE’s “position: device-fixed” is probably the best tradeoff.</p>
+<p>Separately, being able to tell if there is a physical or virtual keyboard (maybe via a media query) is definitely goodness.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/436_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feeela</div>
+          <div class="creation_date">2015-01-05</div>
+          <div class="post_content">
+<p>As I see it, this problem not only holds true for on-screen keyboards. There are other system-wide flyouts or dropdowns in Android and iOS too. So finding a solution that only targets on-screen <strong>keyboards</strong> feels short-sighted to me.</p>
+<p>Maybe the API in discussion could be more general and return the left-over visible view-port inside  a navigator, subtracting things from the screen-size like status bars too…</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Capture Handle - Bootstrap App-Collaboration when Screensharing</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Capture Handle - Bootstrap App-Collaboration when Screensharing</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eladalon</div>
+          <div class="creation_date">2021-06-04</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#prelude-1" name="prelude-1"></a>Prelude</h1>
+<p>For a version of this that is more comprehensive and easier to navigate thanks to internal links, please refer to <a href="https://docs.google.com/document/d/1oSDmBPYVlxFJxb7ZB_rV6yaAaYIBFDphbkx5bXLnzFg/edit?usp=sharing" rel="noopener nofollow ugc">the explainer</a>.</p>
+<h1>
+<a class="anchor" href="#problem-description-2" name="problem-description-2"></a>Problem Description</h1>
+<h2>
+<a class="anchor" href="#generic-problem-description-3" name="generic-problem-description-3"></a>Generic Problem Description</h2>
+<p>Consider a web-application, running in one tab, which we’ll name “main_app.” Assume main_app calls <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia" rel="noopener nofollow ugc">getDisplayMedia</a> and the user chooses to share another tab, where an application is running which we’ll call “captured_app.”</p>
+<p>Note that:</p>
+<ol>
+<li>main_app does not know what it is capturing.</li>
+<li>captured_app does not know that it is being captured; let alone by whom.</li>
+</ol>
+<p>Both these traits are desirable for the general case, but there exist legitimate use cases where the browser would want to allow applications to opt-in to bridging that gap and enable a connection.</p>
+<p>We wish to enable the legitimate use cases while keeping the general case as it was before.</p>
+<h2>
+<a class="anchor" href="#use-case-1-cross-app-communications-4" name="use-case-1-cross-app-communications-4"></a>Use-case <span class="hashtag">#1:</span> Cross-App Communications</h2>
+<p>Consider two applications that wish to cooperate, for example a VC app and a presentation app. Assume the user is in a VC session. The user starts sharing a presentation. Both applications are interested in letting the VC app discover that it is capturing a slides session, which application, and even which session, so that the VC application will be able to expose controls to the user for flipping through slides. When the user clicks those controls, the VC app will be able to send messages to the presentation app (either through a service worker or through a shared back-end infrastructure). These messages will instruct the presentation app to flip through slides, enter/leave presentation-mode, etc.</p>
+<h2>
+<a class="anchor" href="#use-case-2-analytics-5" name="use-case-2-analytics-5"></a>Use-case <span class="hashtag">#2:</span> Analytics</h2>
+<p>Capturing applications often wish to gather statistics over what applications their users tend to capture. For example, VC applications would like to know how often their users share presentation applications from specific providers, Wikipedia, CNN, etc. Gathering such information can be used to improve service for the users by introducing new collaborations, such as the one described above.</p>
+<h2>
+<a class="anchor" href="#use-case-3-detecting-unintended-or-unapproved-captures-6" name="use-case-3-detecting-unintended-or-unapproved-captures-6"></a>Use-case <span class="hashtag">#3:</span> Detecting Unintended or Unapproved Captures</h2>
+<p>Users sometimes choose to share the wrong tab. Sometimes they switch to sharing the wrong tab by clicking the share-this-tab-insead button by mistake. A benevolent application could try to protect the user by presenting an in-app dialog for re-confirmation, if they believe that the user may have made a mistake.</p>
+<h2>
+<a class="anchor" href="#use-case-4-avoiding-hall-of-mirrors-7" name="use-case-4-avoiding-hall-of-mirrors-7"></a>Use-case <span class="hashtag">#4:</span> Avoiding “Hall of Mirrors”</h2>
+<p>This use-case is a sub-case of <span class="hashtag">#3</span>, but deserves its own section due to its importance. The “Hall of Mirrors” effect occurs when users choose to share the tab in which the VC call takes place. When detecting self-capture, a VC application can avoid displaying the captured stream back to the user, thereby avoiding the dreaded effect.</p>
+<h1>
+<a class="anchor" href="#our-solution-8" name="our-solution-8"></a>Our Solution</h1>
+<h2>
+<a class="anchor" href="#summary-9" name="summary-9"></a>Summary</h2>
+<ul>
+<li>Captured applications opt-in to exposing information by setting CaptureHandleConfig.</li>
+<li>Capturing applications read this information as CaptureHandle, which is available through <a href="https://docs.google.com/document/d/1oSDmBPYVlxFJxb7ZB_rV6yaAaYIBFDphbkx5bXLnzFg/edit#bookmark=kix.y4ww0mbjjv2x" rel="noopener nofollow ugc">two access points</a>.</li>
+</ul>
+<h2>
+<a class="anchor" href="#mediadevicessetcapturehandleconfig-10" name="mediadevicessetcapturehandleconfig-10"></a>MediaDevices.setCaptureHandleConfig</h2>
+<pre><code class="lang-auto">dictionary CaptureHandleConfig {
+  boolean exposeOrigin = false;
+  DOMString handle = “”;
+  sequence&lt;DOMString&gt; permittedOrigins = [];
+};
+
+partial interface MediaDevices {
+  void setCaptureHandleConfig(
+      optional CaptureHandleConfig config = {});
+};
+</code></pre>
+<p>We add the method setCaptureHandleConfig in <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices" rel="noopener nofollow ugc">MediaDevices</a>. It accepts a configuration consisting of three independent members.</p>
+<ul>
+<li>
+<strong>exposeOrigin:</strong> If an application sets this value to true, the origin of that application may be exposed to capturing applications as CaptureHandle.origin.</li>
+<li>
+<strong>handle:</strong> If an application sets this value, that value is exposed to capturing applications as CaptureHandle.handle. Otherwise, the capturing application will see the empty string in that field.
+Values to this field are limited to 1024 unicode code points. If the application attempts to set a longer value, a TypeError exception is raised.</li>
+<li>
+<strong>permittedOrigins:</strong> A capturing application is only allowed to observe CaptureHandle if its origin is included in permittedOrigins. If permittedOrigins includes “*”, all capturers are permitted to observe CaptureHandle.
+In either of these cases, <em>origin</em> and <em>handle</em> are still exposed independently. That means that if <em>exposeOrigin</em> is false, capturers only see the handle.
+Defaulting to the empty set means that by default, nobody will see the capture handle, and the call will have no effect. This ensures that the caller has made an explicit decision on which origins to expose the capture handle to.</li>
+</ul>
+<h3>
+<a class="anchor" href="#calls-from-an-embedded-frame-11" name="calls-from-an-embedded-frame-11"></a>Calls from an Embedded Frame</h3>
+<p>When <em>setCaptureHandleConfig()</em> is called from a document which is not the top-level document, an error is thrown.</p>
+<h3>
+<a class="anchor" href="#side-effects-12" name="side-effects-12"></a>Side Effects</h3>
+<p>Whenever a captured application calls <em>setCaptureHandleConfig()</em>:</p>
+<ol>
+<li>An event is fired on the capturer side. It has the new CaptureHandle as a property.</li>
+<li>Any subsequent calls to <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/getSettings" rel="noopener nofollow ugc">MediaStreamTrack.getSettings()</a> on the relevant tracks will produce a new <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings" rel="noopener nofollow ugc">MediaTrackSettings</a> object with a new CaptureHandle object.</li>
+</ol>
+<h3>
+<a class="anchor" href="#empty-capturehandleconfig-13" name="empty-capturehandleconfig-13"></a>Empty CaptureHandleConfig</h3>
+<p>To clarify, the empty CaptureHandleConfig is the one which has all values set to their defaults.</p>
+<h2>
+<a class="anchor" href="#the-capturehandle-type-14" name="the-capturehandle-type-14"></a>The CaptureHandle Type</h2>
+<pre><code class="lang-auto">dictionary CaptureHandle {
+  DOMString origin;
+  DOMString handle;
+};
+</code></pre>
+<p>CaptureHandle is the object through which a capturing application may read information about the application it is capturing. It contains the following independent fields:</p>
+<ul>
+<li>
+<strong>origin:</strong> If the captured application opted-in to exposing its origin (by setting <em>CaptureHandleConfig.exposeOrigin</em> to true), then <em>CaptureHandle.origin</em> is set to the origin of the captured application. Otherwise, the CaptureHandle.origin is not set.</li>
+<li>
+<strong>handle:</strong> Reflects the value which the captured app set in <em>CaptureHandleConfig.handle</em>.</li>
+</ul>
+<p>Capturing applications have two points of access to CaptureHandle objects:</p>
+<ol>
+<li>Through <em>MediaTrackSettings.captureHandle</em>.</li>
+<li>Through <em>CaptureHandleUpdateEvent</em>.</li>
+</ol>
+<p>To clarify, the empty CaptureHandle is defined as that where both origin and handle are set to the empty string. If the captured application sets the empty CaptureHandleConfig, then the capturing application will read the empty CaptureHandle.</p>
+<h2>
+<a class="anchor" href="#mediatracksettingscapturehandle-15" name="mediatracksettingscapturehandle-15"></a>MediaTrackSettings.captureHandle</h2>
+<pre><code class="lang-auto">partial dictionary MediaTrackSettings {
+  CaptureHandle captureHandle;
+};
+</code></pre>
+<p>Assume capturer is the application in the current tab, and captured is an application running in another tab. Assume capturer is display-capturing the tab in which captured lives, and that track, of type <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack" rel="noopener nofollow ugc">MediaStreamTrack</a>, is either a video or an audio track associated with this capture. Calling track.<a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/getSettings" rel="noopener nofollow ugc">getSettings()</a> returns a <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings" rel="noopener nofollow ugc">MediaTrackSettings</a> object with a new field, captureHandle, of type <em>CaptureHandle</em>.</p>
+<h2>
+<a class="anchor" href="#capturehandleupdateevent-16" name="capturehandleupdateevent-16"></a>CaptureHandleUpdateEvent</h2>
+<pre><code class="lang-auto">[Exposed=Window]
+interface CaptureHandleUpdateEvent : Event {
+  constructor(CaptureHandleUpdateEventInit);
+  [SameObject] readonly CaptureHandle captureHandle;
+};
+</code></pre>
+<p>A CaptureHandleUpdateEvent is fired in the capturing application’s JS context whenever the CaptureHandleConfig is updated in the captured application:</p>
+<ul>
+<li>When the captured application calls <em>MediaDevices.setCaptureHandleConfig</em> and sets a new configuration.</li>
+<li>When the captured tab’s top-level application is navigated away from a site that has set a non-empty capture handle.</li>
+<li>If the user manually changes the captured-tab, assuming the new site has a different CaptureHande (as observable by the capturing app).</li>
+</ul>
+<p>The event has a single property - captureHandle - containing the capture-handle as it was at the time the event was fired. (This in contrast to the current handle, which is accessible via <em>getSettings</em>. When multiple events are fired at rapid succession, each will contain its respective value, and only the last one can be guaranteed to be equal to that exposed by getSettings.)</p>
+<p>If an application tries registering an event handler on a track that’s originating from the browsing context in which the application is running, an error should be raised and the handler value should remain unchanged.</p>
+<p>CaptureHandleUpdateEventInit is basically a replica of CaptureHandle, as is the pattern for event constructors in WebIDL.</p>
+<h2>
+<a class="anchor" href="#mediastreamtrackoncapturehandlechange-17" name="mediastreamtrackoncapturehandlechange-17"></a>MediaStreamTrack.oncapturehandlechange</h2>
+<pre><code class="lang-auto">partial interface MediaStreamTrack {
+  attribute EventHandler oncapturehandleupdate;
+};
+</code></pre>
+<p>Allows capturing applications to register an event-handler. The handler is associated with a specific track, and therefore only receives the particular <em>event</em> associated with that track.</p>
+<h2>
+<a class="anchor" href="#capturehandle-asynchronicity-18" name="capturehandle-asynchronicity-18"></a>CaptureHandle Asynchronicity</h2>
+<ul>
+<li>MediaStreamTrack.getSettings().captureHandle returns the latest observable value.</li>
+<li>CaptureHandleUpdateEvent objects contain (as a property) the CaptureHandle at the time the event was fired.</li>
+</ul>
+<h2>
+<a class="anchor" href="#navigation-of-the-captured-applications-tab-19" name="navigation-of-the-captured-applications-tab-19"></a>Navigation of the Captured Application’s Tab</h2>
+<p>When the captured tab’s top-level document is navigated cross-document, before navigation occurs, if a capture handle is set, the browser implicitly resets it. This fires an event.</p>
+<p>Corollaries:</p>
+<ol>
+<li>Assume capture begins of an application with handle=”a”. Assume navigation then unloads the application and replaces it with another application which sets handle=”b”. Two events will be fired. The first, upon navigating away, will be associated with an empty CaptureHandle. The second, once the new site loads and sets handle=”b”, will be associated with that new value.</li>
+<li>Navigation away from a site that sets a CaptureHandle is detectable by the capturer.</li>
+</ol>
+<p>Navigation away from a site that did not set a CaptureHandle is not detectable by the capturer. (More accurately - not more easily detectable than before.)</p>
+<h1>
+<a class="anchor" href="#privacy-security-considerations-20" name="privacy-security-considerations-20"></a>Privacy + Security Considerations</h1>
+<p>Please refer to <a href="https://docs.google.com/document/d/1oSDmBPYVlxFJxb7ZB_rV6yaAaYIBFDphbkx5bXLnzFg/edit?usp=sharing" rel="noopener nofollow ugc">the explainer</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3542_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lindsay_Hall</div>
+          <div class="creation_date">2021-06-04</div>
+          <div class="post_content">
+<p>This API will be extremely helpful in helping to bootstrap collaboration between applications! In allowing the captured and capturing tab to communicate with each other (with consent from both applications), we can enable better logging, monitoring, and product integrations. Looking forward to this!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eladalon</div>
+          <div class="creation_date">2021-06-07</div>
+          <div class="post_content">
+<p>A draft of the spec is available <a href="https://eladalon1983.github.io/capture-handle/" rel="noopener nofollow ugc">here</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3545_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Eric_Davies</div>
+          <div class="creation_date">2021-06-09</div>
+          <div class="post_content">
+<p>This does sound like a cool feature, but could it done transparently to both applications ?
+Ie, if I’m sharing a tab, any mouse/keyboard events on the other guy’s side in the area of their videoobject get relayed and injected as local mouse events in my shared tab?
+The coordinates would need some scaling/translation of course.
+With a bit of cleverness, you could probably inject mouse events into other applications that were being shared through the OS.
+The screenshare dialog would probably need an extra checkbox for “accept control from people you are sharing too - are you really sure, do you really really trust them?”</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eladalon</div>
+          <div class="creation_date">2021-06-09</div>
+          <div class="post_content">
+<p><span class="mention">@Eric_Davies</span>, this feature lets the capturing app relay mouse/keyboard events to the captured app, and if the captured application wants to translate that into some equivalent behavior for itself it could. For instance, you could type text into a textbox in the captured application or click() the elements of its UI.</p>
+<p>But your clicks won’t have transient-activation in the captured application, or anything similar. That is a <strong>useful limitation</strong> to have, and not one we intend to try to subvert. Your proposal is interesting, but I am willing to bet the farm that even with very explicit user consent, such a proposal would be blocked by Chrome Security, as well as the equivalent committees in Mozilla, Apple, etc. Sorry.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3538_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eladalon</div>
+          <div class="creation_date">2021-06-18</div>
+          <div class="post_content">
+<p>P.S: This has been implemented in Chrome, all the code has landed, and the OT is open starting m92. For some minor changes between m92 and m93, please refer to the <a href="https://docs.google.com/document/d/1oSDmBPYVlxFJxb7ZB_rV6yaAaYIBFDphbkx5bXLnzFg/edit#heading=h.uo2xkt6ez31l" rel="noopener nofollow ugc">relevant section</a> of the explainer.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2301_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboba</div>
+          <div class="creation_date">2021-07-08</div>
+          <div class="post_content">
+<p>The proposed specification is potentially useful for a number of applications (not just slide sharing). One of the issues with screen sharing today is that the capturer (by design) is given little or no information on what is being captured. However, optimal encoding requires this knowledge. For example, the encoder configuration for capturing a game will be quite different from capturing a slide presentation, and the encoding configuration has a marked effect on the quality of the capture.</p>
+<p>I expect this specification, once developed to be widely used.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2021-07-09</div>
+          <div class="post_content">
+<p>The repo is now live at <a class="inline-onebox" href="https://github.com/WICG/capture-handle">GitHub - WICG/capture-handle</a></p>
+<p>Happy incubation! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arnaudbud</div>
+          <div class="creation_date">2021-07-15</div>
+          <div class="post_content">
+<p>We at <a href="https://www.ringcentral.com" rel="noopener nofollow ugc">RingCentral</a> think this would be useful to us.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3614_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Emil_Ivov</div>
+          <div class="creation_date">2021-07-25</div>
+          <div class="post_content">
+<p>This looks good and I find it could prove useful to <a href="https://jitsi.org" rel="noopener nofollow ugc">the Jitsi Meet</a> app suite. Thanks for doing the work!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3619_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zoomienick</div>
+          <div class="creation_date">2021-07-29</div>
+          <div class="post_content">
+<p>This would be incredibly useful for us. Love, Zoom!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3640_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Divyac</div>
+          <div class="creation_date">2021-08-16</div>
+          <div class="post_content">
+<p>Citrix here, Screen sharing of the entire screen in conferencing applications, could cause unintended data exposure for our users…we’re eagerly waiting for this and so are our customers so we can control access to specific windows!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>colIndex for td-, th- and col-Elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">colIndex for td-, th- and col-Elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2017-08-30</div>
+          <div class="post_content">
+<p>I know, there exists celIndex, but it would be more usefull, if there was something like colIndex.</p>
+<p>Additionaly, i would like a api like this on tr-Elements:
+tr.cellByColIndex(index);</p>
+<p>Often we have to find cells in other rows that are in the same column.
+This works as long as there is no colspan, but if there is one, i have no quick access to the element like tr.children[index]</p>
+<p>This api would also make sence on col-elements, since they represent a column.</p>
+<p>Edit: changed category to “APIs”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-08-30</div>
+          <div class="post_content">
+<p>You mean <code>tr &gt; :nth-child(index)</code>, and no, it won’t work for the reasons the OP listed - if there’s any colspans (or rowspans from previous rows!), the child index doesn’t necessarily match the column index.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-08-31</div>
+          <div class="post_content">
+<p>It’s a good idea. Along with this it would be worth considering <code>table.cellByIndex(colIndex, rowIndex)</code></p>
+<p>There does need to be consideration about what happens if indexing a spanned cell.</p>
+<pre><code>| 0 | 1 | 2 | 3 |
+| 0 | 1     | 3 |
+| 0 | 1 | 2 | 3 |
+</code></pre>
+<p>If I try and index cell (2, 1) would I get null because that cell doesn’t exist or would I get the cell (1,1) because it’s spanned into that indexed location? Should there also be properties on the element to tell if it’s spanned and which elements it spans over?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2017-08-31</div>
+          <div class="post_content">
+<p>Yes, table.cellByIndex would be more important.</p>
+<p>I just found the “nth-column-pseudo selector”  in the css3 spec:
+<a class="onebox" href="https://www.w3.org/TR/selectors4/#the-nth-column-pseudo" target="_blank">https://www.w3.org/TR/selectors4/#the-nth-column-pseudo</a></p>
+<p>So we can use this it lands in Browsers:</p>
+<pre><code>querySelectorAll('.myTable td:nth-column('+index+')')
+</code></pre>
+<p>But a js-api would be great too.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

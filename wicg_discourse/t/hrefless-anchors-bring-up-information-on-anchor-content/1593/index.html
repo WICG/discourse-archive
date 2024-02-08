@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Hrefless anchors — bring up information on anchor content</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Hrefless anchors — bring up information on anchor content</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1040_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zaz</div>
+          <div class="creation_date">2016-07-17</div>
+          <div class="post_content">
+<p>The anchor tag allows us to link to a destination (with a URL) or a thing (with a URN). However, very commonly on the web today, people incorrectly use URLs as a way to direct people to more information on a thing. This happens because there is currently no good alternative available.</p>
+<p>e.g.:
+“We suggest you change your password due to the recent <a href="http://en.wikipedia.org/wiki/Heartbleed" rel="nofollow noopener">Heartbleed bug</a> discovered in OpenSSL.”</p>
+<p>The above is typical of many links found on the internet, and highlights 3 main problems:</p>
+<ol>
+<li>
+<p>The semantic issue that there is currently no way to express what you really want here. Instead of “show information about the Heartbleed bug”, you can only say “show this Wikipedia article about the Heartbleed bug”. Wikipedia often being chosen somewhat arbitrarily.</p>
+</li>
+<li>
+<p>The person creating the link will often choose their favourite online encyclopedia at the time of authoring, whereas it would be better to use the user’s favourite encyclopedia at the time they follow the URL. The advantage being that the user is in control, and can use an encyclopedia that is on their own computer, or was created after the document was authored.</p>
+</li>
+<li>
+<p>People often don’t bother to link things that users may want to read more about because of the time it takes to get the URL to the Wikipedia article. If an href wasn’t required, I probably would have linked <a>OpenSSL</a> as well, so that users who are interested could easily read about that as well.</p>
+</li>
+</ol>
+<p>So my proposal is that if there is an <code>&lt;a&gt;</code> tag without <code>href</code> or <code>name</code> attributes specified, browsers should take users to information about the text inside. This may involve performing a search for the text on some search engine, or going to the article on Wikipedia, but users should be able to configure this behavior.</p>
+<p>I think this would have a positive effect on the web; like on Wikipedia, it would be easy to conveniently link things that users may want to read more about, saving users time and allowing them to get to the information they want with a single click.</p>
+<p>The only downsides I can see is that this would reduce page ranking for sites that are currently linked to for general-purpose information, e.g. Wikipedia and Google, and that it could cause issues in some cases if you’re already using anchors without <code>href</code> for some reason - <a href="http://stackoverflow.com/questions/3186767/using-anchor-without-href-just-to-get-that-hover-effect" rel="nofollow noopener">http://stackoverflow.com/questions/3186767/using-anchor-without-href-just-to-get-that-hover-effect</a></p>
+<p>A new tag could be created to avoid the latter, but I feel that using the existing <code>&lt;a&gt;</code> tag would be better, as it seems very logical and, in many cases, would avoid systems requiring update to support the new tag.</p>
+<p>I hope this proposal is useful and welcome feedback on it.</p>
+<hr/>
+<p>Above text taken from an old proposal I made on <a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=26108">Bugzilla</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-07-17</div>
+          <div class="post_content">
+<p>So are you talking about a generic anchor that does not point to a specific URL and just marks up some <em>term</em>? Wouldn’t the existing <code>DFN</code> element suitable for this purpose?</p>
+<p>And FYI, the <code>A</code> element without the <code>href</code> attribute is sometimes used to mark up a link which is <em>temporarily inactive</em>: instead of replacing the link with another element like <code>SPAN</code>, its <code>href</code> attribute is just removed (e. g. to prevent a navigation-menu item from pointing to the same page the user is already viewing). Besides (non)clickability, there is some semantics here: link is link anyway (<code>A</code> element is used regardless of whether it is clickable), just inactive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1040_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zaz</div>
+          <div class="creation_date">2016-07-18</div>
+          <div class="post_content">
+<p>I don’t think <code>&lt;dfn&gt;</code> would be suitable. It marks up a defining instance of a term. E.g. “<code>&lt;p&gt;&lt;dfn&gt;</code>HTML<code>&lt;/dfn&gt;</code> is a markup language for web pages.<code>&lt;/p&gt;</code>”</p>
+<p>I’m talking about having a tag for the opposite: Marking up a term so that it <em>links</em> to a definition. E.g. “I use <code>&lt;a&gt;</code>HTML<code>&lt;/a&gt;</code> to make web pages.”</p>
+<p>I see your point about it breaking compatibility though, so perhaps another tag should be used, or an attribute to <code>&lt;a&gt;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2016-07-18</div>
+          <div class="post_content">
+<p>One thing that would need to be addressed is keyboard interaction. It’s the href attribute that makes a link focusable with the keyboard, so without it it would be impossible for keyboard users to use the link.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/241_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JonathanSampson</div>
+          <div class="creation_date">2016-07-19</div>
+          <div class="post_content">
+<p>Is this similar to Microsoft Edge’s “Ask Cortana” feature? You highlight some text, right-click, Ask Cortana, and a search is performed to try and locate information about the highlighted portion.</p>
+<p>In your case, how does the user agent know how to locate more information? What does it do with ambiguities: for instance, if HTML is the text, how does it know to search for Hyper-Text Markup Language, rather than Hamburger, Tomato, Mayonnaise, and Lettuce?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2016-07-20</div>
+          <div class="post_content">
+<p>This reminds me a bit of <a href="https://en.wikipedia.org/wiki/Smart_tag_(Microsoft)" rel="nofollow noopener">Smart Tags</a>. Having the author mark up the entity is appealing; the user agent would not need to work so hard to extract entities, and authors would not be surprised by what is turning into links.</p>
+<p>It is pretty common to use anchors without hrefs as targets, of course. But you could use anchors without hrefs or names.</p>
+<p>I think the user agent could make these links keyboard-accessible when there is an “implied” href.</p>
+<p>One thing that could be a bit of a concern is that one way to bootstrap knowledge about entities is by looking at what people link to on the web. If this method of linking became prevalent, actually doing the linking may get more difficult.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-07-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1593">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>One thing that could be a bit of a concern is that one way to bootstrap knowledge about entities is by looking at what people link to on the web. If this method of linking became prevalent, actually doing the linking may get more difficult.</p>
+</blockquote>
+</aside>
+<p>Yes, I think this would have some pretty worrisome implications.</p>
+<p>Most browsers I use already have a function that lets you select anything and look it up - I use Yandex’ “translate on the fly” all the time.</p>
+<p>You could probably use the <code>mark</code> element if you really wanted to highlight things that people should consider looking up - cue discussion - or we could mint a new element. I agree with Léonie that it’s important to work out keyboard accessibility, but a lot of that is about browser implementations, because most of them are not very good for making less-common interaction work well.</p>
+<p>You could also use something like <a href="http://schema.org">schema.org</a> by adding RDFa or microdata to mark things you wanted to clarify are already explained elsewhere without imposing your idea of the best link…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1046_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dauwhe</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>As a human writing documents on the web, links are an important way I can help my reader understand the background and context of what I write. I choose links carefully, or I choose not to link, as a reader is already free to look up anything they want. I don’t quite understand this middle ground—something is important enough to need a link, but not important enough for the author to supply the link.</p>
+<p>I’m guessing it would be easy to write some JS that would turn plain &lt;a&gt; elements into Wikipedia links, as an aid to authoring. But giving browsers the power and responsibility to interpret such links strikes me as changing the contract between the author and the presentation in a dangerous way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p><span class="mention">@dauwhe</span> hits the key issue here I think. If there’s a reason I’d mark it as a link I’d have half an idea where I’m linking it anyway. I could maybe see the idea of an extra attribute on &lt;a&gt; like <code>reference</code> that says “this href is just a suggestion”, a user could have an extension or a browser setting for their preferred reference source. An author might link to a Wikipedia article for some background information rather than than it being a specifically chosen resource so they mark it with the attribute. A user comes along who has set their preferred reference to Google and instead the browser takes them to a Google search for that topic.</p>
+<p>Probably still not worth the hassle though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1040_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zaz</div>
+          <div class="creation_date">2016-07-24</div>
+          <div class="post_content">
+<p>It would just search for “HTML”, unless HTML was in an <code>&lt;abbr&gt;</code> tag, then it could use the <code>title</code> attribute, or we could add an attribute for this purpose.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1040_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zaz</div>
+          <div class="creation_date">2016-07-24</div>
+          <div class="post_content">
+<p>Thanks for everyone’s feedback.  Good points all around.</p>
+<p>I do still think that URLs are often used incorrectly (e.g. linking to Wikipedia not because you want to direct readers to a Wikipedia page, but rather more information about something), and do believe <span class="mention">@chaoaretasty</span>’s idea of adding a <code>reference</code> attribute is a good one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-10-19</div>
+          <div class="post_content">
+<p>I’m not convinced that links are <em>often</em> used “incorrectly”. There is already a function in my browser to look up more or less anything I want more information about. Moreover, I am more likely than a page author to know what I want some generic information about - having the author guess, and add links all over the place on the off-chance is likely to make the page far less usable, in particular via keyboard.</p>
+<p>So I agree with <span class="mention">@chaoaretasty</span> that this isn’t worth the hassle - and I would be surprised if browsers wanted to support it - or for that matter if there was a big demand from authors.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

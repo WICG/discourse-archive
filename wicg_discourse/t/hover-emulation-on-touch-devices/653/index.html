@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Hover emulation on touch devices</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Hover emulation on touch devices</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2014-09-29</div>
+          <div class="post_content">
+<p>Am I correct that the <em>de facto</em> standard of emulating CSS <code>:hover</code> &amp; JS <code>mouseover</code>/<code>mouseout</code>/<code>mouseenter</code>/<code>mouseleave</code> on mobile touch devices via “tap-and-hold” (as on iOS Safari, Android Chrome, etc.) isn’t standardized at all or even mentioned in a non-normative note in any of the relevant Web standards? Is it in-progress or under discussion at any WG?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-29</div>
+          <div class="post_content">
+<p>Nope, the definition of “hovering” is up to the device and host language, and is a quality-of-implementation kind of thing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2014-09-29</div>
+          <div class="post_content">
+<p>Well, the “you can’t hover on touch” meme is still <a href="http://docs.webplatform.org/wiki/css/selectors/pseudo-classes/:hover">out there in the wild</a> (particularly in old articles/posts), so note(s) would still be nice, imho.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-09-30</div>
+          <div class="post_content">
+<p>I think a non-normative note for the fact that is is a de-facto behavior in the Living Standard would be appropriate. That’s the whole point of the HTML LS: to document the world, not ignoring how the way we’d <em>like</em> it to be differs from how it <em>is</em>.</p>
+<p>To address the behavior <em>itself</em> for a minute, though, I think it’s pretty stupid. Touching and holding something is <em>nothing like</em> hovering on it. Most capacitive touch devices (or at least laptop trackpads) are sensitive enough to detect a finger &lt;5mm off the surface (and Microsoft / Wacom styli have reported - and used - hover for <em>decades</em>): <em>that</em> should be your damn hover. Not some action that, if I change my mind halfway through taking it, turns into a <em>click</em>.</p>
+<p>And, further, the “hover triggers something important (like menu expansion)” pattern needs to DIAF, not just because it’s bad for touch, but because it’s bad usability, <em>period</em>. Hover should be like HEAD requests in HTTP: No side effects, and nothing that doesn’t happen when you make (a GET request / a click). The world definitely <em>should</em> acclimate to a theoretical environment where hover doesn’t exist, because hover should be <em>incidental</em>: it’s something users can do inadvertently. (This is especially going to become an issue as eye-tracking environments like Glass and Oculus grow in popularity, where users have to practice <em>averting their gaze</em> from menus to avoid hover triggers.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1817_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">root</div>
+          <div class="creation_date">2014-10-03</div>
+          <div class="post_content">
+<p>The Touch Events spec defines what you mentioned regarding mouse event emulation here: <a href="http://www.w3.org/TR/touch-events/#mouse-events">http://www.w3.org/TR/touch-events/#mouse-events</a></p>
+<p>Unless you are implying that Touch Events is not a relevant web standard.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2014-12-18</div>
+          <div class="post_content">
+<p>Unfortunately the exact rules for applying :hover (and even :active) with touch aren’t consistent between browsers.  Eg. What’s the order and timing of mouseover events vs. :hover being set.  There are lots of subtle details and tough web compat issues at play.  We’ve talked in CSS WG and TECG about trying to standardize this - IE, Chrome and Safari have all expressed some interest in improving interoperability and understanding here.  I expect we’ll make at least a little progress on this over the coming months.</p>
+<p>By the way, we have a pretty cool experiment enabling true touchscreen hover support in Chrome on the Samsung Galaxy S4: <a href="http://crbug.com/418188" rel="nofollow noopener">http://crbug.com/418188</a>.  I’ll post a video once it hits Beta.  Its not clear we want to enable something like this by default (I agree hover is a broken UX paradigm), but its still a cool demo.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

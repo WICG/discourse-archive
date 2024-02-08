@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Passing an object of attributes to document.createElement() as the second argument</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Passing an object of attributes to document.createElement() as the second argument</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-04-17</div>
+          <div class="post_content">
+<p>Change the current <code>document.createElement()</code> method to do this:</p>
+<pre><code class="lang-auto">var div = document.createElement("div", {
+ "id": "id",
+ "class": "this that and so on",
+ "data-whatever": "whatever data",
+});
+</code></pre>
+<p>As of right now document.createElement second paremeter takes a string for the “is” attribute.</p>
+<p>The above eliminates the reuse of the div variable like in the following:</p>
+<pre><code class="lang-auto">var div = document.createElement('div');
+div.id = "id";
+div.className = "this that and so on"; //Also see how I have to use className instead of what I use in markup. Which obviously is fine we have had className for a while that's not going to change. (Not the point)
+div.dataset.whatever = "whatever data"; //Having to access dataset
+</code></pre>
+<p>Also I’m not sure if there’s a reason why HTMLDivElement and all of the rest of HTML"Whatever"Element are not constructors. If there’s a good reason for that disregard the following:</p>
+<p>If HTML"Whatever"Element can be constructors allow the following:</p>
+<pre><code class="lang-auto">var div = new HTMLDivElement({
+ "id": "id",
+  ...//you get the point
+});
+</code></pre>
+<p>This will also get rid of having a random window.Option constructor. Which to me is really weird.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-04-17</div>
+          <div class="post_content">
+<p>This has been discussed several times before; it’s mostly failed due to relative lack of interest in someone driving it forward.  That said, it’s definitely a good idea!</p>
+<blockquote>
+<p>Also I’m not sure if there’s a reason why HTMLDivElement and all of the rest of HTML"Whatever"Element are not constructors.</p>
+</blockquote>
+<p>It’s not a particularly <em>good</em> reason, but the reason is that several of the classes are shared by multiple elements.  For example, there’s a single <code>HTMLHeadingElement</code> which <code>&lt;h1&gt;</code>-<code>&lt;h6&gt;</code> all use.  Several elements that don’t need anything special on their interface just use the generic <code>HTMLElement</code> class, which is a superclass of <code>HTMLDivElement</code> and the like.  Making the interfaces into constructors would thus be pretty clumsy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2015-04-18</div>
+          <div class="post_content">
+<p>I like the idea, too. It would make code much more readable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-04-24</div>
+          <div class="post_content">
+<p>Also maybe the following:</p>
+<p>Let’s get rid of <strong>String.prototype.HTML</strong> methods by implementing a <code>wrapHTML</code> or <code>HTMLWrap</code> or something:</p>
+<pre><code>"This is a link".HTMLWrap("a", {
+     id: "id",
+     class: "whatever class",
+     href: "https://www.google.com/",
+     ...//You get the point.
+ });
+</code></pre>
+<p>My apologies if this would be another topic, but because the second argument matches this topic I posted it here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-04-26</div>
+          <div class="post_content">
+<p>I don’t know about extending <code>String</code>, but I’d certainly like a way to create an element with its child nodes pre-loaded, rather than having to set textContent, or make a bunch of appendChild calls, after creating it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-04-26</div>
+          <div class="post_content">
+<p>The only thing I can think of for what you want is using client side templating with the <code>template</code> element. Extending the <code>String.prototype</code> is useful to eliminate the other <code>String.prototype.HTML</code> methods, and avoiding adding new ones. <code>HTMLWrap</code> will handle any future element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-04-27</div>
+          <div class="post_content">
+<p><span class="mention">@Edwin_Reynoso</span>
+I would be surprised if TC-39 (JavaScript’s standardization body) accepted HTML-related String extensions like <code>.HTMLWrap()</code>.  Also, such an approach isn’t really needed, I think, as you could further extend <code>.createElement()</code>, e.g.:</p>
+<pre><code>document.createElement("a", {
+     id: "id",
+     class: "whatever class",
+     href: "https://www.google.com/",
+     innerHTML: "This is a link"
+ });
+</code></pre>
+<p>Now, this blurs the line between HTML attributes and DOM element properties, so it might not be a good approach, but in any way, there should be room for setting the element’s content via an argument like this.</p>
+<p>P.S. Regarding <code>class</code> in the object literal, although it’s a reserved word, I think it’s valid to have it (unquoted) like this. (Somebody correct me if I’m wrong.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-04-27</div>
+          <div class="post_content">
+<p>Yes I thought about that. It’ll be pretty confusing between <code>HTML attributes</code> and <code>DOM element properties</code>. Unless prioritized somehow by first looking at <code>HTML attributes</code> if not found look for <code>DOM element property</code>, but IMO that would be absurd. The one that confused me right away was <code>class</code> and <code>className</code>. Also above I used <code>data-whatever</code> using <code>DOM element properties</code> would be <code>dataset.whatever</code>. So idk, but like I mentioned, the <code>HTMLWrap()</code> method is only to remove the <code>String.prototype.HTML</code> methods, and avoid future ones (which I wouldn’t even mind not having, but I believe something has to be done about the <code>String.prototype.HTML</code> methods). But I agree with you on:</p>
+<blockquote>
+<p>there should be room for setting the element’s content via an argument like this.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-05-03</div>
+          <div class="post_content">
+<p>Yeah, I like the idea of the second attribute taking an object of properties to read, named the same as the corresponding DOM element’s properties (so no setting of non-DOM attributes, but allowing the setting of innerHTML / textContent / children / className / dataset etc).</p>
+<p>The trick there would be establishing a hierarchy of which conflicting properties have priority (so if someone passes <code>innerHTML</code>, <code>children</code>, <code>childNodes</code>, and <code>textContent</code>, it’s clear which one gets used).</p>
+<p>Maybe it would also be possible to override the definitions of some existing element constructors to take objects with named properties like this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<p>The Custom Elements spec already uses a second parameter on <code>.createElement()</code> for type extensions.</p>
+<p>Source: <a href="http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-instantiate" rel="nofollow noopener">http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-instantiate</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<p>I believe I mentioned that already:</p>
+<blockquote>
+<p>As of right now document.createElement second paremeter takes a string for the “is” attribute.</p>
+</blockquote>
+<p>If I’m not mistaking is the same thing, so yea that may be a problem since developers are already using <code>Custom Elements</code> so perhaps 3rd argument or if second argument is an object then set those as the attributes. Also allow the <code>is</code> property to be a part of the attributes object.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<p>Ah, missed that.</p>
+<p>Yes, since <code>is</code> is an attribute, it would be defined as a property of the attributes object.</p>
+<p>I’m not confident that the relevant W3C working groups would allow different types on the same parameter like that. Is there an instance of such a pattern in any of the existing DOM API?</p>
+<p>Note that Google’s Polymer project already uses the API extension defined in Custom Elements (<a href="https://youtu.be/OV8BvxpNQOs?t=50s" rel="nofollow noopener">see here</a>). Looks like the second parameter as string is set in stone.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<p>The only one I can think of right away is the new CSSOM smooth scrolling.</p>
+<pre><code>window.scrollBy(0, 0);
+window.scrollBy({top: 0, behavior: 'smooth'});
+</code></pre>
+<p>I’m sure there are more.</p>
+<p><strong>UPDATE:</strong></p>
+<pre><code>document.addEventListener('click', function() {
+    console.log('Hi');
+});
+
+document.addEventListener('click', {
+   handleEvent() {
+     console.log('Hi');
+   }
+});</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-06</div>
+          <div class="post_content">
+<p>It might be worth mentioning here that <span class="mention">@annevk</span> is discussing the removal of <code>is=""</code> so I assume the API would follow suit too.</p>
+<p><a class="onebox" href="https://lists.w3.org/Archives/Public/public-webapps/2015AprJun/0515.html" target="_blank">https://lists.w3.org/Archives/Public/public-webapps/2015AprJun/0515.html</a></p>
+<p>There are other examples to APIs that use different data types like parseInt which varies parsing. setTimeOut is another.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2015-05-07</div>
+          <div class="post_content">
+<p>Yeah <code>is=""</code> is not set in stone at all. Its API even less.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-20</div>
+          <div class="post_content">
+<p>Possible polyfill I guess I would call, obviously this is not the way it would be done because we wouldn’t actually do <code>Document.prototype.createElement.call(document, elementName)</code>.</p>
+<p>But I need help improving if anyone cares to:</p>
+<pre><code>document.createElement = function(elementName, attributes) {
+var element = Document.prototype.createElement.call(document, elementName);
+
+if(attributes &amp;&amp; !(attributes instanceof Object)) {
+	throw Error('Idk what to put, give feedback');	
+} else if(attributes) {
+	for(var attr of Object.keys(attributes)) {
+		if(element[attr] !== undefined) {
+			element[attr] = attributes[attr];
+		} else if (!element.hasAttribute(attr)) {
+			element.setAttribute(attr, attributes[attr]);
+		}
+	}
+}
+
+return element;
+}
+</code></pre>
+<ul>
+<li>
+<p>I don’t know how to check if <code>attr</code> is a proper attribute so for now I just put if not recognized as property then call <code>setAttribute</code>.</p>
+</li>
+<li>
+<p>What would be a proper <code>Error</code>?</p>
+</li>
+<li>
+<p>And more feedback please</p>
+</li>
+</ul>
+<p>Example uses:</p>
+<pre><code class="lang-auto">var div = document.createElement('div'); // Still returns normal div without anything
+var div = document.createElement('div', {
+  "id": 'uniqueDiv',
+  "className": 'one two three',
+  "class": 'this will not be applied because it checks if attribute is already set which it is because of className',
+"data-num": 5,
+"is": "button", // Taking care of is attribute but again is, is not set and stone.
+"innerHTML": '&lt;div class="child"&gt;'
+}); // &lt;div id="uniqueDiv" class="one two three" data-num="5"&gt;
+
+</code></pre>
+<p>What’s missing?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>A few questions or suggestions:</p>
+<p>If the second parameter is an object of attributes, might it accept camelCase attributes, similarly to <code>dataset</code>?</p>
+<pre><code class="lang-auto">document.createElement('nav', {
+	id: 'navigation',
+	class: 'site-nav is-dropdown',
+	ariaExpanded: true,
+	ariaHaspopup: true
+});
+</code></pre>
+<p>Or, might the first argument support CSS selectors, similarly to jQuery?</p>
+<pre><code class="lang-auto">document.createElement('nav#navigation.site-nav.is-dropdown[aria-expanded="true"][aria-haspopup="true"]');
+</code></pre>
+<p>And, if the first argument supports CSS selector, might this allow for creation of child elements?</p>
+<pre><code class="lang-auto">document.createElement('section h1'); // returns &lt;section&gt; containing a child &lt;h1&gt;
+</code></pre>
+<p>I scripted <a href="https://github.com/jonathantneal/document.createDocumentFragment" rel="nofollow noopener">this functionality on <code>document.createDocumentFragment</code></a>, for demonstration purposes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>Wow I really like that idea. It would eliminate some things for simple elements with a set of children.</p>
+<p>Another neat idea would be supporting <strong>emmet</strong> as in:</p>
+<pre><code>document.createElement('div#container &gt; div{Div number $}*10');
+</code></pre>
+<p>Yet I don’t think this part would be natively implmeneted, seems like a library would do that.</p>
+<p>But anyways this would be really neat, eliminating some function calls like appendChild for elements with one child element.</p>
+<p>Now the camelCased properties? I’m pretty confused. Take <code>innerHTML</code> which is technically camelCased it’s a property of the element therefore it’d be the same as:</p>
+<pre><code>var nav = document.createElement('nav');
+nav.ariaExpanded = true;
+</code></pre>
+<p>If I’m not mistaking attributes are not case sensitive meaning:</p>
+<pre><code>document.createElement('nav', {
+    CLASS: "site-nav is-dropdown"
+}); // returns &lt;nav class="site-nav is-dropdown"&gt;&lt;/nav&gt;
+</code></pre>
+<p>At least that’s how it’s working with my prollyfill I provided above.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>For an explanation of the camelCase conversion, see <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset</a>.</p>
+<p>It goes something like this: The <code>dataset</code> object represents custom data attributes on an element. To become a property on the <code>dataset</code> object, each custom data attribute’s <code>data-</code> prefix is removed (including the dash), and then any dash followed by a lowercase letter is replaced with the letter transformed into its uppercase counterpart. For example:</p>
+<pre><code class="lang-auto">&lt;div data-foo-bar="baz"&gt;&lt;/div&gt;
+</code></pre>
+<p>Becomes:</p>
+<pre><code class="lang-auto">return div.dataset.fooBar // returns "baz"
+</code></pre>
+<p>So, in the case of <code>document.createElement(name, attributes)</code>, I was suggesting that the <code>attributes</code> object might do the reverse, replacing any uppercase letters with a dash followed by the letter. For example:</p>
+<pre><code class="lang-auto">document.createElement('div', {
+	dataFooBar: 'baz'
+});
+</code></pre>
+<p>Becomes:</p>
+<pre><code class="lang-auto">&lt;div data-foo-bar="baz"&gt;&lt;/div&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>Well using my prollyfill, I couldn’t figure out how to check whether an attribute is an actual attribute in the DOM. Therefore It results to setting anything to an attribute:</p>
+<pre><code>document.createElement('div', {
+  fooBar: true,
+  "data-fooBar": true
+});
+</code></pre>
+<p>It returns:</p>
+<pre><code class="lang-auto">&lt;div foobar="true" data-foobar="true"&gt;&lt;/div&gt;
+</code></pre>
+<p>Do you know how to prollyfill what you expect? I’m not sure how</p>
+<p>Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

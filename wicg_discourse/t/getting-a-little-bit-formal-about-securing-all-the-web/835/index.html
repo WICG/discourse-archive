@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Getting a little bit formal about securing all the Web</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Getting a little bit formal about securing all the Web</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/577_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hillbrad</div>
+          <div class="creation_date">2015-04-27</div>
+          <div class="post_content">
+<p>Start from the assumption that <a href="https://www.w3.org/TR/mixed-content/">mixed content blocking</a> is a problematic thing given the existing structure of links on the Web.  Assume that we can wave a magic wand and make it extraordinarily easy for servers to set up security equivalent to full https, and for browsers to optimistically attempt and know whether they were able to complete a connection with these properties, regardless of the scheme of the URL they started with.  (There are awesome people working on just this kind of <a href="https://letsencrypt.org/">magic</a>.) Is that enough to make mixed content blocking go away, or achieve our real goal to eliminate the need for wholesale migration of URLs from ‘http://’ to ‘https://’ and to arrive at a universally secure Web?</p>
+<p>It’s a hard question to answer about something as big and messy as the Web, but formal abstractions can help us reason about it, and maybe find a way forward.  When an application uses an ‘https://’ URL today, what is it expecting?  We can generalize these expectations to two bags of properties, based on the direction of the information flow: inbound vs. outbound, and applying formal integrity models to the flows.</p>
+<p>Inbound flows are things like including scripts, images, styles, frames and the like into its context.  The properties we want for inbound flows are described by (a partial set of) the <a href="https://en.wikipedia.org/wiki/Biba_Model">Biba Integrity Model</a>: <em>no read down</em> and <em>no write up</em>.  <em>No read down</em> is the “Simple Integrity Axiom”, which states that a subject at a given integrity level (‘https’) must not read an object at a lower integrity level (‘http’).  <em>No write up</em> is the “* (star) Integrity Axiom” which states that a subject at a given integrity level (‘http’) must not write to an object at a higher integrity level (‘https’).  Both of these prevent, e.g. a script tampered with by a network attacker from assuming control of a secure resource, or an altered image from replacing what should be trusted UI in that resource.  Mixed content blocking is a mandatory control enforced by browsers to achieve these properties. (and also, importantly for different reasons, the Bell-LaPadula “Tranquility Principle”, which states that the classification of a subject or object does not change while it is being referenced.)</p>
+<p>Outbound flows are for things like navigation, postMessage, form submission, etc.  The property we want for these flows are described by (a partial set of) the <a href="https://en.wikipedia.org/wiki/Bell%E2%80%93LaPadula_model">Bell-LaPadula Integrity Model</a>.  <em>No write down</em>, also known as the “★(‘star’) Property”, requires that a subject at a given security level must not write to any object at a lower security level.  So if I have a secret in a secure context, I can’t send it out in a way that might leak it to a network attacker. This property is not actually mandated by browsers today.  Navigating from ‘https://’ to ‘http://’ resources is not blocked. We expect applications to know when they have outbound flows of sensitive data and express that contract explicitly to the browser.  They do this today by using the ‘https://’ scheme.</p>
+<p>So, which of these properties can we make obtain in our magical future where very nearly all http connections can be made as-secure-as-https?  We can actually achieve the necessary properties for inbound flows.  If the user agent infers the contract from the fact that it starts at a secure resource, it can optimistically attempt a secure-only upgrade to an http-designated resource, and only allow the inclusion if it passes.  We can deal with the long tail of sites that don’t get on the magic upgrade train by making failures subject to current mixed content blocking algorithms without harming the contract.  The one thing that would probably need to change in browsers to make this future less painful is that the mixed content blocking algorithms should only apply after HSTS or other optimistic upgrade mechanisms have been attempted and failed, but that is a small and reasonable change to make.</p>
+<p>The problem is in the outbound data flows.  Once an application sends data away from itself, it’s no longer in control of what to do in the case that an optimistic upgrade fails.  The only thing it can do is use ‘https://’ URLs to forbid downgrades.  As long as there is a long tail of sites where optimistic upgrades will fail, applications that require the <em>★ Property</em> will be unwilling to use ‘http://’ URLs.</p>
+<p>At first glance, this seems to require some sort of drastic action to resolve to our desired end-state, where the application need not care about the difference between http[s] URLs.  We can either:</p>
+<ol>
+<li>Modify the imperative contracts of every interface that sends data away from an application to include a security bit carried other than in the scheme.  This is incredibly costly and will take forever to propagate universally, leading to as much or more security uncertainty as not doing it at all.  (I call this the “now you have two problems” option.)</li>
+<li>Wait for that long tail to finally disappear.  It’s going to take decades.</li>
+<li>Declare a “Flag Day” on which non-upgraded http just stops working and those sites drop off the Web.  If we do this within 20 years, there will be a lot of casualties.</li>
+</ol>
+<p>I find none of these options appealing. But as I wrote this down to explain how we end up at this unappealing state, I realized that the formal integrity model may hold a fourth option.</p>
+<p>If you’ve been around the Web for a long time, you may remember that browsers actually used to try to enforce the <em>★ Property</em>.  If you navigated or posted data from ‘https://’ to ‘http://’, you got an interstitial dialog asking if you really wanted to do this.  After a few years of 99.9999% of users clicking “never ask again”, this was dropped.   But what if we brought it back, and made it stronger?  The browser promises it will never navigate/send data from a secure resource, either https or successfully-upgraded http, to an insecure resource.  (or, it won’t do so without the user clicking through a really huge “Now entering the legacy web where you will be spied on and attacked – are you sure you want to continue?” full-page interstitial)</p>
+<p>In this world, you don’t have to have a flag day to kick off some non-trivial portion of the historical web, and you don’t have to wait decades for it to upgrade or go away.  It can still be out there, but it will be behind a one-way membrane isolating it from the rest of the Web that is using secure transports.  We can even add an explicit annotation to links that should be allowed to cross the membrane for e.g. search engine use cases. (something like: &lt;a href=”<a href="http://legacy.example.com">http://legacy.example.com</a>” allow-insecure-navigation&gt;)  But by preventing violation of the <em>★ Property</em> without explicit intent (vs. today where explicit intent to enforce it is required), we can actually move to a world where all deployed apps can start ignoring http[s] scheme distinctions and carry their security context implicitly while meeting all of our necessary integrity guarantees.  And we won’t need a flag day, and we won’t have to wait 20 years.  We can isolate the stragglers without killing them.</p>
+<p>A fun lesson! (and not what I expected when I started writing this!)  Starting from the premise “that mixed content blocking is a problem which we want to make go away so we can ignore http[s] scheme distinctions”, we ended up being able to satisfy the goal <strong>by adding more mixed content blocking</strong>.  (anyone remember TRIZ?)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/577_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hillbrad</div>
+          <div class="creation_date">2015-04-27</div>
+          <div class="post_content">
+<p>Some even older-school web security folks than I have pointed out that there used to be a more comprehensive attempt at working with the ★ Property via tainting in the early Netscape Navigator JavaScript engine.  <a href="http://docstore.mik.ua/orelly/web/jscript/ch20_04.html">http://docstore.mik.ua/orelly/web/jscript/ch20_04.html</a>  This proposal is a little bit similar, but envisions strong defaults at large-granularity, which I think is more acceptable from a deployment perspective (especially once you assume that much of the transition to secure-availability of all resources has already occurred) than the original <em>taintEnabled</em> system.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noncombatant</div>
+          <div class="creation_date">2015-04-27</div>
+          <div class="post_content">
+<p>The people with the best ability to resolve this situation are the site operators. They can use things like sed/awk/Python to rewrite their internal (and some external) links, they can use <a href="https://w3c.github.io/webappsec/specs/upgrade/" rel="nofollow noopener">https://w3c.github.io/webappsec/specs/upgrade/</a>, they can use HSTS. Browsers can also, as you say, optimistically attempt to upgrade.</p>
+<p>But adding a new type of interstitial or modal dialog is to put the problem on the people who have the least ability to resolve the situation.</p>
+<p>I guess fundamentally I’m not convinced that there is a need to elide the scheme distinction. The integrity model(s) appear(s) to be working as intended. Browsers can and should optimistically make it work somewhat more often, but basically the distinction is doing its job.</p>
+<p>Part of the reason I am not convinced of a need to elide the distinction is that I have little sympathy for (or even understanding of) people who believed that they could ship software once and have it continue to work for decades. That has never been true, and on the web it is especially not true. The drive to elide the distinction seems to be an attempt to make abandonware keep working — at the expense of people who need security but who cannot fix the problem.</p>
+<p>Site operators should update their sites. Browsers should continue to observe the explicit Secure and Non-Secure labels. Some sites will never update. OK.</p>
+<p>This might sound awful — writing downward could happen! — but (a) not all navigations are writes; and (b) by observing the distinction, UAs can (and do) warn or make the write less powerful/meaningful in extreme cases. (See e.g. the drive to deprecate powerful features on non-secure origins: that’s partly about making downward writing and upward reading less dangerous.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">awwright</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>From the post:</p>
+<blockquote>
+<p>The property we want for these flows are described by (a partial set of) the Bell-LaPadula Integrity Model</p>
+</blockquote>
+<p>Why is this the case?</p>
+<p>The two data models – Web browsers and access control for documents – aren’t actually compatible. Or rather, the Web is a generalization of BLP.</p>
+<p>In particular, there’s two issues:</p>
+<p>First, mere navigation from a secure page to an insecure page isn’t actually a “write down”. No information is being sent to the insecure resource; it is instead the user agent state that is being manipulated per the secure resource’s instructions.</p>
+<p>I’m guessing the idea was that user agents alerted this for the user’s sake, “hey, the webpage’s contents are no longer tamper-proof, you might be seeing an attacker’s data.” Presumably, this turned out to be such an empty warning it wasn’t even worth showing.</p>
+<p>Second, BLP fails to describe the Web because the Web is more generic. The Web has Code on Demand and multiple authorities, each with their own access policy/hierarchy.</p>
+<p>Just because a resource is considered secure (the user agent definition, i.e. authentic), doesn’t necessarily mean the data is “secure” (<em>Bell–LaPadula model</em> definition, i.e. secret). It is up to the authority - the owner of the resource - to implement the security policy appropriate for the resource in the resource’s Code on Demand (including submission forms).</p>
+<p>Consider an endpoint where anyone can post anything they want, and it goes to where everyone sees it. There is no authentication or authorization. Contrary to BLP, a plaintext POST endpoint is perfectly acceptable here: If an attacker didn’t want the user to deliver the information, they could just shut down the connection even if it was encrypted; if the attacker wants to see the information, it’s going to be posted to the public anyways; the only exception is if the posted messages can’t be removed or modified, then the only attack being prevented is an active transformation on the user’s submission - which might not even be an attack, but is an explicit goal of HTTP gateways and proxies.</p>
+<p>In practice, usually <em>some</em> part of the request is sensitive and for the server only: Typically user credentials, or another form of authentication. In this case, the resource needs to be able to say “Assert that this resource is being POSTed to with this security level (public key, hash, encrypted connection, etc…) otherwise abort.” The resource would make this request because there’s data in the request that needs that level of protection. <em>This</em> is where Bell–LaPadula model applies: “My session token is ‘secret’, do not expose to anyone less than ‘secret’”.</p>
+<p><code>https:</code> implicitly does this, but one bit (“secure” or “insecure”) is too generic for most people’s needs. And, as has been argued, it is inappropriate for this information to be stored in the resource identifier. The ability to specify a specific TLS public key, hash, or other kind of security level would improve the granularity.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] API to Control User Gesture Navigation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] API to Control User Gesture Navigation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-05-30</div>
+          <div class="post_content">
+<h1>Introduction</h1>
+<p>Most browsers implement a set of navigations actions that are triggered by user gesture (find a list below). The user-agent relies on heuristics^ to detect if the scroll gesture should navigate or whether it should be handled by the page. These heuristics may work in general case but fail for certain applications. Such failures are especially problematic because a navigation action is a major context switch that disrupts user experience.</p>
+<p>Over time, web developers have come up with workarounds to disable these navigation gestures either to prevent said disruptions or to implement their own customized versions. Unfortunately these workarounds are not always reliable and have major drawbacks. At Chromium, we have <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=465423" rel="nofollow noopener">heard</a> from web developers about the need for a simpler and more reliable way to do this. This document proposes a standard CSS based API which replaces many of these workarounds.</p>
+<p>A survey of current gesture navigations:</p>
+<ul>
+<li>
+<strong>Pull-to-refresh</strong>: Mobile Chrome and Opera</li>
+<li>
+<strong>Over-scroll swipes</strong>: Chrome, Desktop Safari, Desktop Firefox, IE, Edge^^</li>
+<li>
+<strong>Scroll from edge</strong>: Mobile Safari</li>
+</ul>
+<p>^:  For example, requiring the scroll gesture to be of certain magnitude, be in certain direction, or start when scroller is at its limit.</p>
+<p>^^: Current stable release of Microsoft Edge has no gesture navigation but they are <a href="https://blogs.windows.com/windowsexperience/2016/05/16/announcing-windows-10-mobile-insider-preview-build-14342/" rel="nofollow noopener">adding support</a> for overscroll swipes due to popular demand.</p>
+<h1>Pull-to-Refresh (p2r) Problem</h1>
+<p>Pull to refresh is a feature of Mobile Chrome (and Opera) where once the user over-scrolls the page we show a refresh animation and refresh the page. The UX pattern was popularized by native mobile applications as a way to fetch new content which in the context of the browser translates to refreshing the page. However refreshing the page does not make sense and is not relevant for certain mobile web applications and can be disruptive and costly.</p>
+<p>Below is a list of few (see this <a href="http://stackoverflow.com/questions/29008194/disabling-androids-chrome-pull-down-to-refresh-feature" rel="nofollow noopener">stackoverflow thread</a> for more) workarounds used by apps to disable pull-to-refresh behaviour which come with their own negative consequences:</p>
+<ol>
+<li>Disable document scrolling, move all content in a scrollable div
+<ul>
+<li>Cons: forces a certain layout and loses top controls behaviour.</li>
+</ul>
+</li>
+<li>Disable vertical scrolling all together using ‘touch-action: none;’
+<ul>
+<li>Cons: Opting out of the user-agent scrolling machinery is over-kill and adds a lot of complexity to the application.</li>
+</ul>
+</li>
+<li>Add touch event handlers and prevent scroll if gesture is scrolling vertically in a way that induces a refresh (example: AMP implementation)
+<ul>
+<li>Cons: touch event handlers has perf implications for threaded scrolling and should be avoided if possible. Also this can become flaky if the app hits touch ack timeout.</li>
+</ul>
+</li>
+</ol>
+<h1>Swipe Navigation Problem</h1>
+<p>Most major mobile and desktop browsers provide a swipe navigation feature where they
+navigate backward and forward in history when a user swipes left or right and over-scrolls the page. In some page layouts (e.g., a page with edge-to-edge horizontal image carousel) it is very easy for a user to trigger these navigation actions accidentally once they have reached the page extent.</p>
+<p>There are several workarounds but as similar to p2r ones they are not simple and have draw-backs and none works in Mobile Safari.</p>
+<ul>
+<li>Prevent-defaulting touch event handlers (or wheel event for desktop browsers) similar to p2r.</li>
+<li>Using <code>touch-action: pan-y</code> on document to prevent horizontal (or vertical pan)</li>
+<li>Use scroll chaining: This is an IE specific workaround and disables scroll chaining (<code>--ms-scroll-chaining: none</code>) on root scroller. This actually does not work well in practice as it only prevents overscroll action if the page is not scrolled fully to its extent and requires the page to be scrollable</li>
+</ul>
+<p>Examples of developers trying to find a solution:</p>
+<ul>
+<li>disabling swipe navigation on <a href="http://stackoverflow.com/questions/13654238/can-i-disable-ie10-history-swipe-gesture/27935785#27935785" rel="nofollow noopener">ie10</a>, and <a href="http://stackoverflow.com/questions/18889666/ios-7-is-there-a-way-to-disable-the-swipe-back-and-forward-functionality-in-sa" rel="nofollow noopener">safari</a>
+</li>
+<li><a href="http://stackoverflow.com/questions/23560528/how-to-prevent-overscroll-history-navigation-without-preventing-touchstart" rel="nofollow noopener">disabling overscroll without touchstart</a></li>
+<li><a href="http://stackoverflow.com/questions/30636930/disable-web-page-navigation-on-swipeback-and-forward" rel="nofollow noopener">disable webpage navigation on swipe back</a></li>
+</ul>
+<h2>Out of Scope</h2>
+<p>Navigation gestures that do not need to compose with page content, e.g., swiping URL bar.</p>
+<p>Also cosmetic over-scroll effects such as glow, or bounce are out of scope of this proposal. Unlike navigation, these affordances do not cause a drastic context-switch and usually play a role in keeping platform UI consistent so browsers may not be willing to expose a way to disable them. However this proposed API does not prohibit its extension in order to cover that case if there is interest.</p>
+<h2>Proposed API: <code>overscroll-action</code>
+</h2>
+<p>Introduce a new non-inherited CSS property overscroll-action, that may be applied on the root element and applies to the viewport. It controls the permitted overscroll actions by the browser on each axis. Each property accepts two values that control the permitted overscroll on its individual physical directions i.e., left, right, and top, bottom.</p>
+<p><code>overscroll-action-{x,y}: [auto || none]{1,2}</code></p>
+<ul>
+<li>
+<code>auto</code>: the user agent determines appropriate default action for overscrolls in this axis and direction.</li>
+<li>
+<code>none</code>: overscroll in this axis and direction should not trigger default action such as navigation. This does not impact UI effects such as bounce or glow.</li>
+</ul>
+<p>Allows controlling x and y axis separately e.g., disable p2r without affecting gesture nav. This means that different components may control the behaviour on each axis without having to coordinate (e.g., a routing library may want to control vertical overscroll, and a carousel may want to control horizontal overscroll).</p>
+<p>The idea for using a CSS property is originally mentioned <a href="https://github.com/w3c/manifest/issues/398#issuecomment-133478796" rel="nofollow noopener">here</a>. It is simple to understand and use.</p>
+<p>Note that this property does not prevent us from later adding corresponding javascript event that allows customization of p2r.</p>
+<p><em>Syntax alternatives</em>:</p>
+<ul>
+<li>Shorthand syntax: <code>overscroll-action: [auto || none] {1,4}</code>. A shorthand syntax can be used to control both axis in a single property. Allowing this syntax has the risk of encouraging developers to naively use <code>overscroll-action: none;</code> as a quick way to disable p2r and inadvertently disable swipe navs.</li>
+<li>Explicit action syntax: <code>overscroll-action: [auto || [navigate-x | navigate-y] || none]</code>. This syntax forces developers to be explicit about the actions that they want to prevent. This can be useful if we expect multiple different overscroll actions that the application want to individually control. Also perhaps easier to expand if we want more granular control such as per-direction (e.g., navigate-left vs navigate-right).</li>
+</ul>
+<h2>
+<code>overscroll-action</code> for inner-scrollables</h2>
+<p>Non root scrollables may have default overscrolling actions such as glow or bounce effects.
+The current proposal only intends the overscroll-action property to be applicable on the root scroller and cover navigation actions. Expanding this property to be applicable to non-root scrollers for controlling glow, or bounce effects is outside the scope of this proposal.</p>
+<h2>Feature Detection and Polyfillability</h2>
+<p>It is should be rather straight forward to detect existence of CSS property.
+A polyfill may fallback to one of the existing workarounds which are unfortunately unreliable and have limited applicability.</p>
+<h1>Alternative Solutions</h1>
+<ul>
+<li>Viewport Meta Tags: A CSS, or Javascript based solution is preferable to meta tags.</li>
+<li>
+<a href="https://github.com/w3c/manifest/issues/398" rel="nofollow noopener">App Manifest</a>: This was rejected as being out of scope for app manifest.</li>
+<li>Refresh Event (<a href="https://lists.w3.org/Archives/Public/www-dom/2015AprJun/0022.html">www-dom proposal</a> by rbyers@): This seem to be favored by some web developers as it provides a path to customize the “refresh” action and not just disabling it.
+<ul>
+<li>Does not cover swipe navigations but perhaps a more generic navigation event can be used.</li>
+<li>This ties navigation actions to the main thread (aka slow path) which can introduce delay into navigation process.</li>
+<li>Mozilla engineers were concerned that such an event should be applicable to all refresh affordances on all platforms with an escape hatch for hard reloads and not just p2r.</li>
+<li>See additional discussion below on Disabling vs Customizing.</li>
+</ul>
+</li>
+<li>Attributes on navigator (e.g., Navigator.refreshEnabled, Navigator.swipeNavigationEnabled): This works fine but it seems a CSS property is more natural.</li>
+</ul>
+<h2>Customizing vs Disabling P2R</h2>
+<p>Some web applications (e.g., twitter) may be interested in keeping the p2r UI affordance but hook their own custom refresh logic replacing the browser’s default. This is certainly a valid usecase and should also be addressed. However we think it is worth addressing these two separately for the following reasons:</p>
+<ol>
+<li>The cost of not being able to disable seems to be greater than not being able to customize. Also anecdotally it appears that most apps just want to disable rather than customize so we want to make sure there is a simple API for that. So it is important to address disable first.</li>
+<li>Once we have a <strong>reliable</strong> way to disable UA’s behaviour, it becomes much easier to create customization on top.</li>
+<li>p2r is a Chrome only feature at the moment. This proposal focuses on a solution that is useful for both p2r and swipe navigations across browsers.</li>
+<li>There is some awkwardness in addressing both the Disable and Customize usecases using a single event e.g., deciding whether p2r animation should be shown or not.</li>
+</ol>
+<h2>Links</h2>
+<ul>
+<li>Chrome <a href="https://docs.google.com/document/d/12Ay4s3NWake8Qd6xQeGiYimGJ_gCe0UMDZKwP9Ni4m8/edit#" rel="nofollow noopener">Pull-to-Refresh design document</a> by jdduke@</li>
+<li>Refresh event <a href="https://lists.w3.org/Archives/Public/www-dom/2015AprJun/0022.html">www-dom proposal</a> by rbyers@</li>
+<li>Proposal for a <a href="https://github.com/w3c/manifest/issues/398" rel="nofollow noopener">property on app manifest</a> on w3c-manifest by jdduke@</li>
+<li>Chromium <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=465423" rel="nofollow noopener">bug</a> tracking our progress</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>This is great!</p>
+<p>It’s a common source of debate whether browsers should have gestures that potentially interfere with how the application intends to handle input (eg. many argue Chrome pull-to-refresh feature shouldn’t exist).  But in Chrome we at least believe strongly in the principle that the application should have maximal control over the experience (in fact that’s <a href="http://blog.chromium.org/2008/10/content-not-chrome.html" rel="nofollow noopener">where the name “Chrome” came from</a>).  We thought we were doing that with the P2R feature (can be disabled by cancelling touch events) but it turns out that’s too hard and sometimes even impossible in practice.  So having some mechanism like this for authors to reliably opt-out of the behavior seems REALLY important to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2016-06-01</div>
+          <div class="post_content">
+<p>In a very vague sense, this almost feels like it cuts across what IndieUI Events wanted to address - being able to hook into abstract, high-level events (and then being able to preventDefault and handle it yourself) <a href="https://www.w3.org/TR/indie-ui-events/">https://www.w3.org/TR/indie-ui-events/</a> … however, as the scope for IndieUI has, as I understand it, been heavily cut down, and - to my knowledge - there are no actual implementations in the wild for it…it may well be that a more declarative approach may be better.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-06-08</div>
+          <div class="post_content">
+<blockquote>
+<p>being able to hook into abstract, high-level events (and then being able to preventDefault and handle it yourself)</p>
+</blockquote>
+<p>I agree that the problem we are trying to solve may also be addressed in some way by a high-level event. We have considered having refresh/navigation event. It also could fit in indie-ui or <a href="https://w3c.github.io/editing/device-independent-events-explainer.html" rel="nofollow noopener">device independent event</a> (though neither specifically mentions over-scroll).</p>
+<blockquote>
+<p>however, as the scope for IndieUI has, as I understand it, been heavily cut down, and - to my knowledge - there are no actual implementations in the wild for it…it may well be that a more declarative approach may be better.</p>
+</blockquote>
+<p>Agreed.</p>
+<p>In any case, a declarative solution here does not prevent having an event-based solution in future and in fact one can argue that we want both eventually. Also an advantage of the declarative approach is that the user-agent would know in advance the the over-scroll behaviour is disabled and it does not need to wait for event handler to preventDefault. This can be a performance benefit for threaded scrolling.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1023_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NekR</div>
+          <div class="creation_date">2016-06-12</div>
+          <div class="post_content">
+<p>Do you have any info how many people are using iOS Safari’s gesture navigations in browser?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-06-13</div>
+          <div class="post_content">
+<p>I don’t have any stats on how popular this feature is on iOS Safari.  Are you looking for anything in particular from that stats? I may be able to get some data from Chrome usage stats.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1023_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NekR</div>
+          <div class="creation_date">2016-06-13</div>
+          <div class="post_content">
+<p>I am just thinking if I should optimize for such gestures. Most web apps with animation and pushState look weird on iOS with these gestures. Try Google Plus, for example.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-06-23</div>
+          <div class="post_content">
+<p>Regarding the iOS Safari behavior, I don’t have stats but anecdotally we hear from teams like Google Photos that users accidentally triggering the navigation behavior is one of the top complaints from users.  Eg. see <a href="https://bugs.webkit.org/show_bug.cgi?id=149015" rel="nofollow noopener">this bug</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-07-06</div>
+          <div class="post_content">
+<p>I have created a <a href="https://majido.github.io/user-gesture-nav-proposal/" rel="nofollow noopener">draft spec</a> on GitHub based on this proposal. Feel free to <a href="https://github.com/majido/user-gesture-nav-proposal/issues" rel="nofollow noopener">file issues</a> against it. Also after some offline discussions, we think the alternative explicit action syntax is more appropriate for this. More details are in the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1919_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jacobrossi</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<p>Seems like a reasonable scenario to tackle.  Not sure on the exact API, but how about we move this into the WICG GitHub to incubate further? I think our folks that own overscroll navigation will have some feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-07-29</div>
+          <div class="post_content">
+<p>Great. I am happy to move this to WICG to further collaborate on the API.
+<span class="mention">@yoavweiss</span>: is my proposal repo a good candidate to move to WICG? What is the process?</p>
+<p>As for the exact API, there is an <a href="https://github.com/majido/user-gesture-nav-proposal/issues/1" rel="nofollow noopener">open issue</a> to consider using viewport meta.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-09-08</div>
+          <div class="post_content">
+<p>This <a href="https://github.com/WICG/user-gesture-nav" rel="nofollow noopener">spec repository</a> is now moved to WICG github.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

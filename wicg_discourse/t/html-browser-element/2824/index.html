@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>HTML &lt;browser&gt; element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">HTML &lt;browser&gt; element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RayAI</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<p>Since we’re moving to PWA’s (Progressive Windows Apps) that can be downloaded, and run in full-screen or in windowed mode (Chrome), full-fledged desktop applications are now in a transition to the web. However there are some shortcomings that need to be addressed. One of them is embedding content.</p>
+<p>Our product needs to have a quick documentation and browser to search for content and get inspiration from. We don’t want the user to yet open another chrome browser tab and make their workflow slow. We instead want to integrate a small browser frame within the current window/document, (similar to YouTube on mobile, but its a webpage instead of a video) or twitters webview inside a mobile app.</p>
+<p>There is a hacky way to approach this shortcoming.</p>
+<p><strong>iframe</strong></p>
+<p>But there is a limitation:
+Websites such as twitter disallow the iframe.</p>
+<p>How do we get around it in current alpha:</p>
+<p>We proxy twitter’s website through our server, and tell the user to login from our proxied iframe. Now websites such as Google search and Twitter will recognize us as bots because of multiple request from same ip address. How do we successfully get around that? We have leased entire block of ipv6 addresses from a residential ISP to proxy. We reserve 1 ipv6 address per user. We also block ads server side and other annoyances for a clean experience.</p>
+<p>Why not make it easy instead of making us proxy content and going through different hoops.</p>
+<p>What we propose:
+The <strong>browser</strong> element</p>
+<p>Overview of the proposal:</p>
+<ol>
+<li>
+<p>browser element is an iframe that disrespects the X-FRAME-OPTIONS header.</p>
+</li>
+<li>
+<p>browser element has its 3rd party cookies/storage partitioned under current origin.</p>
+</li>
+<li>
+<p>browser element allows the parent frame to inject anything (i.e: javascript, css etc) even if the embedded website is a different origin that disallows embedding.</p>
+</li>
+<li>
+<p>browser element should be able to control the network requests that happen within the browser element.</p>
+</li>
+<li>
+<p>browser element should be able to control the useragent string inside its own window.</p>
+</li>
+<li>
+<p>browser element should be able to set and read cookies/storage for the embedded websites that were created after the partitioning under current origin.</p>
+</li>
+<li>
+<p>browser element should be able to set custom cookies for the embedded websites.</p>
+</li>
+</ol>
+<p>In simple words: the browser element is <em>literally</em> a browser inside a browser. Just like a webview in iphone apps or microsoft edge view embedded in windows software.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<blockquote>
+<p>browser element is an iframe that disrespects the X-FRAME-OPTIONS header.</p>
+</blockquote>
+<p>Undermining an important security mechanism is not a good basis for a feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<p>This entire request smells of asking browsers to let a developer ignore all security functionality that’s been built to protect users. I don’t see how this could go anywhere. All it does is open up massive methods of exploiting users.</p>
+<p>Imagine a site using this element, embedding twitter as a full view, however, their JS is running underneath to send your username and password to them on submit. Then they get access to your twitter account and you’d not know the wiser because to the user it looked (aside from the URL which can be made similar enough to trick people) like they were on Twitter’s site itself (which they were just in a browser node.) This is just one scenario that is opened by this.</p>
+<p>Perhaps try a post stating what your use-case is that you’d like some discussion around making it function better. Then a discussion could be had over how to handle it (if it should even be allowed) in a secure fashion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RayAI</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="3" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>This entire request smells of asking browsers to let a developer ignore all security functionality that’s been built to protect users. I don’t see how this could go anywhere. All it does is open up massive methods of exploiting users.</p>
+<p>Imagine a site using this element, embedding twitter as a full view, however, their JS is running underneath to send your username and password to them on submit. Then they get access to your twitter account and you’d not know the wiser because to the user it looked (aside from the URL which can be made similar enough to trick people) like they were on Twitter’s site itself (which they were just in a browser node.) This is just one scenario that is opened by this.</p>
+<p>Perhaps try a post stating what your use-case is that you’d like some discussion around making it function better. Then a discussion could be had over how to handle it (if it should even be allowed) in a secure fashion.</p>
+</blockquote>
+</aside>
+<p>We are doing the exact same thing, with the same impact as described here. The users put their twitter/gmail passwords, and we can theoretically with ease  read them in plaintext in our server. We however dont do this. . When we proxy the network requests we are acting like the man in middle between google/twitter and the user,  and we have the control. I’m not sure how it opens another security hole. In-fact we do this right now for convenience.</p>
+<p>If the 3rd party cookies and local storage are partitioned under the current origin, it is equivalent of proxying from our own servers like a vpn.</p>
+<p>We dont use the standard OAuth tokens provided by Google or Twitter. We have complete access of users account. This could be called phishing, but we are using it for legitimate purposes. It could be done in the same manner today, and we are doing it using iframe for now.</p>
+<p>The only practical impact is that it is client side, instead of being server side.</p>
+<p>And, I’d argue it increases security. Right now we have to store store cookies server side. We do not know when the user deletes his/her browsing history and cookies. Therefore we cannot respect that because there is no mechanism to alert us.
+This way we dont need to store any of users personal information for 3rd parties.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RayAI</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Undermining an important security mechanism is not a good basis for a feature.</p>
+</blockquote>
+</aside>
+<p>Even if the same thing with exact same behavior is possible today? The only impact this has is less latency for the user. Please elaborate how this impacts security more than when is possible today?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-06-02</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>We are doing the exact same thing, with the same impact as described here.</p>
+</blockquote>
+</aside>
+<p>Except, you aren’t with Twitter since they disallow iframe embeds of their site. As you stated in your original post. So… You’re either currently doing it and we don’t need something to ignore the <code>X-FRAME-OPTIONS</code> header or you’re not doing it but want it to be possible.</p>
+<p>Your company/product/service doesn’t get to pop up and say that the security measures other sites have put in place to protect their users don’t matter so you and the browser should ignore them. These things all exist for very good reasons, having this “browser” element just reverts the web and opens the attack surface back up.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RayAI</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="6" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>Except, you aren’t with Twitter since they disallow iframe embeds of their site. As you stated in your original post.</p>
+</blockquote>
+</aside>
+<p>I’m not sure if you understood what I meant.</p>
+<p>Because of the limitation of the iframe element that it respects the X-FRAME-OPTIONS header, we proxy twitter and google search from our servers and we strip off the X-FRAME-OPTIONS header.
+See the hacky way we do now:
+<code>&lt;iframe src="https://ourproxy.com/?url=https://twitter.com/"&gt;</code></p>
+<p><a href="http://ourproxy.com" rel="nofollow noopener">ourproxy.com</a> strips off the <code>X-FRAME-OPTIONS</code> header and therefore we can embed twitter. <a href="http://ourproxy.com" rel="nofollow noopener">ourproxy.com</a> are acting like a man in the middle between the user, our website and twitter.
+Because of this, no cookies for <a href="http://twitter.com" rel="nofollow noopener">twitter.com</a> are sent, so the user has to login in to twitter again from our iframe.</p>
+<p>The “browser” element would keep the same behavior, but without needing our proxy.
+Even with the browser element, the user would need to log in again.</p>
+<p>There is no security impact.</p>
+<p>How is any new security flaw being introduced here?</p>
+<p>I’ll provide a POC on how we do it today to clarify my point.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<p>Is your goal only to circumvent the Twitter API?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RayAI</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="8" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Is your goal only to circumvent the Twitter API?</p>
+</blockquote>
+</aside>
+<p>Except for that if something is available on the twitter website, we can use it. It comes under fair use. It is not our fault that browser dont allow twitter to ‘protect’ its API’s. As long as its the web and being done by the end user, we are not the ones at fault.</p>
+<p>And not only twitter. We also use Google translate, without paying for the API.
+If someone makes it available on the web and for free, it is not our fault that our in app browser helps them look for content more easily. Legally it is a browser like any other.</p>
+<p>The same thing could be done using a browser extension. Or downloading our app which user downloads directly from our website. We don’t distribute on walled garden app stores. The user could also download our Win32 app and get the same behavior.</p>
+<p>Of course the users will use our web app when no adblocker/text reader download is required for ad free content.</p>
+<p>If your business model is threatened by this, you should change it, or move away from the web. The web is open and that is the benefit.</p>
+<p>All of this while we get the benefit of knowing which website the user goes to and present the user with our own personalized ads.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<aside class="quote no-group quote-modified" data-post="9" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>This comes under fair usage policy.</p>
+<p>We can do all of this without the browser element. The same user could download our app and do the same thing as well. We can embed the content inside the proxied iframe as well.</p>
+<p>I’m not sure how it circumvents the Twitter API’s. As long as it is on a website, we can legally do anything with it except for republishing. Linking to copyrighted content is fair use.</p>
+</blockquote>
+</aside>
+<p>Actually, that depends on local law. It seems there is a significant risk that you would infringe laws protecting “moral rights”: a legal framework essentially allowing copyright holders to determine where and how their content can be used.</p>
+<p>Equally, the concept of “fair use” is not universal - even in the anglo-saxon first-world countries where you might imagine the laws are compatible, there are some very significant differences.</p>
+<p>In general, the laws of any one place, where they are different elsewhere, are a poor basis for making a standard…</p>
+<p>Something that relies on being a man-in-the-middle doesn’t sound like a good start, since that term is widely understood to be a security attack. The explanation you provide of how it may be possible, by effectively misrepresenting the client to the server, in order to present something other than what the server expects to the client, invites the couner-proposal to harden the Web against this approach. That probably won’t happen, because the Web tends to end up favouring the ability of a user to do what they want - largely because on a technical level this is important to enable such things as accessibility, which is a basic requirement to make the system fit-for purpose.</p>
+<p>But the argument that "</p>
+<aside class="quote no-group" data-post="10" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>Except for that if something is available on the twitter website, we can use it. It comes under fair use. It is not our fault that browser dont allow twitter to ‘protect’ its API’s. As long as its the web and being done by the end user, we are not the ones at fault.</p>
+</blockquote>
+</aside>
+<p>Is likely to fail in a lot of legal systems. The fact that you explicitly did work to enable the user to mislead the website is clearly your fault. More generally, offering people assistance to do things is often held, legally, to make you partially responsible for people who take that assistance in order to do such things.</p>
+<p>It is exceptional, rather than normal, that e.g. news agrgegators are not held to this standard <strong>in some countries</strong> (where I live Google news is unavailable because it would be legally required to pay for the content it presents).</p>
+<p>Whether or not it is technically possible to use an API for free doesn’t have much impact on whether it is legal.</p>
+<p>It is technically trivial to pick up stuff in a shop, put it in your pocket, and walk out, or to walk into someone’s unlocked house and walk out with their TV. That doesn’t stop it being regarded as theft.</p>
+<p>Actively misrepresenting a situation to enable usage that circumvents the conditions under which the API is made available might well be regarded as “obtaining property by deception”. In any event, the case would not turn on the fact that the API can be manipulated, but rather on a few fairly complex arguments about the nature of contract law.</p>
+<p>There is a <a href="https://discourse.wicg.io/t/proposal-a-non-modifiable-unique-id-for-the-client-device/2812/1">related thread on hardening the Web against this kind of behaviour</a>, and it would make sense to read the two together.</p>
+<p>Balancing the needs of users to repurpose content, the legal rights of authors to have some control over their production, and the economic incentives that lead to people producing content or not in the first place, is a tricky task. I don’t see that the use case proposed here is helpful in that, and I doubt that implementing this proposal will get much traction. In particular because most of the “big” browser makers are also effective targets of the “attack” - something you apparently recognise in stating that you do this as a way to circumvent Google’s Terms of Use…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RayAI</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<blockquote>
+<p>Actually, that depends on local law. It seems there is a significant risk that you would infringe laws protecting “moral rights”: a legal framework essentially allowing copyright holders to determine where and how their content can be used.</p>
+<p>Equally, the concept of “fair use” is not universal - even in the anglo-saxon first-world countries where you might imagine the laws are compatible, there are some very significant differences.</p>
+<p>In general, the laws of any one place, where they are different elsewhere, are a poor basis for making a standard…</p>
+<p>Something that relies on being a man-in-the-middle doesn’t sound like a good start, since that term is widely understood to be a security attack. The explanation you provide of how it may be possible, by effectively misrepresenting the client to the server, in order to present something other than what the server expects to the client, invites the couner-proposal to harden the Web against this approach. That probably won’t happen, because the Web tends to end up favouring the ability of a user to do what they want - largely because on a technical level this is important to enable such things as accessibility, which is a basic requirement to make the system fit-for purpose.</p>
+<p>But the argument that "</p>
+<pre><code>Except for that if something is available on the twitter website, we can use it. It comes under fair use. It is not our fault that browser dont allow twitter to ‘protect’ its API’s. As long as its the web and being done by the end user, we are not the ones at fault.
+</code></pre>
+<p>Is likely to fail in a lot of legal systems. The fact that you explicitly did work to enable the user to mislead the website is clearly your fault. More generally, offering people assistance to do things is often held, legally, to make you partially responsible for people who take that assistance in order to do such things.</p>
+<p>It is exceptional, rather than normal, that e.g. news agrgegators are not held to this standard in some countries (where I live Google news is unavailable because it would be legally required to pay for the content it presents).</p>
+<p>Whether or not it is technically possible to use an API for free doesn’t have much impact on whether it is legal.</p>
+<p>It is technically trivial to pick up stuff in a shop, put it in your pocket, and walk out, or to walk into someone’s unlocked house and walk out with their TV. That doesn’t stop it being regarded as theft.</p>
+<p>Actively misrepresenting a situation to enable usage that circumvents the conditions under which the API is made available might well be regarded as “obtaining property by deception”. In any event, the case would not turn on the fact that the API can be manipulated, but rather on a few fairly complex arguments about the nature of contract law.</p>
+<p>There is a related thread on hardening the Web against this kind of behaviour, and it would make sense to read the two together.</p>
+<p>Balancing the needs of users to repurpose content, the legal rights of authors to have some control over their production, and the economic incentives that lead to people producing content or not in the first place, is a tricky task. I don’t see that the use case proposed here is helpful in that, and I doubt that implementing this proposal will get much traction. In particular because most of the “big” browser makers are also effective targets of the “attack” - something you apparently recognise in stating that you do this as a way to circumvent Google’s Terms of Use…</p>
+</blockquote>
+<p>Google’s chrome browser allows adblock extension.</p>
+<p>If Google is helping users view content in a format they like, our usage comes under the same value.
+Google also has web scrapers on its extension store.</p>
+<p>Why has no one held Google accountable for this? When the other apps start following the same thing, it suddenly becomes a problem?</p>
+<p>The web browser is the <strong>user’s agent</strong>. We can interpret the content how we want. Our browser many not follow all the standards, does not mean its illegal.</p>
+<p>Firefox is getting the so called 'tracking protection" that blocks 3rd party connections. Does it mean its illegal? Chromium started blocking the audio context api’s moving away from the standard, does it mean its illegal?</p>
+<p>Adblock browser and dedicated browser block ads too. Does it mean its illegal?</p>
+<p>We will legally call our product an advanced browser. There is no law that prevents what we are doing.</p>
+<p>AMP helped making this even easier. Now we have a standard and that we can get content even more easily and in text mode.</p>
+<p>Your content should not be on the open web, because there is nothing that prevents that. We legally call our fetcher a proxy, because it is a proxy. Proxies are not illegal.</p>
+<p>There is no legal law requiring following the web standards and not interpreting the HTML as we like.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChrisP</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="12" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>Google’s chrome browser allows adblock extension.</p>
+<p>If Google is helping users view content in a format they like, our usage comes under the same value. Google also has web scrapers on its extension store.</p>
+<p>Why has no one held Google accountable for this? When the other apps start following the same thing, it suddenly becomes a problem?</p>
+<p>The web browser is the <strong>user’s agent</strong> . We can interpret the content how we want. Our browser many not follow all the standards, does not mean its illegal.</p>
+<p>Firefox is getting the so called 'tracking protection" that blocks 3rd party connections. Does it mean its illegal? Chromium started blocking the audio context api’s moving away from the standard, does it mean its illegal?</p>
+<p>Adblock browser and dedicated browser block ads too. Does it mean its illegal?</p>
+<p>We will legally call our product an advanced browser. There is no law that prevents what we are doing.</p>
+<p>AMP helped making this even easier. Now we have a standard and that we can get content even more easily and in text mode.</p>
+<p>Your content should not be on the open web, because there is nothing that prevents that. We legally call our fetcher a proxy, because it is a proxy. Proxies are not illegal.</p>
+<p>There is no legal law requiring following the web standards and not interpreting the HTML as we like.</p>
+</blockquote>
+</aside>
+<p><strong>This is why we want a DRM for the web</strong>.
+This should be illegal, unfortunately its not. But I support that you do it. It’ll make our job easier to move users to our own apps, when everyone starts facing the same problem.</p>
+<p>Good luck.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="12" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>Why has no one held Google accountable for this?</p>
+</blockquote>
+</aside>
+<p>As I explicitly noted, in Spain because teh government will hold them accountable Google does not provide its news service.</p>
+<aside class="quote no-group" data-post="12" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>When the other apps start following the same thing, it suddenly becomes a problem?</p>
+</blockquote>
+</aside>
+<p>Legal enforcement in general requires someone to act. And where there is a clear breach of a law, there is only sometimes an incentive to act, and sometimes all those with “standing” - the right to act - fail to do so. That doesn’t make something legal, in general.</p>
+<aside class="quote no-group" data-post="12" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>The web browser is the <strong>user’s agent</strong> . We can interpret the content how we want. Our browser many not follow all the standards, does not mean its illegal.</p>
+</blockquote>
+</aside>
+<p>There is no law that requires you to follow most Web Standards. But there are laws about the ownership of content, and the conditions under which you can use and distribute it. And they are different from place to place. It is that variation that I am suggesting might mean you are not on solid legal ground across the entire  Web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-06-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="12" data-topic="2824">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/f4b2a3/40.png" width="20"/> RayAI:</div>
+<blockquote>
+<p>We will legally call our product an advanced browser. There is no law that prevents what we are doing.</p>
+</blockquote>
+</aside>
+<p>Sure. Just like there is no law preventing snake oil salespeople from selling products under the notion that they “may” help with medical problems. Since there is wiggle room for it to not work. You can call your product an “advanced browser” because people who don’t know any better may think it is. That doesn’t mean it is a browser, much less anything “advanced” in any way.</p>
+<p>You’re correct on one thing though, there <em>may be</em> nothing <strong>illegal</strong> outright about your application. However, being legal and being right are two different things. Web browsers should not allow a method internally to circumvent clear protections put in place by website authors to help protect their users.</p>
+<p>Regardless of direct legality, these controls exist for a reason. Any method to bypass them within a browser <strong>MUST NOT</strong> be done. Otherwise, we might as well remove the controls themselves everywhere and ignore adding any method to allow bypassing them.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

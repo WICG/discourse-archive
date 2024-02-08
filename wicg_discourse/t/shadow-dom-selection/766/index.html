@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Shadow DOM selection</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Shadow DOM selection</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-02-22</div>
+          <div class="post_content">
+<p>So I wrote the following code for an article I am writing: <a href="http://codepen.io/anon/pen/dPeYGN" rel="nofollow noopener">http://codepen.io/anon/pen/dPeYGN</a> (Which is just a clean up of something I posted here).</p>
+<h1>Scoping through the shadow</h1>
+<p>Having selectors from the outside looking through a shadow DOM route I would expect the above code to not be all in red.</p>
+<pre><code class="lang-auto">my-element {
+  color: red;
+}
+</code></pre>
+<p>Rendered HTML DOM nodes:</p>
+<pre><code class="lang-auto">&lt;my-element&gt;
+  &lt;"shadow-tree"&gt;
+    &lt;span&gt;My title&lt;/span&gt;
+    &lt;content&gt;
+      &lt;span&gt;My content&lt;/span&gt;
+    &lt;/content&gt;
+  &lt;/&gt;
+&lt;/my-element&gt;
+</code></pre>
+<p>I would not expect “My title” to be in red text.</p>
+<h2>Scoped styles</h2>
+<p>In both <a href="http://drafts.csswg.org/css-scoping" rel="nofollow noopener">CSS scoping</a> and <a href="http://w3c.github.io/webcomponents/spec/shadow/" rel="nofollow noopener">Shadow DOM</a> there seems to now be a lack of wording around scoped styling within the shadow DOM.</p>
+<p>So given:</p>
+<pre><code class="lang-auto">&lt;div&gt;
+  &lt;"shadow-tree"&gt;
+    &lt;b&gt;Text 1&lt;/b&gt;
+    &lt;style&gt;
+      b { color: purple; }
+    &lt;/style&gt;
+  &lt;/&gt;
+&lt;/div&gt;
+&lt;b&gt;Text 2&lt;/b&gt;
+</code></pre>
+<p>“Text 1” should only be purple right?</p>
+<p>I do remember reading that a <code>&lt;style&gt;</code> within a shadow tree behaves the same way as a <code>&lt;style scoped&gt;</code> however given that implementers are removing support for that I assume that is why the wording got dropped. However I think it would be good to be specific that the styles register on the <code>ShadowRoute.StyleSheetList</code> scoped to only this tree and not the document.</p>
+<p>I assume <span class="mention">@tabatkins</span> will know the current behaviour of these two examples.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-02-22</div>
+          <div class="post_content">
+<p>Why would you think it’s not red?  <em>Selectors</em> don’t reach inside the shadow DOM, but inheritance still applies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-02-22</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> I thought the main advantage would be that it would be much simpler to avoid cascading styles impacting a component unless specifically used to style them.</p>
+<p>So assuming we have a component <code>my-component</code> built from a template which is inserted into a shadow DOM on construction:</p>
+<pre><code class="lang-auto">&lt;template id="mycomponenttemplate"&gt;
+  &lt;div class="me"&gt;
+     &lt;content&gt;&lt;/content&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<p>And usage template like:</p>
+<pre><code class="lang-auto">&lt;div class="my-post"&gt;
+  &lt;my-component&gt;
+    Test 1
+    &lt;div class="control"&gt;
+      &lt;my-component&gt;
+        Test 2
+      &lt;/my-component&gt;
+    &lt;/div&gt;
+  &lt;/my-component&gt;
+&lt;/div&gt;
+</code></pre>
+
+  div { //targets just .my-post and .control
+    background: red;
+  }
+  my-component::shadow div { //targets just .me elements
+    background: green;
+  }
+
+<p>The advantage is that template authors wouldn’t need to worry about the contents of the shadow DOM in their styles (Unless they wanted them to with <code>::shadow</code> or <code>&gt;&gt;&gt;</code>).
+The problem is that I don’t expect <code>::content</code> would work here either as in the case above as the selectors would likely style the second component styles.</p>
+<hr/>
+<p>I was right about styles declared within the shadow DOM are only applicable to it and it’s children and not the document, right?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-02-24</div>
+          <div class="post_content">
+<p>Yes, styles declared inside the shadow DOM don’t escape out, and styles declared outside the shadow DOM don’t reach in (unless you explicitly pierce the shadow).  It’s only inheritance that still works across shadows, and that’s intentional.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-02-25</div>
+          <div class="post_content">
+<p>That is fair enough, as I as a component author could essentially CSS reset to make sure that things like that didn’t leak into my shadow if I so chose.</p>
+<p>Anyway thank you, I just wanted to clarify with you before I finalised my article.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

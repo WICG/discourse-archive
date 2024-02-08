@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>DOMStringMap.prototype extension</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">DOMStringMap.prototype extension</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<p><em>I apologize if this is the wrong place to discuss this.</em></p>
+<p>Can we make this happen (<a href="https://gist.github.com/eorroe/3cc28ed95e6676702868" rel="nofollow noopener">better reading</a>), I tried fixing indentation on here):</p>
+<pre><code>DOMStringMap.prototype.__proto__ = {
+keys() {
+	let keys = Object.keys(this),
+	count = 0;
+	return {
+		next() {
+			if(count == keys.length) return { value: undefined, done: true };
+			return { value: keys[count++], done: false };
+		}
+	}
+},
+values() {
+	let values = Object.keys(this).map(key =&gt; this[key], this),
+	count = 0;
+	return {
+		next() {
+			if(count == values.length) return { value: undefined, done: true };
+			return { value: values[count++], done: false };
+		}
+	}
+},
+entries() {
+	let keys = Object.keys(this),
+	values = keys.map(key =&gt; this[key], this),
+	count = 0;
+	return {
+		next() {
+			if(count == keys.length) return { value: undefined, done: true };
+			return { value: { key: keys[count], value: values[count++] }, done: false };
+		}
+	}
+},
+[Symbol.iterator]: DOMStringMap.prototype.values //Or perhaps .entries
+}
+</code></pre>
+<p>Now the <code>[Symbol.iterator]: DOMStringMap.prototype.values</code> is to make it iterable in <code>for of</code> loops.</p>
+<p>Can someone please explain how the following works:</p>
+<pre><code>for(var c of document.body.classList) console.log(c);
+</code></pre>
+<p>Meaning how is the above possible if it’s a <code>DOMStringList</code> and <code>DOMStringList.prototype[Symbol.iterator]</code> is <code>undefined</code>.</p>
+<p>Yet the above doesn’t work with <code>DOMStringMap</code> example would be <code>document.body.dataset</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<p>Most likely, DOMStringList isn’t <em>supposed</em> to work in an iterator context, per spec, but whatever browser you’re testing in implemented it anyway, since it’s an array-like and iteration behavior is obvious.</p>
+<p>DOMStringMap could probably be given default behavior as you suggest.  Adding things to the prototype is dangerous, though - object-as-map means that anything you expect to see on the prototype might be shadowed by a value on the instance, which is why they’re a bad idea.  But you can certainly safely add a symbol-valued property like Symbol.iterator, and give it one of the behaviors by default (whatever Map uses as its default behavior, if it has one).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-05</div>
+          <div class="post_content">
+<blockquote>
+<p>though - object-as-map means that anything you expect to see on the prototype might be shadowed by a value on the instance, which is why they’re a bad idea.</p>
+</blockquote>
+<p>Why would that be bad if I want every instance to be like that. That’s why I set it on the prototype (Ik how prototypes work in js)</p>
+<p>Every <code>dataset</code> of every element should have the above.</p>
+<p>As far as the <code>DOMStringList</code> it’s iterable through <code>for of</code>. Shouldn’t that only be for anything with <code>[Symbol.iterator]</code> on it’s prototype. Like <code>Array.prototype[Symbol.iterator]</code> and <code>String.prototype[Symbol.iterator]</code> is not undefined. Which means <code>for of</code> should work. Now <code>DOMStringList[Symbol.iterator]</code> is undefined, which should mean <code>for of</code> should NOT work. (or am I mssing something)</p>
+<p>I want to know why and how is that working on chrome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/597_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rwaldron</div>
+          <div class="creation_date">2015-05-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="844">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/edwin_reynoso/40/636_1.png" width="20"/> Edwin_Reynoso:</div>
+<blockquote>
+<p>Why would that be bad if I want every instance to be like that. That’s why I set it on the prototype (Ik how prototypes work in js)</p>
+</blockquote>
+</aside>
+<p>What happens when you have an element with attributes called <code>data-entries</code>, <code>data-keys</code> or <code>data-values</code>? <code>DOMStringMap</code> is a garbage design that creates its “storage” by growing expando properties. Check out what happens:</p>
+<pre><code class="lang-auto">DOMStringMap.prototype.entries = function * () {
+  let keys = Object.getOwnPropertyNames(this);
+
+  while (keys.length) {
+    let key = keys.shift();
+    yield [key, this[key]];
+  }
+};
+
+
+document.body.setAttribute("data-foo", 1);
+
+
+var entries = document.body.dataset.entries();
+
+for (var [k, v] of entries) {
+  console.log(k, v); // "foo" "1"
+}
+
+
+document.body.setAttribute("data-entries", "ohhhhhh shit!");
+
+
+var entries = document.body.dataset.entries();
+
+// TypeError: document.body.dataset.entries is not a function
+</code></pre>
+<p>Whoops!</p>
+<p>That will happen for this as well:</p>
+<pre><code class="lang-auto">&lt;body data-entries="whatever"&gt;
+</code></pre>
+<p>However, as Tab said, using Symbol.iterator is safe:</p>
+<pre><code class="lang-auto">
+Object.defineProperty(DOMStringMap.prototype, Symbol.iterator, {
+  value: function * () {
+    let keys = Object.getOwnPropertyNames(this);
+
+    while (keys.length) {
+      let key = keys.shift();
+      yield [key, this[key]];
+    }
+  }
+});
+
+for (var [k, v] of document.body.dataset) { 
+  console.log(k, v); 
+}
+
+// "foo" "1"
+// "entries" "ohhhhhh shit!"
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-14</div>
+          <div class="post_content">
+<p>Oh wow I didn’t even think of that, that’s so true, um just a thought what if those methods exist, but when you have <code>data-entries</code> they get overridden. That’s probably a really really bad DOM API which were trying to get away from.</p>
+<p>Also I just figured out why <code>DOMStringList</code> is iterable each <code>DOMStringList</code> has <code>[Symbol.iterator]</code> as a own property, why not on the <code>DOMStringList.prototype</code>?</p>
+<p>Thanks guys</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/597_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rwaldron</div>
+          <div class="creation_date">2015-05-14</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="844" data-username="Edwin_Reynoso">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/edwin_reynoso/40/636_2.png" width="20"/> Edwin_Reynoso:</div>
+<blockquote>
+<p>Also I just figured out why DOMStringList is iterable each DOMStringList has [Symbol.iterator] as a own property, why not on the DOMStringList.prototype?</p>
+</blockquote>
+</aside>
+<p>Looks like Firefox has it implemented on the prototype:</p>
+<p><img height="" src="//discourse.wicg.io/uploads/default/599/de481242d95570bc.png" width=""/></p>
+<p>(That’s in Firefox Developer Edition)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-14</div>
+          <div class="post_content">
+<p>Looks like chrome doesn’t should I file a issue? It should be on the prototype.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-05-14</div>
+          <div class="post_content">
+<p>Be sure to test Chrome Canary before filing. Moving things to the prototype has been a recent thing in Chrome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-14</div>
+          <div class="post_content">
+<p>Yes I’m aware, thanks <span class="mention">@domenic</span> and <span class="mention">@rwaldron</span> yup same thing in canary. Needs to be moved to the prototype. Should I post the issue here: <a href="https://code.google.com/p/chromium/issues/list" rel="nofollow noopener">https://code.google.com/p/chromium/issues/list</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

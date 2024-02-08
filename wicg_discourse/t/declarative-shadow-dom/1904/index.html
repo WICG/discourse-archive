@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Declarative Shadow DOM</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Declarative Shadow DOM</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2016-12-12</div>
+          <div class="post_content">
+<p>Currently, the only way to construct a <code>ShadowRoot</code> is via the imperative <code>attachShadow</code> API.</p>
+<p>Has any consideration been given to providing a declarative Shadow DOM tag?</p>
+<p>In order to support Web Component server side rendering, there has to be a way to serialize their contents in a way that can be displayed before JS is initialized. This approach is possible with React components and CSS module implementations. But it would be great if all these CSS module implementations could just be using shadow in the future.</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  .btn {
+    color: blue;
+  }
+&lt;/style&gt;
+&lt;button class="btn"&gt;Blue Button&lt;/button&gt;
+
+&lt;shadow-root mode="open"&gt;
+  &lt;style&gt;
+    .btn {
+      color: red;
+    }
+  &lt;/style&gt;
+
+  &lt;button class="btn"&gt;Red Button&lt;/button&gt;
+&lt;/shadow-root&gt;
+</code></pre>
+<p>Ironic polyfill implemented via Custom Elements.</p>
+<pre><code class="lang-auto">&lt;script&gt;
+  class ShadowRootElement extends HTMLElement {
+    constructor() {
+      super();
+      this.root = this.attachShadow({mode: this.getAttribute('mode')});
+    }
+    connectedCallback() {
+      for (const child of Array.from(this.childNodes)) {
+        this.root.appendChild(child);
+      }
+    }
+  }
+  customElements.define('shadow-root', ShadowRootElement);
+&lt;/script&gt;
+</code></pre>
+<p>Obviously this polyfill has a number of problems and would be better served with a native implementation that could run before scripts are loaded.</p>
+<p>Now that <a href="https://github.com/whatwg/html/issues/552" rel="nofollow noopener"><code>&lt;style scoped&gt;</code> has been removed</a>, this provides that same declarative mechanism.</p>
+<p>Also related, I’ve found hints of <code>HTMLShadowElement</code> in Shadow DOM v0, however it don’t think it could ever be initialized via a tag name.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2016-12-12</div>
+          <div class="post_content">
+<p>Can you explain why these server-rendering solutions are able to insert <code>&lt;shadowroot&gt;</code> elements but are not able to insert <code>&lt;script&gt;document.querySelector("...").attachShadow().appendChild(document.querySelector("..."));&lt;/script&gt;</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2016-12-12</div>
+          <div class="post_content">
+<p>CSP often limits inline scripting usage. Or if scripting is disabled entirely by the UA.</p>
+<p>It seems like there are other HTML parsing performance benefits for a browser to render markup as its coming in without having to context switch between hundreds of blocking inline <code>&lt;script&gt;</code> tags on the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2016-12-12</div>
+          <div class="post_content">
+<p>CSP can be configured to allow select (known ahead of time) inline scripts. We should not be adding new elements to work around CSP.</p>
+<p>I don’t think making performance conjectures without data is very helpful here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1904">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p>CSP can be configured to allow select (known ahead of time) inline scripts.</p>
+</blockquote>
+</aside>
+<p>You never know how exactly scripts are blocked by a script blocker.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2016-12-13</div>
+          <div class="post_content">
+<p>Yes, just like you never know what elements are blocked by a script blocker either. If you introduce nonstandard ways of messing with your page’s contents into the mix, all bets are off. Inventing new elements to get around such blockers is not likely to work for long.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-13</div>
+          <div class="post_content">
+<p>It’s not about working around script blockers, it’s about making those able to do their job without inevitably and unreasonably breaking other parts of document that can be expressed via nonscript means. Script blockers don’t block CSS or HTML since this is not what those are intended for, not because those couldn’t technically.</p>
+<p>Even if a standardized Shadow-DOM-related subset of JS would be defined by a spec, most script blockers would most likely keep blocking JS <em>completely</em>, including (and regardless of) the subset formally called “safe” in the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-04-24</div>
+          <div class="post_content">
+<p>I created a gist that does a performance comparison between using the inline script technique that <span class="mention">@domenic</span> suggested vs. normal inlined HTML: <a href="https://gist.github.com/matthewp/f68d892ceb54ccc44f42691b41638f12" rel="nofollow noopener">https://gist.github.com/matthewp/f68d892ceb54ccc44f42691b41638f12</a></p>
+<p>This creates 1000 divs, and in the shadow DOM case it moves the HTML from a <code>&lt;template&gt;</code> into the div’s shadow root using an inline script.</p>
+<p>On my local machine I get about 4ms load time in the inlined HTML version and ~200ms in the shadow DOM version in Chrome Canary.  Safari 10.1 does a bit better at ~4ms for the inlined and ~50ms for the shadow DOM version.</p>
+<p>I draw no conclusions from this, just presenting the data. A <code>&lt;shadow-root&gt;</code> element might have a similar cost.</p>
+<p>Happy to improve the benchmark if there are any suggestions!  I tried using parentNode/previousElementSibling instead of getElementById but that didn’t change the numbers at all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1291_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">knownasilya</div>
+          <div class="creation_date">2017-05-15</div>
+          <div class="post_content">
+<p>The other use case is for frameworks that have declarative templating, e.g. GlimmerJS. Being able to define your shadow dom in the template is powerful and clear at the same time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-05-19</div>
+          <div class="post_content">
+<p>It isn’t necessarily about server-side rendering. It could be about language. Someone can write the shadow-root element in HTML similar to how they can write a new block scope in JavaScript in order to introduce a new scope for variables. By writing a <code>&lt;shadow-root&gt;</code> element then placing style and elements inside, a scope can be created for CSS isolation when that is all that is desired (for example) without needing JavaScript. It can be a sort of convenience as far as writing HTML goes, which is a much different use case compared to using shadow dom to define component internals. Plus, having JS-only API means that some CSS features are disabled if JS is disabled (if we can’t create shadow roots with JS, then we can’t have CSS scope).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-05-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1904">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p>&lt;script&gt;document.querySelector("…").attachShadow().appendChild(document.querySelector("…"));&lt;/script&gt;</p>
+</blockquote>
+</aside>
+<p>Also writing that in server code is much uglier too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1281_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">McMurphy</div>
+          <div class="creation_date">2017-05-22</div>
+          <div class="post_content">
+<p>Not completely to grips with the use-case here. You don’t use Javascript at all? Deferred till condition X? Just want to speed up query selectors?</p>
+<p>Anyway do <code>&lt;SLOT&gt;</code> elements not help?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-05-31</div>
+          <div class="post_content">
+<p>I think it is a huge benefit to be able to write CSS isolation in HTML without requiring JS. This doesn’t sound right: if JS is turned off, then we loose the feature of CSS isolation. If it was supported in HTML, then jS can be turned off, and CSS isolation can still work. That’s a pretty worth reason I think.</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  /* ... some global styles ...*/
+&lt;/style&gt;
+&lt;body&gt;
+  &lt;div&gt;Some globally-styled content&lt;/div&gt;
+  &lt;shadow-root&gt;
+    &lt;style&gt;
+      /* scoped style without JavaScript */
+    &lt;/style&gt;
+    &lt;div&gt; Some content with scoped-style. The style doesn't affect external content! &lt;/div&gt;
+  &lt;/shadow-root&gt;
+&lt;body&gt;
+</code></pre>
+<p>That is plain and simple, and I think JavaScript should <em>not</em> be required to achieve this.</p>
+<p>EDIT: but things may get tricky, for exampe someone might be inclined to write multiple shadow-roots to create multiple areas with scoped styling (note that multiple shadow roots are not allowed):</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  /* ... some global styles ...*/
+&lt;/style&gt;
+&lt;body&gt;
+  &lt;div&gt;Some globally-styled content&lt;/div&gt;
+  &lt;shadow-root&gt;
+    &lt;style&gt;
+      /* scoped style without JavaScript */
+    &lt;/style&gt;
+    &lt;div&gt; Some content with scoped-style. The style doesn't affect external content! &lt;/div&gt;
+  &lt;/shadow-root&gt;
+  &lt;shadow-root&gt;
+    &lt;style&gt;
+      /* other scoped style without JavaScript */
+    &lt;/style&gt;
+    &lt;div&gt; Some other content with scoped-style. The style doesn't affect external content! &lt;/div&gt;
+  &lt;/shadow-root&gt;
+&lt;body&gt;
+</code></pre>
+<p>In this case the solution may be to use wrappers around the shadow-roots:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  /* ... some global styles ...*/
+&lt;/style&gt;
+&lt;body&gt;
+  &lt;div&gt;Some globally-styled content&lt;/div&gt;
+
+  &lt;div&gt;
+  &lt;shadow-root&gt;
+    &lt;style&gt;
+      /* scoped style without JavaScript */
+    &lt;/style&gt;
+    &lt;div&gt; Some content with scoped-style. The style doesn't affect external content! &lt;/div&gt;
+  &lt;/shadow-root&gt;
+  &lt;/div&gt;
+
+  &lt;div&gt;
+  &lt;shadow-root&gt;
+    &lt;style&gt;
+      /* other scoped style without JavaScript */
+    &lt;/style&gt;
+    &lt;div&gt; Some other content with scoped-style. The style doesn't affect external content! &lt;/div&gt;
+  &lt;/shadow-root&gt;
+  &lt;/div&gt;
+&lt;body&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Richard_Maher</div>
+          <div class="creation_date">2017-06-01</div>
+          <div class="post_content">
+<p>Hi Joseph,</p>
+<p>Sorry to be slow on the uptake but can’t this simply be achieved with
+another CSS class? Or perhaps just prefixing your selectors with " <span class="hashtag">#myHost</span></p>
+<blockquote>
+<p>"?</p>
+</blockquote>
+<p>Perhaps if you explained what was to be gained by this approach?
+Especially, given the semi-isolation described here: -
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://www.gstatic.com/devrel-devsite/prod/v050cadc3f3cf927d4089880349cc4dea1a9dab3bc6036e7a65cc361fddd65555/developers/images/favicon.png" width="32"/>
+<a href="https://developers.google.com/web/fundamentals/web-components/shadowdom" rel="nofollow noopener" target="_blank">Google Developers</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:690/388;"><img class="thumbnail" height="388" src="https://developers.google.com/web/images/social-webfu-16x9.png" width="690"/></div>
+<h3><a href="https://developers.google.com/web/fundamentals/web-components/shadowdom" rel="nofollow noopener" target="_blank">Shadow DOM v1: Self-Contained Web Components  |  Web Fundamentals</a></h3>
+<p>Shadow DOM allows web developers to create compartmentalized DOM and CSS for web components</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>Anyway I’m banned from WICG so good-luck.</p>
+<p>Cheers Richard</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-06-01</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="1904">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/7ba0ec/40.png" width="20"/> Richard_Maher:</div>
+<blockquote>
+<p>Sorry to be slow on the uptake but can’t this simply be achieved with
+another CSS class? Or perhaps just prefixing your selectors with " <span class="hashtag">#myHost</span></p>
+</blockquote>
+</aside>
+<p>Yeah, those are the currently-existing techniques, which Less, Sass, etc, use when they compile to CSS. But it isn’t entirely full proof: you can’t guarantee that someone won’t in the future also write <code>#myHost</code> or some other colliding class name (in a big project for example). Also it takes effort to write collision-free names.</p>
+<p>CSS scoping is programmatically encapsulated, unlike just following conventions. With CSS scope, it means someone can write a class <code>button</code> without having to write <code>component-subcomponent-button</code> or something else more complicated to just to avoid collision…</p>
+<p>Because with scoping the collision is avoided by the program, not by writing conventions. For example, look how easy it is to style scoped button without having to write extra stuff:</p>
+<pre><code class="lang-auto">&lt;shadow-dom&gt;
+  &lt;style&gt;
+    button {
+      color: red
+    }
+  &lt;/style&gt;
+  &lt;button&gt;&lt;/button&gt;
+&lt;/shadow-dom&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1468_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomalec</div>
+          <div class="creation_date">2018-02-07</div>
+          <div class="post_content">
+<p>I tried to aggregate discussions from here and <a href="https://github.com/whatwg/dom/issues/510" rel="nofollow noopener">https://github.com/whatwg/dom/issues/510</a>, to a slightly more structured proposal at <a href="https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Declarative-Shadow-DOM.md" rel="nofollow noopener">https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Declarative-Shadow-DOM.md</a> I would really appreciate any feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-02-09</div>
+          <div class="post_content">
+<p>I like the proposal, but maybe it needs a slightly special syntax to disambiguate from normal DOM elements. For example:</p>
+<pre><code class="lang-auto">    &lt;#shadowroot mode="open"&gt;
+        &lt;h2&gt;Shadow Content&lt;/h2&gt;
+        &lt;slot&gt;&lt;/slot&gt;
+    &lt;/#shadowroot&gt;
+</code></pre>
+<p>with the leading <code>#</code> so that it makes the distinction clear. But, then again, <code>&lt;#foo&gt;</code> isn’t a backwards-compatible format, and in older browsers the <code>&lt;#foo&gt;</code> will appear as text in the rendering. But even with back0compat syntax, it will lead to content not rendered as expected in older browsers. So it’s tricky!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1468_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomalec</div>
+          <div class="creation_date">2018-02-09</div>
+          <div class="post_content">
+<p>Thanks for the review!</p>
+<p>I’m afraid that so different syntax would be problematic for parser changes, polyfilling, etc. It does not fit the current definition of an element name <a href="https://w3c.github.io/html-reference/syntax.html#tag-name" rel="nofollow noopener">https://w3c.github.io/html-reference/syntax.html#tag-name</a>. However, from a users perspective, I don’t see much disadvantages.</p>
+<p>We already have not-“normal DOM elements”, the elements with different parsing contexts, like: <code>template</code>, <code>script</code>, <code>tr</code>. So far, to distinct the special behavior, we didn’t use any mean other than the tag name.</p>
+<p>At the end it will still be part of the DOM, why should we disambiguate DOM from DOM? Is that this “disappearing” behavior that makes you think it may be that special and confusing?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>Well, what happens if we do</p>
+<pre><code class="lang-auto">document.querySelector('shadowroot').remove()
+</code></pre>
+<p>Does that remove the shadowroot even though that is not supposed to be possible?</p>
+<p>Does the parser remove the <code>&lt;shadowroot&gt;</code> element during parsing, so that the result is a real shadow root but the DOM no longer contains a <code>&lt;shadowroot&gt;</code> element? If not, then is it just an inert element after parsing?</p>
+<p>If we add children to <code>&lt;shadowroot&gt;</code>, do they somehow get distributed into the content of the actual root?</p>
+<p>Is a reference to a <code>&lt;shadowroot&gt;</code> the same as an actual shadow root? If not, then how can elements exist both as content of a <code>&lt;shadowroot&gt;</code> and content of the actual real shadow root? Do we introduce another distribution mechanism just for distributing elements from <code>&lt;shadowroot&gt;</code> to actual shadow root?</p>
+<p>What happens if I move the <code>&lt;shadowroot&gt;</code> to another parent?</p>
+<p>If it is a normal element, does that mean that <code>&lt;shadowroot&gt;</code> can be distributed into a… shadow root?</p>
+<p>What happens if we add more than one <code>&lt;shadowroot&gt;</code> element to the parent element?</p>
+<p><code>&lt;shadowroot&gt;</code> is so different than all other elements in the sense that shadow roots are meant for composing HTMLElements/DOM, and currently they <em>aren’t</em> HTML elements. Making them HTML elements has many implications (which may not be desired).</p>
+<p>This is why I thought maybe an alternate syntax would let us sidestep all implications, and specify the behavior from scratch. For example, maybe the <code>&lt;#shadowroot&gt;</code> element is ephemeral, it only exists in your markup, and after being parsed it will not be in the DOM, but the parent element will have a shadow root added to it. That way, if it isn’t in the DOM, it isn’t queryable, isn’t removable, isn’t appendable, can’t have children because it doesn’t exist, can’t be distributed because it doesn’t exist, etc.</p>
+<p>But then, what if one changes <code>innerHTML</code> of an element, introducing a new <code>&lt;#shadowroot&gt;</code> element? Maybe nothing should happen. It just disappears, and the previous root shadow root that was created from the previous parsing remains.</p>
+<hr/>
+<p>For me, the main use case for <code>&lt;shadowroot&gt;</code> is in server-side rendering, so that the client can know how to re-create the composition of trees from the HTML received from the server.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2124_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jamesernator</div>
+          <div class="creation_date">2018-12-15</div>
+          <div class="post_content">
+<p>I have been experimenting with pre-rendered shadow DOM (https://experiments-pre-rendered-shadow-dom-v2–jamesernator.repl.co/) and it definitely adds improved load speed and avoids an awful FOUC.</p>
+<p>However from investigating it I personally don’t think <code>&lt;shadow&gt;&lt;/shadow&gt;</code> is a good solution. In a lot of cases we’ll have similar objects that share the same shape that we only want to change small amounts of the content.</p>
+<p>The solution I wound up using was to simply add an attribute that gives an id number for a template to use.</p>
+<p>So for example if we had lots of identical components differing only by a small bit of data in the current proposal:</p>
+<pre><code class="lang-auto">&lt;blog-post-listing&gt;
+  &lt;shadow&gt;
+    &lt;link rel="stylesheet" href="./blog-post-listing.css"&gt;
+    &lt;span class="blog post name"&gt;Title 1&lt;/span&gt;
+    &lt;div class="description"&gt;
+      Some summary 1
+    &lt;/div&gt;
+  &lt;/shadow&gt;
+&lt;/blog-post-listing&gt;
+&lt;blog-post-listing&gt;
+  &lt;shadow&gt;
+    &lt;link rel="stylesheet" href="./blog-post-listing.css"&gt;
+    &lt;span class="blog post name"&gt;Title 2&lt;/span&gt;
+    &lt;div class="description"&gt;
+      Some summary 2
+    &lt;/div&gt;
+  &lt;/shadow&gt;
+&lt;/blog-post-listing&gt;
+&lt;blog-post-listing&gt;
+  &lt;shadow&gt;
+    &lt;link rel="stylesheet" href="./blog-post-listing.css"&gt;
+    &lt;span class="blog post name"&gt;Title 3&lt;/span&gt;
+    &lt;div class="description"&gt;
+      Some summary 3
+    &lt;/div&gt;
+  &lt;/shadow&gt;
+&lt;/blog-post-listing&gt;
+&lt;blog-post-listing&gt;
+  &lt;shadow&gt;
+    &lt;link rel="stylesheet" href="./blog-post-listing.css"&gt;
+    &lt;span class="blog post name"&gt;Title 4&lt;/span&gt;
+    &lt;div class="description"&gt;
+      Some summary 4
+    &lt;/div&gt;
+  &lt;/shadow&gt;
+&lt;/blog-post-listing&gt;
+&lt;blog-post-listing&gt;
+  &lt;shadow&gt;
+    &lt;link rel="stylesheet" href="./blog-post-listing.css"&gt;
+    &lt;span class="blog post name"&gt;Title 5&lt;/span&gt;
+    &lt;div class="description"&gt;
+      Some summary 5
+    &lt;/div&gt;
+  &lt;/shadow&gt;
+&lt;/blog-post-listing&gt;
+</code></pre>
+<p>We could just just have a single template with the data that we want to prerender into the template e.g.:</p>
+<pre><code class="lang-auto">&lt;template id="blog-post-listing-template"&gt;
+  &lt;link rel="stylesheet" href="./blog-post-listing.css"&gt;
+  &lt;span class="blog post name"&gt;{{title}}&lt;/span&gt;
+  &lt;div class="description"&gt;
+    {{summary}}
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;blog-post-listing
+  prerender-template="blog-post-listing-template"
+  prerender-data="{\"title\":\"Title 1" \"description\": \"Some summary 1\"}"
+&gt;&lt;/blog-post-listing&gt;
+&lt;blog-post-listing
+  prerender-template="blog-post-listing-template"
+  prerender-data="{\"title\":\"Title 2" \"description\": \"Some summary 2\"}"
+&gt;&lt;/blog-post-listing&gt;
+&lt;blog-post-listing
+  prerender-template="blog-post-listing-template"
+  prerender-data="{\"title\":\"Title 3" \"description\": \"Some summary 3\"}"
+&gt;&lt;/blog-post-listing&gt;
+&lt;blog-post-listing
+  prerender-template="blog-post-listing-template"
+  prerender-data="{\"title\":\"Title 4" \"description\": \"Some summary 4\"}"
+&gt;&lt;/blog-post-listing&gt;
+</code></pre>
+<p>This is dependant on the <a href="https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Template-Instantiation.md" rel="nofollow noopener">template instantiation</a> proposal however.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Feature request - target zero-height elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Feature request - target zero-height elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1169_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mottie</div>
+          <div class="creation_date">2016-12-17</div>
+          <div class="post_content">
+<p>First off, I use <a href="https://userstyles.org/" rel="nofollow noopener">Stylish</a> a lot, so I have no control over the markup. I have encountered a situation where an element has a zero-height but still has content, so an <code>:empty</code> pseudo class selector can not be used.</p>
+<p>Given the following markup, I would like to change the position of the navigation bar based on the (non-zero) height of the notification:</p>
+<pre><code class="lang-auto">&lt;div id="notification"&gt;&lt;table&gt;&lt;/table&gt;&lt;/div&gt;
+&lt;div&gt;&lt;/div&gt;
+&lt;nav id="topbar"&gt;...&lt;/nav&gt;
+</code></pre>
+<p>The following CSS would be useful:</p>
+<pre><code class="lang-css">#notification:not(:zero-height) ~ #topbar {
+    top: 34px;
+}
+</code></pre>
+<p>Using the actual height of the notification would be nice, but I’ll save that proposal for later <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+<p>Or, maybe a more useful request would be to add a <code>:has-height</code> pseudo class? Because I think one would almost always use <code>:not(:zero-height)</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-17</div>
+          <div class="post_content">
+<p>The typical answer to such proposals is that selecting elements via CSS by something that depends on CSS could lead to infinite loops. For example, see the recent <a href="https://lists.w3.org/Archives/Public/www-style/2016Nov/0116.html">thread</a> about the potential <code>:in-view()</code> selector at <a href="mailto:www-style@w3.org">www-style@w3.org</a> mailing list.</p>
+<p>What’s unclear is why they apparently ignore the fact that the feature could be used at least with JS methods like <code>querySelector()</code> where infinite loops wouldn’t be an issue.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>Why isn’t <code>topbar</code> pushed down when content appears in <code>notification</code>? It seems to me that your problem should be solvable with CSS alone.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1169_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mottie</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>As I said, I am using Stylish to apply custom userstyles. The site does push down the topbar when the notification is filled only due to the fact that it comes before the <code>topbar</code> element in the HTML. My custom style is setting the <code>topbar</code> style to <code>position:fixed</code> thus disrupting the flow.</p>
+<p>When no notification is displayed, the <code>div#notification</code> is completely empty. A <code>table</code> is added inside when there is a notification, but only the <code>tr</code> is removed once cleared by the user.</p>
+<p>If you need specifics, the style I am applying is <a href="https://userstyles.org/styles/136521/stackexchange-sticky-header" rel="nofollow noopener">StackExchange Sticky Header</a>. And when visiting <a href="http://area51.stackexchange.com/" rel="nofollow noopener">http://area51.stackexchange.com/</a> for the first time, new users will see a welcome notification.</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/c4466d24056db1c22fa10ec26b5813c6d034c022" href="//discourse.wicg.io/uploads/default/original/2X/c/c4466d24056db1c22fa10ec26b5813c6d034c022.gif" title="topbar.gif"><img data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/c/c4466d24056db1c22fa10ec26b5813c6d034c022_2_10x10.png" height="409" src="//discourse.wicg.io/uploads/default/optimized/2X/c/c4466d24056db1c22fa10ec26b5813c6d034c022_2_690x409.gif" srcset="//discourse.wicg.io/uploads/default/optimized/2X/c/c4466d24056db1c22fa10ec26b5813c6d034c022_2_690x409.gif, //discourse.wicg.io/uploads/default/optimized/2X/c/c4466d24056db1c22fa10ec26b5813c6d034c022_2_1035x613.gif 1.5x, //discourse.wicg.io/uploads/default/original/2X/c/c4466d24056db1c22fa10ec26b5813c6d034c022.gif 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">topbar.gif</span><span class="informations">1153×685 797 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p><span class="mention">@Mottie</span> I think this is a case of unsuitable markup, and that the correct approach would have been to put both <code>notification</code> and <code>topbar</code> inside a fixed-positioned element. In that case, both child elements would be ‘in flow’ (inside their parent) and you wouldn’t have to position them individually.</p>
+<p>If we agree that the problem is unsuitable markup, then this is not a valid use case for introducing a new CSS feature. Have you considered using JavaScript to dynamically position <code>topbar</code> whenever <code>notification</code> is toggled?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1169_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mottie</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>Yes, the markup isn’t ideal, but I have no control over it. I could write a userscript to reposition the topbar, but it I don’t think anyone would bother to use it since the notifications don’t pop up that often.</p>
+<p>I’m sure the requested pseudo-selector would still be useful in other situations where <code>:empty</code> isn’t targeting the desired elements; especially when used in conjunction with javascript. But, I don’t have another use-case in mind.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2016-12-20</div>
+          <div class="post_content">
+<p>Hey! There’s not currently a way to do this using regular CSS, but using JavaScript and a plugin we can express a query that targets this in a very CSS-like way!</p>
+<p>I’ve used <a href="http://codepen.io/tomhodgins/pen/oLVWJX" rel="nofollow noopener">EQCSS in the past to target empty inputs</a> using <code>(max-characters: 0)</code> since CSS isn’t aware of <code>input:empty</code>, so why not use <code>(min-height: 1px)</code> to apply a style to only elements at least 1px tall?</p>
+<pre><code class="lang-auto">&lt;div id="notification"&gt;&lt;table&gt;&lt;/table&gt;&lt;/div&gt;
+&lt;div&gt;&lt;/div&gt;
+&lt;nav id="topbar"&gt;...&lt;/nav&gt;
+
+&lt;style&gt;
+  @element '#notification' and (min-height: 1px) {
+    $this ~ #topbar {
+      top: 34px;
+    }
+  }
+&lt;/style&gt;
+
+&lt;script src=http://elementqueries.com/EQCSS.js&gt;&lt;/script&gt;
+</code></pre>
+<p>A solution could be something as simple as that!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<p>What happens if you do <code>:zero-height { height: 1px }</code> ? <img alt=":stuck_out_tongue:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/stuck_out_tongue.png?v=5" title=":stuck_out_tongue:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

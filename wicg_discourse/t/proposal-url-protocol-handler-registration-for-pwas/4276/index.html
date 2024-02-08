@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] URL Protocol Handler Registration for PWAs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] URL Protocol Handler Registration for PWAs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2751_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fabiorocha</div>
+          <div class="creation_date">2020-03-03</div>
+          <div class="post_content">
+<p>It is very common for native apps to register themselves as protocol (i.e.: scheme) handlers. Web developers should similarly be able to register PWAs to handle custom URL schemes (e.g.: mailto://, ms-word:// or web+music://). Arguably, the best time for this registration to happen is when the app is installed, via manifest options.</p>
+<p>In this scenario, after having a PWA registered as a protocol handler, when a navigation to a URL with the registered protocol happens, the PWA should open and handle that URL. More details can be found on the explainer available <a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/master/URLProtocolHandler/explainer.md" rel="nofollow noopener">here</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2800_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">samtanSnowy</div>
+          <div class="creation_date">2020-03-05</div>
+          <div class="post_content">
+<p>It seems that Google demonstrated some interest <a href="https://groups.google.com/a/chromium.org/forum/?hl=en#!topic/blink-dev/x4Ev_l9Oj2U" rel="nofollow noopener">here</a>.  <span class="mention">@mgiuca</span> can you confirm?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2020-03-06</div>
+          <div class="post_content">
+<p>Hi,</p>
+<p>I am <strong>personally</strong> supportive of this but I can’t speak on behalf of Google (at least, there is no internal consensus yet). We are discussing internally and I haven’t heard any objections.</p>
+<p>I’d certainly be OK with creation of a WICG repo to explore. On the other hand, on the spec side, the feature is relatively small, so it might not even be necessary to do so. We could potentially discuss on the <a href="https://github.com/w3c/manifest/issues/846" rel="nofollow noopener">bug</a> and just write it into the spec as-is.</p>
+<p>Precedent is the shortcuts feature proposed by Aaron Gustafson, which I believe is more complex than protocol_handlers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2020-03-07</div>
+          <div class="post_content">
+<p>On Android at least, native apps can also register themselves as handles for domains.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2795_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nightpool</div>
+          <div class="creation_date">2020-03-07</div>
+          <div class="post_content">
+<p>Some web developer feedback: We experimented with URL handler protocol registrations for a while with Mastodon (<a href="https://joinmastodon.org" rel="nofollow noopener">https://joinmastodon.org</a>), but we ran into several UX challenges on the way and ultimately had to remove the feature entirely. The biggest problems were:</p>
+<ul>
+<li>
+<p>The registration flow is very confusing for a non-technical end user. Browser restrictions on this feature make it almost invisible, and messaging around this feature is often overly technical—users shouldn’t need to understand what protocol handlers and <code>web+mastodon:​//</code> is to use a share button. I think this proposal, tying it to PWA installation, makes a lot of sense and would help a lot in this area.</p>
+</li>
+<li>
+<p>There’s no way for users to choose between multiple custom protocol handlers. Right now, the browser implementation of custom protocol handlers allows for only <em>one</em> registered website per protocol handler—any additional registrations override the first one. Not only is this inflexible, it means that browser have to be more restrictive and present more permission prompts to the users <em>ahead</em> of time, before a link is ever used at all. This increases user confusion and permission fatigue. The explainer mentions this as a valid use-case, but I think it’s important to acknowledge that we would have to overhaul most current browser implementations of registerProtocolHandler to support it, and we may also want to make sure to call it out specifically when writing the spec text. I would also hate to get into a situation where PWA apps have good protocol handler UX but non-PWA sites have avoidably bad UX because of a historical accident.</p>
+</li>
+<li>
+<p>There’s no good fallback or feature detection story. If someone includes a web+mastodon link in their HTML content, and the user hasn’t heard of mastodon or managed to install any protocol handlers (see the first bullet :D​) they just get a broken link. Most native platforms allow for deeplinks to have some sort of fallback to an app store or similar, it would be great if we had a similar sort of fallback mechanism for protocol handlers. (There are workarounds here using Javascript and a complicated XHR dance, but they’re kind of fragile and increase complexity). Of course, care needs to be taken to avoid this being an avenue for passive fingerprinting.</p>
+</li>
+</ul>
+<p>to give a little more insight into our main use-cases for this feature in Mastodon: Mastodon is a specific client software for the ActivityPub distributed social network. Since there are many thousands of Mastodon instances run by many different people, a user might be reading a post on one instance, like https:​//cybre.space, and then want to interact with it from their account on https:​//snouts.online. So we used custom protocol handlers to link the “like” and “boost” buttons on one status to a URI schema the web interface could pick up on. You can read a little bit more about the broader interest in this kind of feature from the Social Web community group (which specs ActivityPub) here: <a href="https://socialhub.activitypub.rocks/t/suggestion-a-custom-url-scheme-handler-as-a-streamlined-ux-for-cross-instance-interactions-on-the-web/504" rel="nofollow noopener">https://socialhub.activitypub.rocks/t/suggestion-a-custom-url-scheme-handler-as-a-streamlined-ux-for-cross-instance-interactions-on-the-web/504</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2795_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nightpool</div>
+          <div class="creation_date">2020-03-07</div>
+          <div class="post_content">
+<p>Now, taking off my developer hat and putting on my spec hat, it seems from the explainer that there are three broad use-cases for this feature, some of which overlap with other technologies:</p>
+<ol>
+<li>
+<p>Linking from one app to a specific, different app. This is the use-case that traditionally supports <code>skype://</code>, <code>ms-word:​//</code>,  etc. The vast majority of examples that the doc gives fall into this category. IMO, these work just as well as normal links that fall into the <code>scope</code> of the web app. Except for backwards compatibility, there’s no reason these need to be custom protocol handlers at all, and I don’t think anything is gained by making them one. For example, if a native or web application wanted to send you to a specific track on Spotify, they could link you to <code>https://open.spotify.com/track/5VZZp4pnzogH7xboEv1c3r</code>, and, if Spotify was a PWA, the user agent would <em>already</em> open the link in Spotify. For progressive enhancement, fallback and general compatibility reasons, this seems vastly preferable to <code>spotify:track:5VZZp4pnzogH7xboEv1c3r</code></p>
+</li>
+<li>
+<p>Supporting a specific, non-web protocol that has an independent, standardized URI scheme. For example, <code>magnet</code>, <code>ftp</code> or <code>dat</code>. These are independent URI schemes that are co-equal to <code>http</code>, and generally “make sense” <em>outside of a application-launching context.</em> For example, you might cite files that are available on dat, or bookmark a FTP directory to come back to it again. Just like native apps, we should support parity by allowing PWAs to register handlers and open for these.</p>
+</li>
+<li>
+<p>Triggering a specific action that could be handled by one of many apps. For example, <code>mailto</code>, or the <code>web+music</code> example given in the specification. These actions tend to be much less formally standardized, and they don’t make a ton of sense outside of the navigation process. This <em>seems</em> like it is basically the use-case Web Intents/Activities was designed to support—I’m not familiar with any of the history there, but it looks like it had interop issues and didn’t get a lot of traction. However, lots of platforms (but not all) use a simpler custom URI scheme methodology for handling this, the most famous of which is <code>mailto:</code>.</p>
+</li>
+</ol>
+<p>(Writing that up has made me realize another use-case exists which isn’t well-served by any existing technology, which is interoperability with existing system activity/Intent frameworks that <em>don’t</em> primarily use custom protocols, like Android’s Intent framework or iOS’s <a href="https://developer.apple.com/documentation/sirikit" rel="nofollow noopener">SiriKit</a>. It would be very useful to allow a PWA to respond to, for example, asking a voice assistant to create a new todo item. However, that use-case is entirely outside of the scope of this proposal)</p>
+<p>Given the use-cases above, I think it would be best if the explainer for this feature refocuses on <span class="hashtag">#2</span> and <span class="hashtag">#3</span>, and avoids the complications and inherent questions that may come with <span class="hashtag">#1</span>, which are already well-served by existing web platform technologies (except for backcompat/interop).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">comoody</div>
+          <div class="creation_date">2020-03-09</div>
+          <div class="post_content">
+<p><span class="mention">@nightpool</span>, thank you for your insightful comments.</p>
+<p>To address your feedback given from the perspective of a web developer:</p>
+<p>We have also seen issues with registerProtocolHandler including:</p>
+<ol>
+<li>Only allowing one registration per handler</li>
+<li>Calling unregisterProtocolHandler deregisters the protocol only with the browser, not the OS</li>
+<li>Prompting the user to accept/deny something that they aren’t particularly knowledgeable about</li>
+</ol>
+<p>This behavior isn’t part of the spec (<a href="https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers">https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers</a>), so it could be changed. However, it would be outside the scope of this proposal to suggest UX fixes for the registerProtocolHandler API.</p>
+<p>I agree that there is no link fallback story if a user is accessing the link <strong>from a browser</strong>. However, protocols are an OS level concept with an OS level fallback story. I think the best we can do is allow the OS to fallback when accessing protocols from native apps and pitch PWA protocol handling for what it is - a web hook into OS functionality.</p>
+<p>To address your feedback from the perspective of a spec writer:</p>
+<p>I agree with the divisions you’ve made among protocol types, however, your characterization of group 1 seems to downplay the importance of backwards compatibility with app-specific protocols. From a web-only perspective, I agree that app-specific links are less relevant and introduce compatibility issues. However, this proposal aims to support existing ecosystems of native applications, where protocols from group 1 are just as relevant as those in group 2 and 3.</p>
+<p>I’ll also add that any native application can register to use any protocol, so a “proprietary” protocol introduced by a native app ecosystem can be handled by an arbitrary third-party application. One example is the Microsoft Office URI protocol (<a href="https://docs.microsoft.com/en-us/office/client-developer/office-uri-schemes" rel="nofollow noopener">https://docs.microsoft.com/en-us/office/client-developer/office-uri-schemes</a>) that is publicly documented, allowing other productivity software to handle a protocol that initially appears to app-specific. I use this example to point out  that the lines between groups 1, 2, and 3 are blurred when you consider protocols as an OS feature meant to provide integration between native applications.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2800_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">samtanSnowy</div>
+          <div class="creation_date">2020-03-09</div>
+          <div class="post_content">
+<p>There seems to be some interest in this API and I would love to see some of the feedback to become issues we can follow up with. I’m requesting to move the spec to a WICG repo. <span class="mention">@yoavweiss</span>, can you help us with that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2751_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fabiorocha</div>
+          <div class="creation_date">2020-03-17</div>
+          <div class="post_content">
+<blockquote>
+<p>I’d certainly be OK with creation of a WICG repo to explore. On the other hand, on the spec side, the feature is relatively small, so it might not even be necessary to do so. We could potentially discuss on the <a href="https://github.com/w3c/manifest/issues/846" rel="nofollow noopener">bug </a> and just write it into the spec as-is.</p>
+</blockquote>
+<p>I’m fine with us moving this discussion to the issue above in the manifest repo. Indeed, most of the things being discussed here are implementation details and the spec side of this work shouldn’t warrant a dedicated repo. Is anyone opposed to the idea?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hanguokai</div>
+          <div class="creation_date">2022-12-10</div>
+          <div class="post_content">
+<p>Yesterday, I made a new proposal, similar to this one. But lets developers themselves to handle protocal events in the service worker. It is more flexible for developers, and should work for PWA, Non-PWA (general web) and Browser extensions.</p>
+<ul>
+<li><a href="https://github.com/w3c/ServiceWorker/issues/1665" rel="noopener nofollow ugc">https://github.com/w3c/ServiceWorker/issues/1665</a></li>
+<li><a href="https://github.com/whatwg/html/issues/8596" rel="noopener nofollow ugc">https://github.com/whatwg/html/issues/8596</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

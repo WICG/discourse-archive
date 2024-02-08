@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] relative heading elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] relative heading elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2106_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">M-J-Robbins</div>
+          <div class="creation_date">2022-01-19</div>
+          <div class="post_content">
+<p>Headings should have a hierarchical structure, start with an <code>&lt;h1&gt;</code> and work down as needed.</p>
+<p>But what happens when we don’t know the structure of the rest of the page, when we’re embedding content or inserting a component etc.</p>
+<p>What if the heading could be relative to the rest of the page, these would still keep the <code>role="heading"</code> but the <code>aria-level</code> 1-6 would be generated on page load.</p>
+<p><code>&lt;heading-primary&gt;</code> <code>aria-level="0"</code> This will apply the highest level possible (if there is no <code>&lt;h1&gt;</code> on the page, this will act as an <code>&lt;h1&gt;</code> if there is an <code>&lt;h1&gt;</code> this will act as an <code>&lt;h2&gt;</code>)</p>
+<p><code>&lt;heading-sibling&gt;</code> <code>aria-level="sibling"</code> this will match the aria level of the previous heading</p>
+<p><code>&lt;heading-child&gt;</code> <code>aria-level="child"</code> this will be 1 level lower than the previous heading (if the last heading was an <code>&lt;h2&gt;</code> this works as an <code>&lt;h3&gt;</code>)</p>
+<p><code>&lt;heading-parent&gt;</code> <code>aria-level="parent"</code> this will be 1 level higher than the previous heading (if the last heading was an <code>&lt;h3&gt;</code> this works as an <code>&lt;h2&gt;</code>)</p>
+<p>So this code</p>
+<pre><code class="lang-auto">&lt;heading-primary&gt;&lt;/heading-primary&gt;
+  &lt;heading-child&gt;&lt;/heading-child&gt;
+    &lt;heading-child&gt;&lt;/heading-child&gt;
+    &lt;heading-sibling&gt;&lt;/heading-sibling&gt;
+  &lt;heading-parent&gt;&lt;/heading-parent&gt;
+  &lt;heading-sibling&gt;&lt;/heading-sibling&gt;
+    &lt;heading-child&gt;&lt;/heading-child&gt;
+</code></pre>
+<p>Would be read as this</p>
+<pre><code class="lang-auto">&lt;h1&gt;&lt;/h1&gt;
+  &lt;h2&gt;&lt;/h2&gt;
+    &lt;h3&gt;&lt;/h3&gt;
+    &lt;h3&gt;&lt;/h3&gt;
+  &lt;h2&gt;&lt;/h2&gt;
+  &lt;h2&gt;&lt;/h2&gt;
+    &lt;h3&gt;&lt;/h3&gt;
+</code></pre>
+<p>But if it’s loaded in a page that already has an <code>&lt;h1&gt;</code> it would become</p>
+<pre><code class="lang-auto">&lt;h2&gt;&lt;/h2&gt;
+  &lt;h3&gt;&lt;/h3&gt;
+    &lt;h4&gt;&lt;/h4&gt;
+    &lt;h4&gt;&lt;/h4&gt;
+  &lt;h3&gt;&lt;/h3&gt;
+  &lt;h3&gt;&lt;/h3&gt;
+    &lt;h4&gt;&lt;/h4&gt;
+</code></pre>
+<p>This is similar to the idea around effectively <a href="https://html.spec.whatwg.org/multipage/sections.html#:~:text=Notice%20how%20the%20use%20of%20section%20means%20that%20the%20author%20can%20use%20h1%20elements%20throughout">resetting the heading structure inside a section</a>. Maybe that makes this suggestion redundant, but i thought I’d share anyway it and see if this sparks some ideas or interest.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

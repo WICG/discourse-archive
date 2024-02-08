@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Ability to override low-level drawing of ordinary HTML elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Ability to override low-level drawing of ordinary HTML elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Libertardian</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>Currently, the only way to do low-level drawing is to spawn a canvas tag. While this is a good way to draw something on the screen efficiently, and grants us access to things like WebGL, it seems too removed from the rest of the tools that we get to use.</p>
+<p>More specifically, we have a high-level styling system called CSS, and a low-level drawing system called Canvas. There is no “mid-level” where we can, say, use most of the existing CSS properties, but change the way a certain thing is drawn to the screen. You either make do with what CSS provides, or reinvent the world in a canvas tag. The latter is suicidal if you care about accessibility, unless you create a cavalcade of invisible DOM to duplicate what you are drawing on the canvas enough that screen readers still work.</p>
+<p>The heart of the issue is that canvas is semi-broken - it should be possible to grab <em>any</em> element off the DOM, register some event handlers, and draw things on the screen at the appropriate time. Every lowly div should be a canvas. More importantly, it should be possible to use that canvas to draw other elements in the DOM. e.g. you could have a game that draws 3D graphics to WebGL, and then uses some new API to render ordinary DOM on, say, a computer screen in the game. Or, more mundanely, you could have a Masonry plugin that uses canvas for all it’s layout instead of having to sample and mutate CSS properties in a tight loop. (We could also package up bundles of immediate-mode drawing as our own custom CSS properties.)</p>
+<p>I do not believe this would be easy to implement - the web already has a defined rendering model, with browser-specific quirks here and there. Browsers already spend a lot of time doing rendering, and we would risk designing an API that makes it impossible for the browser to implement future optimizations if custom drawing was enabled. Still, I feel like web developers would benefit from a more flexible rendering model. Does anyone else agree with me, or am I just talking out of my butt?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>It’s not exactly the same, but there was <a href="http://oksoclap.com/p/P3aS4GtR2L">some discussion about workers that could handle layout</a> during the last Extensible Web Summit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>This same stuff was supposed to be presented/discussed in more detail this week at the CSS WG f2f, unfortunately I am really off my game and missed it… Tab represented though, maybe we can get an update.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Maybe ask Tab to join <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1015_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eisaksen</div>
+          <div class="creation_date">2014-12-17</div>
+          <div class="post_content">
+<p>I like the idea that you could draw inside any ‘lowly div’ but what do we envision as the future of the canvas tag itself if this were to happen? Adding another API might be good but on the other side of that we have CSS shapes, SVG &amp; CSS, WebGL, canvas, css hacks using pseudo selectors to create incredible art, transitions, transforms, and the element.animate API (keyframed animation). None of these solve an entire solution for visual design in the browser but each addresses many aspects of  interactive digital visualization.</p>
+<p>Combined with that complexity and browser/device support we have newish layout &amp; positioning CSS standards that address some translate and transform pieces of visualizations - exclusions, masking, position sticky, grid &amp; flexbox css and optimizations like will-change.</p>
+<p>What I am trying to say is that we need to have much less overlap in these specs to avoid confusion and fragmentation in the ecosystem. Maybe we do need this API for canvas-as-any-element but we should really consider the dev community because they will implement these in their apps and with multiple ways of doing visualizations (or anything for that matter) in css they will use whatever they find first or what is most prevalent in existing code.</p>
+<p>Can we achieve your goal with existing specs or should we propose what you have suggested.</p>
+<p>Just my 2 cents.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-12-18</div>
+          <div class="post_content">
+<p>Related:  The W3C Technical Architecture Group (TAG) and the CSS-WG have  recently created a task force to “explain the magic of layout and styling on the Web”.  Watch <a href="http://css-houdini.org">css-houdini.org</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Libertardian</div>
+          <div class="creation_date">2015-01-01</div>
+          <div class="post_content">
+<p>Well, what exactly makes <code>&lt;canvas&gt;</code> so special that it and only it is allowed to have immediate mode drawing on it? Especially considering that it carries no more additional semantic weight than <code>&lt;div&gt;</code> does.</p>
+<p>My personal opinion is that the current API landscape of the web is filled with “escape hatches” like <code>&lt;canvas&gt;</code> which were designed mainly so a particular developer could work around a limitation of CSS or HTML rather than augment their capabilities. So many things on the platform are either explained as the browser throwing a C++ API over the sandbox fence, or an incredibly high-level concept that’s tightly integrated into browser internals without any way to make use of the new functionality outside of just using the new shiny.</p>
+<p>Drawing and layout tend heavily towards the “inflexible high-level” of this spectrum, where very little that happens in that area can actually be implemented with a reasonable API. If I wanna polyfill a CSS behavior, I need to have a large amount of JS redownload and reparse the CSS in question, generate a new stylesheet applicable to only the current viewport, and listen to the appropriate events to know when the stylesheet was invalidated and needs to be regenerated. Whereas, when a browser vendor implements that same functionality, it happens within the layout and painting phase as opposed to a second pass triggered by CSS updates.</p>
+<p>So, if we had a single low-level API to add JS to the browser’s own layout and paint passes, then we could actually remove a lot of the complexity involved in this sort of thing. It’s the direction that a couple of web standards are already going towards, such as the Web Animations API, which is designed specifically to unify disparate high-level APIs under the same umbrella.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

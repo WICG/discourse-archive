@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Expand client hints to include preloading support</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Expand client hints to include preloading support</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3118_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jashsayani</div>
+          <div class="creation_date">2020-09-28</div>
+          <div class="post_content">
+<p>Client Hints exposes JS equivalent of <code>navigator.connection</code> APIs that help in loading optimizations. But other APIs like preload support detection (<code>DOMTokenListSupports(document.createElement("link").relList, "preload"); </code>) are also relevant to loading optimizations and can benefit from inclusion in Client Hints.</p>
+<p>Example use case: In my server side rendered app, I render inline scripts. These scripts can have different contents based on if client supports preloading. I could add basic defer script loader if preload is not supported or a more sophisticated script loader if preload is supported, where script execution time is controlled by certain events.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p>While I can sympathize with the desire to avoid sending unused script code, I don’t know that it’s tenable to add a client hint for every possible feature detectable platform feature.</p>
+<p>Can you estimate the code size differences between preload-supporting browsers and non-supporting ones? What happens if you send preload-related code to all and perform the feature detection on the client side?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3118_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jashsayani</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p>I don’t think we need to send this for every possible feature detectable platform feature. More detailed request:</p>
+<ol>
+<li>On initial page load, there are no client hints sent.</li>
+<li>Client adds <code>Accept-CH: preload-support</code> header to request (but its pointless since page with inline script is already loaded. So additional header <code>Accept-CH-Lifetime</code> is added with long time period)</li>
+<li>Future requests to load the html page (within <code>Accept-CH-Lifetime</code>) will get client hints and can serve better inline scripts.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-10-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="4869" data-username="jashsayani">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jashsayani/40/3118_2.png" width="20"/> jashsayani:</div>
+<blockquote>
+<p>I don’t think we need to send this for every possible feature detectable platform feature</p>
+</blockquote>
+</aside>
+<p>What distinguishes preload here from other features? Any example on how the scripts would be significantly different if they knew of lack of preload support?</p>
+<p>Also note that older browsers that don’t support preload will also not support this new Client Hint.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3118_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jashsayani</div>
+          <div class="creation_date">2020-10-05</div>
+          <div class="post_content">
+<blockquote>
+<p>What distinguishes preload here from other features?</p>
+</blockquote>
+<p>I think eventually many more features should be exposed via Client Hints (when explicitly requested by <code>Accept-CH</code> to avoid bloating header). But preload support allows for many optimizations, specially when apps use server-side rendering.</p>
+<blockquote>
+<p>Any example on how the scripts would be significantly different if they knew of lack of preload support?</p>
+</blockquote>
+<p>Sure, in my server-side rendered app. If preload is not supported, my inline script would be:</p>
+<pre><code class="lang-auto">const scEl = document.createElement('script');
+scEl.src = '&lt;inserted-by-server&gt;';
+scEl.defer = true;
+document.head.appendChild(scEl);
+</code></pre>
+<p>In case of preloading, it could be more complex / optimized:</p>
+<pre><code class="lang-auto">const plEl = document.createElement('link');
+plEl.href = '&lt;inserted-by-server&gt;';
+plEl.rel = 'preload';
+plEl.as = 'script';
+document.head.appendChild(plEl);
+</code></pre>
+<p>Then I can have an event in my app that is triggered by some action, and the event can force-execute the preloaded script (by using the url in script src and appending to head). So it gives control on when the script is executed rather than async or defer. If my app has 500 results, I can execute after first 50 results are loaded. But in summary, it’s a different script loader essentially that leverages preload support to execute the script at the right/intended time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-10-06</div>
+          <div class="post_content">
+<p>Seems like client-side feature detection can enable a single script to do both of those things with minimal overhead (e.g. ~100 bytes pre-compression)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3118_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jashsayani</div>
+          <div class="creation_date">2020-10-06</div>
+          <div class="post_content">
+<p>It’s not just bytes. Execution time also matters. The execution time for feature detection and running appropriate code (about 1ms on my MacBook Pro), is highly magnified on lower end devices like cheap Android phones selling for $50 or $100 in emerging countries.</p>
+<p>Having hints would save bytes + execution time, and as more apps are server-side rendered for performance gains, more feature detection will have to be indicated to servers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-10-06</div>
+          <div class="post_content">
+<p>I’m measuring 0.2ms on my 2016 MBP, but that still seems like a lot. Most of it is coming from the fact that the <a href="https://gist.github.com/yoavweiss/b1f798bb2be4e671107b">feature detection snippet</a> calls <code>createElement()</code> and it’s being slower than (IMO) it should be.</p>
+<p>IMO, the right way to fix this would be to optimize that call away.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3118_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jashsayani</div>
+          <div class="creation_date">2020-10-06</div>
+          <div class="post_content">
+<p>I measured it (similar code, but needs to do more like grab nonce: <code>document.querySelector('script[nonce]')</code>) which was 0.81ms on my MacBook. Also, the additional JS is much more than my example here (need to handle errors, fallback if events don’f fire, etc).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[proposal] Passing arguments to Custom Element&rsquo;s createdCallback (constructor)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[proposal] Passing arguments to Custom Element&rsquo;s createdCallback (constructor)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-07</div>
+          <div class="post_content">
+<p>The API is somewhat limited in regards to creating Custom Elements. <code>createdCallback</code> doesn’t take any arguments (and nor do we get to define and use our own constructor). It’d be nice if <code>document.createElement</code> would take extra arguments to pass to the new Element’s <code>createCallback</code>. For example:</p>
+<pre><code class="lang-auto">document.createElement('foo-bar', arg1, arg2, arg3)
+</code></pre>
+<p>Then, <code>arg1</code>, <code>arg2</code>, and <code>arg3</code> would be passed to the element’s <code>createdCallback</code>, which might look like this:</p>
+<pre><code class="lang-auto">// ...
+    createdCallback(arg1, arg2, arg3) {
+      // do something with the args.
+    },
+// ...
+</code></pre>
+<p>I think this is a simple and much need extension to the API.</p>
+<p>The idea here can possibly be combined with <a href="https://discourse.wicg.io/t/809">https://discourse.wicg.io/t/809</a>. For exampmle, maybe arguments to createdCallback are third and beyond, while the second argument contains attributes:</p>
+<pre><code class="lang-auto">document.createElement('foo-bar', {
+  attr1: '1',
+  attr2, '2'
+}, arg1, arg2, arg3)
+</code></pre>
+<p>or something similar. The <code>is-""</code> attribute needs to be taken into consideration too. Also note that the arguments can be anything, not limited to strings like attributes are.</p>
+<p>Any thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2016-04-07</div>
+          <div class="post_content">
+<p>I’m really confused where is this <code>createdCallback</code> defined?</p>
+<p>If this is a method that is passed to the <code>createElement</code> options arguments then there’s no need to pass, just use scope:</p>
+<pre><code class="lang-auto">var arg1, arg2, arg3;
+document.createElement('foo-bar', {
+  createdCallback: function() {
+    // this scope can access arg1, arg2, arg3;
+  }
+});
+</code></pre>
+<p>or if I’m missing something then I’d prefer:</p>
+<pre><code class="lang-auto">document.createElement('foo-bar', {
+  onCreatedArgs: [arg1, arg2, arg3]
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-07</div>
+          <div class="post_content">
+<p>createdCallback is part of the Custom Elements API.  It gets called after your element is constructed, so we don’t have to run synchronous constructor code in the middle of parsing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-11</div>
+          <div class="post_content">
+<p><span class="mention">@Edwin_Reynoso</span> In your example, every single element created will have access to the same exact arguments. The reason for passing arguments during creation is for each instance to be able to accept arguments individually.</p>
+<p>Whoever imports the custom elements in your example won’t be able to set those args when creating elements, which means the code isn’t as re-usable. For example: consider two cases, where each case shows one file that exports, and one that imports:</p>
+<h3>case 1</h3>
+<pre><code class="lang-auto">var arg1, arg2, arg3;
+export default document.createElement('foo-bar', {
+  createdCallback: function() {
+    // this scope can access arg1, arg2, arg3;
+  }
+});
+</code></pre>
+<pre><code class="lang-auto">import FooBar from './foo-bar'
+
+// how does user of your custom element (suppose they imported it from NPM) set the args now?:
+let el = new FooBar()
+</code></pre>
+<h3>case 2</h3>
+<p>In this case, the user decides what the args are (the component is re-usable with different characteristics depending on the arguments):</p>
+<pre><code class="lang-auto">export default document.createElement('foo-bar', {
+  createdCallback: function(arg1, arg2, arg3) {
+    // this scope can access arg1, arg2, arg3;
+  }
+});
+</code></pre>
+<pre><code class="lang-auto">import FooBar from './foo-bar'
+
+let el = new FooBar(1, 2, 3)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2016-05-02</div>
+          <div class="post_content">
+<p>Hi, I implemented Custom Elements in Blink so I am pretty familiar with it.</p>
+<p>One wrinkle with this idea is that <a href="https://dom.spec.whatwg.org/#dom-document-createelement">createElement already takes a second argument,</a> a dictionary of <a href="https://dom.spec.whatwg.org/#dictdef-elementcreationoptions">element creation options.</a> So additional arguments to createElement should work with that. Because the argument is a dictionary, trying to switch on the type of the argument probably would not work.</p>
+<p>Another wrinkle: createdCallback has been removed from <a href="https://html.spec.whatwg.org/multipage/scripting.html#customelementsregistry">the spec;</a> now you can use a constructor. I’m implementing this in Blink at the moment. I think passing arguments to this constructor will just work:</p>
+<pre><code>class MyElement extends HTMLElement {
+  constructor(a, b) {
+    super();
+    this._a = a;
+    this._b = b;
+  }
+}
+window.customElementsRegistry.define('my-element', MyElement);
+let e = new MyElement('foo', 'bar');
+console.log(e._a); // logs 'foo'
+</code></pre>
+<p>However when the element is created by other means (the HTML parser, createElement, etc.) the constructor will be invoked without any additional arguments. HTH!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1434">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<pre><code class="lang-auto">let e = new MyElement('foo', 'bar');
+</code></pre>
+</blockquote>
+</aside>
+<p>Ah, nice! Maybe <code>createElement</code> options can take args? f.e.:</p>
+<pre><code class="lang-auto">document.createElement('foo-bar', {
+  arguments: [arg1, arg2, arg3],
+  // ... other stuff ...
+})
+</code></pre>
+<p>On a related note, It’d be nice to have some way to scope Custom Elements to a Web Component (probably scoped to ShadowDOM roots since those already provide other forms of encapsulation that a Custom Element take advantage of). The idea is distantly similar to component scoping that React andsimilar libraries provide (just the mechanism works differently, my idea relying on a registry existing on shadow roots, while React/etc relying on JavaScript lexical scoping). I <a href="https://github.com/w3c/webcomponents/issues/488" rel="nofollow noopener">wrote about this possible idea</a> in the w3c Web Components GitHub issue tracker.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="6" data-topic="1434">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_1.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>Maybe <code>createElement</code> options can take args? f.e.:</p>
+<pre><code class="lang-auto">document.createElement('foo-bar', {
+  arguments: [arg1, arg2, arg3],
+  // ... other stuff ...
+})
+</code></pre>
+</blockquote>
+</aside>
+<p>I think elements always need to be prepared to be created without arguments. How would the HTML parser know what arguments to call the constructor with?</p>
+<p>When running script, you could write something like what you have above by retrieving the constructor with <a href="https://html.spec.whatwg.org/multipage/scripting.html#dom-customelementsregistry-get">get</a> and calling it directly. This also forces you to think about what to do if the element is not defined.</p>
+<aside class="quote">
+<blockquote>
+<p>On a related note, It’d be nice to have some way to scope Custom Elements to a Web Component (probably scoped to ShadowDOM roots since those already provide other forms of encapsulation that a Custom Element take advantage of). The idea is distantly similar to component scoping that React andsimilar libraries provide (just the mechanism works differently, my idea relying on a registry existing on shadow roots, while React/etc relying on JavaScript lexical scoping). I <a href="https://github.com/w3c/webcomponents/issues/488" rel="nofollow noopener">wrote about this possible idea</a> in the w3c Web Components GitHub issue tracker.</p>
+</blockquote>
+</aside>
+<p>Yeah, this is an interesting idea. It might make sense to start a thread here with some more details (link to what React does, explain the benefits of this.) There’s some back and forth right now about <a href="https://github.com/w3c/webcomponents/issues/512" rel="nofollow noopener">adopting custom elements</a> and it may make sense to wait and see what the conclusion to that is. I imagine you could treat components a bit like mini-documents.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<p>I believe this problem might be solved in Custom Elements v1, where an ES6 class’ <em>actual</em> constructor method is used instead of a <code>createdCallback</code>. So, we can simply pass anything we want into the constructor.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-06-06</div>
+          <div class="post_content">
+<p>Here’s the v1 spec about constructors: <a href="https://w3c.github.io/webcomponents/spec/custom/#custom-element-conformance" rel="nofollow noopener">https://w3c.github.io/webcomponents/spec/custom/#custom-element-conformance</a></p>
+<p>It doesn’t explicitly say that we can pass arguments to the constructor, but I’m guessing if it works like all other class constructors then we can pass arguments to it.</p>
+<p>TLDR, in v1 there is no more <code>createdCallback</code> and instead now we use the <code>constructor</code> which follows the ES6 spec (awesome!).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2016-06-07</div>
+          <div class="post_content">
+<p>If you’re interested you can install Chrome Canary and run it with <code>--enable-blink-features=CustomElementsV1</code> and try it. This should work (but not much else.)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Custom property selectors</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Custom property selectors</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>This is likely to cause an edge case in looping that crops up in most threads about custom properties.</p>
+<p>However I would like to propose two extensions to the syntax to generate variables on the fly:</p>
+<pre><code class="lang-auto">:root {
+  --use-info-light: blue;
+  --use-info-lighter: lightblue;
+  --use-warning-light: red;
+  --use-warning-lighter: pink;
+}
+
+my-flash-message {
+  [use=--use] {
+    my-heading {
+      color: var(--use-var(--use)-lighter, --use-info-lighter);
+    }
+    my-block {
+      color: var(--use-var(--use)-light, --use-info-light);
+    }
+  }
+}
+</code></pre>
+<p>Where I have a custom element:</p>
+<pre><code class="lang-auto">&lt;my-flash-message use="warning"&gt;...&lt;/my-flash-message&gt;
+</code></pre>
+<p><strong>The suggestions are:</strong></p>
+<ul>
+<li>Variable variable syntax: <code>var(--use-var(--use)-light)</code> or <code>var(--calc(use- + var(--use) + -light))</code>
+</li>
+<li>Attribute selector variables: <code>[use=--use]</code> where <code>use="warning"</code> makes <code>var(--use)</code> equal ‘warning’</li>
+</ul>
+<p><strong>The rationale is:</strong></p>
+<p>Having the ability to create a property that adds semantic meaning to custom elements that defines style dependent on the custom element and context (Top level selectors wouldn’t work).
+Generated macro code works for this use case somewhat however the output selectors becomes very large quickly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>It looks like your idea is to enable concatenating strings together and using that as a variable name?  Isn’t this just as easily achieved with something like:</p>
+<pre><code class="lang-css">:root {
+  --use-info-light: blue;
+  --use-info-lighter: lightblue;
+  --use-warning-light: red;
+  --use-warning-lighter: pink;
+}
+
+my-flash-message {
+    my-heading {
+      color: var(--use-info-lighter);
+    }
+    my-block {
+      color: var(--use-info-light);
+    }
+}
+my-flash-message[use=warning] {
+  my-heading {
+    color: var(--use-warning-lighter);
+  }
+  my-block {
+    color: var(--use-warning-light);
+  }
+}
+</code></pre>
+<p>Or, if you use these variables multiple times and want to make it a bit more DRY:</p>
+<pre><code class="lang-css">:root {
+  --use-info-light: blue;
+  --use-info-lighter: lightblue;
+  --use-warning-light: red;
+  --use-warning-lighter: pink;
+}
+
+my-flash-message {
+    --color-light: var(--use-info-light);
+    --color-lighter: var(--use-info-lighter);
+    my-heading {
+      color: var(--color-lighter);
+    }
+    my-block {
+      color: var(--color-light);
+    }
+}
+my-flash-message[use=warning] {
+    --color-light: var(--use-warning-light);
+    --color-lighter: var(--use-warning-lighter);
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>Our current site has 9 of those ‘uses’ which always use the same ratios just different ‘modifiers’ and properties for each component.</p>
+<p>So for example we have: ‘warning’, ‘error’, ‘info’, ‘success’ that all look the same just different shades.</p>
+<p>The practice works really well, just the CSS the LESS macros we are using generates a lot of noise.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="869">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>It looks like your idea is to enable concatenating strings together and using that as a variable name?</p>
+</blockquote>
+</aside>
+<p>Yes that is the suggestion here.</p>
+<p>I have been looking for a way in which the template can provide semantic meaning to components from the outside and this is the best I have come up with so far.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<blockquote>
+<p>Our current site has 9 of those ‘uses’ which always use the same ratios just different ‘modifiers’ and properties for each component.</p>
+</blockquote>
+<p>Then it looks like my second suggestion will work fine - just cast the correct set of variables into a common set at time of use, and use that common set.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>Certainly it is <strong>possible</strong> but with 50 odd components each using ‘use’ in this manner it would end up with pretty much double the CSS we currently have.</p>
+<p>It is being implemented with something similar to this in LESS:</p>
+<pre><code class="lang-auto">  my-component {
+    .generate-use(color, dark)
+    .generate-use(background-color, lighter, my-other-component)
+  }
+</code></pre>
+<hr/>
+<p>Unless you mean more like:</p>
+<pre><code class="lang-auto">:root {
+  --use-info-light: blue;
+  --use-info-lighter: lightblue;
+  --use-warning-light: red;
+  --use-warning-lighter: pink;
+  --color-light: var(--use-info-light);
+  --color-lighter: var(--use-info-lighter);
+}
+[use=warning] {
+    --color-light: var(--use-warning-light);
+    --color-lighter: var(--use-warning-lighter);
+}
+[use=info] {
+    --color-light: var(--use-info-light);
+    --color-lighter: var(--use-info-lighter);
+}
+my-flash-message {
+    my-heading {
+      color: var(--color-lighter);
+    }
+    my-block {
+      color: var(--color-light);
+    }
+}
+</code></pre>
+<p>Would that work as intended?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>Also I only just noticed we are relying on LESS style nesting here, rather than your suggested syntax.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="869">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Unless you mean more like:</p>
+</blockquote>
+</aside>
+<p>Yes, that was my second suggestion exactly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<p>With some mild tweaks of making the attribute selectors top level etc, I’m always paranoid about syntax usage I can’t test <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<p>That covers my use cases however it will to my understanding break where the LESS properties don’t.</p>
+<p>Due to assigning variables, across components the cascade will define properties for all children so that is why the defaults need to be per component don’t they?
+In your example:</p>
+<pre><code class="lang-auto">my-flash-message {
+    --color-light: var(--use-info-light);
+...
+</code></pre>
+<p>Otherwise both components here have warning usage:</p>
+<pre><code class="lang-auto">&lt;my-component use="warning"&gt;
+&lt;my-component /&gt;
+&lt;/my-component&gt;
+</code></pre>
+<p>A way to ‘default’ custom properties may become useful over time for things like this, so you could:</p>
+<pre><code class="lang-auto">my-component {
+  --[^color]: default;
+  or
+ --color*: default;
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="869">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Otherwise both components here have warning usage:</p>
+</blockquote>
+</aside>
+<p>I don’t understand what you mean.  In my example code, the message components will get the info colors by default, but warning messages will override them to use the warning colors (and specificity ensures that they’ll win).</p>
+<p>It seems like maybe you think there’s some notion of ordering going on here, such that the value set at one point in the DOM applies for the rest of the page until set otherwise?  Or something like that, I’m a little confused.  Custom properties are just inherited properties - when you set them, they apply to the element and its descendants, nothing more.</p>
+<p>Defaulting a custom property is indeed in the cards for Custom Properties level 2, where we’ll make them real, useful properties, rather than just trivial hosts for variable values.  You’ll be able to set an “initial” value for them, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>No not ordering just that the standard DOM rules is different to how I am using it with components, I am making the components all throw out a default ‘use’.</p>
+<p>So I understand variables would be no different to variable usage:</p>
+<iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_Wvjrvo" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/anon/embed/preview/Wvjrvo?height=300&amp;slug-hash=Wvjrvo&amp;default-tabs=html,result&amp;host=https://codepen.io&amp;embed-version=2" title="" width="695"></iframe>
+<p>So the above has to reset div to blue (which is what you did, however in my example I didn’t reset at the my-flash-message).</p>
+<p>The LESS I showed outputs similar to:</p>
+<pre><code class="lang-auto">my-component[use=info] {
+  color: blue;
+}
+my-component[use=info] my-other-component {
+  color: lightblue;
+}
+my-component[use=warning] {
+  color: red;
+}
+...
+</code></pre>
+<p>This is very noisy as output however when defaulting the components to have a ‘use=“normal”’ with JavaScript I can skirt round changing all the properties per component in the CSS.</p>
+<p>Resetting variables for each component would need to know to reset to [use=*] rather than initial to be useful I feel.</p>
+<p>It’s a weak sounding use case however I think some kind of reset per component may close the circle on this.</p>
+<p>So lets say this imaginary syntax:</p>
+<pre><code class="lang-auto">:root {
+  --use-info-light: blue;
+  --use-info-lighter: lightblue;
+  --use-warning-light: red;
+  --use-warning-lighter: pink;
+  --color-light: var(--use-info-light);
+  --color-lighter: var(--use-info-lighter);
+}
+
+@initial {
+  [use=warning] {
+      --color-light: var(--use-warning-light);
+      --color-lighter: var(--use-warning-lighter);
+  }
+  [use=info] {
+      --color-light: var(--use-info-light);
+      --color-lighter: var(--use-info-lighter);
+  }
+}
+my-flash-message {
+    all: initial;
+    my-heading {
+      color: var(--color-lighter);
+    }
+    my-block {
+      color: var(--color-light);
+    }
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="869">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<pre><code class="lang-css">@initial {
+  [use=warning] {
+      --color-light: var(--use-warning-light);
+      --color-lighter: var(--use-warning-lighter);
+  }
+  [use=info] {
+      --color-light: var(--use-info-light);
+      --color-lighter: var(--use-info-lighter);
+  }
+}
+</code></pre>
+</blockquote>
+</aside>
+<p>This is identical to just using a normal style rule.  That is, just strip off the surrounding <code>@initial</code> block, and you’ve got correct CSS that does what you want.</p>
+<p>(Note as well that ‘all’ does <em>not</em> reset custom properties.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-05</div>
+          <div class="post_content">
+<p>Yup it is however given the following structure:</p>
+<pre><code class="lang-auto">&lt;my-modal use="warning"&gt;
+  &lt;my-header&gt;
+    This is my modal
+  &lt;/my-header&gt;
+  &lt;my-content&gt;
+    text here
+  &lt;/my-content&gt;
+&lt;/my-modal&gt;
+</code></pre>
+<p>I want to be able to easily set:</p>
+<pre><code class="lang-auto">my-content {
+  .use-normal();
+}
+</code></pre>
+<p>So the visual appearance would be the header is a background red, but the content behaves as if the cascade of <code>[use=warning]</code> doesn’t apply.</p>
+<p>So I was trying to bikeshed a syntax that basically removes the cascade unless <code>my-content</code> had it’s own ‘use’.</p>
+<p>As in the syntax we used <code>--color-light</code> would be <code>--color-warning-light</code> as it would cascade down right?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-07</div>
+          <div class="post_content">
+<p>Is that something that might be possible with variables 2, <span class="mention">@tabatkins</span>?</p>
+<p>Seems like something your custom alias spec could cover perhaps or even allow <span class="mention">@extend</span> to support variables too might cover this use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-08</div>
+          <div class="post_content">
+<blockquote>
+<p>So I was trying to bikeshed a syntax that basically removes the cascade unless my-content had it’s own ‘use’.</p>
+</blockquote>
+<p>I think you’re confusing the cascade with inheritance.  If you set the variables to their “warning” values with a <code>my-model[use=warning]</code> rule, then a rule that specifies the “normal” values for <code>my-content</code> will work just fine.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-08</div>
+          <div class="post_content">
+<p>Yup I did mean inheritance sorry (terminology aside, I still mean the same).</p>
+<p>That is right but instead of having to do something like this:</p>
+<pre><code class="lang-auto">my-modal my-content {
+  --color-light: var(--use-normal-light);
+  --color-lighter: var(--use-normal-lighter);
+}
+</code></pre>
+<p>I was thinking a way to define the DOM or CSS with the ability to reset to a defined value with the following advantages:</p>
+<ul>
+<li>Remove the need to redefine what normal is everywhere</li>
+<li>Removes the need to declare set rules (like ‘use’) everywhere</li>
+<li>Adding new definitions doesn’t mean reopening up many CSS files to hunt down variable usage</li>
+<li>Template authors won’t need redefine <code>use="normal"</code> at all levels</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-17</div>
+          <div class="post_content">
+<p>What I want should be possible with <code>@extend</code> and the <code>%</code> class syntax assuming this would be possible:</p>
+<pre><code class="lang-auto">:root {
+  --use-info-light: blue;
+  --use-info-lighter: lightblue;
+  --use-warning-light: red;
+  --use-warning-lighter: pink;
+}
+%use {
+  --color-light: var(--use-info-light);
+  --color-lighter: var(--use-info-lighter);
+}
+%use[use=warning] {
+  --color-light: var(--use-warning-light);
+  --color-lighter: var(--use-warning-lighter);
+}
+%use[use=info] {
+  --color-light: var(--use-info-light);
+  --color-lighter: var(--use-info-lighter);
+}
+</code></pre>
+<pre><code class="lang-auto">my-flash-message {
+    @extend %use;
+    my-heading {
+      color: var(--color-lighter);
+    }
+    my-block {
+      color: var(--color-light);
+    }
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

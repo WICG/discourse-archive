@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Expose function tables outside of asm.js module</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Expose function tables outside of asm.js module</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chadaustin</div>
+          <div class="creation_date">2014-11-14</div>
+          <div class="post_content">
+<p>If asm.js passes a function pointer (as a numeric index into a function table) to JavaScript, JavaScript currently has no way to look up the actual underlying function object.  This is a severe penalty for Embind, which relies on the ability to map numeric function pointers to JavaScript function objects.</p>
+<p>At the end of this post, see benchmark results with (oldcomp, non-asm.js) and without this functionality.  You can see that the old Emscripten compiler without asm.js generates substantially faster calls through Embind.</p>
+<p>Without function object lookup, Embind instead must go through an Emscripten-generated dynCall function, which adds some costly indirection: <a href="https://github.com/kripken/emscripten/blob/master/src/embind/embind.js#L907" rel="nofollow noopener">https://github.com/kripken/emscripten/blob/master/src/embind/embind.js#L907</a></p>
+<p>I now believe it’s possible to eliminate part of the overhead (<code>Function.prototype.bind</code>) it still wouldn’t be as fast as having direct access to the function.</p>
+<p>Some proposals:</p>
+<ul>
+<li>allow function tables to be exported, but frozen.  e.g. <code>return { table_viii: Object.freeze(table_viii) }</code>
+</li>
+<li>allow export of a new type of function which takes an index and returns the function object.  e.g. <code>return { get_function_viii: function(idx) { return table_viii[idx]; } }</code>
+</li>
+</ul>
+<p>Alon proposed duplicating the function table into the export list with some kind of format that includes the type signature and the index, i.e. “fp_viii_1: some_internal_function” but that would have a rather large code size impact.</p>
+<h2>Benchmark results: JS → C++ via embind</h2>
+<p>Can’t figure out how to make a table in Specifiction markdown, so here’s a blockquote:</p>
+<pre><code>Firefox 33
+Oldcomp / not asm
+56636000
+
+Firefox 33
+Fastcomp / “almost asm”
+52250000
+
+Chrome 38
+Oldcomp / not asm
+27212000
+
+Firefox 33
+Fastcomp / asm.js
+10681868
+
+Firefox 33
+Oldcomp / asm.js
+10657152
+
+Chrome 38
+Fastcomp / “almost asm”
+3247677
+
+Chrome 38
+Fastcomp / asm.js
+3234561
+
+Chrome 38
+Oldcomp / asm.js
+3210571</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-14</div>
+          <div class="post_content">
+<p>The function tables are segregated by type so couldn’t you have a per-table function:</p>
+<pre><code>function asmModule() {
+    "use asm";
+    function a1() { return 1 }
+    function a2() { return 2 }
+    function call_a(i) { i=i|0; return a_tbl[i&amp;1]()|0 }
+    var a_tbl = [a1, a2];
+    return call_a;
+}
+</code></pre>
+<p>which you could use wherever you would have called an element of the proposed exported function table?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chadaustin</div>
+          <div class="creation_date">2014-11-14</div>
+          <div class="post_content">
+<p>That’s exactly what Emscripten already does, exposed as dynCall_, and that’s what embind currently uses in asm.js.</p>
+<p>The additional indirection hurts performance, which led to this issue.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-14</div>
+          <div class="post_content">
+<p>Ahh, when you said “dynCall”, I was thinking Runtime.dynCall, which takes (sig, ptr, args) and does dynamic lookup.  But looking at the embind code you posted, it looks like requireFunction is basically returning dynCall_sig.bind(undefined, i) which skips all that on each call.</p>
+<p>A few questions about the benchmark results:</p>
+<ul>
+<li>Is this a microbenchmark (where you have a loop calling a function with a trivial body in a loop) or a macro benchmark?</li>
+<li>Instead of using .bind(), could you use an equivalent lambda that closes over rawFunction?  I’m curious if that would help v8 inline.</li>
+</ul>
+<p>Regardless of whether we add this feature, FF won’t be able to inline across the JS/asm.js boundary and will go through a somewhat costly trampoline (you can see the self time in the trampoline in the FF profiler if you check “Show Gecko Platform Data” in the devtools config panel).  If you have a real (non-microbenchmark) case where you are calling through Embind a ton, could you instead put more of that code inside asm.js so that there are fewer JS-&gt;asm.js calls?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chadaustin</div>
+          <div class="creation_date">2014-11-14</div>
+          <div class="post_content">
+<p>This is a microbenchmark.  Sadly, I cannot do an actual apples-to-apples comparison in our application until fastcomp is upgraded to LLVM 3.4 or 3.5.  LLVM 3.3 doesn’t have a functional -mergefunc, which we rely on for code size and performance.  When fastcomp is upgraded, I can run an apples-to-apples comparison.</p>
+<p>I would like to eliminate the .bind() now that I know how, and if you think it would help make the case, I can try to get to that this weekend.</p>
+<p>I agree that the asm.js trampoline will hurt, but we care a lot about performance in Chrome too, and V8 benefits from having a direct JavaScript -&gt; embind invoker -&gt; “asm.js” function path.</p>
+<p>Reducing calls between JS and asm.js is also important, but sometimes tricky.  We’re at the optimization stage of our application where we’ve spent the last four months looking for 1% gains here and there, and this falls in that bucket.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azakai</div>
+          <div class="creation_date">2014-11-15</div>
+          <div class="post_content">
+<p>I pushed an EXPORT_FUNCTION_TABLES option to emscripten incoming now, which reflects the function tables out of the asm module. This lets you avoid those dynCalls, which should avoid all that call indirection overhead, at the cost of a slight code increase, for the reflected tables. Would be interesting to see embind perf using that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chadaustin</div>
+          <div class="creation_date">2014-11-15</div>
+          <div class="post_content">
+<p><a class="onebox" href="https://dl.dropboxusercontent.com/u/1602057/embind%20call%20benchmarks%202.pdf" rel="nofollow noopener" target="_blank">https://dl.dropboxusercontent.com/u/1602057/embind%20call%20benchmarks%202.pdf</a></p>
+<p>I ran the microbenchmarks again, once with Function.prototype.bind replaced with a generated trampoline per function binding ( <a href="https://github.com/kripken/emscripten/commit/a563da7adcebe324aa00da2d9be9e3e71cd4f634#diff-1e25583510869c425881c98eac3b295bR905" rel="nofollow noopener">https://github.com/kripken/emscripten/commit/a563da7adcebe324aa00da2d9be9e3e71cd4f634#diff-1e25583510869c425881c98eac3b295bR905</a> ), and the second with Alon’s EXPORT_FUNCTION_TABLES ( <a href="https://github.com/kripken/emscripten/commit/5a3ae46c88dad44fdf89bed25e85a5f8085735fe" rel="nofollow noopener">https://github.com/kripken/emscripten/commit/5a3ae46c88dad44fdf89bed25e85a5f8085735fe</a> ).</p>
+<p>As you can see, replacing the .bind with a generated trampoline is dramatically faster in Chrome, and noticeably faster in Firefox.</p>
+<p>Having access to the function tables is another noticeable win.  Alon’s change duplicates the function tables, which is unfortunate for code size and because it requires exporting functions that may only be called internally or by function pointer.</p>
+<p>If function tables could be exported, we would see the best of both worlds: high performance and small code size.</p>
+<p>There is +/- a few percent noise in those measurements.  The data was gathered in an Ubuntu VM on my Haswell 4771.  Each number is the average of three runs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azakai</div>
+          <div class="creation_date">2014-11-15</div>
+          <div class="post_content">
+<p>Thanks for the detailed numbers!</p>
+<p>It looks like the table mirroring achieves very good performance. Firefox without asm validation and with the table mirrors reaches the highest value, 75076000.</p>
+<p>As to why Firefox with asm validation is slower, it’s likely that this is a microbenchmark that stresses JS calling into the asm.js module. That has higher overhead when asm.js opts are on. In a large app where each such call does enough work it should be worth it, but on a test like this, this is the expected result.</p>
+<p>Less clear is why Chrome does so poorly - its best result is 27566000, almost 3x slower than Firefox. Might be worth filing a bug for them to take a look.</p>
+<p>It’s slightly curious that fastcomp (with mirrored tables) is a little slower on Chrome than oldcomp. However given the almost 3x slowness in the last paragraph, it could be noise compared to whatever bigger issue exists there.</p>
+<p>Anyhow, overall, it looks like moving embind to mirrored function tables on fastcomp is a good thing, aside from the code size change. With that, fastcomp is almost as good as oldcomp on Chrome, and better on Firefox.</p>
+<p>That leaves the issue of exposing function tables in asm.js itself as mostly a code size issue, not a perf issue. I agree that would be the optimal result, however, speccing exposing the function tables is not trivial (they shouldn’t be modifiable from outside, for example).</p>
+<p>How big was the code size change with mirrored tables?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chadaustin</div>
+          <div class="creation_date">2014-11-17</div>
+          <div class="post_content">
+<p>Until fastcomp is on LLVM 3.4 or greater, I can’t really do an apples-to-apples code size change in our codebase.  <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/>  We rely on -mergefunc pretty heavily at this point, and it’s broken in LLVM 3.3.</p>
+<p>In my microbenchmarking, there aren’t enough function pointers to really show what the total code size impact would be.  Mirrored function tables has two code size costs:</p>
+<ul>
+<li>there’s the obvious code size impact of having each table in the generated JS twice.</li>
+<li>in addition, mirroring the tables requires exporting functions that otherwise would be internal. almost all function pointers used by embind are for internal invoker functions that should not otherwise be exported. same for many vtable entries.</li>
+</ul>
+<p>That said, I don’t know the percentage of our code that makes up function tables.  I can check once fastcomp is upgraded to a newer LLVM.  <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azakai</div>
+          <div class="creation_date">2014-11-17</div>
+          <div class="post_content">
+<p>We hope to have a wip 3.5 branch fairly soon, <a href="https://github.com/kripken/emscripten-fastcomp/issues/51#issuecomment-63221450" rel="nofollow noopener">https://github.com/kripken/emscripten-fastcomp/issues/51#issuecomment-63221450</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

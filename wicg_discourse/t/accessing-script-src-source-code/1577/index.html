@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Accessing &lt;script src&gt; Source Code</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Accessing &lt;script src&gt; Source Code</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Currently, the source code of scripts with src can only be read by fetching them a second time. There should be a property of HTMLScriptElement which contains the source code.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Isn’t it already there as the textContent of the element?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Obviously, the point is accessing the code of an <em>external</em> script embedded via the <code>src</code> attribute of the <code>SCRIPT</code> element that has empty <code>textContent</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>The same feature would be nice for any text-type external resources such as stylesheets, not just for scripts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Could you add one or more use cases?</p>
+<p>Also, is there a way to instruct the browser to serve the script from its network cache, when performing the fetch?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>My use case is a testing framework. I want to watch for “error” and “unhandledrejection” events, and tie them back to the tests they originate in using the line and file. To do that I need the source of the test scripts, meaning I need to fetch the scripts again immediately after the page loads.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Couldn’t this force browsers to keep the JS source code in RAM where it can currently be freed, just in case the source is requested? That could bloat every web page.</p>
+<p>Also there are already ways to get both source and script with only a single request - you could use <code>fetch(..., { cache: "force-cache" })</code> or (IMO better) fetch the script as text (giving you the source), create a blob with the text, create a URL to the blob, then attach a script with the blob URL src.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-07-03</div>
+          <div class="post_content">
+<p>The use case certainly seems reasonable, but obscure enough that I suspect optimising for it is unlikely to get a lot of takeup…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-03</div>
+          <div class="post_content">
+<p>It seems like browsers (at least Chrome) are already keeping the source files (in RAM? SSD?) while the page is open, accessible via Sources in Devtools. If they already have this easily available internally, it shouldnt be too hard to expose to sites.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-07-04</div>
+          <div class="post_content">
+<p>Several browsers are regularly criticised for using too much memory, and have on-going engineering projects to reduce memory usage. This may well be one of the things in their sights. I think features that could have a per-page memory cost are not necessarily a good idea, especially when there are workarounds.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-07-04</div>
+          <div class="post_content">
+<p>Perhaps have this via a property on the tag to opt in to the feature (or even a meta tag to opt all tags on the page in).
+By being opt in for quite a rare case it won’t prevent browsers optimising memory usage in future. Also as the main use case appears to be testing/development even sites that do use it will mostly remove the feature before hitting live so memory usage is even less of a concern.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-07-04</div>
+          <div class="post_content">
+<p>If testing is the main use case for this, can’t a browser extension do this without requiring rendering engine changes?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

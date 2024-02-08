@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Expose First Paint* Timing in Performance Observer</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Expose First Paint* Timing in Performance Observer</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-11-30</div>
+          <div class="post_content">
+<p>We’d like to expose timing for First Paint &amp; First Contentful Paint in the Performance Observer.
+##<span class="hashtag">#Motivation</span>
+No single moment in time completely captures the user’s “loading experience”. To give developers insight into the loading experience, we propose a set of key progress metrics to capture the series of key moments during pageload which developers care about. First Paint (FP), is the first of these key moments, followed by First Contentful Paint (FCP). In the future, we plan to expose more such key moments, to help developers understand the full loading experience.</p>
+<p>Link to Proposal: <a href="https://github.com/tdresser/paint-timing" rel="nofollow noopener">https://github.com/tdresser/paint-timing</a>
+Relevant github discussion: <a href="https://github.com/w3c/charter-webperf/issues/32" rel="nofollow noopener">https://github.com/w3c/charter-webperf/issues/32</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-12-01</div>
+          <div class="post_content">
+<p>Considering the wide support this proposal seen at the WebPerfWG F2F at TPAC, the repo was moved under the WICG org: <a href="https://github.com/WICG/paint-timing">https://github.com/WICG/paint-timing</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-12-09</div>
+          <div class="post_content">
+<p>Couple issues have been raised on the <a href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/kyll3WFKTig" rel="nofollow noopener">Blink Intent thread</a> and the public-web-perf meeting, that I’d like to discuss here.</p>
+<p>The concerns are:</p>
+<ol>
+<li>FP is not very actionable by developers, it can move due to browser changes. Also developers wouldn’t know what exactly painted at reported FP (except that it’s something more than blank screen).</li>
+<li>Instead of FP why not expose first rAF as a proxy metric for “browser is starting to render”.</li>
+<li>If exposing paint times, ensure it captures the full cost of the paint, specifically include time in compositor, or round to next rAF.</li>
+</ol>
+<p>I am amenable to <span class="hashtag">#3</span> and wiling to consider <span class="hashtag">#2</span> if there’s support here, however I wanted to address <span class="hashtag">#1</span> i.e. why exposing FP is a good thing:
+FP is the first visual signal to end users that “it is happening” therefore it’s a good thing for developers to know.
+However developers should not fixate on FP alone, rather it adds value when considered together with FCP (and proposed Hero Element Timing API). In that sense it’s an important diagnostic metric.
+For instance addition of 200ms between FP and FCP is a negative signal that developers should dig into.</p>
+<p>Feedback is welcome!</p>
+<p>/cc <span class="mention">@toddreifsteck</span> <span class="mention">@igrigorik</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-12-09</div>
+          <div class="post_content">
+<p>Re (1): I believe “<a href="https://docs.google.com/document/d/1wdxSXo_jctZjdPaJeTtYYFF-rLtUFxrU72_7h9qbQaM/edit" rel="nofollow noopener">Why first paint</a>” already answers this… Yes, in isolation it’s not sufficient to understand the full picture, but when combined with other metrics it helps developers understand how their pages are being painted. If the browsers change their heuristics, that’s good to know, as I might want to update how I construct + ship my page.</p>
+<p>Re (2): as in, record the time of first rAF and call that first paint? Correct me if I’m wrong, but this wouldn’t account for the cases when all you’ve painted is default background color? The intent behind FP is to refine that and make sure that at leas something other than default background is on the screen.</p>
+<p>Re (3): It’d be helpful to break down what edge-cases these proposals would actually solve. As in, if we round everything to next rAF, what are we accounting for that we didn’t before, what did we regress, etc. I don’t have a clear picture of what these cases are, so it’s hard to make a call one way or another.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

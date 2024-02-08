@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Re-imagining details/summary design</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Re-imagining details/summary design</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I have been questioning the current design on the <a href="http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#the-details-element">details</a>/<a href="http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#the-summary-element">summary</a> feature for a while. Its design seems overcomplicated and inflexible.  Am wondering if there is still time to reconsider the design, making it more flexible, and at the same time making implementation simpler…</p>
+<p>There is a <a href="http://thepaciellogroup.github.io/disclosure-button/disclosure-button-spec/index.html" rel="nofollow noopener">rough spec</a> for an alternative and <a href="http://thepaciellogroup.github.io/disclosure-button/example2.html" rel="nofollow noopener">demos</a> of a <a href="https://github.com/ThePacielloGroup/disclosure-button" rel="nofollow noopener">custom element</a> based on the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I have not found any problem with <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code>. As consultants, we use them in production websites regularly, usually with tiny polyfills for older browsers.</p>
+<p>The only problem is styling them, but that is taken care of in nonstandard ways by vendor-specific pseudo-elements, and besides it is a problem inherent to basically any nontrivial HTML element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I think I am where <span class="mention">@domenic</span> is here - what is the difficulty/inflexibility of which you speak?  Is it that it has to be parent/child relationship or certain style or script things are difficult?  Can you expand?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I haven’t been able to deploy any details/summary usage in a production app either. It just tricky to style correctly.</p>
+<p>The <strong>direct</strong> parent child relationship makes it hard. Typically the markup for implementing this kind of thing looks like:</p>
+<pre><code class="lang-auto">&lt;div class="details-container"&gt;
+  &lt;p&gt;Inline row with text, but not the target itself &lt;span class="details-target"&gt;...&lt;/span&gt;&lt;p&gt;
+  &lt;div class="details-contents"&gt;
+    &lt;p&gt;Some extra info&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Heres some places on <a href="http://github.com" rel="nofollow noopener">github.com</a> that I’d like to be able to use details/summary for:</p>
+<p><img alt="" height="" src="//discourse.wicg.io/uploads/default/14/d090b4cf62cfec2c.png" width=""/>
+<img alt="" height="" src="//discourse.wicg.io/uploads/default/15/824f86d0bb289eda.png" width=""/>
+<img alt="" height="" src="//discourse.wicg.io/uploads/default/16/fdd3059262f06417.png" width=""/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>It does seem like it is better if we could make something a little looser with default styling that it was easier to enhance or even supersede… An accordion, for example is just a stack of these right relationships really… I’ve seen disclosures that pop out or fade in or slide down - all sorts of stuff really.  It’s tricky (like label/idref) in terms of styling because they can be in completely different parts of the tree, but they have conceptual relationship that’s important to maintain none the less.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>right and that is what the disclosure-button example does, it strips the feature down and makes it easier to deploy. any element can become the equivalent of the details element simply by referencing it from the disclosure control. The disclosure control can be a child of most any element and by styled anyway easily. I am not overly serious about changing the current html feature. I think its just a bit of a mistaken addition as the functionality can be provided easily and simply by other means. details/summary doesn’t add a lot, if anything. The only advantage to details/summary is that when implemented in all browsers it won’t require JavaScript. It should also be noted that while there are implementations, there are no conforming implementations as the interaction behaviour and specced shadow DOMminess of the interactive bits as implemented are at odds with the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>It would have been better to create an accordion element, reuse Heading tags as the click targets, and let developers link together a given heading and matching content element within the containing tag using an attribute that specifically targets it. For instance:</p>
+<pre><code>&lt;accordion&gt;
+  &lt;h3&gt;Title 1&lt;/h3&gt;
+  &lt;section&gt;Content 1&lt;/section&gt;
+  &lt;h3 for="content-2"&gt;Title 2&lt;/h3&gt;
+  &lt;section&gt;Content X&lt;/section&gt;
+  &lt;section name="content-2"&gt;Content 2&lt;/section&gt;
+&lt;/accordion&gt;
+</code></pre>
+<p>In the above example, not using for/name targeting would mean a user’s click/touch on a heading will apply an active state to both the heading an the next sibling element. If you used the targeting mechanism shown in the Title 2 example, you could associate the active state toggle of a heading with any element inside the container.</p>
+<p>This would provide people with far more extensibility, and solve many more of the common cases this sort of element is generally intended for.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Why set the hidden attribute?  The aria attribute is selectable with CSS and in my mind semantically better. Why not just provide default style display:none or size 0/overflow hidden on it and then you can easily add effects, etc via css</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Issue here is that the heading semantics are overriden by it function as a button. see <a href="http://rawgit.com/w3c/aria-in-html/master/index.html#second-rule-of-aria-use" rel="nofollow noopener">http://rawgit.com/w3c/aria-in-html/master/index.html#second-rule-of-aria-use</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Because hidden is the semantic marker for hidden content. why use aria-hidden and then apply a style, when hidden does both?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="64">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stevef/40/80_1.png" width="20"/> SteveF:</div>
+<blockquote>
+<p><a href="http://rawgit.com/w3c/aria-in-html/master/index.html#second-rule-of-aria-use">http://rawgit.com/w3c/aria-in-html/master/index.html#second-rule-of-aria-use</a></p>
+</blockquote>
+</aside>
+<p>Tried responding to this via mail, but perhaps that doesn’t work yet… In either case, will repost my comments here (and expand a bit):</p>
+<p>…Because if i want to define how it becomes hidden (a css animation to slide it shut or offscreen perhaps) then i have to fight hidden.  Am I doing it wrong?  It feels weird debating this with you Steve since you are editor on both of the relevant documents - so I’m just going to share my perspective and say “why is that wrong, because even with the documents - it feels right to me.”</p>
+<p>As an illustration, I’ll to point to  input type=hidden – generally speaking this is where the idea originates and here it is fundamentally data for processing that has no business ever being shown to a user (but that’s a different thing)… You could use the global hidden attribute for similar reasons - something purely technical… Beyond that, the act of hiding seems like display or accessibility which seem better handled with CSS and Aria, respectively.   This same notion this has always seemed to jive in my mind with the HTML spec which states</p>
+<blockquote>
+<p>The hidden attribute must not be used to hide content that could
+legitimately be shown in another presentation. For example, it is
+incorrect to use hidden to hide panels in a tabbed dialog, because the
+tabbed interface is merely a kind of overflow presentation — one could
+equally well just show all the form controls in one big page with a
+scrollbar. It is similarly incorrect to use this attribute to hide
+content just from one presentation — if something is marked hidden, it
+is hidden from all presentations, including, for instance, printers.</p>
+</blockquote>
+<p>This whole section of the spec, in fact, seems to me to speak of the difference between something that is actually hidden for practical reasons by its nature (for example, a chunk that is maintained via script, never intended to be shown) vs something that is purely about style - it cites examples like a canvas element offscreen, etc.  It also states that using CSS you should be able to override the display nature.</p>
+<p>Aria’s attribute doesn’t re-invent, it actually better expresses.  “Expanded” is what you are trying to express here and it has no conflict that I can see with the specs at all.  In fact, in different UIs you might choose to always display them expanded, make them into clickable links which display the contents as a “page” or in some “main” area (think ember/angular), animate them opened and closed, etc… But mostly all of them work with the idea of something ‘expanded’ better than ‘hidden’ imo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>hey I am not married to the use of hidden, if you want to code an alternative method and send a pull request will be happy to merge <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>I do tend to agree with your arguments re hidden and consider in retrospect its use in the context of the disclosure element as sub optimal</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="64">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>For example, it is
+incorrect to use hidden to hide panels in a tabbed dialog, because the
+tabbed interface is merely a kind of overflow presentation</p>
+</blockquote>
+</aside>
+<p>btw i don’t agree with this (in the spec) but don’t think its important enough to change/fork</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>I’d love to send a pull – to do so, I have some questions though.  In the component right now you are settin<a href="https://github.com/bkardell/disclosure-button/blob/gh-pages/w3c-disclosure.html#L41">g style attributes</a> as well as the hidden attribute (why?) - but from this element, I’d like to know who controls it.  Let me explain a use case… Let’s say I have a panel which is controllable via a standard title oriented expander right above it – but I also have something elsewhere in the UI, a notification or something where I want to draw their attention.  It’s entirely plausible that they BOTH control the SAME element, at which point it seems they would potentially be in disagreement.  I’m trying to figure out from an accessibility standpoint how this would work - it seems that 1 target might have many controllers/sources - so it makes the most sense for the target to store the state… Certainly from a styling standpoint, it is the details element, not the summary that is expanded if you see what I mean - but reading the code and the Aria spec, it seems that it is the <a href="https://github.com/bkardell/disclosure-button/blob/gh-pages/w3c-disclosure.html#L37">button itself</a> which is supposed to contain the expanded attribute - I’m having trouble reconciling how that works or could be useful if we need to tie together helpful APIs (maybe) and CSS (definitely)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="64">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>but I also have something elsewhere in the UI, a notification or something where I want to draw their attention.  It’s entirely plausible that they BOTH control the SAME element,</p>
+</blockquote>
+</aside>
+<p><a href="http://www.w3.org/WAI/PF/aria-1.1/states_and_properties#aria-controls">aria-controls</a> can take a space delimited list of id refs. In terms of the disclosures owned element you could use <a href="http://www.w3.org/WAI/PF/aria-1.1/states_and_properties#aria-owns">aria-owns</a>. When you say ‘draw attention to’ for whom? The usual pattern for notifications that are displayed and visually apparent is to use <a href="http://www.w3.org/WAI/PF/aria-1.1/states_and_properties#attrs_liveregions">aria-live</a> on the notification container, so the content of the container will be announced by SR’s when displayed. so this does not need to be associated using controls.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="64">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>it seems that it is the button itself which is supposed to contain the expanded attribute</p>
+</blockquote>
+</aside>
+<p>its the button because it controls the state of the controlled content. Also from a practical perspective the aria-expanded state needs to be on a focusable element so that it is communicated to the user. Current user experience:</p>
+<p>User focuses on button using a screen reader. label (<em>text</em>)/role(button) and state (collapsed) is announced.
+User activates button label (<em>text</em>)/role(button) and state (expanded) is announced.</p>
+<p>For SR’s that support aria-controls - that the button controls something is announced and a keystroke to move to the controlled element is provided.</p>
+<p>Also note some acc APIs provide access to reverse relationships. For example Iaccessible 2 (used by firefox/chrome)  aria-controls hooks into <a href="http://accessibility.linuxfoundation.org/a11yspecs/ia2/docs/html/group__grp_relations.html" rel="nofollow noopener">controllerFor</a> which has a reverse relation property controlledBy</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="64">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>In the component right now you are setting style attributes as well as the hidden attribute</p>
+</blockquote>
+</aside>
+<p>No longer sets hidden, just display value.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1826_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sideshowbarker</div>
+          <div class="creation_date">2014-05-24</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="64">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/josh/40/92_1.png" width="20"/> josh:</div>
+<blockquote>
+<p>The direct parent child relationship makes it hard. Typically the markup for implementing this kind of thing looks like:</p>
+<pre><code class="lang-auto">&lt;div class="details-container"&gt;
+  &lt;p&gt;Inline row with text, but not the target itself &lt;span class="details-target"&gt;...&lt;/span&gt;&lt;p&gt;
+  &lt;div class="details-contents"&gt;
+    &lt;p&gt;Some extra info&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+</blockquote>
+</aside>
+<p>So OK there you mean the <code>&lt;span class="details-target"&gt;...&lt;/span&gt;</code> part is the disclosure control, and you’re saying that shouldn’t have to be a direct child of the same element (<code>&lt;details&gt;</code>) that contains the contents that gets shown/hidden (<code>&lt;summary&gt;</code>)?</p>
+<p>If so, I <em>think</em> <span class="mention">@SteveF</span>’s alternative proposal would handle that case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1825_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SteveF</div>
+          <div class="creation_date">2014-05-24</div>
+          <div class="post_content">
+<p>This is exactly what <a href="https://github.com/ThePacielloGroup/disclosure-button" rel="nofollow noopener">w3c-disclosure</a> does, see code example.</p>
+<pre><code> &lt;!-- can be anywhere in DOM --&gt;
+&lt;button is="w3c-disclosure" controlfor="x-id" /&gt;
+
+
+  ...
+ &lt;!-- can be any element --&gt;    
+    &lt;div id=x-id&gt;...
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-28</div>
+          <div class="post_content">
+<p>I see the problem now; thanks Steve and others.</p>
+<p>My general feeling is that trying to put interactive widgets into the HTML standard has not been a rousing success. Largely this is because there has been no good story for styling or customizing them. (Who wants to use the super-ugly <code>&lt;input type="date"&gt;</code> that ships with Chrome?) The introduction of custom elements provides a way forward for such things, with the promise that in the future if something becomes so ubiquitous that almost everyone is shipping it (like jQuery is today), we can start rolling them back into HTML. And in the meantime, we’ll be figuring out the story for styling shadow DOM and the like.</p>
+<p>So yeah, things like <code>w3c-disclosure</code> are probably the way to go for now.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[proposal] Register custom elements onto ShadowDOM roots</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[proposal] Register custom elements onto ShadowDOM roots</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>I mentioned in a <a href="http://lists.w3.org/Archives/Public/public-webapps/2016AprJun/0040.html">public-webapps thread</a> how Custom Elements coupled with ShadowDOM, along with a new ability to register Custom Elements on a per-shadow-root basis would be a good way to have Custom-Element-based “web components” that can encapsulate HTML/DOM similar to how React components encapsulate “HTML” (JSX):</p>
+<p><em><strong>Note, this opening description of the proposal is deprecated in favor of the <a href="https://discourse.wicg.io/t/proposal-register-custom-elements-onto-shadowdom-roots/1440/6?u=trusktr">new description in the comment below</a>.</strong></em></p>
+<p>Previous ideas have talked about being able to register elements on a per-document basis, but that doesn’t seem to help things be more modular and componentized. Shadow roots can be the form of encapsulation for Custom Elements in a similar manner as how JSX/render() encapsulates “HTML” (“DOM”) for a React component.</p>
+<p>Now, if we could register elements on a per-shadow-root basis, then we’d effectively have encapsulated HTML.</p>
+<p>From the email thread, here’s what a small component might look like:</p>
+<pre><code class="lang-auto">//  --------------- HandyForm.js
+import AwesomeButton from './AwesomeButton'
+import { FancyForm, FancyInput } from './FancyForm'
+
+export default
+class HandyForm extends HTMLElement {
+    constructor() {
+        this.root = this.createShadowRoot()
+        this.root.registerElement('cool-button', AwesomeButton)
+        this.root.registerElement('fancy-form', FancyForm)
+        this.root.registerElement('fancy-input', FancyInput)
+
+        const frag = document.createDocumentFragment()
+        frag.innerHTML = `
+            &lt;div&gt;
+                &lt;fancy-form&gt;
+                    &lt;fancy-input type="text" /&gt; &lt;!-- give us self-closing custom elements, pleeeease w3c --&gt;
+                    &lt;cool-button type="submit"&gt;&lt;/cool-button&gt;
+                &lt;/fancy-form&gt;
+            &lt;/div&gt;
+        `
+        this.root.appendChild(frag)
+    }
+
+    static get observedAttributes() { return [ ... ] }
+
+    connectedCallback() { ... }
+    disconnectedCallback() { ... }
+    attributeChangedCallback() { ... }
+}
+
+//  --------------- app.js
+import HandyForm from './HandyForm'
+
+// elements registered on the document won't cross into shadow roots
+document.registerElement('handy-form', HandyForm)
+document.body.appendChild(document.createElement('handy-form'))
+</code></pre>
+<p>As you can see here, the pattern would be that a component author would utilize Custom Elements and ShadowDOM together, along with a new ability to register elements for that specific shadow root (and only for that shadow root, it won’t leak to the outer DOM scope). This effectively allows the component author to define which HTML elements map to which classes inside the component (similar to how JSX elements map to React classes inside a React component).</p>
+<p>As part of general recommendations, sites like MDN, MSDN, <a href="http://developer.chrome.com" rel="nofollow noopener">developer.chrome.com</a>, etc, would recommend that authors of Custom Elements supply end users only the class for the custom element, and that end users register the element using any name they desire. As you see in the example, the end user of the <code>AwesomeButton</code> element chose to register the AwesomeButton class into his/her component’s shadow root as “cool-button”:</p>
+<pre><code class="lang-auto">        this.root.registerElement('cool-button', AwesomeButton)
+</code></pre>
+<p>Then, the <code>AwesomeButton</code> end user, who is the author of the <code>HandyForm</code> element simply exports the <code>HandyForm</code> class and does not register it onto the <code>document</code>, leaving it up to the end user of <code>HandyForm</code> to decide how to do that and with what name. The pattern is part of the import process. For normal JavaScript, an import statement is usually enough, but for HTML elements, the pattern would be</p>
+<pre><code class="lang-auto">import SomeElement from 'some-element'
+document.registerElement('any-name', SomeElement)
+// ...
+shadowRoot.registerElement('any-name', SomeElement)
+</code></pre>
+<p>For this all to work nicely, an important rule would be that elements registered at the top level with <code>document.registerElement</code> should not propagate into shadow roots. A new shadow root should start as a clean slate who’s DOM uses only the native elements until Custom Elements are explicitly registered. For exampe:</p>
+<pre><code class="lang-auto">// --- file1.js
+import CustomImageElement from 'somewhere'
+
+document.registerElement('img', CustomImageElement)
+
+// creates a CustomImageElement instance:
+const img = document.createElement('img')
+
+document.body.appendChild(img)
+img.src = 'path/to/image.png'
+</code></pre>
+<pre><code class="lang-auto">// --- file2.js
+const el = document.querySelector('.foo')
+const root = el.createShadowRoot()
+
+// creates an HTMLImageElement instance, not affected by
+// the previous call to document.registerElement:
+const img = root.createElement('img')
+
+root.appendChild(img)
+img.src = 'path/to/image.png'
+</code></pre>
+<pre><code class="lang-auto">// --- file3.js
+import OtherImageClass from 'other-place'
+
+const el = document.querySelector('.bar')
+const root = el.createShadowRoot()
+root.registerElement('img', OtherImageClass)
+
+// creates an OtherImageClass instance:
+const img = root.createElement('img')
+
+root.appendChild(img)
+img.src = 'path/to/image.png'
+</code></pre>
+<pre><code class="lang-auto">// --- file4.js
+import CustomImageElement from 'somewhere'
+
+const path = 'path/to/image.png'
+const el = document.querySelector('.bar')
+const root = el.createShadowRoot()
+root.registerElement('img', CustomImageElement)
+
+// creates a CustomImageElement instance:
+root.innerHTML = `
+    &lt;div&gt;
+        &lt;img src="${path}"&gt;
+        &lt;/img&gt;
+    &lt;/div&gt;
+`
+</code></pre>
+<p>What do you think of this idea?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>Slightly off-topic, but:</p>
+<aside class="quote" data-post="1" data-topic="1440">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_1.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>&lt;!-- give us self-closing custom elements, pleeeease w3c --&gt;</p>
+</blockquote>
+</aside>
+<p>This was discussed <a href="https://github.com/whatwg/html/issues/721">in the HTML github</a> and the conclusion seems to be that making custom elements pay attention to the self-closing syntax is probably fine, it just needs implementor interest before they’re willing to spec a change like that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-13</div>
+          <div class="post_content">
+<p>I updated my example, moving render logic to a <code>render()</code> method, so that example is more similar to a React component (which also has a render() method):</p>
+<pre><code class="lang-auto">import AwesomeButton from './AwesomeButton'
+import { FancyForm, FancyInput } from './FancyForm'
+
+export default
+class HandyForm extends HTMLElement {
+    constructor() {
+        this.root = this.createShadowRoot()
+        this.root.registerElement('cool-button', AwesomeButton)
+        this.root.registerElement('fancy-form', FancyForm)
+        this.root.registerElement('fancy-input', FancyInput)
+
+        this.frag = this.root.createDocumentFragment()
+
+        this.someValue = 0
+        this.render()
+    }
+
+    render() {
+        this.frag.innerHTML = `
+            &lt;div&gt;
+                &lt;fancy-form&gt;
+                    &lt;fancy-input type="text" value="${this.someValue}" /&gt; &lt;!-- give us self-closing custom elements, pleeeease w3c --&gt;
+                    &lt;cool-button type="submit"&gt;&lt;/cool-button&gt;
+                &lt;/fancy-form&gt;
+            &lt;/div&gt;
+        `
+        if (this.root.hasChildNodes())
+            this.root.removeChild(this.root.firstChild)
+        this.root.appendChild(frag)
+    }
+
+    static get observedAttributes() { return [ ... ] }
+
+    connectedCallback() {
+        this.interval = setInterval(() =&gt; { this.someValue++; this.render() }, 1000)
+    }
+
+    disconnectedCallback() {
+        clearInterval(this.interval)
+    }
+
+    attributeChangedCallback() { ... }
+}
+</code></pre>
+<p>With some imagination, we can imagine that the AwesomeButton, FancyForm, and FancyInput components might be made using this same pattern, and might register they’re own internal elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/943_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Adam_Timberlake</div>
+          <div class="creation_date">2016-04-14</div>
+          <div class="post_content">
+<p>Take a look at <a href="https://github.com/Wildhoney/Standalone" rel="nofollow noopener"><code>react-standalone</code></a> which is a custom elements implementation using React, however it is framework agnostic, thus truly reusable and interoperable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-15</div>
+          <div class="post_content">
+<p>I wrote a better description of the proposal in the <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=603985" rel="nofollow noopener">Chromium tracker</a>, so posting here for reference:</p>
+<p>We currently have the ability to register Custom Elements onto the top-level document by doing</p>
+<pre><code class="lang-auto">document.registerElement('any-name', SomeElementClass)
+// ^ this currently ignores the class' constructor, so leave the constructor empty for now.
+</code></pre>
+<p>This allows us to define a class that encapsulates the behavior of our Custom Element, which is awesome!!</p>
+<p>But, there are some limitations of this when compared to using React instead of the native Custom Elements API. First, let me describe what React has that makes it powerful:</p>
+<p>JSX in React encapsulates “HTML” (but keep in mind JSX “is just JavaScript” as JSX compiles to plain JS) on a per-component basis. This is powerful in React because the “custom elements” in React are classes that are imported and contained within the React component’s JavaScriptlexical scope. For example:</p>
+<pre><code class="lang-auto">import React from 'react'
+import AwesomeButton from 'AwesomeButton'
+
+export default
+class MyForm extends React.Component {
+    constructor() {
+        this.value = "hello form"
+    }
+    render() {
+        return (
+            &lt;form&gt;
+                &lt;input type="text" value={this.value} /&gt;
+                &lt;AwesomeButton type="submit"&gt;Submit&lt;/AwesomeButton&gt;
+            &lt;/form&gt;
+        )
+    }
+
+    componentDidMount() { ... }
+    componentWillUnmount() { ... }
+    componentWillReceiveProps() { ... }
+}
+</code></pre>
+<p>What’s important here is that AwesomeElement is lexically scoped to the component thanks to how JavaScript works. Some other file can not use AwesomeButton unless that other file also imports AwesomeButton.</p>
+<p>This is much better than using globals!!</p>
+<p>The problem with the current Custom Elements API: everything is a global! Custom Elements are currently registered globally for the entire web app, via <code>document.registerElement()</code>.</p>
+<p>I’d like to propose a possible solution that will introduce the ability for custom element authors to scope imported custom elements to their components (achieving an effect of encapsulation similar to React components): allow the registration of Custom Elements onto ShadowDOM roots. Before showing how the custom element “web component” encapsulation would work, first let’s see how registering a Custom Element onto a shadow root would work:</p>
+<pre><code class="lang-auto">// --- file4.js
+import CustomImageElement from 'somewhere'
+
+const path = 'path/to/image.png'
+const el = document.querySelector('.bar')
+const root = el.createShadowRoot()
+root.registerElement('img', CustomImageElement)
+
+// The 'img' tag creates a CustomImageElement instance:
+root.innerHTML = `
+    &lt;div&gt;
+        &lt;img src="${path}"&gt;
+        &lt;/img&gt;
+    &lt;/div&gt;
+`
+</code></pre>
+<p>(Note, as we can see in the example, I am also indirectly proposing that we be allowed to override native elements; in this case the IMG element is overridden.)</p>
+<p>Here’s one more example using the imperative form of element creation and following the hyphen-required rule:</p>
+<pre><code class="lang-auto">import CustomImageElement from 'other-place'
+
+const el = document.querySelector('.bar')
+const root = el.createShadowRoot()
+root.registerElement('img', CustomImageElement)
+
+// creates a CustomImageElement instance:
+const img = root.createElement('img')
+
+root.appendChild(img)
+img.src = 'path/to/image.png'
+</code></pre>
+<p>In both of the last two examples, a Custom Element is registered on a shadow root. The registration is only valid within the DOM of those shadow roots and the registration does not escape the shadow root, thus the shadow root encapsulates the registration. If the shadow root contains a sub-shadow-root, then the sub-shadow-root is not affected by the parent shadow root’s registration. Likewise, registrations on the <code>document</code> do not propagate into shadow roots. For example:</p>
+<pre><code class="lang-auto">import CustomImageElement from 'somewhere'
+document.registerElement('img', CustomImageElement)
+
+// ...
+// creates an instance of HTMLImageElement despite the registration on the
+// document:
+shadowRoot.appendChild(shadowRoot.createElement('img'))
+</code></pre>
+<p>(Note, I’m also implying here that the <code>createElement</code> method would need to exist on shadow roots, which makes sense if shadow roots will have their own custom element registrations.)</p>
+<p>Now, let me show how component encapsulation would work with web components made with the paring of Custom Elements and ShadowDOM (providing encapsulation of HTML/DOM similarly to React components). In the previous React example, AwesomeButton is a component that is defined in a similar fashion to MyForm class: it imports any components that it needs and uses them within the lexical scope of the module that its definition lives in. In the Custom Element API, we don’t have the luxury of the JavaScript lexical scope passing into our markup (well, at least not with some sophisticated and possibly mal-performing template-string tagging hackery).</p>
+<p>So, let’s get down to business: let’s see what a Custom Element “component” would look like. Let’s recreate the React-based MyForm example above, but this time using Custom Elements + ShadowDOM coupled with the idea that we can register Custom Elements onto ShadowDOM roots:</p>
+<pre><code class="lang-auto">import AwesomeButton from 'AwesomeButton'
+
+export default
+class MyForm extends HTMLElement {
+    constructor() {
+        this.root = this.createShadowRoot()
+        this.root.registerElement('awesome-button', AwesomeButton)
+
+        this.frag = this.root.createDocumentFragment()
+
+        this.value = 'hello form'
+        this.render()
+    }
+
+    // A naive render function that has no diffing like React. We could use
+    // React here for that.
+    render() {
+        this.frag.innerHTML = `
+            &lt;div&gt;
+                &lt;form&gt;
+                    &lt;input type="text" value="${this.value}" /&gt; &lt;!-- give us self-closing custom elements, pleeeease w3c --&gt;
+                    &lt;awesome-button type="submit"&gt;Submit&lt;/awesome-button&gt;
+                &lt;/form&gt;
+            &lt;/div&gt;
+        `
+        if (this.root.hasChildNodes())
+            this.root.removeChild(this.root.firstChild)
+        this.root.appendChild(frag)
+    }
+
+    connectedCallback() { ... }
+    disconnectedCallback() { ... }
+    attributeChangedCallback() { ... }
+}
+</code></pre>
+<p>What we can see in this example is that we’ve effectively encapsulated the meaning of <code>&lt;awesome-button&gt;</code> inside of our Custom Element component. Instead of using JavaScript’s lexical scoping, we’ve used the encapsulation of our component’s shadow root by registering <code>awesome-button</code> onto it. This gives freedom to the web component developer; allowing the developer to determing what names are used for Custom Elements that are used withing the developer’s own custom-element-based component.</p>
+<p>An idea like this, whereby the registration of an element can be encapsulated within a component, will be a great way to increase modularity in the web platform.</p>
+<p>What do you think of this idea?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<p>Ultimately, this requires every element-creation API to accept a context argument, so it can know which set of custom elements constructors to use.  If you accidentally omit it, it would default to the global scope.</p>
+<p>In particular, that means <code>createElement()</code> and <code>createDocumentFragment()</code> (the latter so it can tell what constructors to use when you set innerHTML) need to have context arguments, or maybe automatically inherit one from the shadow root you call them from.  (That would mean your example is broken, since you’re using the document’s <code>createDocumentFragment()</code> - it would pull from the document root’s set of elements, not the ones you registered to MyForm.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-23</div>
+          <div class="post_content">
+<p>This is true! The <code>createElement()</code> method’s context would indeed be the shadow root that it’s called from. As for the <code>createDocumentFragment()</code> method, the easiest solution to that would be to be able to call <code>createDocumentFragment()</code> on a shadow root as well. I’ll update my examples. Inserting a document fragment created from one shadow root into another shadow root would throw an error.</p>
+<p>I’m in love with this idea of calling createElement/DocumentFragment (perhaps some other methods we haven’t talked about too) on shadow roots, and the premise of encapsulation that this provides. I’m also open to other ideas on how elements can be encapsulated.</p>
+<p>EDIT: I updated the examples so that the relevant parts of the Custom Element definitions look something like this:</p>
+<pre><code class="lang-auto">        this.root = this.createShadowRoot()
+        this.frag = this.root.createDocumentFragment()
+</code></pre>
+<p>where <code>this.frag</code> can only be used with (appended to) <code>this.root</code>. I think that would be the best way (better than something like <code>document.createDocumentFragment(shadowRoot)</code> with <code>shadowRoot</code> as context).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

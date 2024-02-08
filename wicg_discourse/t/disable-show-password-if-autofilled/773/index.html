@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Disable “Show password” if autofilled</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Disable “Show password” if autofilled</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-03-05</div>
+          <div class="post_content">
+<p>I think that the “show password” checkbox on login forms is useful (LukeW has recently written about it <a href="http://www.lukew.com/ff/entry.asp?1941" rel="nofollow noopener">here</a>) and I’d like to see it on the Web. Luke points out that this feature is a security issue in the presence of the browsers’ autofill mechanism (when the user chooses “remember password” and later has the password field autofilled by the browser).</p>
+<p>How can we circumvent this issue?</p>
+<ul>
+<li>Should browsers just refuse to reveal an autofilled password on the page (even when input type is switched to <code>'text'</code> via JavaScript)?</li>
+<li>How can web apps detect autofill (needed for conditionally enabling the “show password” checkbox)?</li>
+<li>How much of this should be standardized?</li>
+</ul>
+<p>Btw, I’ve noticed an IMO ideal implementation of this functionality in ESET’s security software. See a video demo <a href="https://www.youtube.com/watch?v=Dt8np9kYCVM" rel="nofollow noopener">here</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2015-03-06</div>
+          <div class="post_content">
+<p>I understand the threat, but I’m not sure that this should be standardised. If the attacker has access to the user’s browser, even if the browser removes the password when the <code>input</code> is switched to <code>text</code>, the attacker can still get the value by hitting the JS console and looking at the input’s <code>value</code>. And you can’t remove that as it’s needed for logins that work through XHR.</p>
+<p>So the attack is really just the case in which there is a Show Password checkbox and the attacker has a split second in which to click it but not the time to open the console. I’m not sure browsers could defend against that without causing issues for legitimate uses. The better solution is to get rid of login dialogs altogether <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+<p>I guess that a Web app can detect this by noticing that the password field has been filled out but has never been focused. In that case, it could disable its Show Password checkbox until such a time as the <code>password</code> field has been both focused <em>and</em> cleared. Technically it’s not hard; I’m not sure that there wouldn’t be cases in which it might confuse users though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-03-06</div>
+          <div class="post_content">
+<p>Ok, I can make a proof of concept when I find time. I think it makes sense to have the Show Password functionality <em>disabled</em> at first and then enable it on user input (after making sure that the current value consists <em>exclusively</em> of direct user input).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-06</div>
+          <div class="post_content">
+<p>I suspect pages could protect the fields themselves against extensions or malware a little with:
+<a class="onebox" href="http://www.w3.org/TR/UISecurity/" target="_blank">http://www.w3.org/TR/UISecurity/</a></p>
+<hr/>
+<p>However it would be nice that password itself could be set from the browser side, something similar to this:</p>
+<pre><code class="lang-auto">&lt;input type="password" prefilled /&gt;
+</code></pre>
+<p>Typing in the box would be the equivalent of their being a place holder on the element and removing <code>prefilled</code>.</p>
+<p>If the form gets submitted the memory reference is never shown to the user or the JS but could be used to send to a server.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>This is somewhat related to: <a href="//discourse.wicg.io/t/write-only-input-fields/598">Write-only input fields</a></p>
+<p>I the <a href="https://w3c.github.io/webappsec/specs/credentialmanagement/" rel="nofollow noopener">Credentials Management API</a> will likely help solve this form of issue however it won’t solve it for medical data or card information.</p>
+<p>This is however in a way harder to solve than write-only-input-fields as it requires the prevention of third party scripts to not be allowed to inject their own form to inspect the value that gets prefilled.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

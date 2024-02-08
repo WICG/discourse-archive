@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add inputset tag for simplifying form creation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add inputset tag for simplifying form creation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-25</div>
+          <div class="post_content">
+<p>It is very common to need to wrap a form element in a div or the like for formatting purposes. It is also necessary to create a lot of <code>id</code> attributes to wire up labels and descriptions etc. I propose an <code>&lt;inputset&gt;</code> tag to leverage the former against the latter.</p>
+<p>An <code>&lt;inputset&gt;</code> is a block element that automatically associates labels and the like with its first descendant form element (native or custom).</p>
+<p>This</p>
+<pre><code class="lang-auto">&lt;inputset&gt;
+  &lt;label&gt;Label&lt;/label&gt;
+  &lt;input&gt;
+  &lt;datalist&gt;
+    &lt;option value=A&gt;
+    &lt;option value=B&gt;
+  &lt;/datalist&gt;
+&lt;/inputset&gt;
+</code></pre>
+<p>is equivalent to</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  input-set { display: block; }
+&lt;/style&gt;
+&lt;input-set&gt;
+  &lt;label for=id1&gt;Label&lt;/label&gt;
+  &lt;input id=id1 list=id2&gt;
+  &lt;datalist id=id2&gt;
+    &lt;option value=A&gt;
+    &lt;option value=B&gt;
+  &lt;/datalist&gt;
+&lt;/input-set&gt;
+</code></pre>
+<p>This reduces the need for coming up with many globally unique <code>id</code>s for adjacent elements.</p>
+<p>That can sometimes be achieved in simple cases by wrapping the input element in the label element but that can make certain layouts harder and only handles the case of the label. This would also handle descriptions and possibly errors if taken with <a href="https://discourse.wicg.io/t/extend-label-element-with-type-attribute-to-let-it-set-descriptions-and-error-messages/5667">my other proposal for extending the label element</a>. I wrote a demo of both together: <a href="https://codepen.io/jimmyfrasche/pen/yLoeRQm" rel="noopener nofollow ugc">https://codepen.io/jimmyfrasche/pen/yLoeRQm</a></p>
+<p>It’s easier to read, easier to write, and harder to get wrong.</p>
+<p>If the wrapper element is not required it can be set to <code>display: contents</code> without altering the semantics.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2196_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sollyucko</div>
+          <div class="creation_date">2021-10-26</div>
+          <div class="post_content">
+<p>So it chains adjacent elements?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-26</div>
+          <div class="post_content">
+<p>Roughly. It’s meant to improve that task by providing a simpler way of doing that, yes. I don’t think it should be limited to adjacent in the strict sense, though. Descendant would probably be preferable to allow extra divs and such for styling and grouping.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2021-10-27</div>
+          <div class="post_content">
+<p>Why not using <code>&lt;fieldset&gt;</code> ?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-10-27</div>
+          <div class="post_content">
+<p>fieldset already exists and does something different so it can’t really be changed to do this or would it make much sense to have some kind of attribute toggle that makes it work in two very different ways with very different effects on its children</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

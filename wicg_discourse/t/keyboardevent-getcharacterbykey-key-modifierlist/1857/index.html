@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>KeyboardEvent.getCharacterByKey(key, modifierList)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">KeyboardEvent.getCharacterByKey(key, modifierList)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-11-24</div>
+          <div class="post_content">
+<p>I read about <code>KeyboardEvent.prototype.key</code> and somewhere it was mentioned that one of its use cases is to let a developer provide a consistent keyboard experience, for example, in games, where the W, A, S, D and X keys are used for moving and similar, regardless of the keyboard layout of the user.
+This is a good use case, however, applications (or even for help pages of games) that provide keyboard shortcuts (for example, the Developer Tools, GMail and others), cannot show meaningful keys to the user in some keyboard shortcut legend, because they cannot know in advance what <code>KeyA</code> really is in the keyboard of the user. This creates some funny situations where the application shows that Control + A is the keyboard shortcut for selecting all of the characters, but since it relies on <code>KeyA</code>, the shortcut will simply be wrong for German users with AZERTY keyboards, for example. It will do nothing, or worse - do something else (like discarding a new e-mail!).</p>
+<p>My suggestion is to add a static method to <code>KeyboardEvent</code>, named <code>getCharacterByKey</code> (bikeshedding for the name or the placement is welcome only after establishing that the concept itself seems like a good idea, obviously :)).
+It will take two parameters, <code>key</code>, which is the value of <code>KeyboardEvent.prototype.key</code>, as well as a modifier list, which can be the same input used for <code>KeyboardEvent.prototype.getModifierState</code>. The method will return the value of <code>KeyboardEvent.prototype.code</code> (for the combination of the key and modifiers).</p>
+<p>Privacy concerns - web applications will be able to identify the current keyboard layout (the operating system provided one, not the physical one, though) of the keyboard of the user. This can be used for fingerprinting in a way, though I heard that the number of bits that can be used for fingerprinting has already increased far enough for fingerprinting to happen anyway and thus fighting this specific concern is is pretty meaningless at this point. Also, it does not expose the name of the keyboard layout of the user, which can reveal much more about the locality, nationality or religion than just getting the keys.</p>
+<p>Open questions -</p>
+<ul>
+<li>In case the user has two keyboard layouts (I have Hebrew and English, for example), which one will be returned? The current one at the time of calling the API?</li>
+<li>Should the method return a promise since it might involve some system calls?</li>
+<li>Should the method accept multiple combinations (use case - a keyboard shortcut legend usually includes more than a few shortcuts. This can make the application call this API a lot at once. This is especially useful in the promise-returning method case).</li>
+<li>Should the method return multiple outputs, per keyboard layout (in my case, one for Hebrew and one for English)?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/970_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">garykac</div>
+          <div class="creation_date">2017-08-28</div>
+          <div class="post_content">
+<p>We had a proposal for something like this in the past, but didn’t have time to devote to it. I’ve added a bug to the UIEvents spec so that we can track this more easily.</p>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/uievents/issues/156" rel="nofollow noopener" target="_blank">github.com/w3c/uievents</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/w3c/uievents/issues/156" rel="nofollow noopener" target="_blank">Support queryKeyCap</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2017-08-28" data-format="ll" data-time="23:47:41" data-timezone="UTC">11:47PM - 28 Aug 17 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/garykac" rel="nofollow noopener" target="_blank">
+<img alt="garykac" class="onebox-avatar-inline" height="20" src="https://avatars0.githubusercontent.com/u/1480010?v=4" width="20"/>
+          garykac
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">Previous versions of the UIEvents spec proposed queryKeyCap to get the symbol printed on the physical key cap (by assuming that...</p>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">Proposal</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/970_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">garykac</div>
+          <div class="creation_date">2018-03-15</div>
+          <div class="post_content">
+<p>This issue came up again recently, so I have written up a proposal to get a mapping from <code>code</code> values to <code>key</code> values for the currently active keyboard.</p>
+<aside class="onebox githubblob">
+<header class="source">
+<a href="https://github.com/garykac/keyboard-map/blob/master/proposal.md" rel="nofollow noopener" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/garykac/keyboard-map/blob/master/proposal.md" rel="nofollow noopener" target="_blank">garykac/keyboard-map/blob/master/proposal.md</a></h4>
+<pre><code class="lang-md"># Keyboard Map
+
+A proposal to provide an API to return the |key| value for a given |code|.
+
+DRAFT: garykac@
+
+## Overview
+
+Provide an API to convert from a given `code` value to the `key` value that would be generated
+(given the current locale and layout) when the corresponding key is pressed.
+ 
+### Goals include:
+
+* Being able to convert from a |code| value (with no modifiers) into the |key| value.
+* Adding an event when the active keyboard layout changes.
+
+### Non-goals include:
+
+* Identifying a keyboard layout or locale
+* Being able to convert from a `code` value + modifiers into the `key` value that would be generated
+</code></pre>
+
+  This file has been truncated. <a href="https://github.com/garykac/keyboard-map/blob/master/proposal.md" rel="nofollow noopener" target="_blank">show original</a>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Please add comments either here or as issues on Github. Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1641_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">masayuki-nakano</div>
+          <div class="creation_date">2018-03-20</div>
+          <div class="post_content">
+<p>According to the user story, isn’t it enough to limit web apps can retrieve only unmodified key value of the highest priority ASCII capable keyboard layout if shortcut keys are always displayed with ASCII characters even in non-ASCII keyboard layout users?  If using active keyboard layout, shortcut key labels may be displayed with non-ASCII characters like Hebrew, Cyrillic, Greek, etc.</p>
+<p>On macOS, we can retrieve the highest priority keyboard layout with TISCopyCurrentASCIICapableKeyboardLayoutInputSource().</p>
+<p>On Linux/GTK, we can walk groups and check KeyA’s character like this:
+<a class="onebox" href="https://searchfox.org/mozilla-central/rev/877c99c523a054419ec964d4dfb3f0cadac9d497/widget/gtk/nsGtkKeyUtils.cpp#1211-1229" rel="nofollow noopener" target="_blank">https://searchfox.org/mozilla-central/rev/877c99c523a054419ec964d4dfb3f0cadac9d497/widget/gtk/nsGtkKeyUtils.cpp#1211-1229</a></p>
+<p>Although, I have no idea on Windows. Should give highest priority to first ASCII capable keyboard layout found in the result of GetKeyboardLayoutList()?</p>
+<p>Additionally, should it only work with Writing System Keys?
+<a class="onebox" href="https://w3c.github.io/uievents-code/#key-alphanumeric-section" rel="nofollow noopener" target="_blank">https://w3c.github.io/uievents-code/#key-alphanumeric-section</a></p>
+<p>I know users may map character input to some function keys. But web API doesn’t need to treat such users only for this purpose since such users can remap shortcut keys in their brain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/970_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">garykac</div>
+          <div class="creation_date">2018-03-20</div>
+          <div class="post_content">
+<p><strong>Re: “active layout” vs. “highest ASCII layout”</strong></p>
+<p>Those are good points about the ASCII layout. We can probably get away with just the ASCII layout.</p>
+<p>If the info for the “active layout” is useful, we could have a <code>useActiveLayout</code> flag that defaults to <code>false</code>. I’m not sure if that’s necessary, though.</p>
+<p><strong>Re: Only Writing System keys</strong></p>
+<p>The Writing System keys are the ones for which this API is the most useful since the other keys already have special names (unless they have a custom override).</p>
+<p>So I agree that’s a good idea to limit it to the just the Writing System keys. One advantage of restricting it in this way is that key map would be smaller since we could ignore the large number of special keys (Multimedia Keys, Brazil-only numpad keys, etc.).</p>
+<p>Overall, though, I’m trying to gauge overall interest in migrating something like this to an official W3C specification where we could work out these issues:</p>
+<ul>
+<li>There currently is no alternative mechanism for getting this data.</li>
+<li>We’ve had requests for something like this for years.</li>
+<li>It would help support a class of webapps that we want to encourage - specifically games (for control) and other apps that have a mode that uses the keyboard as a set of buttons (like a drawing app that has keys to select drawing tools) where they care about the location of the buttons relative to each other.</li>
+</ul>
+<p>Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/970_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">garykac</div>
+          <div class="creation_date">2018-04-05</div>
+          <div class="post_content">
+<p>I’ve placed an initial ED in the WICG github repo: <a href="https://wicg.github.io/keyboard-map/" rel="nofollow noopener">https://wicg.github.io/keyboard-map/</a></p>
+<p>Please add comments or file issues.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

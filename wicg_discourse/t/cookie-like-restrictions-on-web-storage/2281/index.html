@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Cookie like restrictions on web storage</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Cookie like restrictions on web storage</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1174_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">koba04</div>
+          <div class="creation_date">2017-08-25</div>
+          <div class="post_content">
+<p>I sometimes use web storage(sessionStorage) to store temporary data when I build SPAs.
+(I know I shouldn’t store any sensitive information in web storage)</p>
+<p>Web storage can restrict to access its data by same-origin policy, which means if I’d like to restrict it for security reasons, I have to use an another (sub)domain, which seems to be costs for developers.</p>
+<p>If a site has XSS in a page of its domain, all stored data in web storage can be stolen like this.</p>
+<pre><code class="lang-auto">[...new Array(1000)].map((_, i) =&gt; localStorage.key(i)).filter(k =&gt; k).forEach(k =&gt; console.log(k, localStorage.getItem(k)))
+// or
+[...new Array(1000)].map((_, i) =&gt; sessionStorage.key(i)).filter(k =&gt; k).forEach(k =&gt; console.log(k, sessionStorage.getItem(k)))
+</code></pre>
+<p>In addition to that, web storage can’t specify expires to the data so it;s difficult to store only necessary data.</p>
+<p>So I think it would be nice if web storage has a feature that is able to restrict to access its data by path or expires as well as Cookie.
+The same might apply to IndexedDB.</p>
+<p>Are there already any discussions about this?
+I’ve found it.</p>
+<ul>
+<li><a href="https://html.spec.whatwg.org/multipage/webstorage.html#cross-directory-attacks">https://html.spec.whatwg.org/multipage/webstorage.html#cross-directory-attacks</a></li>
+</ul>
+<p>Alternatively, should I just use CSP?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-08-25</div>
+          <div class="post_content">
+<p>Why should you not store any sensitive information in local storage?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-08-26</div>
+          <div class="post_content">
+<p>If you limit access based on path, you only need to XSS on the right path, and if by cookie, you can XSS and steal the cookie too. So I think this only creates an illusion of security. A strong CSP should block most (all?) XSS vectors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1174_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">koba04</div>
+          <div class="creation_date">2017-08-26</div>
+          <div class="post_content">
+<p>Because all stored data can be stolen if a page in same domain has an XSS.</p>
+<p>OWASP recommends not to store sensitive information in local storage.</p>
+<p><a class="onebox" href="https://www.owasp.org/index.php/HTML5_Security_Cheat_Sheet#Local_Storage" rel="nofollow noopener" target="_blank">https://www.owasp.org/index.php/HTML5_Security_Cheat_Sheet#Local_Storage</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1174_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">koba04</div>
+          <div class="creation_date">2017-08-26</div>
+          <div class="post_content">
+<p>You are right.
+But We need to apply CSP in all pages in the same domain to block to this by CSP, don’t we?
+If I’m developing an app on <code>example.com/apps/a/</code> and use web storage to store some data and apply CSP to the app, I can protect the data from XSS.</p>
+<p>But If <code>example.com/some/page.html</code> has an XSS which is maintained by others, the data can be stolen from the XSS.
+To avoid this, I need to host the app on an another domain.
+I can protect the data If I could store data with restriction by path.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-08-26</div>
+          <div class="post_content">
+<p>The same-origin policy is a critical part of browser security. If you host other people’s content on the same origin and you don’t trust them to properly secure their content, then moving your content to a different origin is the correct thing to do IMO.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2017-08-28</div>
+          <div class="post_content">
+<p>+1 to that - finer-than-origin security boundaries for web content are not reliable, and don’t even exist in many of the APIs (e.g. permissions, web storage, HSTS.) If expiration time is the main worry, though, you could consider encrypting the stored data using crypto.subtle and storing the decryption keys in expiring cookies. And yes, you can path-scope the cookie, but that’s not actually particularly helpful security-wise as there are a number of ways pages in other paths can coerce arbitrary different sub-paths into acting on their behalf, including IFRAME-and-script. Preventing all such same-site scripting vulnerabilities is AFAIK basically impossible and most current security work on the web is aimed at origin-granularity rather than origin+path-granularity as the smallest defensible perimeter</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1174_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">koba04</div>
+          <div class="creation_date">2017-08-28</div>
+          <div class="post_content">
+<p>Thank you for your answers!
+I understand the path restriction doesn’t work well on the web because of iframe + XSS.</p>
+<blockquote>
+<p>The same-origin policy is a critical part of browser security.</p>
+</blockquote>
+<p>I agree with you.
+In particular, I think the same-origin policy is a more important topic on the web because the web will be HTTPS everywhere.
+It causes to make unexpected pages as the same origin.</p>
+<p>To avoid to stolen web storage data stored by an app, we can choose these options</p>
+<ul>
+<li>Isolate the app by the same-origin policy</li>
+<li>Apply CSP everywhere in the domain</li>
+</ul>
+<p>Are there any other options or proposals?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

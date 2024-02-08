@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for promotable IFRAME</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for promotable IFRAME</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-09-29</div>
+          <div class="post_content">
+<p><em>TL:DR: I propose <code>myIframeElement.promote()</code> to navigate a browser from page A to page B, where page B is already loaded and rendered as an iframe on page A, by “promoting” the IFRAME to be the top level browsing context.  Read on!</em></p>
+<p>Recently, the W3C TAG <a href="https://www.w3.org/2001/tag/doc/distributed-content/">has been concerned</a> about the increase in ‘walled garden’ content ecosystems, notably Google’s AMP cache and carousel, but also Facebook instant articles, Apple News and other similar products.  Where these systems are implemented on the web they may choose to reproduce a third party’s content within their own UI, or load the third party into an IFRAME, in order to provide a faster, reliable loading experience.  These practices arise from a legitimate and reasonable desire to improve the loading speed of pages (especially news articles) that you might want to navigate to from a search result page or newsfeed.</p>
+<p>In AMP’s case, this works by:</p>
+<ol>
+<li>Loading a number of search result target pages in hidden iframes while the search results are displayed</li>
+<li>Capturing clicks/taps on the search result elements</li>
+<li>In response, displaying the relevant already-loaded IFRAME full-screen.</li>
+<li>Updating the URL to reflect the state change.</li>
+</ol>
+<p>However, this approach suffers from some severe negative effects, notably that the third party’s origin is not preserved.  The referring party can only update the URL to a path on their own origin, resulting in a URL such as <code>nytimes.com/path/to/article</code> displaying as something like <code>google.com/s/amp/nytimes.com/path/to/article</code>.  The destination page is unable to access client-side resources and permissions that are attached to their origin, and the unclear attribution has significant implications for the provenance and trustworthiness of the content.</p>
+<p>I’ve <a href="https://discourse.wicg.io/t/pre-render-meets-feature-policy-alternative-to-amp/2173">previously proposed a limited resurrection of the <code>&lt;link rel="prerender"&gt;</code> tag</a>, but the following may be a better solution:</p>
+<p>I propose that we create a <code>promote</code> method of <code>HTMLIFrameElement.prototype</code> that performs the following steps:</p>
+<ol>
+<li>replace the current top level browsing context with the browsing context of the IFRAME, without reconstructing the DOM of the frame.  If the IFRAME does not have the right size or position, the browser should perform a relayout and paint as would happen if the viewport were resized by the user.</li>
+<li>reevaluate the CSS OM of the page to remove any influences resulting from the CSS of the parent page (which might, for example, have made the IFRAME invisible)</li>
+<li>reevaluate any origin-level policies that may have previously been applied to the page when it was being framed by another origin (eg Referrer policy, feature policy or CSP).  For example, a page that may not be permitted to use geolocation when framed might be allowed to do so once promoted.</li>
+<li>update the URL bar to the URL of the new page</li>
+<li>Trigger the <code>unload</code> event on the referring page and perform any actions normally associated with unloading a document</li>
+<li>Enter the unloaded document in the history</li>
+</ol>
+<p>If a user invokes the browser’s ‘back’ action after an iframe promotion, the browser should reconstruct the prior page.  Browsers that retain the prior page’s DOM might choose to ‘reframe’ the active DOM back into the IFRAME element of the prior page’s DOM, otherwise both the prior page and the IFRAME should be reloaded.</p>
+<p>Example code:</p>
+<pre><code class="lang-javascript">// Pre-render the top three search results into hidden iframes
+searchResults.querySelectorAll('a').slice(0,3).forEach(el =&gt; {
+	const prerenderIframe = document.createElement('iframe');
+	prerenderIframe.src = el.href;
+	prerenderIframe.classList.add('prerender-frame');
+	el.prerenderIframe = prerenderIframe;
+});
+
+// On click, promote the iframe if there is one
+searchResults.addEventListener('click', e =&gt; {
+	const linkEl = e.target.closest('a');
+	if (linkEl.prerenderIframe) {
+		e.preventDefault();
+		linkEl.prerenderIframe.promote();
+	}
+});
+</code></pre>
+<p>You could imagine that developers might want to animate a transition to the iframe in some way, which could be accomplished easily with existing CSS transitions.</p>
+<p>This solution has privacy implications - the referring site may be initiating fetches to the target site before the user has indicated an intent to go there, so there is also a need for a mechanism that enables the referring site to cache the target site’s content but retain the ability to run that content within the context of the target origin.  Therefore the solution proposed here works well in conjunction with <a href="https://github.com/WICG/webpackage" rel="nofollow noopener">signed packages</a>.  Without packaging, promotable iframes would still work if the referring site, or a partner, to host a subdomain of the target site’s origin, in order to ensure that prefetch requests do not provide privacy-compromising information to the target site’s owners.</p>
+<p>I’ve mostly considered this as a solution for AMP, but there are use cases beyond pre-loading seach results, notably in advertising: responsive ads might achieve a faster, more seamless transition from publisher site to advertiser site if the ad iframe were simply promoted rather than navigating the browser to a new page.</p>
+<p>Cheers,</p>
+<p>Andrew</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-10-02</div>
+          <div class="post_content">
+<p>I really like this idea.</p>
+<aside class="quote" data-post="1" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>If a user invokes the browser’s ‘back’ action after an iframe promotion, the browser should reconstruct the prior page.  Browsers that retain the prior page’s DOM might choose to ‘reframe’ the active DOM back into the IFRAME element of the prior page’s DOM, otherwise both the prior page and the IFRAME should be reloaded.</p>
+</blockquote>
+</aside>
+<p>I didn’t like this when I first read it, but the reframing would be a good way to describe how bfcache browsers could handle this.</p>
+<aside class="quote" data-post="1" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>This solution has privacy implications - the referring site may be initiating fetches to the target site before the user has indicated an intent to go there</p>
+</blockquote>
+</aside>
+<p>How is this different from what iframes can do today?</p>
+<aside class="quote" data-post="1" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>I’ve mostly considered this as a solution for AMP</p>
+</blockquote>
+</aside>
+<p>Can you talk a little more about how AMP would use this? Specifically, I’m not sure how they could use this &amp; still side-swipe between cached articles. Or would they have to drop that feature?</p>
+<p>As you mentioned on Twitter, this is a simple® solution that enables a lot of <a href="https://github.com/jakearchibald/navigation-transitions">https://github.com/jakearchibald/navigation-transitions</a>.</p>
+<p>My proposal got push-back internally because it requires keeping both documents in memory at once for a bit. I guess this has the same problem, but the browser can’t opt out of it (like it could with my proposal). It’d be good to hear from implementors about this. If navigation was dependent on being able to have two documents active, how much failure would we see?</p>
+<p>Some other thoughts:</p>
+<p>What happens to the scroll position? I’m guessing the new document takes on the scroll position of the iframe? It’d be great if scroll inertia carries over too.</p>
+<p>Because loading is kinda CPU intensive, I wonder if we’d benefit from some way to freeze the iframe. Eg:</p>
+<ol>
+<li>Create iframe, monitor it until enough content has loaded.</li>
+<li>Freeze iframe.</li>
+<li>Perform a nice smooth transition.</li>
+<li>Unfreeze and promote iframe.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-10-02</div>
+          <div class="post_content">
+<p>With the “reframing” stuff, I’m worried there’s a way for an iframe to become promoted, then get itself into some sort of state the parent page wouldn’t allow, then be reframed. Or the reverse, where reframing is used to frame a page that doesn’t want to be framed. However, I can’t think of a precise way to do this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-10-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>How is this different from what iframes can do today?</p>
+</blockquote>
+</aside>
+<p>It isn’t, from a standards perspective, only from an AMP standpoint.  Currently AMP solves the privacy issue by fetching from a Google cache which does not inform the source origin of the load.  That wouldn’t work if they promoted the IFRAME and we want to fix the incorrect origin issue.</p>
+<aside class="quote" data-post="2" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>Can you talk a little more about how AMP would use this? Specifically, I’m not sure how they could use this &amp; still side-swipe between cached articles. Or would they have to drop that feature?</p>
+</blockquote>
+</aside>
+<p>They would have to drop that feature, along with the additional UI at the top of the page, both of which would be good changes because then when I view the page, the experience is what the author of that page intended, without interference.  I liken the swiping carousel and additional header thing to those countdown timers that wifi spots used to inject into every non-https website you visited to tell you how much time you have left.</p>
+<aside class="quote" data-post="2" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>I wonder if we’d benefit from some way to freeze the iframe</p>
+</blockquote>
+</aside>
+<p>You mean like <a href="https://github.com/jkarlin/pause-frame" rel="nofollow noopener">https://github.com/jkarlin/pause-frame</a>?</p>
+<p>There are various other points that I know I don’t have the chops to address, and are probably best addressed by implementors, and scroll position is one of them, but ideally I see it being as close to unchanged as possible, when navigating in either direction.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1454_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cramforce</div>
+          <div class="creation_date">2017-10-02</div>
+          <div class="post_content">
+<p>This would, indeed, be great for AMP, and it is one of the options that we have been floating with implementors over the last weeks.</p>
+<p>This particular version has gotten pushback in terms of implementability as being the first primitive that allows changing the frame hierarchy (although it appears that <code>window.open</code> is similar when the <code>opener</code> is closed).</p>
+<p>Another variant of the proposal that we have been discussing is to instead extend <code>requestFullscreen</code> with the ability to opt into showing more system and browser UI. This would be very useful beyond AMP. E.g. for many fullscreen applications it would be great to be able to opt into showing the Android software buttons on devices that do not have physical buttons. This could be based on the <a href="https://developer.mozilla.org/en-US/docs/Web/Manifest#display" rel="nofollow noopener">display</a> configuration in Web Manifest as in: <code>requestFullscreen({display: 'browser'})</code>. The browser would show the URL of the iframe if an iframe requested fullscreen with a display option that shows (parts of) the URL.</p>
+<p>Using <code>requestFullscreen</code> would inherently not change frame hierarchy and keep the parent alive. One downside is that it would not come with a chance to re-apply “origin-level policies”.</p>
+<p>From AMP’s point of view both the <code>promote</code> and <code>requestFullscreen</code> primitives would work. I tend to favor <code>requestFullscren</code> as it is more generally useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zetafunction</div>
+          <div class="creation_date">2017-10-03</div>
+          <div class="post_content">
+<p>We previously implemented iframe reparenting, so that it wouldn’t require reloading the contained Document: <a href="https://bugs.webkit.org/show_bug.cgi?id=32848" rel="nofollow noopener">https://bugs.webkit.org/show_bug.cgi?id=32848</a>. It ended up being reverted about two years later: <a href="https://bugs.webkit.org/show_bug.cgi?id=81590" rel="nofollow noopener">https://bugs.webkit.org/show_bug.cgi?id=81590</a>, since it was the source of a number of security vulnerabilities, and added a complex corner case to WebKit.</p>
+<p>Implementing it today in Chrome would still be tricky at best. There are many hidden assumptions throughout Chrome based on whether a given Document loaded in the main frame or not–and this property is assumed to be static. This would likely end up with similar issues to the original magic iframe implementation, with a constant stream of bugs that need to be fixed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-10-13</div>
+          <div class="post_content">
+<p>I have a strong negative reaction to <code>requestFullscreen({display: 'browser'})</code>, primarily because it would be a potentially confusing user experience (are you in fullscreen mode or not?!), and because it opens the door to powerful platform owners making a ‘land grab’ for control of the web by intermediating the relationship between user and content.</p>
+<p>The web is an open network of content with no centralised control or owner.  That is the ideal that standards people need to recognise and defend, by not allowing the standardisation of technologies that undermine it (anticipating the counterpoint: yes, the requestFullScreen needs to come from inside the iframe, but that request can easily be compelled by the platform, either contractually or technically, as in fact would be the case with AMP)</p>
+<p>Addressing the privacy concerns of using promotable iframes for pre-rendering, I was talking to <span class="mention">@cramforce</span> yesterday and wonder if a sandbox or CSP-like directive could prevent cookies being sent in requests for iframe content (in browsers that don’t already do double-keying of cookies on iframes).  Perhaps we already have this?</p>
+<p><span class="mention">@zetafunction</span> that’s disappointing, but it feels like iframe promotion is a slightly different case to that, ie. we are not trying to move an iframe to a different point in the parent DOM, or to the DOM of another parent document, but to a separate top-level browsing context.  Does that still have all the same concerns?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1454_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cramforce</div>
+          <div class="creation_date">2017-10-16</div>
+          <div class="post_content">
+<p>I don’t completely follow how a <code>requestFullscreen</code> with full browser UI would be confusing if a few invariants would hold: It would be requested by the content, the content could at any moment break out of it (by navigating away), and it could also only be exited by the content itself (as opposed to the container).</p>
+<p>When you talked in person you mentioned, the ability to run script on the destination page would somehow increase platform control. I don’t, however, understand how that is different from the same situation in classic navigation. That script could just call <code>history.back()</code> when it would call <code>exitFullscreen</code> with <code>requestFullscreen</code> and with <code>window.open</code> and <code>target=_blank</code> we even grant the opener the right to navigate the opened window.</p>
+<p>There are a lot of use cases for <code>requestFullscreen</code> with browser UI (or minimal-ui, one of the other modes of the <code>display</code> attribute in WebManifest). E.g. oAuth, other identity, and payment providers would certainly love the ability to temporarily take over a window with origin display while having a straightforward way to return to the original page. <code>window.open</code> is lacking the reliability on mobile to be very useful for this use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-10-26</div>
+          <div class="post_content">
+<p>I think the use cases aren’t totally clear here and are hidden behind an assumed knowledge of AMP which some (myself included) don’t have. I’m going to attempt to distill down the use cases, please correct me if I am wrong:</p>
+<ul>
+<li>The AMP use case is: Display a page within an iframe. Later promote that iframe to be the full page (for example if a user clicks on a full-screen button).</li>
+<li>
+<span class="mention">@Jake_Archibald</span>’s use case: Navigate from one page to another with transitions.</li>
+</ul>
+<p>Are these correct? Are there others?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1661_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Androbin</div>
+          <div class="creation_date">2018-03-09</div>
+          <div class="post_content">
+<p>Loading the AMP page inside <code>&lt;iframe&gt;</code> is probably most “compatible”.
+But this method of “parking” it somewhere in the DOM seems kinda hacky.
+It should be possible to hold <em>and load</em> that framed page solely in JavaScript.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1631_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">KenjiBaheux</div>
+          <div class="creation_date">2018-03-09</div>
+          <div class="post_content">
+<p>Just a quick note,</p>
+<p>Kenji here from the web platform team at Chrome.</p>
+<p>We’ve been thinking about this and might have identified a viable proposal which is not based on iframes (so, no reparenting needed) and not about a special fullscreen mode.</p>
+<p>It just needs a few more sanity checks before we can share it publicly.
+Stay tuned.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-03-09</div>
+          <div class="post_content">
+<p>There are some interesting Web advertising use cases around this area
+or that might be affected.</p>
+<p>Today advertising companies experimenting in things like ads that grow
+when you interact with them have to go to considerably hacky
+approaches, e.g. so the JS in the parent document makes an element that
+will hide the iframe when requested, using a web socket to communicate.</p>
+<p>And the idea of sandboxing something that is not an iframe would help a
+lot with securing native ads that are fulfilled server-side.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1624_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wanderview</div>
+          <div class="creation_date">2018-03-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>Addressing the privacy concerns of using promotable iframes for pre-rendering, I was talking to <span class="mention">@cramforce</span> yesterday and wonder if a sandbox or CSP-like directive could prevent cookies being sent in requests for iframe content (in browsers that don’t already do double-keying of cookies on iframes).  Perhaps we already have this?</p>
+</blockquote>
+</aside>
+<p>This has always been my main question reading this proposal:</p>
+<p>How are browsers that treat 3rd party iframes differently for storage/cookies supposed to work here?</p>
+<p>Consider, if a browser partitions storage for 3rd party iframes, does it change partitions when being promoted? If so, doesn’t this essentially let sites exfiltrate data from one partition to the other? This seems bad for tracking prevention.</p>
+<p>At least in our implementation this would essentially amount to changing the origin of the frame when its promoted. This seems very challenging to do safely without a reload of the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1631_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">KenjiBaheux</div>
+          <div class="creation_date">2018-05-15</div>
+          <div class="post_content">
+<p>Following up on my comment from March 9th, we’ve published a tentative proposal for enabling seamless navigations between sites or pages. In particular, this proposal enables a page to show another page as an inset and perform a seamless transition between an inset state and a navigated state. It also allows for a few guarantees over user experience and privacy.</p>
+<p>See the <a href="https://github.com/KenjiBaheux/portals/blob/master/explainer.md" rel="nofollow noopener">explainer</a> for more details.
+Looking forward to your feedback!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-05-18</div>
+          <div class="post_content">
+<p>This is a interesting idea, and seems workable.  My main concern with it is that under the use case discussion regarding a <a href="https://github.com/KenjiBaheux/portals/blob/master/explainer.md#carousel-of-articles-from-different-websites" rel="nofollow noopener">carousel</a> (the AMP scenario), there appears to be an implication that the activation of the portal would result in the portal page sharing the viewport with UI from the parent page, and that gestures within the new page might be handled by code that is still running from the parent context.  If that is indeed the intent, then the main URL bar cannot be updated and the origin context cannot be changed without breaking the origin model.</p>
+<p>For me, one of the great values of the web is to provide a decentralised platform where anyone can, at low cost, publish content without the consent, control, or approval of any third party, in a way that is robust to interference.  If this technology ships, and allows a platform operator to invisibly retain an active presence in the user agent despite the fact that the user believes they are not on the platform’s website, that is extremely bad.</p>
+<p>So, in this example, the ‘news aggregator’ should by all means show the preview portal, but when activated, it should navigate the user to the portal page’s site, and the session between the user and the aggregator will end.  The aggregator could also allow the user to swipe through a carousel of unactivated portals, that would also be fine.  At no point during that experience would the URL change.  When the user indicates an intent to navigate to a portal, that page becomes the active tab and the news aggregator page is unloaded.</p>
+<p>A smaller concern is over the activation of a portal that is only partially in the viewport.  Example: I scroll down to the bottom of an article and another article appears for me to ‘scroll into’.  But while still only occupying the lower half of the screen, I attempt to interact with some element of the portal content.  This will presumably necessarily activate a transition, filling the viewport with the portal content, and activating it, after which I’d have to perform my interaction again.  Therefore in this use case, it might make sense for developers to be have a CSS hook to apply certain styles only when a document is inside an unactivated portal, so that explicit calls to action can be dimmed or hidden until the document is activated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1631_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">KenjiBaheux</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<p>Thanks for the feedback.</p>
+<blockquote>
+<p>A smaller concern is over the activation of a portal that is only partially in the viewport. Example: I scroll down to the bottom of an article and another article appears for me to ‘scroll into’. But while still only occupying the lower half of the screen, […]  have a CSS hook to apply certain styles only when a document is inside an unactivated portal, so that explicit calls to action can be dimmed or hidden until the document is activated.</p>
+</blockquote>
+<p>This is a great suggestion. Can you file this as an issue on the repository (if you don’t mind I can also file something on your behalf)?</p>
+<blockquote>
+<p>[…] appears to be an implication that the activation of the portal would result in the portal page sharing the viewport with UI from the parent page, and that gestures within the new page might be handled by code that is still running from the parent context. If that is indeed the intent, then the main URL bar cannot be updated and the origin context cannot be changed without breaking the origin model.</p>
+</blockquote>
+<p>Note that this is a potential user experience that the proposal could help enable. It’s not a by-design behavior.</p>
+<blockquote>
+<p>If this technology ships, and allows a platform operator to invisibly retain an active presence in the user agent despite the fact that the user believes they are not on the platform’s website, that is extremely bad.</p>
+</blockquote>
+<p>I’m not sure I follow:</p>
+<ul>
+<li>In AMP’s viewer case, the user started their journey from an article among a series of related ones.</li>
+<li>They start their journey on a page that shows the article they were interested in, and get the confirmation that it’s indeed from a familiar news website.</li>
+<li>They see a navigation UI at the top reminding them that they started from a list of related news articles. They can also learn more about what the AMP viewer is (e.g. the AMP icon ask you if you want to learn more and navigates you to a help page).</li>
+<li>Still <strong>hugely-TBC</strong> but when they swipe to the left, the AMP viewer portal would become active again (since only it knows what’s coming next and knows how to do the transition). The address bar would be updated which will let the user know that they are on the news aggregator origin.</li>
+<li>Another take on the subject would then come into view. As it snaps, they now get to confirm the publisher of that story.</li>
+</ul>
+<p>There is nothing invisible about the aggregator in this scenario.</p>
+<blockquote>
+<p>So, in this example, the ‘news aggregator’ should by all means show the preview portal, but when activated, it should navigate the user to the portal page’s site, and the session between the user and the aggregator will end.</p>
+</blockquote>
+<blockquote>
+<p>The aggregator could also allow the user to swipe through a carousel of unactivated portals, that would also be fine. At no point during that experience would the URL change. When the user indicates an intent to navigate to a portal, that page becomes the active tab and the news aggregator page is unloaded.</p>
+</blockquote>
+<p>This seems like it would be a different user experience which requires more actions and time:</p>
+<ul>
+<li>the user would have to swipe, [activate], read, [then go back], [probably wait until the carousel UX comes back], swipe [and activate]. Note: activate could just be scrolling and be counted as “free”.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<blockquote>
+<p>There is nothing invisible about the aggregator in this scenario.</p>
+</blockquote>
+<p>I disagree.  I’d be reading a news article from NYT, with <a href="http://nytimes.com" rel="nofollow noopener">nytimes.com</a> in the address bar, but not all the UI on the page is served by <a href="http://nytimes.com" rel="nofollow noopener">nytimes.com</a>.  And the part that is not, is not even under the control of NYT.  To the user, it looks like the whole thing is NYT, but it’s not.</p>
+<p>Whoever is identified in the URL bar is the controlling origin for the tab.  There must be nothing - no script, no markup, no style, no workers, no portals, nothing - which is not loaded by the controlling origin.  That breaks the web.</p>
+<p>I appreciate that you are trying to create a particular user experience for AMP.  However, if Google wants to not compromise on this, then you cannot put the origin of the article owner in the address bar, because at no point are you ceding control of the tab to that origin.</p>
+<p>To turn this around, if I want to load <a href="http://google.com" rel="nofollow noopener">google.com</a> in a portal, full-screen it and activate it, showing <a href="http://google.com" rel="nofollow noopener">google.com</a> with a validated cert in the URL bar, but still be able to detect gestures and interactions with the Google page and beacon those back to my server, are you ok with that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="17" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/kenjibaheux/40/1631_1.png" width="20"/> KenjiBaheux:</div>
+<blockquote>
+<p>They see a navigation UI at the top reminding them that they started from a list of related news articles. They can also learn more about what the AMP viewer is (e.g. the AMP icon ask you if you want to learn more and navigates you to a help page).</p>
+</blockquote>
+</aside>
+<p>A critical piece of this UI is that it MUST be provided by the <em>article</em>, since the AMP viewer has been navigated away from. The article might provide it by <code>&lt;portal&gt;</code>ing the referring viewer page (as mentioned in the <a href="https://github.com/KenjiBaheux/portals/blob/master/explainer.md#carousel-of-articles-from-different-websites">explainer</a>: “The news aggregator becomes a portal of the activated article.”), but it’s still a subsection of the article’s page. I’m not convinced that this is workable as a UI—target pages would need to be very careful to get the positioning right to maintain the illusion, and the carousel would need to trust that all articles did this—but I think it does preserve the attributes <span class="mention">@triblondon</span> wants.</p>
+<p>This obviously isn’t clear enough in the explainer; <span class="mention">@Kenji</span>, could you make it more explicit?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<p>Ah, the penny drops. Sorry I didn’t get this before. So in this scenario the aggregator persuades/coerces the content creator to include some standard library or piece of markup that is proprietary to that aggregator?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<p>I believe so, yes. You could imagine a uniform way to do it across aggregators, where when a portal is promoted, the aggregator includes a <a href="https://github.com/KenjiBaheux/portals/issues/4">message</a> of where on the screen it wants to be embedded. The uniform code would also have to recognize the complete set of gestures, so probably just left and right swipes, which would swap the referring portal back into control when they start.</p>
+<p>However, that’s probably ripe for abuse, where, say, a hostile site portals to a reputable one, with their “navigation UI” arranged to mislead the user. This could be handled by whitelisting referrers, but that goes back to the centralizing properties we (I?) want to avoid.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

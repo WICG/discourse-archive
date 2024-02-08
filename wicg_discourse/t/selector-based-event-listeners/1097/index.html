@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Selector-based event listeners</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Selector-based event listeners</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-09-14</div>
+          <div class="post_content">
+<p>What if browsers had first-class support for listeners that apply for elements based on selectors, the way libraries like jQuery implement event listeners? Would we potentially see significant performance over the existing performance of libraries like jQuery, Bean, and D3?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1145_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adamschwartz</div>
+          <div class="creation_date">2015-09-14</div>
+          <div class="post_content">
+<p>Sounds good to me. <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+<p>Something simpler I’d like to see is just a better syntax for this:</p>
+<pre><code>Array.prototype.forEach.call(document.querySelectorAll('ul.things &gt; li &gt; a.delete-button'), function(button) {
+    button.addEventListener('click', function(){
+        // Handle delete
+    });
+});
+</code></pre>
+<p>As a straw man, being able to do <code>document.querySelectorAll(selector).addEventListener...</code> and have that iterate over the elements for you would be wonderful. Having that selector be “live” would be cool too though.</p>
+<p>[Edit: I guess <a href="//discourse.wicg.io/t/how-useful-would-it-be-to-have-nodelist-inherit-from-node-element-etc/862/2">@tabatkins already covered this</a> in <span class="hashtag">#862</span>.]</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-09-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1097">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/adamschwartz/40/1145_1.png" width="20"/> adamschwartz:</div>
+<blockquote>
+<p>Having that selector be “live” would be cool too though.</p>
+</blockquote>
+</aside>
+<p>This is the main property I’d want to be gained from having this feature. Events that are based on selectors rather than adding/removing listeners directly fit two use cases (which are currently met for style needs by the selector-based Cascading Style Sheet system):</p>
+<ul>
+<li>Allows for, essentially, registering prototypes for the document, based on classes and hierarchies. All future elements meeting a given selector pattern will automatically have the event apply.</li>
+<li>Allows for registering <em>modalities</em>, where the selector pattern will match and events will apply only when a <em>parent</em> is in a certain state.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-09-14</div>
+          <div class="post_content">
+<p>Ik the following is not really the same, but I’m doubting it will actually happen since we have event delegation, and the <code>matches()</code> method:</p>
+<pre><code class="lang-auto">document.body.addEventListener('click', function(evt) {
+  if( evt.target.matches(selector) ) {
+    // do something
+  }
+});
+</code></pre>
+<p>Use multiple if statements for multiple selectors.</p>
+<p>You’re able to do it all in one event handler, and if you don’t want that just add more.</p>
+<p><strong>I probably shouldn’t promote my library here</strong>, but since it sort of relates to what you said <span class="mention">@adamschwartz</span> <a href="https://github.com/eorroe/NodeList.js" rel="nofollow noopener">NodeList.js</a> can do:</p>
+<pre><code class="lang-auto">$$(selector).addEventListener('click', function(evt) {...});
+</code></pre>
+<p>It’s just not live</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2015-09-14</div>
+          <div class="post_content">
+<p>An elegant solution, that flexes to more use-cases, would be to introduce a primitive for functional pseudos. Imagine if you could chain actions together in a generic and generative way:</p>
+<pre><code>new FunctionPseudo('delegate', function(fn, args, pseudo){
+    if (!args[0].target.matches(pseudo.parameters[0])) {
+        fn.apply(this, args);
+    }
+});
+
+document.addEventListener('click', function `delegate('ul &gt; li')` (e) { ... });
+
+new FunctionPseudo('record', function(fn, args, pseudo){
+  fetch(..., { recording: args });
+  fn.apply(this, args);
+});
+
+function foo `record` (message){ alert(message); }
+
+foo('bar') // both alerts and sends a post to record the message passed.
+</code></pre>
+<p>With Function Pseudos, you can even chain multiple actions together in a line of activities that can be assembled to form a more complex functional operation:</p>
+<pre><code>document.addEventListener('click', function `delegate('ul &gt; li'):record` (e) { ... });</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-09-14</div>
+          <div class="post_content">
+<p>That seems like an interesting ES7+ proposal which if you want, but with more proposal than the DOM, you could post at: <a href="https://esdiscuss.org" rel="nofollow noopener">https://esdiscuss.org</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-10-24</div>
+          <div class="post_content">
+<p>I’m thinking it would be interesting to spec this. What would you call it? <code>addSelectiveListener(selector, eventName, callback)</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1097">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/adamschwartz/40/1145_1.png" width="20"/> adamschwartz:</div>
+<blockquote>
+<pre><code class="lang-auto">Array.prototype.forEach.call(document.querySelectorAll('ul.things &amp;gt; li &amp;gt; a.delete-button'), function(button) {
+    button.addEventListener('click', function(){
+        // Handle delete
+    });
+});
+</code></pre>
+</blockquote>
+</aside>
+<p>With the new <a href="https://gist.github.com/bendc/4090e383865d81b4b684" rel="nofollow noopener">ES2015</a>/<a href="http://pouchdb.com/2015/03/05/taming-the-async-beast-with-es7.html" rel="nofollow noopener">ES2016</a> <a href="http://jlongster.com/Taming-the-Asynchronous-Beast-with-CSP-in-JavaScript" rel="nofollow noopener">features</a> and the amazing <a href="https://www.npmjs.com/package/async-csp" rel="nofollow noopener"><code>async-csp</code></a>, you can do the following, which is pretty clean:</p>
+<pre><code class="lang-auto">import Channel from 'async-csp'
+
+let elements = document.querySelectorAll('ul.things &gt; li &gt; a.delete-button')
+let eventChannel = new Channel
+
+[...elements].forEach(el =&gt; el.addEventListener('click', eventChannel.put))
+
+// start an event loop (this is an immediately invoked async function)
+~async function() {
+    while (true) {
+        let event = await eventChannel.take()
+        let el = event.currentTarget
+        // Handle delete
+    }
+}()
+</code></pre>
+<p>If you’re not using ES2016 async functions, you can also achieve the same with ES2015 generators (already supported natively in Chrome, Firefox, and Edge with preview mode!) and <a href="https://www.npmjs.com/package/js-csp" rel="nofollow noopener"><code>js-csp</code></a>:</p>
+<pre><code class="lang-auto">import {chan, put, take, go} from 'js-csp'
+
+let elements = document.querySelectorAll('ul.things &gt; li &gt; a.delete-button')
+let eventChannel = chan()
+
+[...elements].forEach(el =&gt; el.addEventListener('click', event =&gt; put(eventChannel, event)))
+
+// start an event loop (this is a generator function immediately invoked by the
+// call to `go()`)
+// Note: Although you can immediately invoke the generator youself, the `go()`
+// wrapper is required for this to work
+go(function*() {
+    while (true) {
+        let event = yield take(eventChannel)
+        let el = event.currentTarget
+        // Handle delete
+    }
+})
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-12-23</div>
+          <div class="post_content">
+<p>I’m not talking about cleanliness of code, though (although that is a component of this proposal), I’m talking about avoiding large-scale ugly hacks to effectively duplicate the mechanisms of the browser’s selector engine in JS-land to handle events the way jQuery or D3 do.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-26</div>
+          <div class="post_content">
+<p>The problem with</p>
+<pre><code class="lang-auto">document.addEventListener('click', function `delegate('ul &gt; li')` (e) { ... });
+</code></pre>
+<p>is that the <code>`delegate('ul &gt; li')`</code> portion is very unlikely to get accepted into JavaScript, because JavaScript is a language not specifically tied to DOM (as that expression implies). What does that mean in Node.js? What does that mean in Rhino? What does that mean in Qt’s JavaScript environment? A language feature like that, specific to DOM, isn’t likely to make it into the language. For the same reason, I believe Facebook’s JSX spec is unlikely to become part of the language.</p>
+<p>On the other hand, if you can show how</p>
+<pre><code class="lang-auto">function `foo`() {}
+</code></pre>
+<p>can be applied more generically, without specific ties to the environment that the language is used in, then that might have more chances. Can you come up with a generic useful ness of those backticks and examples not relating to DOM?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-01-06</div>
+          <div class="post_content">
+<p>Is this something like as proposed in <span class="mention">@tabatkins</span>’  <a href="https://tabatkins.github.io/specs/css-aliases/">https://tabatkins.github.io/specs/css-aliases/</a> ?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2016-01-06</div>
+          <div class="post_content">
+<p><em>“The problem with …DEMO… is that the <code>delegate('ul &gt; li')</code> portion is very unlikely to get accepted into JavaScript, because JavaScript is a language not specifically tied to DOM”</em> - this isn’t true, I believe you may be misunderstanding the code I wrote.</p>
+<p>The Function Pseudo declaration is not bound to the DOM in any way. Function Pseudos would be a JS primitive that allows you do declare tokens that map to functions, which can be chained together, as seen in this example:</p>
+<pre><code>new FunctionPseudo('delegate', function(fn, args, pseudo){
+    if (!args[0].target.matches(pseudo.parameters[0])) {
+        fn.apply(this, args);
+    }
+});
+
+new FunctionPseudo('once', function(fn, args, pseudo){
+    // Prevent more than one call to the function chain
+});
+
+new FunctionPseudo('save', function(fn, args, pseudo){
+    // Saves some aspect of the function call to somewhere else
+});
+
+document.addEventListener('click', function `once:save:delegate('ul &gt; li')` (e) { ... });
+</code></pre>
+<p>Just because you touch the DOM or do a DOMy thing inside your Function Pseudo declaration doesn’t mean Function Pseudos, the JS primitive, are tied to the DOM. As you see in the example, I have chained the hypothetical pseudos <code>once</code> and <code>save</code> with <code>delegate</code>. The pseudo <code>once</code> would just execute any function once then prevent further calls - which has nothing to do with the DOM, and <code>save</code> can do whatever you want, maybe send a value to a server with an HTTP request.</p>
+<p>This is no more DOM-bound than a traditional <code>function</code>. Just because you write <code>function(){ ... }</code> and happen to touch the DOM inside your function, does not mean the JS keyword <code>function</code> is tied to the DOM - understand what I mean?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2016-01-06</div>
+          <div class="post_content">
+<p>What Tab has proposed there is basically a CSS/DOM-centric API that does for CSS, in a similar style, what my proposed JS primitive would allow for any JS code, whether it lives in a browser, server, or other JS engine implementation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2016-01-06</div>
+          <div class="post_content">
+<p><span class="mention">@trusktr</span> I should also note that all <code>delegate</code>'s Function Pseudo definition does is allow you to define the token <code>delegate</code>, and use whatever JS String is passed to it - in the case of the example, the code the user writes inside the definition is using the string as a CSS selector.</p>
+<p>What you do with the arguments that are passed into your Function Pseudo is completely up to you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-01-09</div>
+          <div class="post_content">
+<p>Ahhh, okay. That’s what I meant by when I said</p>
+<blockquote>
+<p>if you can show how … DEMO … can be applied more generically…</p>
+</blockquote>
+<p>which you did by describing Function Pseudos. Is that something you created? Does a proposal for function pseudos exist somewhere?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-06-27</div>
+          <div class="post_content">
+<p>Have you tried <a href="http://atom.io" rel="nofollow noopener">Atom</a> (written with HTML/JavaScript/CSS)? It’s “command” system is exactly this, a selector-based event system, with selector-based key mappings for triggering those events (commands). How does that compare to what you’re thinking of here <span class="mention">@stuartpb</span>?</p>
+<p>To try it out in Atom, what you can do is install a package (for example, the <code>advanced-open-file</code> package), then in the settings page for that package, look at the keybindings. The keybinding table shows you the command name and the selector associated with the keybinding. Those commands are already mapped to specific elements via selectors. <a href="https://github.com/Osmose/advanced-open-file/blob/b8713b5bf3c1a4688440a7b5f15b2c9a722588ce/lib/controller.js#L30-L32" rel="nofollow noopener">Here’s how</a> that is done in the advanced-open-file package, using <code>atom.commands.add()</code>. Then there’s also <a href="https://github.com/Osmose/advanced-open-file/blob/62b85f4ce3465651bc844fc261372e7c90e6d5d5/spec/advanced-open-file-spec.js#L53" rel="nofollow noopener"><code>atom.commands.dispatch()</code></a>, which can trigger those events imperatively if not using a keybinding. The first argument to <code>atom.commands.add()</code> can be an actual element, or a selector to match multiple elements (I’m not sure why the reciprocal <code>atom.commands.dispatch()</code> method doesn’t accept a selector, but if it did that might be nice too). For reference, here is Atom’s <a href="https://atom.io/docs/api/v1.8.0/CommandRegistry" rel="nofollow noopener"><code>CommandRegistry</code></a> class which is what <code>atom.commands</code> is an instance of. <code>CommandRegistry</code> is essentially an “event registry” if we rename it to match the idea here in this topic, but I think the concept with Atom’s CommandRegistry is basically what you describe here <span class="mention">@stuartpb</span>. The Atom API docs are good, be sure to check out the keymapping stuff to see how that ties together with commands (events).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<aside class="quote" data-post="16" data-topic="1097">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_1.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>I think the concept with Atom’s CommandRegistry is basically what you describe here <span class="mention">@stuartpb</span>.</p>
+</blockquote>
+</aside>
+<p>I’m just talking about the selector-based event model we’ve had for years with jQuery and its successive would-be usurpers. Atom might have something like it, but the definitive example is just a free-floating <code>addEventListener</code> where the first element is a CSS selector that listens to events from all matching elements. Just</p>
+<pre><code class="lang-auto">EventTarget.prototype.whatStuartpbIsDescribing =
+function addSelectiveEventListener(selector, type, listener, options) {
+  return this.addEventListener(type,function selectorMatchFilter(event) {
+    if (event.target.match(selector)) return listener.apply(this,arguments);
+  }, options);
+}
+</code></pre>
+<p>That’s all it is. Just that, as a native function. Maybe a corresponding function for removing them, too. None of this delegated functional pseudo package command registry mile-high sytems jargon. Just the two lines <span class="mention">@Edwin_Reynoso</span> posted <a href="https://discourse.wicg.io/t/selector-based-event-listeners/1097/4">a few hours after I opened the topic</a>, running as optimized in-engine logic, instead of a bolted-on source of slowdown inconsistently implemented in black box scripts spread across half the pages on the web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chenzx</div>
+          <div class="creation_date">2016-10-19</div>
+          <div class="post_content">
+<p>I like this polyfill. And in my experience, to support selector-based event listeners, browser kernel engineers have to implement Element.match(CSSSelector) in native C++ to support live event trigger.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2017-06-25</div>
+          <div class="post_content">
+<p>Looping in the discussion that is happening <a href="https://github.com/whatwg/dom/issues/215" rel="nofollow noopener">on GitHub</a> about this same concept (making it possible to add event listeners that are applied by selector).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

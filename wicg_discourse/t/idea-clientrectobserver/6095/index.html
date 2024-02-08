@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Idea: `ClientRectObserver`</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Idea: `ClientRectObserver`</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2022-12-28</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#problem-1" name="problem-1"></a>Problem</h1>
+<p>It is essentially impossible to observe an element bounding client rect (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect" rel="noopener nofollow ugc"><code>el.getBoundingClientRect()</code></a>) without resorting to a polling solution (for example an animation frame loop).</p>
+<p>Trying to implement it without polling is futile. For example see the question and answers here:</p>
+<aside class="onebox stackexchange" data-onebox-src="https://stackoverflow.com/questions/40251082/an-event-or-observer-for-changes-to-getboundingclientrect">
+<header class="source">
+<a href="https://stackoverflow.com/questions/40251082/an-event-or-observer-for-changes-to-getboundingclientrect" rel="noopener nofollow ugc" target="_blank">stackoverflow.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://stackoverflow.com/users/1189799/micahscopes" rel="noopener nofollow ugc" target="_blank">
+<img alt="micahscopes" class="thumbnail onebox-avatar" height="256" src="https://i.stack.imgur.com/RjFgI.png?s=256&amp;g=1" width="256"/>
+</a>
+<h4>
+<a href="https://stackoverflow.com/questions/40251082/an-event-or-observer-for-changes-to-getboundingclientrect" rel="noopener nofollow ugc" target="_blank">An event or observer for changes to getBoundingClientRect()</a>
+</h4>
+<div class="tags">
+<strong>javascript, dom, mutation-observers, dom-events</strong>
+</div>
+<div class="date">
+  asked by
+  
+  <a href="https://stackoverflow.com/users/1189799/micahscopes" rel="noopener nofollow ugc" target="_blank">
+    micahscopes
+  </a>
+  on <a href="https://stackoverflow.com/questions/40251082/an-event-or-observer-for-changes-to-getboundingclientrect" rel="noopener nofollow ugc" target="_blank">10:58PM - 25 Oct 16 UTC</a>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>It <em>might</em> be possible to ponyfill this hypothetical <code>ClientRectObserver</code> API without polling, but it will be very convoluted:</p>
+<ul>
+<li>Use InterSection observer (only with ancestors of the target element) and scroll events (on all scrollable ancestors of the target element) to detect possible position changes of the target element’s bounding rect.</li>
+<li>Use MutationObserver to observe every single possible DOM mutation that could ever change the target element’s bounding client rect
+<ul>
+<li>style changes to any ancestors, and siblings within layouts like flexbox, etc</li>
+<li>stylesheet changes to all style and link elements</li>
+<li>forget about CSSOM.</li>
+</ul>
+</li>
+<li>position:fixed tricks that break with containing block changes</li>
+<li>etc</li>
+</ul>
+<p>You get the picture: practically impossible, or at best DOOM ultra-nightmare code.</p>
+<h1>
+<a class="anchor" href="#solution-2" name="solution-2"></a>Solution</h1>
+<p>A new <code>ClientRectObserver</code> API would allow us to simply observe an element’s bounding client <code>DOMRect</code>. It would be something like the following:</p>
+<pre><code class="lang-javascript">const element = document.querySelector('.someElement')
+
+const clientRectObserver = new ClientRectObserver((entries) =&gt; {
+  // any time the client rect could ever change, log it.
+  for (const entry of entries) {
+    console.log(entry.target.getBoundingClientRect())
+
+    // similar to ResizeObserverEntry/IntersectionObserverEntry:
+    console.log(entry.contentRect)
+    console.log(entry.boundingClientRect)
+  }
+})
+</code></pre>
+<p>and done!</p>
+<h1>
+<a class="anchor" href="#why-3" name="why-3"></a>Why</h1>
+<p>There are plenty of reasons to depend on client rects:</p>
+<ul>
+<li>implement new layouts, f.e. anchoring one element on the edge of another</li>
+<li>re-using DOM layout (in hidden elements) to apply to canvas renderings</li>
+<li>rendering things on a WebGL canvas based on DOM element positioning, for example <a href="https://threejs.org/examples/#webgl_multiple_elements" rel="noopener nofollow ugc">rendering multiple “canvases” using a single overlaid canvas</a> (note, there is a limit of 32 webgl contexts in Chrome as of this writing, so this is a requirement when we need to render multiple little scenes)</li>
+<li>etc</li>
+</ul>
+<p>Having this API would not only make things easier for web devs, but help them avoid bugs. I’ve experience bugs with polled bounding rect values and code running before the polled value is up to date. Ideally any bounding rect value would be updated exactly when it should be, and all other code would always have the latest value without worrying about code ordering.</p>
+<p>Calling <code>getBoundingClientRect</code> every single time it is needed in an app solves the issue, but introduces a heavy performance hit because browsers (f.e. Chrome) currently re-calculate bounds on every call.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/4040_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Marckon</div>
+          <div class="creation_date">2023-03-09</div>
+          <div class="post_content">
+<p>I vote for you! Really look forward to something that can help me locate an element based on another element. Current UIs like tooltip, suggestion, or dialog are all likely to deflect their target when scrolling  or target’s size changing happens.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2023-03-12</div>
+          <div class="post_content">
+<p>For size changes, there is ResizeObserver, but for position changes, there exists no API, and your proposal would be that API. Do I understand this correctly?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2023-04-18</div>
+          <div class="post_content">
+<p><span class="mention">@simevidas</span> correct! Both ResizeObserver and IntersectionObserver do not handle this case.</p>
+<p>A subset of the solution is possible with IntersectionObserver, but it is cumbersome and brittle (shown in the linked StackOverflow question).</p>
+<p>ClientRectObserver would be a superset of ResizeObserver, because resize changes an element client rect. ResizeObserver does not detect changes in position where the size is the same between positions.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

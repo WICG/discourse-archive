@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: built-in JSON Schema validation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: built-in JSON Schema validation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2022-11-09</div>
+          <div class="post_content">
+<p>It’s common today to perform schema validation on incoming JSON from an HTTP response, e.g. with tools like ZOD (<a class="inline-onebox" href="https://github.com/colinhacks/zod" rel="noopener nofollow ugc">GitHub - colinhacks/zod: TypeScript-first schema validation with static type inference</a>).</p>
+<p>What if the web platform provided this in a standard, performant and non-blocking way?
+It would make it much easier to avoid a very common type of bugs without blocking the main thread, creating new service-worker code, or having to choose between all kinds of schema validation libs.</p>
+<p>Strawman API:</p>
+<pre data-code-wrap="js"><code class="lang-nohighlight">const response = await fetch("...");
+const data = await response.json({schema: "my-json-schema.json"});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3914_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">idoros</div>
+          <div class="creation_date">2022-11-09</div>
+          <div class="post_content">
+<p>How would you imagine error catching would look for such API?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2022-11-09</div>
+          <div class="post_content">
+<p>Perhaps somehing like this:</p>
+<pre><code class="lang-javascript">const response = await fetch("...");
+let data = null;
+try {
+  data = await response.json({schema: "my-json-schema.json"});
+} catch (error) {
+  if (error instanceof SyntaxError) {
+    alert("This ain't JSON": + error.message);
+  } else if (error instanceof TypeError) {
+    alert("This is JSON but schema validation failed": + error.message);
+  }
+}
+</code></pre>
+<p>(<code>instanceof</code> for demonstration purposes that it’s different error types)</p>
+<p>btw I think that once we have async JSON parsing we can add schema validation there as well.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

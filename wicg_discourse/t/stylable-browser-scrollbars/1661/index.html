@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Stylable browser scrollbars</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Stylable browser scrollbars</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1071_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mlavault</div>
+          <div class="creation_date">2016-08-18</div>
+          <div class="post_content">
+<p>There already are vendor implementation of this, the most complete one seems to be the Webkit one.</p>
+<p>Since a lot of websites theme scrollbars using some sort of JS library that often poorly replace the browser scrollbars, I think it would make sense to have a standard for this, probably based on the Webkit implementation.</p>
+<p>It is especially needed for container elements scrollbars inside the page, which often break a carefully crafted design.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-08-18</div>
+          <div class="post_content">
+<p>Indeed, since custom scrollbars, when needed, are implemented <strong>anyway</strong> (just currently via JS), it would be better to have a standardized proper (consistent and accessible in particular) way to do this in pure CSS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-19</div>
+          <div class="post_content">
+<p>Agreed, we would want/need to properly spec out the parts of the scroll bar that can be styled, what styles on it can be styled and a standard approach to accessing the elements on it to style (possibly a shadow DOM approach?).</p>
+<p>The key to getting this down would be to avoid a complicated series of near similar but still different enough approaches that happens for <a href="https://css-tricks.com/styling-cross-browser-compatible-range-inputs-css/" rel="nofollow noopener">input type=“range”</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1193_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edward_J</div>
+          <div class="creation_date">2016-08-23</div>
+          <div class="post_content">
+<p>Yes, this would be useful (simplifying custom scrollbars, not requiring JavaScript) and should be a shadow D.O.M. and pseudo element combination. It should be based off the existing WebKit ideas as they are a good C.S.S. implementation. The page <a href="https://css-tricks.com/custom-scrollbars-in-webkit/" rel="nofollow noopener">https://css-tricks.com/custom-scrollbars-in-webkit/</a> explains the WebKit selectors well, including scrollbar parts (pseudo elements, below) and scrollbar states (pseudo classes, below)</p>
+<pre><code>::-webkit-scrollbar
+::-webkit-scrollbar-button
+::-webkit-scrollbar-track
+::-webkit-scrollbar-track-piece
+::-webkit-scrollbar-thumb
+::-webkit-scrollbar-corner
+::-webkit-resizer
+
+:horizontal
+:vertical
+:decrement
+:increment
+:start
+:end 
+:double-button
+:single-button
+:no-button
+:corner-present
+:window-inactive</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-08-23</div>
+          <div class="post_content">
+<p>It’s a good start but I think needs work. Some of the pseudo classes seem a tad odd (<code>:increment</code> and <code>:decrement</code> particularly feel quite off).</p>
+<p>Some behaviour also needs speccing out and possibly different from the webkit implementation. There is also some very odd things going on. If you apply a style to the scroll bar suddenly everything needs to be specified. I can see there being some use for this as it means you don’t need to override a lot of style defaults but it makes it impossible to do some changes that work with the user agent defaults (eg I just want to make it a little thinner but otherwise look like the system default, this is impossible).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1193_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edward_J</div>
+          <div class="creation_date">2017-02-17</div>
+          <div class="post_content">
+<p>I agree that the selectors should be a standardised version of the WebKit format.
+The <code>-webkit-</code> prefix should be removed to have the <code>scrollbar</code> prefix and the pseudo-classes should only be allowed on scrollbar pseudo-elements (but could be available for other purposes on other elements if required).</p>
+<p>I’ve noticed the <code>::-webkit-resizer</code> pseudo-element isn’t directly related to scrollbars (it can appear without them on a <code>textarea</code> element) but is still important so should be stylable. It has an associated <a href="https://www.w3schools.com/cssref/css3_pr_resize.asp" rel="nofollow noopener">CSS3 <code>resize</code> property</a> specifying if the element is resizable by a user, which is unsupported by Microsoft Edge - if they’re persuaded to support customising the style of it, a feature request should be sent to them for enabling/disabling it using this CSS property.</p>
+<p>For the styling, I think the default style should apply like it does on standard elements to allow small modifications such as custom width. A slightly hacky solution I thought up to allow completely custom styling is creating a new C.S.S. property called <code>scrolltool-reset</code> that removes all default styles from the specific pseudo-element (but keeps core things like <code>display</code>). I’ve chosen the prefix <code>scrolltool</code> because it’s unspecific to a particular scrolling item such as the scrollbar, also allowing it to be used on the resizer button.</p>
+<p>Existing pseudo-class definitions from <em>css-tricks</em>:
+<div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/e763da8e7f1649199400d316d3a952f2c34d4fe4" href="//discourse.wicg.io/uploads/default/original/2X/e/e763da8e7f1649199400d316d3a952f2c34d4fe4.png" title="image.png"><img data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/e/e763da8e7f1649199400d316d3a952f2c34d4fe4_2_10x10.png" height="360" src="//discourse.wicg.io/uploads/default/original/2X/e/e763da8e7f1649199400d316d3a952f2c34d4fe4.png" width="590"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">image.png</span><span class="informations">921×629 63.5 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

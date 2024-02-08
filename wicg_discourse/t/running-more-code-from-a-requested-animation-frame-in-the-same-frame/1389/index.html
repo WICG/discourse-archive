@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Running more code from a requested animation frame in the same frame</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Running more code from a requested animation frame in the same frame</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-03-07</div>
+          <div class="post_content">
+<p>We can use <code>requestAnimationFrame</code> to request a frame between browser paints in which to run code. Then, if we call <code>requestAnimationFrame</code> from that code, it schedules the code in the new call to run at the next frame.</p>
+<p>Is there some way to tell the browser “Hey, if there’s still time in this frame, run this new code in this same frame, not the next frame, but if there isn’t time, run it in the next frame.”?</p>
+<p>Is this a good place to ask? Or maybe SO is better? Any other places I might try?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-03-07</div>
+          <div class="post_content">
+<p>You may want to look into <a href="https://w3c.github.io/requestidlecallback/">requestIdleCallback</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-03-07</div>
+          <div class="post_content">
+<p>The idle callbacks have no defined time to run; in a busy period they might not run at all for several frames until the browser finally calms down.  This fails <em>both</em> of the requests: there’s no guarantee that this’ll happen before frame commit, even if there’s time; and there’s no guarantee it’ll run in the <em>next</em> rAF period either.</p>
+<p>There’s no way to request this right now; as you’ve found, any rAF callbacks added during the rAF period are put in the next frame, as that’s <em>usually</em> what you want - most of the time you’ll be doing work per frame, and running twice in the same frame would be silly.</p>
+<p>Can you elaborate on what you’re trying to do?  What work are you trying to make async that doesn’t care whether it runs in the current rAF or the next?  It might be that you’re not actually wanting a rAF at all, but are indeed asking for an idleCallback, and rAF timing just happens to be the closest you have to that at the moment.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jokeyrhyme</div>
+          <div class="creation_date">2016-03-09</div>
+          <div class="post_content">
+<p>If you have 2 separate <code>rAF()</code> callbacks, then my understanding is that the browser may execute them both in the same frame if there is time.</p>
+<p>For example:</p>
+<pre><code class="lang-auto">requestAnimationFrame(() =&gt; { /* something quick */ });
+requestAnimationFrame(() =&gt; { /* something also quick */ });
+</code></pre>
+<p>Assuming this works, you might be able to exploit this. For example:</p>
+<pre><code class="lang-auto">let doSecondTask = false;
+requestAnimationFrame(() =&gt; {
+  doSecondThing = false; // disable the second task at the start of each frame
+  /* something quick */
+  doSecondThing = true; // only do this when we'd like the second task
+});
+requestAnimationFrame(() =&gt; {
+  if (doSecondTask) {
+    /* something also quick */
+  }
+});
+</code></pre>
+<p>Without thorough testing, this is probably a bad thing to recommend. /shrug</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-03-09</div>
+          <div class="post_content">
+<p>Ooh, clever (but terribly hacky).  It’ll definitely <em>work</em>, though - you’re correct that multiple rAF callbacks will be executed in the same frame if there’s time.  It’s just terrible. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-03-09</div>
+          <div class="post_content">
+<p>Thanks for the input guys. I didn’t know about requestIdleCallback until now. It has an interesting feature where it lets you detect time remaining until the end of the rAF (if we’re lucky enough for it to fire):</p>
+<pre><code class="lang-auto">requestIdleCallback(function myNonEssentialWork (deadline) {
+  while (deadline.timeRemaining() &gt; 0)
+    doWorkIfNeeded();
+})
+</code></pre>
+<p>It seems <code>deadline.timeRemaining()</code> shows the time remaining until the end of the rAF.</p>
+<aside class="quote" data-post="3" data-topic="1389">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Can you elaborate on what you’re trying to do?</p>
+</blockquote>
+</aside>
+<p>I’m trying to determine the best possible way to handle the animation loop for the engine we’re working on at <a href="http://infamous.io" rel="nofollow noopener">infamous.io</a> (name subject to change).</p>
+<p>Maybe I can request a single animation frame callback, then place all rendering code into idle callbacks so I always know how much time is left in the frame. I’m also using <a href="https://www.npmjs.com/package/raf-timeout" rel="nofollow noopener">raf-timeout</a> to see if we can prevent 3rd party libs from running async code at times that might effect rendering. I haven’t experimented with monkey patching <code>Promise.resolve().then</code> yet, which is faster than <code>setTimeout(..., 0)</code>. In my apps, I never need (yet) to execute anything in a future-but-soon-as-possible tick, so monkey patching setTimeout, etc, with rAF is fine in my cases, and probably fine for the vast majority of apps.</p>
+<p><span class="mention">@tabatkins</span> <span class="mention">@yoavweiss</span> <span class="mention">@jokeyrhyme</span> One reason I’m researching this is I’m thinking that there might be a way to specify some animations in the engine to be secondary, so that they can run at lower FPS when necessary in order for primary animations to be at 60fps; if we know there’s no time remaining in the frame, then we can skip some frames of the secondary animation. Another thing I’m trying to achieve is figuring out if we’re in a frame or not when calling the setter of a Node in the scene graph: calling <code>node.rotation = [0,0,20]</code>, for example, will trigger the engine to request an animation frame in order to call <code>node.render()</code>, but, if we’re already in a frame, we don’t need to queue more rAF’s when the <code>node.rotation</code> setter is used inside the rAF, so I’m determining how to handle that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-03-09</div>
+          <div class="post_content">
+<p>It seems I need something that is guaranteed to fire at the end of a frame even if the user happens to be interacting (because the engine is intended for making interactive things). Maybe passing <code>{timeout:0}</code> can guarantee that the idle callback will fire after each rAF: <code>requestIdleCallback(..., {timeout:0})</code>? Because, I still need it to fire no matter what, and if timeout:0 does the trick, then the <code>deadline</code> argument passed into the callback will tell me if I exceeded the frame time or not. I’ll experiment with it…</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

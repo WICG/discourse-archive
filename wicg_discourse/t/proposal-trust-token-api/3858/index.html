@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Trust Token API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Trust Token API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2343_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csharrison</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>Here is an <a href="https://github.com/dvorak42/trust-token-api" rel="nofollow noopener">explainer</a> detailing this new API idea.</p>
+<p><strong>Problem</strong></p>
+<p>The web ecosystem relies heavily on building trust signals to detect fraudulent or spammy actors. One common way this is done is via tracking an individual browser’s activity across the web, usually via associating stable identifiers across sites.</p>
+<p>Preventing fraud is a legitimate use case that the web should support, but it shouldn’t require an API as powerful as a stable, global, per-user identifier. In third party contexts, merely segmenting users into trusted and untrusted sets seems like a useful primitive that also preserves privacy. This kind of fraud protection is important both for CDNs, as well as for the ad industry which receives a large amount of invalid, fraudulent traffic.</p>
+<p><strong>Solution</strong></p>
+<p>This API proposes a new per-origin storage area for “Privacy Pass” style cryptographic tokens, which are accessible in third party contexts. These tokens are non-personalized and cannot be used to track users, but are cryptographically signed so they cannot be forged.</p>
+<p>When an origin is in a context where they trust the user, they can issue the browser a batch of tokens, which can be “spent” at a later time in a context where the user would otherwise be unknown or less trusted. Crucially, the tokens are indistinguishable from one another, preventing websites from tracking users through them.</p>
+<pre><code class="lang-auto">// Fetch trust tokens on one site...
+fetchTrustTokens('/request-tokens').then(...)
+
+// Redeem trust tokens on another site!
+getTrustAttestation('https://token-issuer.com', {refresh-policy: 'use-cached').then(...)
+</code></pre>
+<p>We further propose an extension mechanism for the browser to sign outgoing requests with keys bound to a particular token redemption.</p>
+<p>Please take a look! We hope to gather feedback via Github issues on the explainer.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>Is the term “Privacy Guarantee” at <a href="https://github.com/dvorak42/trust-token-api#privacy-considerations" rel="nofollow noopener">https://github.com/dvorak42/trust-token-api#privacy-considerations</a> capable of being fulfilled and verified (e.g., see <a class="inline-onebox" href="https://discourse.wicg.io/t/revocation-of-basic-web-permissions-such-as-internet-access-or-some-other-way-to-trust-a-webpage-with-your-sensitive-files-e-g-image-editor-app/3826/6">Revocation of "basic" web permissions (such as internet access) or some other way to "trust" a webpage with your sensitive files (e.g. image editor app)</a>) for any signals or storage device (<a href="https://en.wikipedia.org/wiki/Cellebrite" rel="nofollow noopener">https://en.wikipedia.org/wiki/Cellebrite</a>)?</p>
+<p>Or is the term used at the Explainer to describe the fact that there is absolutely no expectation of privacy on the Web (i.e., see <a href="http://agoodamerican.org/" rel="nofollow noopener">A Good American</a>) or using any analog or digital signals or storage devices?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2343_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csharrison</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>Hey! I don’t quite understand the question. We used “privacy guarantee” to describe a cryptographic property of the tokens: that issuance and redemption are not linkable. The issuer sees “blinded tokens” in one context (issuance), and “clear tokens” in another context (redemption).</p>
+<p>For more information, I encourage you to take a look at the VOPRF primitive which Privacy Pass is based on:
+<a class="onebox" href="https://datatracker.ietf.org/doc/draft-irtf-cfrg-voprf/?include_text=1" rel="nofollow noopener" target="_blank">https://datatracker.ietf.org/doc/draft-irtf-cfrg-voprf/?include_text=1</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="3858">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/csharrison/40/2343_2.png" width="20"/> csharrison:</div>
+<blockquote>
+<p>Hey! I don’t quite understand the question. We used “privacy guarantee” to describe a cryptographic property of the tokens:</p>
+</blockquote>
+</aside>
+<p>The question is why is the term “guarantee” used?</p>
+<p>AFAICT There is no “guarantee” of “privacy” on any wire at any time. All signals can be intercepted, analyzed, stored by undisclosed third-parties.</p>
+<p>Perhaps consider removing the term “guarantee” from the Explainer? Or, if the term is retained, can you kindly explain exactly how a “guarantee” of “privacy” is verified at any arbitrary point in time, where a given third-party has the capabilities to intercept, analyze (and store indefinitely) at least 20TB/second of data (“real-time”) as of last century?</p>
+<p>By what means is a “guarantee” of “privacy” verified? From within the same system which guarantees privacy?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2343_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csharrison</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<blockquote>
+<p>The question is why is the term “guarantee” used?</p>
+<p>AFAICT There is no “guarantee” of “privacy” on any wire at any time. All signals can be intercepted, analyzed, stored by undisclosed third-parties.</p>
+</blockquote>
+<p>“Guarantee” is not used to say the API itself guarantees privacy, but that “issuer blinding” is <em>a</em> privacy guarantee of the API based on the cryptographic properties. That is, the API guarantees that tokens are unlinkable between issuance and redemption.</p>
+<p>It’s possible this isn’t clear enough in the explainer, I’m fine rewording to “cryptographic guarantee” if this is confusing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<p>Re the terms “privacy” and “security”, in brief consider the case of EMV technology</p>
+<ul>
+<li><a href="https://www.zdnet.com/article/anatomy-of-the-target-data-breach-missed-opportunities-and-lessons-learned/" rel="nofollow noopener">https://www.zdnet.com/article/anatomy-of-the-target-data-breach-missed-opportunities-and-lessons-learned/</a></li>
+<li>[insert stakeholder (insurance firms; banks, etc.) negotiations on whom assumes what, resposibities for implementation; consumers may or not get notice of new compulsory use of EMV “chip” card policy of institution for “security”; purported recent purchase, etc. using non-EMV card]</li>
+<li><a href="https://securetablepay.com/emv-chip-cards-good-bad-ugly/" rel="nofollow noopener">https://securetablepay.com/emv-chip-cards-good-bad-ugly/</a></li>
+<li><a href="https://web.stanford.edu/class/cs101/security-8-emv.html" rel="nofollow noopener">https://web.stanford.edu/class/cs101/security-8-emv.html</a></li>
+<li><a href="https://www.cl.cam.ac.uk/research/security/banking/interceptor/" rel="nofollow noopener">https://www.cl.cam.ac.uk/research/security/banking/interceptor/</a></li>
+<li><a href="https://pdfs.semanticscholar.org/a3ab/1f3d95ca45b027cac744d0fd2a67d9375ba5.pdf" rel="nofollow noopener">https://pdfs.semanticscholar.org/a3ab/1f3d95ca45b027cac744d0fd2a67d9375ba5.pdf</a></li>
+</ul>
+<blockquote>
+<p>“cryptographic guarantee”</p>
+</blockquote>
+<p>Is clearer from perspective here. Though using the term “guarantee” is <em>binding</em>, correct? Why is that term necessary? Could not the cryptographic algorithm used by described without guarantying anything as to what may or may not occur in the future, or potentially has already occurred, that is, what the API intends to do in the given environment?</p>
+<p> <a class="onebox" href="https://imgs.xkcd.com/comics/security.png" rel="nofollow noopener" target="_blank">
+<img height="274" src="https://imgs.xkcd.com/comics/security.png" width="448"/>
+</a>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2343_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csharrison</div>
+          <div class="creation_date">2019-08-30</div>
+          <div class="post_content">
+<blockquote>
+<p>Though using the term “guarantee” is  <em>binding</em> , correct? Why is that term necessary? Could not the cryptographic algorithm used by described without guarantying anything as to what may or may not occur in the future, or potentially has already occurred, that is, what the API intends to do in the given environment?</p>
+</blockquote>
+<p>The point of the section is to elaborate on the consequences of the properties of the underlying algorithm. If “guarantee” is too strong a word, “property” suffices.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2019-10-02</div>
+          <div class="post_content">
+<p>Notes from TPAC discussion: <a href="https://www.w3.org/2019/09/18-trusttokens-minutes.html">https://www.w3.org/2019/09/18-trusttokens-minutes.html</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

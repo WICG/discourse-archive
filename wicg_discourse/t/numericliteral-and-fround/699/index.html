@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>NumericLiteral and fround</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">NumericLiteral and fround</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michael</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>In the asm.js spec, see that for <a href="http://asmjs.org/spec/latest/#variable-type-annotations" rel="nofollow noopener">variable type annotations</a>, it says:</p>
+<blockquote>
+<p>Lookup(Δ, Γ, f) must be fround and n must be a floating-point literal with the character . in its source.</p>
+</blockquote>
+<p>This is not how it is used though, as Emscripten generates and Firefox validates without the ‘.’ character. My initial thought was that maybe the validation rule was actually being treated as any fround(<a href="http://asmjs.org/spec/latest/#numericliteral" rel="nofollow noopener">NumericLiteral</a>), which would essentially be the integer range [-2^31, 2^32), or any numeric literal with a ‘.’ present.</p>
+<p>However, this does not seem to be the case either, as Firefox validates any numeric literal, without respect to how NumericLiteral is defined in the spec or used elsewhere. To me this seems inconsistent, so what should the behavior be? My opinion on the matter is that it should be handled the same as NumericLiteral elsewhere.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-25</div>
+          <div class="post_content">
+<p>You are exactly right, FF accepts any Math.fround((-)NumericLiteral).  I found this in an asm.js spec audit a few weeks ago and put this on a list of things to fix for the next spec update, but unfortunately we haven’t made that update yet.  In the meantime, here’s the list: <a href="https://etherpad.mozilla.org/ibPVJ81u35" rel="nofollow noopener">https://etherpad.mozilla.org/ibPVJ81u35</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/614_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RReverser</div>
+          <div class="creation_date">2015-06-16</div>
+          <div class="post_content">
+<p>Could you please explain why was special type <code>fround</code> added specifically for this function? Trying to figure out how is it different from <code>(double)-&gt;float ^ ...</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-06-16</div>
+          <div class="post_content">
+<p>The basic idea is that fround can show up in places that normal calls can’t (in coercion contexts like parameters where we don’t want to allow arbitrary code execution) and <code>fround</code> gives the validation rules a special way to say “just allow the magic <code>fround</code> function here”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/614_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RReverser</div>
+          <div class="creation_date">2015-06-16</div>
+          <div class="post_content">
+<p>So it’s just kind of strict alias for <code>Math.fround</code> itself and not an actual type?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/614_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RReverser</div>
+          <div class="creation_date">2015-06-16</div>
+          <div class="post_content">
+<p>Another question (posting here since related to NumericLiteral) - in section 5.2 (Return Type Annotations) it’s said:</p>
+<blockquote>
+<p>has return type double if n is composed of a floating-point
+literal, i.e., a numeric literal with the character . in
+its source; alternatively, if n is composed of an integer
+literal and has its value in the range [-2^31,
+2^31), the return statement has return
+type signed</p>
+</blockquote>
+<p>but in 5.4 (Variable Type Annotations):</p>
+<blockquote>
+<p>the variable type is double
+if n’s source contains the character .;
+otherwise n may be an integer literal in the range
+[-2^31, 2^32), in which case the variable type
+is int.</p>
+</blockquote>
+<p>Which is different in two ways:</p>
+<ol>
+<li>higher bound is 2^31 vs 2^32</li>
+<li>type is signed vs int</li>
+</ol>
+<p>I guess those are supposed to be the same, so there is some kind of mistake here?</p>
+<p><a href="https://etherpad.mozilla.org/ibPVJ81u35" rel="nofollow noopener">https://etherpad.mozilla.org/ibPVJ81u35</a> doesn’t seem to mention any of those</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

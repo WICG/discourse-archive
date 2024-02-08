@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Support async loading stylesheets with low-priority</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Support async loading stylesheets with low-priority</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1369_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">addyosmani</div>
+          <div class="creation_date">2019-07-22</div>
+          <div class="post_content">
+<p><strong>tl;dr:</strong> We should offer a simple solution for async loading stylesheets at a low-priority. Something in the vein of <code>&lt;link async&gt;</code> or <code>&lt;link importance="low"&gt;</code>.</p>
+<p>The Filament Group <a href="https://twitter.com/scottjehl/status/1152295964440485894" rel="nofollow noopener">recently</a> posted a pattern for loading CSS asynchronously, leveraging a workaround setting a <code>link</code>'s <code>media</code> attribute to <code>print</code>:</p>
+<pre><code class="lang-auto">&lt;link rel="stylesheet" href="/path/to/my.css" media="print" onload="this.media='all'"&gt;
+</code></pre>
+<p>Although <code>link[rel=preload]</code> exists for achieving a similar pattern (toggle <code>rel</code> once loaded vs <code>media</code>), it fetches files early at a higher perceived priority. This can have the downside of de-prioritizing other critical requests.</p>
+<p>An alternative to the <code>print</code> pattern above would be standardizing on a way to async load stylesheets with a low-priority. This could be achieved in a few ways:</p>
+<ul>
+<li>Explore <code>&lt;link rel="stylesheet" href="/path/to/my.css" async&gt;</code>
+</li>
+<li>Modify the behavior of Priority Hints such that <code>&lt;link rel="stylesheet" href="/path/to/my.css" importance="low"&gt;</code> both signaled low-network priority and that the link should be non-render blocking</li>
+</ul>
+<p>Starting this discussion to explore whether this is overall problem is a pattern we would like to better solve in the web platform and if so, what the shape of a solution should be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2427_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nerd</div>
+          <div class="creation_date">2019-07-22</div>
+          <div class="post_content">
+<p>Curious if <code>&lt;link rel="stylesheet" href="/path/to/my.css" defer&gt;</code> is meaningful as well, in case the order of imports can changes which is overwriting which rulesets / styles.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1050_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndyDavies</div>
+          <div class="creation_date">2019-07-22</div>
+          <div class="post_content">
+<p>I like the idea of native async</p>
+<p>Would prefer an obvious signal e.g. <code>async</code> attribute as JS has over <code>importance=low</code> signalling non-blocking behaviour behaviour</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-07-22</div>
+          <div class="post_content">
+<p>We definitely want <code>defer</code> semantics here, regardless of the markup used. Current JS async semantics are… not good. They are racy by definition. We shouldn’t add that kind of raciness to CSS, unless people explicitly want it (and then they can use preload to recreate it :D).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-07-24</div>
+          <div class="post_content">
+<p>Yes, <code>async</code> interrupts the parser, while <code>defer</code> waits for the page to finish parsing. External style sheets that are non-critical should probably not interrupt parsing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bzbarsky</div>
+          <div class="creation_date">2019-07-29</div>
+          <div class="post_content">
+<blockquote>
+<p>Yes, <code>async</code> interrupts the parser</p>
+</blockquote>
+<p>That’s a Chrome implementation detail, sounds like.  In Gecko it doesn’t do that; it will run if/when the parser is interrupted, but will not trigger an interrupt itself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-08-03</div>
+          <div class="post_content">
+<p>Is Firefox’s behavior in accordance with the spec? The spec text suggests that an <code>async</code> script <em>always</em> interrupts the parser.</p>
+<blockquote>
+<p>For classic scripts, if the <code>async</code> attribute is present, then the classic script will be fetched in parallel to parsing and evaluated as soon as it is available (potentially before parsing completes).</p>
+</blockquote>
+<p><a class="onebox" href="https://html.spec.whatwg.org/#attr-script-async" target="_blank">https://html.spec.whatwg.org/#attr-script-async</a></p>
+<p><div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/a2790fe48037462deac27aa507b98d18792a2545" href="//discourse.wicg.io/uploads/default/original/2X/a/a2790fe48037462deac27aa507b98d18792a2545.png" title="Screen Shot 2019-08-03 at 6.22.24 PM.png"><img alt="24%20PM" data-base62-sha1="nbiIV4iIOdbAfLcXuMkrDAoUydn" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/a/a2790fe48037462deac27aa507b98d18792a2545_2_10x10.png" height="184" src="//discourse.wicg.io/uploads/default/optimized/2X/a/a2790fe48037462deac27aa507b98d18792a2545_2_690x184.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/a/a2790fe48037462deac27aa507b98d18792a2545_2_690x184.png, //discourse.wicg.io/uploads/default/optimized/2X/a/a2790fe48037462deac27aa507b98d18792a2545_2_1035x276.png 1.5x, //discourse.wicg.io/uploads/default/optimized/2X/a/a2790fe48037462deac27aa507b98d18792a2545_2_1380x368.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Screen Shot 2019-08-03 at 6.22.24 PM.png</span><span class="informations">2880×768 184 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bzbarsky</div>
+          <div class="creation_date">2019-08-04</div>
+          <div class="post_content">
+<p>How can you tell when the script is “available” except for “when it gets run”?  In particular, in Firefox it’s not “available” until a task runs on the main thread notifying it that it’s available, and those tasks don’t interrupt the parser.</p>
+<p>That’s as far as observable behavior goes.  In spec terms, “available” is not really defined; it’s up to the browser to decide when the script is “available”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>If we go for <code>defer</code> semantics (I guess we could have both), would it be in the same queue as <code>&lt;script defer&gt;</code>? That would be nice…</p>
+<pre><code class="lang-auto">&lt;link defer rel="stylesheet" href="style1.css"&gt;
+&lt;script defer src="script1.js"&gt;&lt;/script&gt;
+&lt;script src="script2.js"&gt;&lt;/script&gt;
+</code></pre>
+<p>This means the execution of <code>script1.js</code> would be blocked by the fetch &amp; calculation of <code>style1.css</code>. Whereas <code>script2.js</code> would not be blocked by <code>style1.css</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2019-08-08</div>
+          <div class="post_content">
+<p>I don’t want to disrupt this discussion, but FYI there’s the “<a class="inline-onebox" href="https://discourse.wicg.io/t/a-standard-method-for-loading-style-sheets-asynchronously/542/">A standard method for loading style sheets asynchronously</a>” post too.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

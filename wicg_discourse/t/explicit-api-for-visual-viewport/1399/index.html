@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Explicit API for visual viewport</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Explicit API for visual viewport</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2016-03-21</div>
+          <div class="post_content">
+<p>We’ve got a proposal for explicitly getting the properties of the visual viewport. Would anyone else be interested in discussing this proposal in the WICG (before eventually maturing and migrating it to CSSWG)? The proposal is on <a href="https://github.com/bokand/ViewportAPI" rel="nofollow noopener">my GitHub</a>, pasted here for convenience:</p>
+<h1>Viewport API</h1>
+<h2>tl;dr</h2>
+<p>We propose adding a <code>visualViewport</code> object on <code>document</code> that contains the properties of the visual viewport.</p>
+<h2>Background</h2>
+<p>The mobile web contains two viewports, the Layout and Visual viewport. The Layout viewport is what a page lays out its elements into(*) and the Visual viewport is what is actually visible on the screen. When the user pinch-zooms into the page, the visual viewport shrinks but the layout viewport is unchanged. UI like the on-screen keyboard (OSK) can also shrink the visual viewport without affecting the layout viewport. See this <a href="http://bokan.ca/viewport/index.html" rel="nofollow noopener">demo</a> to visualize the two viewports. This isn’t specified anywhere and implementations vary greatly between browsers.</p>
+<p>Currently, several CSSOM scroll properties are relative to the visual viewport (see <a href="https://docs.google.com/document/d/1ZzzvA_AuMDa_nlwIc9PdpzfIXsgrOZDixFvEFwrfXJM/edit#" rel="nofollow noopener">this</a> for list). Again, there is no spec governing this, but this is how browsers have it implemented today. With this implementation, the dimensions of the visual viewport can be easily determined (For example, window.innerHeight = visual viewport height). However, all other coordinates are generally relative to the layout viewport (e.g. getBoundingClientRects, elementFromPoint, event coordinates, etc.). Having these APIs be mixed is arbitrary and confusing.</p>
+<p>This confusion has caused many desktop sites to break when pinch-zoomed or when showing the OSK (see <a href="http://crbug.com/489206" rel="nofollow noopener">this bug </a> for examples). This is because mobile browsers added new semantics to existing properties, expecting they’d to be invisible to desktop browsers. This becomes a problem as the lines between mobile and desktop blur and features like on-screen keyboard and pinch-zoom make their way to desktops, or when accessing desktop pages from mobile devices.</p>
+<p>(*) - This isn’t strictly true. In Chrome, the layout viewport is actually the “viewport at minimum scale”. While on most well behaving pages this is the box that the page lays out into (i.e. the initial containing block), extra-wide elements or an explicit minimum-scale can change this. More specifically, the layout viewport is what position: fixed elements attach to.</p>
+<h2>Proposed Plan</h2>
+<p>We believe the best way forward is to change those remaining CSSOM scroll properties to be relative to the layout viewport. In fact, Chrome did this in M48 but, due to <a href="http://crbug.com/571297" rel="nofollow noopener">developer feedback</a>, this change was reverted in M49. There was more reliance on this than anticipated.</p>
+<p>In order to make this transition we propose adding a new explicit API for the visual viewport. With an explicit API, and after a sufficient transition period, we could once again change the CSSOM scroll properties to be relative to the layout viewport. This change would make sure existing desktop sites continue to function correctly as new UI features are added. At the same time, it would allow authors to use and customize those features where needed.</p>
+<p>The new API is also easy to feature detect and polyfilling this behavior should be fairly straightforward.</p>
+<h2>Proposed API</h2>
+<ul>
+<li>Add a <code>visualViewport</code> object on <code>document</code>.</li>
+</ul>
+<pre><code class="lang-auto">visualViewport = {
+    double scrollTop;  // Relative to the layout viewport
+    double scrollLeft; // and writable.
+
+    double clientWidth;  // Read-only and excludes the scrollbars
+    double clientHeight; // if present.
+
+    double pageScale; // Read-only
+}
+</code></pre>
+<ul>
+<li>Fire a <code>viewportchanged</code> event against <code>document</code> whenever any of these properties change.</li>
+</ul>
+<h2>Example</h2>
+<p>Here’s how an author might use this API to simulate <code>position: device-fixed</code>, which fixes elements to the visual viewport.</p>
+<pre><code class="lang-auto">&lt;style&gt;
+    #bottombar {
+        position: fixed;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        transform-origin: left bottom;
+        transform: translate(0px, 0px) scale(1);
+    }
+&lt;/style&gt;
+
+&lt;body&gt;
+    &lt;div id="bottombar"&gt;This stays stuck to the visual viewport&lt;/div&gt;
+&lt;/body&gt;
+
+&lt;script&gt;
+    var bottomBar = document.getElementById('bottombar');
+    var viewport = document.visualViewport;
+    document.addEventListener('viewportchanged', function()   
+    {
+        // Since the bar is position: fixed we need to offset it by the visual
+        // viewport's offset from the layout viewport origin.
+        var offsetX = viewport.scrollLeft;
+        var offsetY = document.documentElement.clientHeight
+                    - viewport.clientHeight
+                    + viewport.scrollTop;
+
+        // You could also do this by setting style.left and style.top if you
+        // use width: 100% instead.
+        bottomBar.style.transform = 'translate(' + 
+                                    offsetX + 'px,' +
+                                    offsetY + 'px) ' +
+                                    'scale(' + 1/viewport.pageScale + ')'
+    });
+&lt;/script&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2291_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChumpChief</div>
+          <div class="creation_date">2016-03-21</div>
+          <div class="post_content">
+<p>I’m interested in discussing this in the WICG with intent to progress it to standardization in the CSSWG.  I think we may want to expand the scope of the document to include formal definition of layout vs. visual viewports (otherwise the functionality of the new API is less obvious).  And potentially include some of the further features discussed (e.g. you mention position:device-fixed, which could also potentially make sense to define here).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenchris</div>
+          <div class="creation_date">2016-03-22</div>
+          <div class="post_content">
+<p>I am wondering whether we clear up all the viewports and put the things in one place. I believe that would make it easier for developers to understand the concepts and use them right. Layout viewport may also change due to orientation change and viewport meta tag values, but for that you will need to listen to resize changes.</p>
+<p>It is also confusing that the event is called viewportchanged but it only affects visual viewports.</p>
+<p>We could have something like document.viewport.visual document.viewport.layout etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2016-03-24</div>
+          <div class="post_content">
+<p>Hi Kenneth,</p>
+<p>I’ve already changed it due to that <a href="http://feedback.It" rel="nofollow noopener">feedback.It</a>’s now document.visualViewport.</p>
+<p>As for layout viewport…I’m not sure we have a good definition or that the name is very accurate. In Chrome, it <em>usually</em> coincides with the initial containing block (i.e. the root layout container) and documentElement.clientWidth/Height but not always. A more accurate description might be “the position: fixed box” or the “minimum-scale box”, the latter being how it’s implemented in Chrome. I’m not sure of the subtleties in other browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2016-03-24</div>
+          <div class="post_content">
+<p>FYI, the repo is now owned by the WICG GitHub org: <a href="https://github.com/WICG/ViewportAPI" rel="nofollow noopener">https://github.com/WICG/ViewportAPI</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2016-04-05</div>
+          <div class="post_content">
+<p>An experimental implementation has just landed in Chrome, it should be available in the most recent Mac and Windows Canaries and Android dev channel soon. You can give it a try by turning on the “enable-experimental-web-platform-features” flag in chrome://flags.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2016-07-20</div>
+          <div class="post_content">
+<p>After some initial rounds of feedback we’ve now got an initial API implemented in Chrome Canary. If you’re interested, please give it a whirl and give us any feedback, file issues, etc. There’s instructions, details and examples you can play around with on the <a href="https://github.com/WICG/ViewportAPI" rel="nofollow noopener">GitHub repo</a>.</p>
+<p>Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

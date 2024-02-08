@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>OffscreenCanvas animations in workers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">OffscreenCanvas animations in workers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-06</div>
+          <div class="post_content">
+<p>The <a href="https://html.spec.whatwg.org/multipage/scripting.html#the-offscreencanvas-interface">OffscreenCanvas API</a> currently has no available mechanism for running animations in a way that is synchronized with the display.</p>
+<p>We basically need something to fulfill the role of requestAnimationFrame that can be used in workers.  It cannot be as simple as exposing requestAnimationFrame in workers because the processing model of rAF is based on the fact that the main thread (the browsing context’s event loop) has a graphics update step, which is not the case in workers.  There are also plenty of non-trivial use cases that need to thought of.</p>
+<p>I’ve summarized various use cases, requirements, and solution ideas in this document: <a href="https://github.com/junov/OffscreenCanvasAnimation/blob/master/OffscreenCanvasAnimation.md" rel="nofollow noopener">https://github.com/junov/OffscreenCanvasAnimation/blob/master/OffscreenCanvasAnimation.md</a></p>
+<p>This is still an early draft. In the coming days, I will be actively editing that document to add more details and to list various arguments for and against the different ideas.</p>
+<p>Please share you feedback.</p>
+<p>Thanks,</p>
+<p>Justin</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-02-07</div>
+          <div class="post_content">
+<p>Does the approach where commit() returns a promise actually have any downsides? From reading that document, it sounds like the obvious choice, because there were no downsides noted for it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-07</div>
+          <div class="post_content">
+<blockquote>
+<p>Does the approach where commit() returns a promise actually have any downsides?</p>
+</blockquote>
+<p>I plan to add a section at the end of the document with an exhaustive list of pros and cons.  For now, the biggest downside I can think of for the commit approach is that there are use cases where the commit action is not required (i.e. there is no placeholder canvas, we just want to readback rendered results from the canvas), but we still want to drive an animation loop that runs at 60fps. For example, a GPU-accelerated physics simulation. In such cases, you could do a hack where you set-up a bogus placeholder canvas (1x1 pixels), and it would have to reside in a visible document to prevent the browser from throttling the animation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-02-07</div>
+          <div class="post_content">
+<p>When you talk about running an animation loop at 60fps, you really mean v-sync rate right? That would be why you need a displayed canvas somewhere - to get the v-sync rate of the display hardware associated with the canvas.</p>
+<p>If you have a canvas in a worker with no associated display hardware, then you don’t have a v-sync rate. It could either be ambiguous (e.g. dual-monitors running at different rates - which do you choose?) or I think a better analogy is it’s like running on a headless server. In which case surely it’s acceptable to just use a software timer?</p>
+<p>Alternatively if you want to sync it up with something that is being rendered, that’s easy too, you just tie in to some other canvas’ animation loop.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-08</div>
+          <div class="post_content">
+<blockquote>
+<p>Alternatively if you want to sync it up with something that is being rendered, that’s easy too, you just tie in to some other canvas’ animation loop.</p>
+</blockquote>
+<p>Agreed. And I know I am splitting hairs here, but for the sake of argument, a conceivable use case would be for the results of some GPU accelerated computation to be postMessage’d back to the main thread to animate DOM elements.  In this case, you’d want a v-sync driven animation loop on the worker that uses a canvas, but without commit().</p>
+<p>After thinking more about how I’d implement such a use case I think I would drive it strictly via window.rAF, to avoid the main thread animation loop and the worker animation loop from falling out of sync.  I realized that if the worker is running an independent animation loop, there is a risk that the main thread would not keep up, which would make the animation fall out of sync. So we’d probably want to do something like this to execute the GPU accelerated animation calculations in parallel with DOM edits + style and layout calculations:</p>
+<pre><code>var currentFrameAnimationData = null;
+
+worker.onmessage(message) {
+  currentFrameAnimationData = message.data;
+}
+
+function animLoop() {
+  if (currentFrameAnimationData) {
+    worker.postMessage(...); // request animation state for frame N+1
+    // Apply computed animation state for frame N to the DOM
+    (...)
+    currentFrameAnimationData = null;
+  }
+  window.requestAnimationFrame(animLoop);
+}
+
+worker.postMessage(...); // request animation state for frame 0
+window.requestAnimationFrame(animLoop); // kick off the animation.
+</code></pre>
+<p>So after all, chosing the commit() + promise does not affect this use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2017-02-14</div>
+          <div class="post_content">
+<p>Thank you very much for putting together the summary document, Justin!  It was very informative.</p>
+<p>Some general comments:</p>
+<ul>
+<li>
+<strong>GPU Throttling</strong>. Thank you for discussing this in your summary document!  I think it is essential for user agents to be able to throttle rendering of workers on GPU constrained machines. I think we should be clear with developers that calling commit multiple times in a JavaScript block will result in everything but the first frame getting dropped on the floor in all instances. We don’t want to end up in a place where content appears to work on higher performing hardware (no frames dropped) but completely bogs down more limited hardware (multiple frames dropped).</li>
+<li>
+<strong>Window Invisibility</strong>.  One of the key aspects of the current window.requestAnimationFrame mechanism is it gives user agents the ability to suppress RAF callbacks on background or non-visible tabs. I think we need to be clear with developers that the promise returned from commit will behave in the same manner and is tied to the visibility of the corresponding window the document resides in. GPU work on background tabs tends to affect desktop responsiveness much more than CPU work.</li>
+<li>
+<strong>Multi-Canvas Rendering Coordination</strong> Using Promise.all to coordinate rendering of several canvases is interesting. However, I have concerns about how well this will work when some of the Promise.all canvases are on monitors running at 60hz and some that are on 120hz HMDs. The user agent will need to either wake up the Javascript thread at 120hz and waste CPU cycles on the 60hz Canvases or cause the user in the HMD to toss their cookies. Neither is a good solution. Since the Promise object doesn’t have a .any function, developers are going to need to know what device things reside in order to do the right thing.</li>
+<li>
+<strong>Canvas.commit vs. Session.commit</strong> Along the same lines, in Brandon’s <a href="https://github.com/w3c/webvr/issues/188" rel="nofollow noopener">Render Loop Proposal</a>, he wants to standardize on Session.commit returning a promise.  He believes this is preferable to doing a commit on the canvas to provide a more consistent solution. His proposal and yours will need to be reconciled a bit more with each other.</li>
+<li>
+<strong>Polling in Sample Code</strong>  In the sample code of your last reply, you do requestAnimationFrame on the foreground thread and poll the worker by checking whether currentFrameAnimationData is null. Is there a reason why you don’t call requestAnimationFrame in worker.onMessage instead?  If the worker is busier than the foreground thread, it seems we want to avoid unnecessary polling.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2017-02-14</div>
+          <div class="post_content">
+<p><span class="mention">@RafaelCintron</span></p>
+<p>Just some thoughts…</p>
+<p>GPU Throttling &amp; Window Invisibility - This all matches what I think we should do, I don’t think <span class="mention">@junov</span> would disagree here.</p>
+<p>Multi-Canvas Rendering Coordination - So we have Promise.race() available on the platform (slightly different to Promise.any wrt. rejection handling)… this covers your use-case right? You’d still need to keep track of which canvas the winning commit came from. It might be nice to expose a bool on the canvas to check which canvases to draw to? But this seems like something that can be added later if needed.</p>
+<p>Canvas.commit vs. Session.commit - I think that if Canvas.commit becomes a thing we could just remove VRSession.comit for now, it’s purely additive I believe. The WebVR spec would have to define when VRFrameData is updated relative to the canvas commit() but this is just spec-ese complexity.  I’d expect that that VRFrameData updates at the rate of the fastest canvas for the VRSession?</p>
+<p><span class="mention">@junov</span> I also hand a little bit more of a think about WorkerGlobalScope.requestAnimationFrame and came to the same conclusion as you… i.e. the sync between the two threads is more or less impossible, and developers will need to add a communcation channel (like you just described) themselves.</p>
+<p>I think separately we could add an object that can receive  trigger a callback on a worker thread efficiently, but this should be kept to a separate proposal (and can be polyfilled today N different ways).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-14</div>
+          <div class="post_content">
+<p>Thanks for the feedback.</p>
+<p>On the topic of throttling: I think that in the case where commit is called too frequently, the last frame (not the first) should be the only one guaranteed not to be dropped since it may represent some sort of final state. Example of legit uses case where drawing may not be driven by v-sync: a progressive rendering or image processing algorithm that updates the view every time a compute step is completed; A painting app that draws brush strokes every time a pointer input event is handled.  In these scenarios, it is fine to skip frames when there is a burst of commits, but when the burst stops, the final frame should always make it to screen IMHO.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2017-02-18</div>
+          <div class="post_content">
+<p>Suppose the web developer has the following code running in a worker:</p>
+<blockquote>
+<p><code>function animationLoop() { // Draw A to Canvas 1 let promise1 = ctx1.commit();</code>
+<code>// Draw B to Canvas 2 let promise2 = ctx2.commit(); Promise.all([promise1, promise2]).then(animationLoop); }</code></p>
+</blockquote>
+<p>Will the user see A at the same time as B or could it be the case that A can appear for one or more frames before B appears?  I think it would be desirable for user agents to guarantee the former behavior; commits happen when control is returned back to the user agent. If not, that would be one regression from the current requestAnimationFrame scheme we have today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>With the current proposal, the Promise.all approach would only guarantee that the various canvases render at the same frame rate. Display is not not synchronized. The reason for this, is that we got feedback from game engine developers that they wanted to be able to push frames to the display without yielding control back to the user agent.  They’d basically have a never ending loop. This would make it easier for native engines to be ported to the web via emscripten, apparently.</p>
+<p>For cases where the graphics updates to multiple canvases need to be in sync, the way to go would be to use OffscreenCanvas.transferToImageBitmap() on both canvases, then transfer the imageBitmaps back to the main thread where they can be displayed in synchrony via a canvas with a ‘bitmaprenderer’ context.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>Thread scheduling being the way it is, I don’t think you’ll be able to claim “various canvases render at the same framerate” unless you also synchronize the display. In a multi-canvas page, all it takes is for one or two of the commits to sneak past the VSync for this to no longer be true.</p>
+<p>In your summary document, you identified the need to have a backpressure mechanism to throttle the animation and avoid accumulating a rendering backlog. Later in the document, you talked about the negatives of throttling setTimeout/setInternal because it prevents the worker from doing other, non-rendering work.  I agree with these goals.</p>
+<p>In the call-commit-without-yielding approach, when are you going to institute the backpressure mechanism?  If the answer is “at commit time”, then this would prevent the browser from scheduling non-rendering work on the worker during this time, which is one of your goals.  Since the user agent has no idea how imminent another commit would be, it would be forced to hold one canvas commit, but not another, further eroding the desire for canvases to update at the same framerate.</p>
+<p>The nice thing about forcing a yield-back for display is it encourages developers to think in terms of frame boundaries, and sets them up for success on GPU-limited machines. Developers that port well behaved games to JavaScript are going to be doing an ‘await ctx.Commit()’ which already yields control back to the user agent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1989">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/87869e/40.png" width="20"/> RafaelCintron:</div>
+<blockquote>
+<p>The nice thing about forcing a yield-back for display is it encourages developers to think in terms of frame boundaries, and sets them up for success on GPU-limited machines.</p>
+</blockquote>
+</aside>
+<p>Right, so if we stick with the paradigm of frame boundaries that are defined by the termination of a script task, then we no longer need an explicit commit().  Basically, at the end of any script execution task that touches the contents of one or many canvases, we would get an implicit frame boundary, just like with regular HTML canvases.  I don’t oppose this. However, the idea of having an explicit commit() was specifically for supporting the concept of a non-yielding animation loop, which was a request from 3rd party developers.  It could be that this is the wrong solution to their problem, I am not sure. I will try to track down interested parties and point them to this thread.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-22</div>
+          <div class="post_content">
+<p>I take back what I said about explicit commit not being necessary. Here is a use case that justifies having an explicit commit: A VR game that renders to a VR headset and also has a “spectator view” that is rendered on screen. To avoid resource duplication, you would want both the VR view and the spectator view to be rendered from the same WebGL context.  To achieve this you would have two rendering loops, most likely running at different frame rates.  The VR rendering loop pushes frames to the VR device by calling VRDisplay.commit() (or submitFrame() or whatever). The spectator view rendering loop would push frames by calling commit() on the rendering context. Having a single OffscreenCanvas that can push frames to more than one destination makes it highly desirable to have an explicit commit().  There are also other scenarios that use a combination of commit() and transferToImageBitmap() where an explicit commit makes sense, because you don’t want to implicitly commit frames that were only meant for transferToImageBitmap().</p>
+<p>Anyways this still does not settle the issue of whether or not the frame boundaries for commit() should be synchronized at the termination of script tasks.  This really depends on whether or not there is a compelling use case that requires the ability to commit in a non-yielding loop.</p>
+<p>In native games, having a continuous game loop is a common design. If I am not mistaken, the idea is to rely on the graphics API to throttle the loop.  The equivalent of this for OffscreenCanvas would be to make commit() halt to throttle the loop. At first glance I don’t see this halting behavior as advantageous for the web. The only argument I can imagine in favor of supporting non-yielding loops is that this makes it marginally easier to write tools that port native apps to the web by having a web API that sort of emulates glSwapBuffers (or IDXGISwapChain::Present).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-02-22</div>
+          <div class="post_content">
+<p>Another idea: options.</p>
+<pre><code>dictionary OffscreenCanvasCommitOptions {
+  bool sync = true; // when true, commit is synchronized at the end of the
+                    // current task. Otherwise, commit is immediate.
+  bool throttle = false; // when true, commit blocks when there is a frame
+                         // backlog. Otherwise, frames may be overdrawn (dropped).
+}
+</code></pre>
+<p>Possible future addition: dirtyRect for limiting the commit to a subregion of the canvas.</p>
+<p>WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1234_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OleksandrChekhovskyi</div>
+          <div class="creation_date">2017-02-24</div>
+          <div class="post_content">
+<p>Hi. I’m developing a game (<a href="https://statebuilder.com/" rel="nofollow noopener">https://statebuilder.com/</a>), and am interested in using OffscreenCanvas in it.</p>
+<p>It is a port of a native C++ codebase using Emscripten, where app main thread is running in a Web Worker, and never yields to the JS event loop. It is also using own modal (blocking) event loops for some UI functionality, so refactoring this into run-to-completion model would be very painful.</p>
+<p>From this perspective, my use case requirement is to have a way to commit frames with throttling in a blocking/synchronous way. Basically, what I need is some kind of function that will sleep the exact right amount of time before I should start working on a new frame. So far when experimenting with OffscreenCanvas, I’ve been doing a sleep to pad the frame to 1/60 s manually.</p>
+<p>Maybe one good way of doing it would be to make commit() return a Promise, but then have some way to wait on Promise(s) in a blocking way? Then it works even for multiple canvases. And then developer can decide to wait either on current frame’s commit promise, or on previous one (whether latency or throughput is preferred).</p>
+<p>The simplest case, however, would be to have some commitSync() - would work great for one canvas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2017-03-01</div>
+          <div class="post_content">
+<p>In DirectX games, developers are responsible for taking their disparate intermediate render targets and combining them into a full screen (or full window) swap chain.  The swap chain has an explicit commit method called ‘Present’.  Even though it appears that you’re writing “infinite game loop”, DirectX is throttling your CPU work by holding your thread using a semaphore if the GPU is more than two frames behind. Failure to do this results in additional latency and worsens the framerate, not improve it. Edge had previous bugs where requestAnimationFrame was not throttling properly on under powered GPUs an the result was not pretty.</p>
+<p>I am fine with explicit commit but we should provide a “pit of success” for developers by strongly discouraging non-yielding loops that render multiple frames and, thus, appear to work on some hardware but fall over on others.  Having a promise that fullfills when the user agent is ready for more frames is a good approach. Combined with an async/await Javascript features, this should make porting existing engines straightforward.</p>
+<p>Your example of having a single OffscreenCanvas that can push frames to more than one destination is useful. Isn’t this really copyTo operation that returns void, not a commit that returns a promise?  The promise should be a frame-boundary thing, not an individual element thing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2017-03-01</div>
+          <div class="post_content">
+<p>Okay, I think we’ve got it.  Basically, the syntax for getting a commit that throttles by blocking (as Oleksadr suggests) would simply be “await context.commit();”. And of course, this is much better than hard-blocking the entire thread.</p>
+<p>Then, the concept of synchronizing commits by placing the frame boundaries at the end of the script tasks works just fine, as long as it is defined in such a way that “await” also represents a frame boundary.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Justin_Novosad</div>
+          <div class="creation_date">2017-04-25</div>
+          <div class="post_content">
+<p>I’ve updated the proposal.</p>
+<p>See Section : <a href="https://github.com/junov/OffscreenCanvasAnimation/blob/master/OffscreenCanvasAnimation.md#processing-model-1" rel="nofollow noopener">Proposed Solution -&gt; Processing Model</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2561_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dakom</div>
+          <div class="creation_date">2019-09-15</div>
+          <div class="post_content">
+<p><span class="mention">@junov</span> re: your loop posted at  <a class="inline-onebox" href="https://discourse.wicg.io/t/offscreencanvas-animations-in-workers/1989/5">OffscreenCanvas animations in workers</a></p>
+<p>So, I realize this thread is old, but I have almost the exact implementation shown here and it is skipping frames here and there. Almost as though it thinks it’s okay to delay a <code>postMessage</code> by a tick sometimes.</p>
+<p>Is that expected behavior? I’m in my phone right now and can’t put together an example right this moment, but happy to do so later… thought it might be something in the spec, in the meantime…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2570_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fserb</div>
+          <div class="creation_date">2019-09-19</div>
+          <div class="post_content">
+<p>Yeah, this thread is a bit old and <span class="mention">@junov</span> hasn’t been working on this for a while now. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+<p>due to some feedback from <a href="https://github.com/w3ctag/design-reviews/issues/141" rel="nofollow noopener">W3C Tag</a> we switched this API from <code>commit()</code> to a <code>DedicatedWorkerGlobalScope.requestAnimationFrame()</code>. For busy loop cases, we are still working on some alternatives to pass events.</p>
+<p>That said, if you are still having issues using RAF on Workers, please let me know.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

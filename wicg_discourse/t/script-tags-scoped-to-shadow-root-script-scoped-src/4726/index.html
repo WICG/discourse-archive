@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Script tags scoped to shadow root, &lt;script scoped src=&rdquo;&hellip;&rdquo;&gt;</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Script tags scoped to shadow root, &lt;script scoped src=&rdquo;&hellip;&rdquo;&gt;</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-08-13</div>
+          <div class="post_content">
+<p>It’d be neat if we could scope scripts to shadow roots, like we can scope CSS to shadow roots.</p>
+<p>F.e. inside a shadow Root’s HTML (naming bikesheddable):</p>
+<pre><code class="lang-auto">&lt;script scoped&gt;
+  function foo() {...}
+  var bar = 123
+&lt;/script&gt;
+</code></pre>
+<p>Then in a custom element, for example, we could access that stuff, which is scoped to the shadow root instead of window:</p>
+<pre><code class="lang-auto">this.shadowRoot.scope.foo()
+console.log(this.shadowRoot.scope.bar) // 123
+</code></pre>
+<p>Use case: it would allow us to very easily wrap and scope markup managed by tools like <a href="https://github.com/alpinejs/alpine" rel="nofollow noopener">Alpine.js</a> or <a href="https://mavo.io/" rel="nofollow noopener">Mavo</a> as custom elements, and in general would allow devs to be more inventive on what sorts of component systems (custom element systems) they can create.</p>
+<p>F.e., we could make simple markup like that of Svelte with <code>let</code>s and <code>function</code>s, but still having a scope object for any given custom element (that has a shadow root).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-08-13</div>
+          <div class="post_content">
+<p>It would mean we could take advantage of simple features of DOM that we already have. F.e. writing the following within a shadow root without muddying the global scope:</p>
+<pre><code class="lang-auto">&lt;!-- inside the shadow DOM --&gt;
+&lt;div onclick="foo()"&gt;&lt;/div&gt;
+&lt;script scope="shadow"&gt;
+  // foo does not leak to global scope, but it can shadow a global foo var.
+  function foo() {...}
+&lt;/script&gt;
+</code></pre>
+<p>The builtin <code>onclick</code> attribute handler of the DOM would run in scope of the shadow root, which means it’ll use any variables defined in that “lexical scope”. Any variables in that scope can shadow global variables, just like we’re accustomed to inside JavaScript functions. The only difference between this new scope and a normal function scope is that the variables are also exposed on an object on the shadow root.</p>
+<p>Now we can imagine a custom element framework, might prescribe for a user to write HTML files like this:</p>
+<pre><code class="lang-auto">&lt;!-- my-element.html --&gt;
+&lt;div onclick="foo()"&gt;
+  &lt;slot&gt;&lt;/slot&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  function foo() {...}
+  function connected(ce) {...}
+  function disconnected(ce) {...}
+&lt;/script&gt;
+</code></pre>
+<p>Then the framework takes this HTML, adds the <code>scope="shadow"</code> attribute to it, gets the life cycle functions from the scope object, and hooks them up to the custom element class.</p>
+<p>Just like that we’d have an easy way to create “single-file component” format (like Vue). This would be alternative to the <a href="https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Declarative-Custom-Elements-Strawman.md" rel="nofollow noopener">Declarative Custom Elements proposal</a>, but this does not require ES Modules, and it works with the existing and simple functionality that HTML has already given us for many years (f.e. <code>onclick="foo()"</code>), which is something we can’t really use with custom elements.</p>
+<p>Basically, this could allow possibilities that requires a lower learning curve for new developers.</p>
+<p>And even CE authors could hook things up pretty easily:</p>
+<pre><code class="lang-auto">// fetch the above HTML file
+const html = fetch('./my-element.html')
+  .then(r =&gt; r.text().replace('&lt;script', '&lt;script scope="shadow"'))
+
+class MyElement extends HTMLElement {
+  async connectedCallback () {
+    const htm = await html
+    if (!this.isConnected) return
+
+    const root = this.attachShadow(...)
+    // (Let's update the HTML parser for this)
+    root.innerHTML = htm
+    this.scope = root.scope
+    root.scope.connected?(this)
+  }
+
+  disconnectedCallback() {
+    this.scope?.disconnected?(this)
+  }
+}
+</code></pre>
+<p>With this you could imagine it would be trivial for an author to reduce that boilerplate to the following (with a simple monkey patch):</p>
+<pre><code class="lang-auto">customeElements.define('my-element', './my-element.html')
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-08-13</div>
+          <div class="post_content">
+<p>If a script is <code>type=module</code>, then maybe in that case <code>root.scope</code> is a promise that resolves to the scope (not the module). In that case, the end user (that is using the above framework) would write:</p>
+<pre><code class="lang-auto">&lt;!-- my-element.html --&gt;
+&lt;div onclick="foo()"&gt;
+  &lt;slot&gt;&lt;/slot&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  import something from 'somewhere'
+  function foo() {...}
+  function connected(ce) {...}
+  function disconnected(ce) {...}
+&lt;/script&gt;
+</code></pre>
+<p>The idea here is for things like <code>onclick="foo()"</code> to still work in a simple way.</p>
+<p>If we resolve the promise to a module, then how would it work? We would need to update <code>onclick</code> machinery to look for exports if script modules. That could work too. In that case, the user would write:</p>
+<pre><code class="lang-auto">&lt;!-- my-element.html --&gt;
+&lt;div id="el" onclick="foo()" class="loading"&gt;
+  &lt;slot&gt;&lt;/slot&gt;
+&lt;/div&gt;
+&lt;style&gt;.loading {...}&lt;/style&gt;
+&lt;script type="module"&gt;
+  import something from 'somewhere'
+  el.classList.remove('loading')
+  export function foo() {...}
+  export function connected(ce) {...}
+  export function disconnected(ce) {...}
+&lt;/script&gt;
+</code></pre>
+<p>Now just imagine, the end user can use something very simple like Alpine.js to further augment that DOM to add data binding, list iteration, etc. Or they can use anything really.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3231_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dy</div>
+          <div class="creation_date">2020-11-18</div>
+          <div class="post_content">
+<p>Nice! Partial polyfill is here <a href="https://gist.github.com/dy/2124c2dfcbdd071f38e866b85436c6c5" rel="noopener nofollow ugc">https://gist.github.com/dy/2124c2dfcbdd071f38e866b85436c6c5</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jackyjoy123</div>
+          <div class="creation_date">2021-07-16</div>
+          <div class="post_content">
+<p>thanks for the awesome information.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-09-03</div>
+          <div class="post_content">
+<p>I really love the idea of having a <code>scoped</code> attribute also for the <code>script</code> tags, it’s very intuitive.</p>
+<p>Take the new ViewComponents of Ruby on Rails for example:</p>
+<aside class="onebox allowlistedgeneric" data-onebox-src="https://viewcomponent.org/guide/javascript_and_css.html">
+<header class="source">
+<img class="site-icon" height="" src="https://viewcomponent.org/favicon.ico" width=""/>
+<a href="https://viewcomponent.org/guide/javascript_and_css.html" rel="noopener nofollow ugc" target="_blank">ViewComponent</a>
+</header>
+<article class="onebox-body">
+<h3><a href="https://viewcomponent.org/guide/javascript_and_css.html" rel="noopener nofollow ugc" target="_blank">Javascript and CSS</a></h3>
+<p>A framework for building reusable, testable &amp; encapsulated view components in Ruby on Rails.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Instead of the ugly custom elements (suggested in the above link) we could simply use <code>scoped</code> CSS and JS.</p>
+<p>Maybe if a polyfill exists we can try to use this idea right now (with Rails ViewComponents).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2021-09-03</div>
+          <div class="post_content">
+<p>Could you do the same thing by throwing your script code in a js file and import it into the one you’d use it in? Taken from your example:</p>
+<pre><code class="lang-auto">// code.js
+export function foo() {...}
+export const bar = 123
+</code></pre>
+<p>Then you import it into your component like this</p>
+<pre><code class="lang-auto">import { foo, bar} from 'code.js';
+
+class MyComponent extends HTMLElement {
+  // do some stuff with foo() or bar
+}
+</code></pre>
+<p>Would this not be sufficient? Or is there some special need for “scoping” that I’m missing?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jackyjoy123</div>
+          <div class="creation_date">2021-12-07</div>
+          <div class="post_content">
+<aside class="quote no-group quote-modified" data-full="true" data-post="5" data-topic="4726" data-username="jackyjoy123">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/j/d6d6ee/40.png" width="20"/> jackyjoy123:</div>
+<blockquote>
+<p>thanks for the awesome information.
+<a href="https://krogerfeedback.nl" rel="noopener nofollow ugc">https://krogerfeedback.nl</a> <a href="https://talktosonic.onl" rel="noopener nofollow ugc">https://talktosonic.onl</a> <a href="https://talktowendys.vip" rel="noopener nofollow ugc">https://talktowendys.vip</a> <a href="https://whataburgersurvey.onl" rel="noopener nofollow ugc">https://whataburgersurvey.onl</a></p>
+</blockquote>
+</aside>
+<p>thanks my issue has been fixed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3978_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomyo</div>
+          <div class="creation_date">2022-10-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="4726" data-username="mkay581">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/m/839c29/40.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>Or is there some special need for “scoping” that I’m missing?</p>
+</blockquote>
+</aside>
+<p>Yes, for what I understand, is the possibility to reference this imported functions from within the html itself as in <code>&lt;button onclick="foo()"&gt;</code>.</p>
+<p>Currently, they only reference the global scope.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2022-12-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="4726" data-username="mkay581">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/m/839c29/40.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>Would this not be sufficient? Or is there some special need for “scoping” that I’m missing?</p>
+</blockquote>
+</aside>
+<p>Of course that works! The purpose of scoped scripts would be that they can be written in HTML. This can  be good for some reasons:</p>
+<ul>
+<li>server side rendering sends up an HTML payload, and it simply works and run immediately, eliminates complicated custom hydration code that would need to run before anything would function. This is also one reason why <a href="https://web.dev/declarative-shadow-dom/" rel="noopener nofollow ugc">declarative shadow DOM</a> is coming out, so that an HTML payload can be fully rendered even without JavaScript. In the case of scoped scripts, their JavaScript and functionality would be ready before any custom elements are defined and executed, so the end user would be able to get a seemingly faster user experience.</li>
+<li>write components HTML-first: we can write HTML first, then you add scripts later if we need. Currently, for custom elements, we must write JavaScript no matter what, which detracts from the simplicity of HTML. We should not need JavaScript to make custom elements, but should have a declarative HTML-first capability that simplifies the experience, and scoped scripts would be one step towards that (thinking like Vue and Svelte components which are HTML-first, add JS later <em>if you want</em>).
+<ul>
+<li>Relating to this, scoped scripts would make life simpler for tools to take the HTML-first components and output JavaScript custom element wrappers. The less our tools have to do (because more of it is standard) the better.</li>
+</ul>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2022-12-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="4726" data-username="tomyo">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tomyo/40/3978_2.png" width="20"/> tomyo:</div>
+<blockquote>
+<p>Yes, for what I understand, is the possibility to reference this imported functions from within the html itself as in <code>&lt;button onclick="foo()"&gt;</code>.</p>
+</blockquote>
+</aside>
+<p>I forgot to mention that too <span class="mention">@mkay581</span>. With Declarative Shadow DOM that I linked above, scoped scripts would let us write HTML like this:</p>
+<pre><code class="lang-auto">  &lt;h1&gt;Example: &lt;/h1&gt;
+
+  &lt;template shadowroot="open"&gt;
+    &lt;!-- inside the shadow DOM --&gt;
+    &lt;div onclick="foo()"&gt;&lt;/div&gt;
+
+    &lt;script scope="shadow"&gt;
+      // foo does not leak to global scope, but it can shadow a global foo var.
+      function foo() {...}
+    &lt;/script&gt;
+
+    &lt;script scope="global"&gt;
+      // bar is global
+      function bar() {...}
+    &lt;/script&gt;
+  &lt;/template&gt;
+
+  &lt;!-- other div outside the shadow root, causes runtime error because foo() is not global --&gt;
+  &lt;div onclick="foo()"&gt;&lt;/div&gt;
+
+  &lt;!-- yet another div outside the shadow root, this works because bar() is global --&gt;
+  &lt;div onclick="bar()"&gt;&lt;/div&gt;
+</code></pre>
+<p>Note:</p>
+<ul>
+<li>
+<code>foo</code> is scoped only inside of the declarative shadow root</li>
+<li>this HTML may come from a server, and it will immediately run before any custom elements may even be defined (if at all), so the user may have functionality that is available sooner</li>
+</ul>
+<p>We might need more rules. F.e. what is <code>this</code> inside the <code>foo()</code> function? Perhaps it is the <code>shadowRoot</code> itself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2022-12-28</div>
+          <div class="post_content">
+<p>I see. Thanks for explaining <span class="mention">@trusktr</span> and <span class="mention">@tomyo</span>.</p>
+<p>Just the benefit of having custom element creation (with shadow dom) not require JavaScript is a big enough win for me to support this proposal. <img alt=":raised_hands:" class="emoji" height="20" loading="lazy" src="//discourse.wicg.io/images/emoji/twitter/raised_hands.png?v=12" title=":raised_hands:" width="20"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

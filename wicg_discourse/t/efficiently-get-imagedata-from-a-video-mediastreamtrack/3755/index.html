@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Efficiently Get ImageData from a Video MediaStreamTrack</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Efficiently Get ImageData from a Video MediaStreamTrack</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dsanders11</div>
+          <div class="creation_date">2019-07-19</div>
+          <div class="post_content">
+<p>Per advice from <span class="mention">@annevk</span>, posting this here as a problem-oriented discussion, rather than the solution-oriented proposal I made on the whatwg/html repository.</p>
+<p><strong>Problem</strong></p>
+<p>Getting ImageData for a frame from a video MediaStreamTrack, so that it may be processed in JavaScript, is inefficient. Highly inefficient in terms of memory usage, and moderately inefficient in terms of CPU usage.</p>
+<p>If trying to process all frames in a video, the ImageData garbage (frames you’ve already processed) can quickly become large, for 1080p@30 FPS, that’s 240 MB/sec of discarded frames. Depending on the GC implementation, and the power of the device, this can render it unusable. Firefox on a Raspberry Pi 3, for example, will eat through all 1 GB of system memory in a few seconds.</p>
+<p>CPU efficiency is also a problem. The current idiom for getting ImageData goes through a canvas, which are increasingly being made GPU-backed for better performance. For capturing video frames from a local webcam, this will mean CPU-to-GPU-to-CPU, which is unnecessarily inefficient.</p>
+<p>An earlier post here (<a class="inline-onebox" href="https://discourse.wicg.io/t/rfc-proposal-for-integration-streams-mediastreamtrack-api/2256">RFC: Proposal for integration Streams &lt;--&gt; MediaStreamTrack API</a>) by <span class="mention">@miguelao</span> had a proposed solution which dealt with both of these inefficiencies: avoided using the canvas as an intermediary, and had the potential to alleviate memory problems by enabling ReadableStreamBYOBReader (bring-your-own-buffer) since it was adding ReadableStream to MediaSteamTrack.</p>
+<p>Two years on from that proposal it looks like it stalled out. The overall problem outlined still exists.</p>
+<p><strong>Use Cases</strong></p>
+<ul>
+<li>Barcode reading</li>
+<li>Face tracking</li>
+<li>Machine learning</li>
+<li>Augmented reality</li>
+</ul>
+<p>With WASM there’s potential to quickly bring existing libraries which do these things into the JS world, and all you’d need to do is feed them the video data. Inability to efficiently get this data greatly hinders this, especially on lower-spec devices.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jesup</div>
+          <div class="creation_date">2019-07-28</div>
+          <div class="post_content">
+<p>There was a proposal from Mozilla that was  discussed a fair bit at TAG and elsewhere to allow for efficient off-main-thread and GPU/video-memory based interaction with video frames.  Even more important than the memory considerations is getting the data processing off the main thread.  The person responsible for the proposal is no longer with Mozilla, but the proposal is still around somewhere, and it directly addresses this set of use-cases (they were the driving force behind it, along with other related ones).</p>
+<p>Jan-Ivar or Nils can likely help find the proposal and perhaps recap the status.  I’ll point them here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-07-28</div>
+          <div class="post_content">
+<p>/cc <span class="mention">@mounir</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2019-07-29</div>
+          <div class="post_content">
+<p><span class="mention">@miguelao</span> and <span class="mention">@Dale_Curtis</span> are the right contacts on the Google side.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2499_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jib</div>
+          <div class="creation_date">2019-07-30</div>
+          <div class="post_content">
+<p><span class="mention">@jesup</span> is referring to <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1100203" rel="nofollow noopener">FoxEye</a>, an old experiment at mozilla that resulted in the (since abandoned) <a href="https://w3c.github.io/mediacapture-worker/" rel="nofollow noopener">https://w3c.github.io/mediacapture-worker/</a> proposal. More recent strawman proposals like <a href="https://alvestrand.github.io/audio-worklet/" rel="nofollow noopener">https://alvestrand.github.io/audio-worklet/</a> were briefly discussed at TPAC 2018, but the WebRTC WG decided to focus on finishing 1.0 at that time, and to wait and see how audio worklets pan out. TPAC 2019 might be an opportunity to revisit this problem, though there’s some question whether it belongs in the WebRTC or Media WG.</p>
+<p>Taking a step back and discussing the problem here SGTM. I hear</p>
+<ol>
+<li>Avoid GC/CC-triggering buffer usage</li>
+<li>Move CPU usage off main-thread</li>
+<li>Limit needless copying (CPU vs GPU) by aligning with browsers’ media stacks where possible</li>
+</ol>
+<p>I’d add: 4) Clarify whether the need is read-only (semi-realtime) vs read-write (realtime).</p>
+<p>E.g. a web worker API might satisfy things like face tracking. But if people expect to read &amp; modify video track data in real-time before playout (or producing a MediaStreamTrack), then something that can keep up with audio worklets might be the better.</p>
+<p>We don’t have a lot of experience with workers and media. Worklets are severely locked down to keep GC/CC in check, which sounds good, but it might be quite limiting and hard to get data off its specialized thread. Video is frame-based, so maybe timing requirements are looser? OTOH, video data dwarfs audio. This is a tricky area to guess about, at least for me.</p>
+<p>Another problem is where to put this. The web platform breaks down workers based on top-down problem domains:</p>
+<ul>
+<li>web workers = page CPU offloading</li>
+<li>service workers = network caching</li>
+<li>worklets = render pipelining</li>
+</ul>
+<p>Yet we’re discussing this as a bottom-up optimization, which doesn’t inform much about <em>where</em> to put this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-01</div>
+          <div class="post_content">
+<p>Similar concept <a href="https://github.com/w3c/css-houdini-drafts/issues/905#" rel="nofollow noopener">Proposal: videoWorklet [worklets-1]</a> <span class="hashtag">#905</span></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

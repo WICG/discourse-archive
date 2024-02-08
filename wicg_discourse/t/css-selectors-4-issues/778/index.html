@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS selectors-4 issues</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS selectors-4 issues</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-15</div>
+          <div class="post_content">
+<p>I can’t see selectors-4 on any of the popular accounts on github to raise issues there.</p>
+<p>However there are a lot of unanswered questions on the specification and I just wondered where the best place to discuss them is (Obviously I’m aware of the mailing list however sometimes it doesn’t seem the best place until the idea actually has more weight than “I think it should have this syntax”, “Yeah, well I like this syntax”).</p>
+<p><a href="http://dev.w3.org/csswg/selectors-4/#issue-49b6c0eb">Issue 11</a> was the one I was currently interested in:</p>
+<p>It seems that <code>:blank</code> may be a little ambiguous however is more specific than <code>:-moz-whitespace-only</code> which implies the element can’t be empty.</p>
+<p>The best I could think of would be add <code>:space</code> which would match only elements with spaces in them, then to get <code>:blank</code> functionality you could use: <code>el:matches(:space, :empty)</code>.</p>
+<p>I considered something off the wall like <code>:trim</code> where most languages would see whitespace or not as acceptable, however I think it is more confusing than <code>:blank</code>.
+I also considered <code>:collapsable</code> but again confusing.</p>
+<p>I guess the prefix should match whatever gets settled for <code>text-space-collapse</code> vs <code>white-space-collapse</code>, unless this has been removed completely.</p>
+<p>There is some bikeshedding for you all, I know how much you all like it hah.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-03-15</div>
+          <div class="post_content">
+<p>I think this forum (Specifiction) is preferred over GitHub for discussions about web standards.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-15</div>
+          <div class="post_content">
+<p>I thought that too, I like to check if there is one already then realised I couldn’t even find it on github.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p>I’m okay with <code>:blank</code>, not sure I see the value of using <code>:whitespace-only</code> or something else.</p>
+<p>Also, I like the current semantics of <code>:blank</code>, equal to <code>:matches(:empty, :whitespace-only)</code>. I’ve never had the use case of selecting an element that <em>must</em> contain a text node which <em>must</em> contain only whitespace. What I’ve had is trying to use <code>:empty</code> with an intent of “there is no non-whitespace text or child element”, and seeing it fail. <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/427_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">amtiskaw</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p>Instead of adding additional special-case keywords, why not add a <code>:text</code> pseudo for generalised pattern matching of text content, based on a limited regular expression syntax?</p>
+<p>E.g. <code>*:text('\s*')</code> would match all elements containing whitespace (or nothing)</p>
+<p><code>td:text('NA')</code> would match all table cell elements containing only the text “NA”, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p>I was thinking the same myself, however I was thinking around just about putting a better name to the current usage. The only previous mention of such implementation was <code>:contains()</code> which got dropped and this appears to be the last mention of it by <span class="mention">@tabatkins</span> - <a href="https://lists.w3.org/Archives/Public/www-style/2012Apr/0380.html">https://lists.w3.org/Archives/Public/www-style/2012Apr/0380.html</a></p>
+<p>I don’t think there is better semantics than separating the space out and uses matches for both, as <span class="mention">@fvsch</span> says though I don’t really see the use case of space on it’s own.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p>I don’t like anything that requires <code>:matches()</code> for the common case; I don’t think there’s really a use-case for selecting things that contain only whitespace characters.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> I don’t like both either to be honest - just bikeshedding to get the conversation out there <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<p>I’m not really seeing anything better than <code>:blank</code>.</p>
+<p>Am I right in thinking the <code>:contains()</code> got shelved through lack of interest in implementers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p>That, plus the aforementioned performance issues.  I haven’t felt the urge to put it into the spec under the Complete profile yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-17</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> so issue resolved, there isn’t a better name <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+<p>Is this the preferred place to discuss the issues on specs then?</p>
+<p>Do all editors drafts not go onto github yet?</p>
+<p>As an aside I’m really excited by the new approach to specifications: <a href="http://w3c.github.io/modern-tooling/" rel="nofollow noopener">http://w3c.github.io/modern-tooling/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-03-17</div>
+          <div class="post_content">
+<p>Here, or on the <a href="mailto:www-style@w3.org">www-style@w3.org</a> mailing list.</p>
+<p>All of the CSSWG drafts are on GitHub - <a href="https://github.com/w3c/csswg-drafts/">https://github.com/w3c/csswg-drafts/</a>.  Using GitHub issues to report bugs is fine, but we prefer substantive conversation happen on the mailing list.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-17</div>
+          <div class="post_content">
+<p>Thanks I missed that one.</p>
+<p>Yeah I read the mailing list a lot but rarely see any worth in adding threads there as that to me feels reserved for large sweeping changes or well structured research.
+I have never felt comfortable to discuss pointless things like this on the mailing list.</p>
+<p>I guess this all comes out of the modern tooling which <span class="mention">@robin</span> is leading.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

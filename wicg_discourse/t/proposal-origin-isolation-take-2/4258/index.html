@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Origin isolation, take 2</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Origin isolation, take 2</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2020-02-25</div>
+          <div class="post_content">
+<p><strong>Origin isolation</strong> refers to segregating cross-origin documents into separate <a href="https://html.spec.whatwg.org/multipage/webappapis.html#integration-with-the-javascript-agent-cluster-formalism">agent clusters</a>. Translated into developer-observable effects, this means:</p>
+<ul>
+<li>preventing the <a href="https://html.spec.whatwg.org/multipage/origin.html#relaxing-the-same-origin-restriction"> <code>document.domain</code> </a> setter from relaxing the same-origin policy; and</li>
+<li>preventing <code>SharedArrayBuffer</code> s from being shared with cross-origin (but same-site) documents.</li>
+</ul>
+<p>If a developer chooses to give up these capabilities, then the browser has more flexibility in how it allocates resources like processes, threads, and event loops.</p>
+<p>This proposal allows web applications to give up these capabilities for their origin, and also hint at why they are doing so, to better guide the browser in its resource allocation decisions. This is done via an <a href="https://github.com/WICG/origin-policy">origin policy</a>.</p>
+<p>See the <a href="https://github.com/domenic/origin-isolation">full explainer</a> for more details.</p>
+<p><em>Note: Upon posting this topic, I learned that there was a <a href="https://discourse.wicg.io/t/proposal-origin-isolation/1704">previous proposal</a> of the same name back in 2016 posted to WICG Discourse. It seems that my modern proposal represents an refinement of the 2016 proposal to focus on specific cases related to isolating same-site, cross-origin documents from synchronously accessing each other.</em></p>
+<hr/>
+<p>This proposal is being prototyped behind a flag in Chrome, and has a designation of “<a href="https://mozilla.github.io/standards-positions/#domenic-origin-isolation">worth prototyping</a>” from Mozilla, so I am hopeful it can migrate to WICG forthwith.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2020-02-26</div>
+          <div class="post_content">
+<p>This looks related to a Chrome issue I filed a while ago about isolating the main thread of a popup window (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=738046" rel="nofollow noopener">crbug.com/738046</a>). Would this kind of execution isolation be another developer-observable effect?</p>
+<p>Since filing that issue, we’ve essentially solved the problem a different way by moving all our logic in to a Web Worker, largely thanks to OffscreenCanvas. This is actually better for us since we’re guaranteed a separate thread, as opposed to hinting that we want one, which the browser may ignore due to resource constraints.</p>
+<p>I think it’s interesting to compare running everything in a web worker with the proposal. It does execution isolation/separate event loop already. Do Web Workers provide secure memory isolation, side-channel protection, and measurement isolation from the main thread and other workers? Could they? If so, it might be a more lightweight option relative to “maybe give my origin a whole new process”. It might also be another reason to consider better API coverage in workers to make it easier to take this route too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="4258" data-username="AshleyScirra">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>This looks related to a Chrome issue I filed a while ago about isolating the main thread of a popup window (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=738046">crbug.com/738046</a>). Would this kind of execution isolation be another developer-observable effect?</p>
+</blockquote>
+</aside>
+<p>Yeah. In this case, if you provided one of the isolation hints, that would be a stronger signal to the browser that perhaps you should get your own process, or at least your own thread. There’s no guarantee about these implementation details, but this does provide a dedicated mechanism for such hints.</p>
+<p>Another related technology you probably would want to investigate is <a href="https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e">Cross-Origin-Opener-Policy</a>.</p>
+<aside class="quote no-group" data-post="2" data-topic="4258" data-username="AshleyScirra">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>I think it’s interesting to compare running everything in a web worker with the proposal</p>
+</blockquote>
+</aside>
+<p>I don’t think the comparison really applies, except perhaps in highly specific cases. Origin isolation allows you to isolate different origins from each other; usually those origins are not controlled by the same person.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2020-02-27</div>
+          <div class="post_content">
+<p>Given the “worth prototyping” from Mozilla, this has been moved into the WICG: <a href="https://github.com/WICG/origin-isolation">https://github.com/WICG/origin-isolation</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

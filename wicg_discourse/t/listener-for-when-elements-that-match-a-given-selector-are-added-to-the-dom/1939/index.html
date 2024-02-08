@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Listener for when elements that match a given selector are added to the DOM</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Listener for when elements that match a given selector are added to the DOM</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p><strong>The problem:</strong> Many libraries operate on elements that match a specific selector. Either they only fetch elements on DOMContentLoaded, missing any dynamically inserted elements, or they additionally use the MutationObserver API to listen for future changes. However, this means that every library needs to add its own mutation observer that listens to changes in the entire DOM tree, which is slow.</p>
+<p><strong>The solution:</strong> Syntactic sugar over the MutationObserver API that allows developers to add callbacks every time an element that matches a given selector is added. This way, there would only be one mutation observer for all libraries and all their needs in the page, created lazily when the fist one is needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>I know rafael played with this idea back in like ?2010 and did <a href="https://github.com/rafaelw/mutation-summary">https://github.com/rafaelw/mutation-summary</a> and <span class="mention">@csuwildcat</span> did <a href="http://www.backalleycoder.com/2012/08/06/css-selector-listeners/">http://www.backalleycoder.com/2012/08/06/css-selector-listeners/</a> - hitch kind of effectively did this too… So I guess… Do you a rough readme level early draft of what you are thinking specifically?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>I’m not asking for selector mutation observers. This is nice to have, but a library works just fine. I’m suggesting a performance optimization so that libraries can effectively observe the entire page DOM, without creating yet another mutation observer for the entire DOM. This can only be done on the browser level, not as a library, since otherwise all libraries would need to agree to use the same dependency, which as you can imagine, is quite unrealistic.</p>
+<p>Syntax-wise, I guess it could be something like <code>document.onAppend(selector, callback);</code>, name TBB. Or just an event on <code>document</code>, since it wouldn’t have anywhere to bubble anyway? Though that sounds dangerously close to mutation events, which had serious perf issues.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>but, they would still be async, batch/flush and give you mutation records, right?  I honestly don’t see why a prollyfill/speculative polyfill for this isn’t valuable. Yes, I realize that means that people would have to agree to use it but the alternative is that they have to write their own or wait for native to work it out, and not just one browser, but all of them.  There’s a decent chance that through such actual dev use we can improve it before anyone does native work and see what people have to say.  It seems to me that’s what incubation is all about really… So I’m saying, let’s write up a draft and a reference implementation and that gives us something to talk about.  I’m happy to collab on this if you want.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>Having multiple document.documentElement mutation observers should be OK.  The browser should be able to internally handle that in an efficient manner.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>According to my experience, iterating over and filtering elements returned by a mutation observer is plain painful.</p>
+<p>Also, I suspect browsers could filter the elements much more effectively in terms of performance than a web developer forced to always iterate over <em>all</em> mutated elements though he needs e. g. just <code>A</code> elements.</p>
+<p>After all, we <em>already</em> have the ability to provide a list of specific <em>attributes</em> to observe, so it would be natural to be able to do the same with elements at least as for tag name (but selectors would be more usable and flexible).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>Filtering mutation records based on a css selector sounds cool but is actually way more work for the browser than what we currently do for mutation observers; indeed when you insert or move a node that contains children, we currently do not care about these children at all; filtering based on css selectors means that you need to test all added/removed nodes, not just the roots; you also need to update pseudo-classes like :last-of-type on every dom mutation which is costly.</p>
+<p>On the other hand, when we perform the getMatchedRulesForElement, we could very likely at the same time reevaluate an additional set of js-provided selectors and queue appropriate events. Seems easier to me, and it relies on existing css invalidation mechanics.</p>
+<p>On the other hand, a solution I support even more is to add support for StyleMutationObserver where you can listen for changes in the computed value of a property; if you have that you can trivially have a selector listener by adding “selector { --custom-property-with-unique-name: non-initial }” and listen for changes of the “–custom-property-with-unique-name” property (and that also works for things like hover/active/etc).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-01-08</div>
+          <div class="post_content">
+<p>would this support complex selectors or only simple and compound?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-01-10</div>
+          <div class="post_content">
+<p>Even if it were only simple &amp; compound it would be very useful, so let’s heard the implementers first on this.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

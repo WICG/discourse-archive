@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] OffscreenVideo</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] OffscreenVideo</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2595_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">germain</div>
+          <div class="creation_date">2019-10-05</div>
+          <div class="post_content">
+<p>As a developer working on a video editor that run in the browser, I got very excited when I saw the <code>OffscreenCanvas</code> API. I believe that I have identified a way to improve it with my potential solution below</p>
+<p><strong>Problem:</strong></p>
+<p>A very common pattern when manipulating video on an application would be to have a <code>requestAnimationFrame</code> loop that will extract the presented frame of an <code>HTMLVIdeoElement</code>, manipulates the pixels and then draw the result on a canvas.
+The release of the <code>OffscreenCanvas</code> API allows for the rendering of WebGL graphics off the main thread. However there are currently no reliable way to render a video on an <code>OffscreenCanvas</code>.</p>
+<p>We currently have to run a <code>requestionAnimationFrame</code> loop on the main thread that creates an <code>ImageBitmap</code> that will be sent to a worker, to then be rendered on the <code>OffscreenCanvas</code>. This defeats the purpose as if any UI work is perfomed on the main thread this could delay the sending of the frame.</p>
+<p><strong>Proposed solution:</strong></p>
+<p>An <code>OffscreenVideo</code> would have the same capability as an <code>HTMLVideoElement</code> but would be controllable from the main thread or a worker.
+My initial thought would be to follow the pattern that the <code>OffscreenCanvas</code> brought and apply that to the video.</p>
+<pre><code class="lang-auto">const video = document.createElement("video");
+const offscreenVideo = video.transferControlOffscreen();
+</code></pre>
+<p>The <code>OffscreenVideo</code> interface would implement all the playback related functions.</p>
+<p>An alternative approach to that would be to piggyback the work made to the Media Source Extensions API to run in a worker. <a href="https://github.com/w3c/media-source/issues/175" rel="nofollow noopener">https://github.com/w3c/media-source/issues/175</a>.
+A <code>MediaSource</code> could implement a mechanism to get an <code>ImageBitmap</code> for a given time. This looks a bit more unrealistic to me as all of this logic currently lives only as part of the <code>HTMLVideoElement</code></p>
+<p>–</p>
+<p>I am looking forward to hearing your thoughts about this</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-05</div>
+          <div class="post_content">
+<p>A very similar concept is described at <a class="inline-onebox" href="https://discourse.wicg.io/t/offlinemediacontext/3814">OfflineMediaContext</a>. In particular see <a href="https://github.com/whatwg/html/issues/2981" rel="nofollow noopener">https://github.com/whatwg/html/issues/2981</a>.</p>
+<blockquote>
+<p>My initial thought would be to follow the pattern that the  <code>OffscreenCanvas</code>  brought and apply that to the video.</p>
+<pre><code class="lang-auto">const video = document.createElement("video");
+const offscreenVideo = video.transferControlOffscreen();
+</code></pre>
+</blockquote>
+<p>Would suggest that <code>document</code> not be required at all. Technically it is already possible to create and play an HTML <code>&lt;video&gt;</code> element within a Module script, then import the <code>MediaStream</code> or <code>ReadableStream</code> to the main <code>document</code> <a href="https://plnkr.co/edit/vQjbBo?preview&amp;p=preview" rel="nofollow noopener">https://plnkr.co/edit/vQjbBo?preview&amp;p=preview</a> , <a href="https://plnkr.co/edit/Axkb8s?preview" rel="nofollow noopener">https://plnkr.co/edit/Axkb8s?preview</a>, though each approach requires a <code>document</code>.</p>
+<p>It should be possible to create an object in <code>Worker</code>, <code>SharedWorker</code>, <code>ServiceWorker</code>, <code>Worklet</code> scopes which is capable of accessing and using the media decoders and web media player implementation shipped with the browser in any context, without a <code>document</code> being involved at all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-05</div>
+          <div class="post_content">
+<p>Note, <code>requestAnimationFrame</code> is not the only means to use to get image frames from a video. <code>ReadableStream</code> alone or paired with a <code>WritableStream</code>, where implemented, can be used to get all of the frames of a video and, if necessary, adjust the number of frames captured.</p>
+<p>If the videos are generated in the browser using, e.g., <code>MediaRecorder</code> where the codec used is H264 or AVC1 the file size will always be the same over multiple uses of the same code. For VP8 and VP9 codecs the file size will always not be the same. Meaning attempting to determine the exact number of frames encoded in a given video is variable based on the codec used <a href="https://plnkr.co/edit/0GnT1d?p=info" rel="nofollow noopener">https://plnkr.co/edit/0GnT1d?p=info</a>.</p>
+<p>A related concept is to create a generic method similar to Web Audio API <code>OffscreenAudioContext</code> <code>startRendering()</code> for video files and buffers. Where the video would not be played back, rather <code>ImageBitmap</code>s, or <code>ImageData</code> or <code>data URI</code>s will be extracted from the file “as fast as possible” without rendering the video to any monitor or output device <a href="https://github.com/w3c/css-houdini-drafts/issues/905" rel="nofollow noopener">https://github.com/w3c/css-houdini-drafts/issues/905</a>. If modelled on <code>AudioWorkletNode</code>, a <code>currentTime</code> and <code>currentFrame</code> parameter can be set as defaults to the constructor, to avoid the need to mathematically calculate which frame the code is reading (given a finite stream or media file). Once all of the frames are extracted the frame rate can be calculated, it will then be possible to playback the extracted frames at HTML <code>&lt;video&gt;</code> element; <code>&lt;canvas&gt;</code>; Web Animation API; potentially <code>MediaSource</code>, given the raw frames proposal; and using other standard Web APIs; and code unrelated to and outside the constraints of any formalized Web specification, e.g. <a href="https://plnkr.co/edit/Inb676" rel="nofollow noopener">https://plnkr.co/edit/Inb676</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2214_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">calvaris</div>
+          <div class="creation_date">2019-10-09</div>
+          <div class="post_content">
+<p>There’s the case of EME to consider. There are videos that can’t be rendered offscreen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-13</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="3952">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/germain/40/2595_2.png" width="20"/> germain:</div>
+<blockquote>
+<p>However there are currently no reliable way to render a video on an <code>OffscreenCanvas</code> .</p>
+</blockquote>
+</aside>
+<p>It is currently possible to render a video on an <code>OffscreenCanvas</code> in a <code>Worker</code> frame by frame.</p>
+<p>The individual frames can then be posted to the main thread, drawn onto a <code>&lt;canvas&gt;</code> where the captured <code>MediaStream</code> of the <code>&lt;canvas&gt;</code> can be set as <code>srcObject</code> of a <code>&lt;video&gt;</code> element. Audio represented as <code>Float32Array</code>s can also be streamed from the <code>Worker</code> thread to the main thread.</p>
+<p>HTML</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+  &lt;head&gt;
+    &lt;title&gt;Stream video frames from Worker to main thread&lt;/title&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;video autoplay muted controls&gt;&lt;/video&gt;&lt;br&gt;
+    &lt;code&gt;&lt;/code&gt;
+    &lt;script&gt;
+      const video = document.querySelector("video");
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const code = document.querySelector("code");
+      ctx.globalComposite = "copy";
+      const canvasStream = canvas.captureStream(0);
+      const [canvasTrack] = canvasStream.getVideoTracks();
+      const mediaStream = [canvasStream, canvasTrack].find(({requestFrame:rf}) =&gt; rf);
+      const worker = new Worker("worker.js");
+      const readStream = async e =&gt; {
+        if (e.data === "stream done") {
+          console.log(e.data);
+          // canvasTrack.stop();
+          // canvasTrack.enabled = false;
+          worker.removeEventListener("message", readStream);
+          return;
+        }
+        const {imageBitmap, width, height} = e.data;
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(imageBitmap, 0, 0);
+        mediaStream.requestFrame();
+        imageBitmap.close();
+      }
+      video.srcObject = canvasStream;
+      video.ontimeupdate = e =&gt; code.textContent = video.currentTime;
+      worker.addEventListener("message", readStream);
+    &lt;/script&gt;
+  &lt;/body&gt;
+
+&lt;/html&gt;
+</code></pre>
+<p>Worker</p>
+<pre><code>(async() =&gt; {
+  const url = "https://gist.githubusercontent.com/guest271314/895e9961e914ad39a3365a42ec6a945c/raw/97b4d51ae42e17bdda41f16708700e3ebf1d6de4/frames.json";
+  const frames = await (await fetch(url)).json();
+  console.log(frames);
+
+  const rs = new ReadableStream({
+    async pull(controller) {
+      for (const frame of frames) {
+        const [{
+          duration, frameRate, width, height
+        }] = frame;
+        const framesLength = frame.length -1;
+        const frameDuration = Math.ceil((duration * 1000) / framesLength);
+        for (let i = 1; i &lt; framesLength; i++) {
+          const osc = new OffscreenCanvas(width, height);
+          const osctx = osc.getContext("2d");
+          const blob = await (await fetch(frame[i])).blob();
+          const bmp = await createImageBitmap(blob);
+          osctx.drawImage(bmp, 0, 0);
+          const imageData = osctx.getImageData(0, 0, width, height);
+          // manipulate pixels here
+          const imageBitmap = await createImageBitmap(imageData);
+          controller.enqueue({imageBitmap, frameDuration});
+        }
+      }
+      controller.close();
+    }
+  });
+  
+  const reader = rs.getReader();
+  const processStream = async({value, done}) =&gt; {
+    if (done) {
+      await reader.closed;
+      return "stream done";
+    }
+    const {imageBitmap, frameDuration} = value;
+    const {width, height} = imageBitmap;
+    postMessage({imageBitmap, width, height}, [imageBitmap]);
+    await new Promise(resolve =&gt; setTimeout(resolve, frameDuration));
+    return processStream(await reader.read());
+  }
+  const done = await processStream(await reader.read());
+  postMessage(done);
+
+})();
+</code></pre>
+<p>plnkr <a href="https://plnkr.co/edit/gCjYSt?p=preview" rel="nofollow noopener">https://plnkr.co/edit/gCjYSt?p=preview</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

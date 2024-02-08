@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>IndexedDB change observers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">IndexedDB change observers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dknox</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<p>IndexedDB doesn’t have any observer support. This could normally be implemented by the needed website (or third party) as a wrapper around the database. However, IDB spans browsing contexts (tabs, workers, etc), and implementing a javascript wrapper that supports all of the needed features would be very difficult and performance optimization of the features would be impossible.</p>
+<p>Use cases for observers include:</p>
+<ul>
+<li>Updating the UI from database changes (data binding).</li>
+<li>Syncing local state from background worker (like a ServiceWorker) or another tab making changes.</li>
+<li>Serializing changes for network communication.</li>
+<li>Simplified application logic.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1801_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">plehegar</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<p>Did you look at <a href="https://github.com/dmurph/indexed-db-observers/blob/gh-pages/EXPLAINER.md">https://github.com/dmurph/indexed-db-observers/blob/gh-pages/EXPLAINER.md</a> ?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dmurph</div>
+          <div class="creation_date">2016-05-20</div>
+          <div class="post_content">
+<p>Thanks Dru &amp; Philippe!</p>
+<p>Any feedback on our spec at
+<aside class="onebox githubblob">
+<header class="source">
+<a href="https://github.com/dmurph/indexed-db-observers/blob/gh-pages/EXPLAINER.md" rel="nofollow noopener" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/dmurph/indexed-db-observers/blob/gh-pages/EXPLAINER.md" rel="nofollow noopener" target="_blank">dmurph/indexed-db-observers/blob/gh-pages/EXPLAINER.md</a></h4>
+<pre><code class="lang-md"># Explainer
+Documentation &amp; FAQ of observers. See accompanying WebIDL file [IDBObservers.webidl](/IDBObservers.webidl)
+
+**Please file an issue if you have any feedback :)**
+
+&lt;!-- START doctoc generated TOC please keep comment here to allow auto update --&gt;
+&lt;!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE --&gt;
+**Table of Contents**
+
+- [Why?](#why)
+- [Example Uses](#example-uses)
+  - [UI Element](#ui-element)
+  - [Server sync worker](#server-sync-worker)
+  - [Maintaining an in-memory data cache](#maintaining-an-in-memory-data-cache)
+  - [Custom refresh logic](#custom-refresh-logic)
+- [interface IDBObserver](#interface-idbobserver)
+  - [new IDBObserver(callback, options)](#new-idbobservercallback-options)
+      - [`options` Argument](#options-argument)
+  - [IDBObserver.observe(...)](#idbobserverobserve)
+    - [`ranges` Argument](#ranges-argument)
+</code></pre>
+
+  This file has been truncated. <a href="https://github.com/dmurph/indexed-db-observers/blob/gh-pages/EXPLAINER.md" rel="nofollow noopener" target="_blank">show original</a>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+would be helpful.</p>
+<p>I also plan on updating updating the creation sematics to be more like IntersectionObserver here:
+<a class="onebox" href="https://github.com/dmurph/indexed-db-observers/issues/24" rel="nofollow noopener" target="_blank">https://github.com/dmurph/indexed-db-observers/issues/24</a>
+and I’d love any feedback about that. <strong>(Note: that issue has some good examples usages as well)</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1008_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">btseng</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>I like this idea to add observer support to current IndexedDB design for web developer to provide better experience and consistent data to the user when multiple tabs are open.
+The only concern/limitation so far to me is addressed in <a href="https://github.com/dmurph/indexed-db-observers/issues/24#issuecomment-222052352" rel="nofollow noopener">https://github.com/dmurph/indexed-db-observers/issues/24#issuecomment-222052352</a>
+The transaction ordering has been confirmed to be restricted even if it’s an empty transaction.
+I’d still like to see if we can improve it instead of restricting it.</p>
+<p>Thanks for your efforts to improve the use cases of the IndexedDB! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2016-06-01</div>
+          <div class="post_content">
+<p>Sounds great.  <span class="mention">@dmurph</span>, can you move the repo to WICG?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dmurph</div>
+          <div class="creation_date">2016-06-03</div>
+          <div class="post_content">
+<p>Done!
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/WICG/indexed-db-observers" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars3.githubusercontent.com/u/13145324?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/WICG/indexed-db-observers" rel="nofollow noopener" target="_blank">WICG/indexed-db-observers</a></h3>
+<p>Prototyping and discussion around indexeddb observers. - WICG/indexed-db-observers</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

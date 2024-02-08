@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Markdown within HTML</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Markdown within HTML</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/321_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">newtron</div>
+          <div class="creation_date">2014-06-16</div>
+          <div class="post_content">
+<p>I think it could be useful to allow Markdown processing within HTML. Markdown is already used all over the web (including right here), with processing done both server- and client-side. Baking it into HTML or a related spec could help standardize all the existing flavours out there (e.g. <a href="http://daringfireball.net/projects/markdown/" rel="nofollow noopener">“classic” Markdown</a>, Markdown Extra, Github Flavored Markdown, etc.), could make it easier for authors (both web devs and content authors) to use, and could hopefully improve performance.</p>
+<p>There are two ways I could see this working:</p>
+<ol>
+<li>A new <code>&lt;markdown&gt;</code> element</li>
+<li>
+<code>&lt;pre&gt;</code> with a new prop/attribute (e.g. <code>markdown</code>, or <code>formatting="markdown"</code>)</li>
+</ol>
+<p>Both would be easy to polyfill with JS markdown processors, but using <code>&lt;pre&gt;</code> would also present relatively easy-to-read fallback text, even if a polyfill (or JS) wasn’t available. Using an attribute like <code>formatting="markdown"</code> also opens up the possibility of including other types of formatting in the future, such as Textile.</p>
+<p>One potential pitfall is licensing: Markdown is licensed under “<a href="http://daringfireball.net/projects/markdown/license" rel="nofollow noopener">a BSD-style open source license</a>”, and I have no idea how this plays with spec license stuff.</p>
+<p>I’d love to hear your thoughts on this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-16</div>
+          <div class="post_content">
+<p>This sort of thing has been brought up before, and in similar contexts (an element for displaying CVS as a table, etc).</p>
+<p>The main problem is that it’s unclear how to expose the markup inside of it.  Possibly it could be generated in exposed Shadow DOM these days?  You’d still have to explicitly style it, rather than having it pick up styles from the page (a <code>b</code> selector won’t style <code>&lt;b&gt;</code> elements inside of shadow DOM; you need to do <code>pre[markdown]::shadow b</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><span class="mention">@newtron</span> Markdown itself would need a clear specification; something which has been lacking for some time actually. Last time I checked there were some failed attempt at formalising it and also a working group suggestion which didn’t get any uptake. <a href="http://blog.codinghorror.com/the-future-of-markdown/" rel="nofollow noopener">Even Jeff Atwood failed to get a specification.</a></p>
+<p>Besides the issues mentioned by <span class="mention">@tabatkins</span> I think there are also syntactical issues; there isn’t really any embedded meaning into markdown nor is there any way to extend it - even just to provide id’s.</p>
+<p>There is the other worry that opening the door to text encoding formats will get every encoding writer out there suggesting the same to the W3C too; We could quickly see suggestions for Jade, Textile, BBCode.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>There is the other worry that opening the door to text encoding formats will get every encoding writer out there suggesting the same to the W3C too; We could quickly see suggestions for Jade, Textile, BBCode.</p>
+</blockquote>
+</aside>
+<p>This is why I think a custom element would make the most sense. People who want Markdown can use it.</p>
+<p>If it turns out every site on the internet is using it within a few years, then we’d have a stronger case for baking it into browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><span class="mention">@domenic</span> sure write it as a quick JS lib that shim’s the behaviour and test the adoption. The problem for me would be the task in specifying it first / adoption of the favourite Markdown.</p>
+<p>The other problem as I see for the custom element is that encoding; I think should be an attribute level decision - like language or text direction. We could end up in many text encoding elements which for me doesn’t make sense:
+<code>&lt;bbcode /&gt; &lt;textile /&gt; &lt;jade /&gt; &lt;haml /&gt; &lt;etc /&gt;</code></p>
+<p>I would shoot more for the parameter which could be added to block level elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>Custom elements that provide a draft of proposal and can compete with other options should really be the default answer for any new tag suggestion.  Pickup won’t always be based on what we might expect and that’s ok.  Sometimes to even evaluate and give good feedback we need something to use and discuss.  I say take a crack at a concrete proposal/element</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/321_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">newtron</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>This sort of thing has been brought up before, and in similar contexts (an element for displaying CVS as a table, etc).</p>
+</blockquote>
+</aside>
+<p>I looked for threads about it on various mailing lists and wasn’t able to track anything down. If you have links, I’d love to take a look at the past discussion.</p>
+<aside class="quote" data-post="2" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>The main problem is that it’s unclear how to expose the markup inside of it.  Possibly it could be generated in exposed Shadow DOM these days?  You’d still have to explicitly style it, rather than having it pick up styles from the page (a b selector won’t style &lt;b&gt; elements inside of shadow DOM; you need to do pre[markdown]::shadow b).</p>
+</blockquote>
+</aside>
+<p>I actually really like the idea of doing it in the Shadow DOM.</p>
+<aside class="quote" data-post="3" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p><span class="mention">@newtron</span> Markdown itself would need a clear specification; something which has been lacking for some time actually. Last time I checked there were some failed attempt at formalising it and also a working group suggestion which didn’t get any uptake. Even Jeff Atwood failed to get a specification.</p>
+</blockquote>
+</aside>
+<p>That’s a great point, and definitely an obstacle, but if there’s interest I don’t think it should stop us from at least making the attempt. In fact, I think it’s encouraging that Jeff Atwood is interested in standardizing Markdown, because it might mean he, his readers, and other like-minded folk might be interested in getting involved if we try to revive the effort.</p>
+<aside class="quote" data-post="3" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Besides the issues mentioned by <span class="mention">@tabatkins</span> I think there are also syntactical issues; there isn’t really any embedded meaning into markdown nor is there any way to extend it - even just to provide id’s.</p>
+</blockquote>
+</aside>
+<p>Some flavours of Markdown actually do allow for adding classes and IDs. See, for example, <a href="https://michelf.ca/projects/php-markdown/extra/#spe-attr" rel="nofollow noopener">Markdown Extra’s special attributes</a>. That said, I agree that no matter what flavour of Markdown gets encoded, it’s not going to be a perfect match for HTML and its semantic or syntactic power. I don’t think it needs to be, though.</p>
+<p>The use case isn’t to use Markdown for the entire web, it’s to address a specific pain point where Markdown is already being used: user-generated content. Most websites that use Markdown now do so for comments, posts, and other content generated by users that either don’t need a lot of detailed control, don’t have the technical knowledge to write full HTML, or where full HTML can’t be trusted.</p>
+<aside class="quote" data-post="3" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>There is the other worry that opening the door to text encoding formats will get every encoding writer out there suggesting the same to the W3C too; We could quickly see suggestions for Jade, Textile, BBCode.</p>
+</blockquote>
+</aside>
+<p>It could happen, but I’d argue that if there’s enough interest in actually standardizing it, implementing it, and maintaining it, then that isn’t necessarily a bad thing. This possibility is why I’d prefer the <code>&lt;pre formatting="markdown"&gt;</code> approach, for better extensibility later.</p>
+<aside class="quote" data-post="4" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p>This is why I think a custom element would make the most sense. People who want Markdown can use it.</p>
+<p>If it turns out every site on the internet is using it within a few years, then we’d have a stronger case for baking it into browsers.</p>
+</blockquote>
+</aside>
+<p>That does make sense, but then we’d be stuck with <code>&lt;markdown&gt;</code> instead of, as I mentioned above <code>&lt;pre formatting="markdown"&gt;</code>. Not the end of the world, but it’s not as clean IMO. Also, I’m not sure what benefit a custom element would have over the existing server- and client-side solutions out there. In fact, we can already see that <em>many</em> sites are using Markdown, even if it’s not “every site on the internet”.</p>
+<aside class="quote" data-post="5" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p><span class="mention">@domenic</span> sure write it as a quick JS lib that shim’s the behaviour and test the adoption. The problem for me would be the task in specifying it first / adoption of the favourite Markdown.</p>
+</blockquote>
+</aside>
+<p>Yup.</p>
+<aside class="quote" data-post="5" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>The other problem as I see for the custom element is that encoding; I think should be an attribute level decision - like language or text direction. We could end up in many text encoding elements which for me doesn’t make sense:
+&lt;bbcode /&gt; &lt;textile /&gt; &lt;jade /&gt; &lt;haml /&gt; &lt;etc /&gt;</p>
+</blockquote>
+</aside>
+<p>Yup.</p>
+<aside class="quote" data-full="true" data-post="6" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>Custom elements that provide a draft of proposal and can compete with other options should really be the default answer for any new tag suggestion.  Pickup won’t always be based on what we might expect and that’s ok.  Sometimes to even evaluate and give good feedback we need something to use and discuss.  I say take a crack at a concrete proposal/element</p>
+</blockquote>
+</aside>
+<p>In general, I agree that’s probably the right approach. But seeing as how we already know that Markdown is widely-used, and that an actual element is probably not the best solution, I don’t think a custom element is the right approach here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><span class="mention">@newtron</span> Markup is not universally written or universally used in the same way - there is no data for a markdown attribute or tag.  Your assertion about extensibility or preference is actually at the end of the day your own preference.  It may well be that the community thinks <code>&lt;jade&gt;</code>  and <code>&lt;textile&gt;</code> are ergonomically (or for some reason functionally) better than <code>formatting="markdown"</code> on a <code>&lt;pre&gt;</code>.  I expect if you make the later with a good spec as a proposal, you will quickly find someone doing it as a tag too.  Put something out there - them compete and evolve a bit - there is little value and much risk in going from debate to spec.  If you can get a draft and actual usage with a convincing case for the formatting attribute version, it will ultimately speed things up, not slow them down IMO.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/321_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">newtron</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p><span class="mention">@newtron</span> Markup is not universally written or universally used in the same way - there is no data for a markdown attribute or tag. Your assertion about extensibility or preference is actually at the end of the day your own preference. It may well be that the community thinks <code>&lt;jade&gt;</code> and <code>&lt;textile&gt;</code> are ergonomically (or for some reason functionally) better than <code>formatting="markdown"</code> on a <code>&lt;pre&gt;</code>.</p>
+</blockquote>
+</aside>
+<p>Oh ya, definitely, it is just my opinion/preference. But it’s a preference based on some reasoning, that I outlined above and will try to clarify below:</p>
+<p>First, given the possibility of future formatting types, I <em>think</em> an attribute is more flexible and extensible than a series of new tags. Maybe I’m wrong. I realize that in terms of priority of constituencies, focusing on this type of “elegance” is pretty low, so if there are decent user, author, or implementer reasons to prefer tags, then that’s fair.</p>
+<p>Second, I <em>think</em> fallback content would be easier to deal with for the average author if the markdown existed in a <code>&lt;pre&gt;</code> tag, simply because, e.g.,</p>
+<pre><code>* one
+* two
+* three
+</code></pre>
+<p>is easier to read than</p>
+<pre><code>* one * two * three
+</code></pre>
+<p>A <code>&lt;pre&gt;</code> tag would at least allow the inherent readability of Markdown come through without any additional work on the part of the author. However, maybe I’m wrong about this, too.</p>
+<p>If the community disagrees with any of the above reasoning or has good counter-arguments, I’m more than willing to hear about it. I’m not set on any on particular syntax or anything, but I’m not convinced that going the custom element route will help us learn anything new.</p>
+<aside class="quote" data-post="8" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>I expect if you make the later with a good spec as a proposal, you will quickly find someone doing it as a tag too.  Put something out there - them compete and evolve a bit - there is little value and much risk in going from debate to spec.  If you can get a draft and actual usage with a convincing case for the formatting attribute version, it will ultimately speed things up, not slow them down IMO.</p>
+</blockquote>
+</aside>
+<p>Sorry, I’m not entirely clear what you’re suggesting here. If you’re saying to do a spec draft + polyfill for the attribute, developed simultaneously, then I definitely would agree that it’s a good approach.</p>
+<p>Regardless of the <em>approach</em> though, I’m actually more interested to see how much interest there is from the standards community and implementors. I suspect there’s author interest (which we could hopefully gauge with the draft + polyfill or custom element or whatever), but there’s no point working on it if there’s no interest from implementors and/or standards folks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-06-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/newtron/40/321_1.png" width="20"/> newtron:</div>
+<blockquote>
+<p>Sorry, I’m not entirely clear what you’re suggesting here. If you’re saying to do a spec draft + polyfill for the attribute, developed simultaneously, then I definitely would agree that it’s a good approach.</p>
+</blockquote>
+</aside>
+<p>Yes, a prollyfill… Write a draft, then try implementing it outside the browser.  You will learn new things about the problem space, you will create something actually useful to developers.  Developers will try to use it, they’ll tell you about what isn’t working for them, it may give them real value for real needs right now regardless of whether that particular thing ever becomes a standards - that’s a healthy incentive for involvement that is historically upside down.  Use means you’ll get feedback which will make the proposal better - and we’ll know whether it’s getting uptake or whether a competitor is born that more people prefer, etc.  It could also die hard. Either way, this creates a nice tight feedback loop that involves developers and doesn’t get hung up in years of debate about abstract things not actually involving developers… See the <a href="http://extensiblewebmanifesto.org">Extensible Web Manifesto</a></p>
+<aside class="quote" data-post="9" data-topic="419">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/newtron/40/321_1.png" width="20"/> newtron:</div>
+<blockquote>
+<p>Regardless of the approach though, I’m actually more interested to see how much interest there is from the standards community and implementors. I suspect there’s author interest (which we could hopefully gauge with the draft + polyfill or custom element or whatever), but there’s no point working on it if there’s no interest from implementors and/or standards folks.</p>
+</blockquote>
+</aside>
+<p>There are some things which are sort of non-starters and there are things which everyone is immediately interested in… Both are rare and I don’t think that this is either. More usually it is somewhere along a spectrum and all of the incentives are historically at odds with one another.  We’d like to change that.  If there is a good proposal, implementation, use, etc - implementors and standards community will take notice.  Specifiction is especially great here because it brings together developers with ideas, makers/users and standards folk.  Seriously, I’d encourage you to put together a solid proposal and implementation - or even two (one as a tag the other as an attr and try to make the case why one is so much better).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/321_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">newtron</div>
+          <div class="creation_date">2014-06-18</div>
+          <div class="post_content">
+<p><span class="mention">@briankardell</span> Great, I think sounds reasonable. Anybody on here interested in helping out with a draft or polyfill?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-18</div>
+          <div class="post_content">
+<p><span class="mention">@newtron</span> I’m certainly willing to take a look, review code and help where I can.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>Did somebody say polyfill? Count me in!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/10_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">karl</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>So we (myself but mostly Ciro Santilli) have a <a href="https://github.com/karlcow/markdown-testsuite">Markdown Test Suite</a> in active development with an interop table. The goal was more or less to understand the state of implementations before <a href="http://htmlpreview.github.io/?https://github.com/karlcow/markdown-testsuite/blob/master/markdown-spec.html">creating a specification</a>.</p>
+<p>I didn’t really take the time to push the specification, but any pull requests are welcome. The test suite results will help to understand what is widely deployed and what is muddy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>Thank you for this, I had noticed the group on W3C; various other attempts at writing tests and specifications before - I have a feeling I saw this in its early inception.</p>
+<p>This certainly looks like the most mature implementation so far and the best starting place; I will take a look over this tonight.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/338_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mcepl</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>Two problems which can be avoided with one solution:</p>
+<ul>
+<li>
+<p>yes, as long as Markdown enthusiasts are not able to agree on one syntax, there is no chance in hell they would agree on it for the purposes of HTML specification. The only result will be that some randomly chosen syntax prevails (original Gruber?, Github?, something randomly chosen by currently present member of the committee?) and for the rest of the Universe proponents of other dialects will complain that this is solution of nothing because it lacks feature <code>foo</code>.</p>
+</li>
+<li>
+<p>and of course: why Markdown? I prefer reStructuredText and the list of other simple-this-is-jus-ttext-not-markdown markdown formats is endless.</p>
+</li>
+</ul>
+<p>So, what is the <strong>MAGIC</strong> which saves us from all these problems?</p>
+<p>Enter</p>
+<p><strong><em><a href="http://webcomponents.org/" rel="nofollow noopener">WEB COMPONENTS</a></em></strong></p>
+<p>You get all good parts (you have your <code>&lt;markdown&gt;</code> (or more likely <code>&lt;x-markdown&gt;</code>) element, and yet you don’t wait on the hell getting frozen, err, I mean, Markdown specification getting united (and of course don’t forget <a href="http://xkcd.com/927/" rel="nofollow noopener">http://xkcd.com/927/</a> … the moment you create your standard, you just split the community even more). Actually, if your element is really succesful you may contribute to the world peace, err, I mean, Markdown unification.</p>
+<p>You also don’t have to wait on the browser manufacturers to agree with your great idea. You can use Web Components right now ( <a href="http://x-tags.org" rel="nofollow noopener">x-tags.org</a> or <a href="http://polymer-project.org" rel="nofollow noopener">polymer-project.org</a> or some others).</p>
+<p>And of course, if I want to create <code>&lt;x-reStructuredText&gt;</code>, nothing in the world stops. Just my laziness, lack of time, and lack of passion for the endeavor.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/10_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">karl</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p><span class="mention">@jonathank</span> I added this morning the <a href="https://github.com/karlcow/markdown-testsuite#other-noticeable-test-suites">other test suites efforts in the README</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>Get done a <a href="http://www.w3.org/community/markdown/wiki/Main_Page">real specification for Markdown (plus extensions)</a> or rather write a more generic specification for lightweight markup languages whereof Markdown is a valid profile. Get a MIME type assigned to it. Popularize it for use in e-mail, i.e. get mail clients to parse it. Get browsers to support it directly, i.e. as a file format. Make CSS apply to it. Don’t try to mix it with HTML – it’s been a bad idea in the first place for Markdown to allow one to mix it with HTML-like elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>I know there are a couple of custom elements already made - for example <a href="https://github.com/robdodson/mark-down">https://github.com/robdodson/mark-down</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-07-01</div>
+          <div class="post_content">
+<p>At the fear of this site turning into tumbleweed, I thought I would make another comment.</p>
+<p><span class="mention">@karl</span> are you accepting changes to this repo for the specification or are you waiting for the tests to indicate which features are supported in all parsers you are testing with?</p>
+<p>I couldn’t see any of the popular Markdown parsers written in JavaScript as part of the testing suite; this obviously would be key to writing browser shims.</p>
+<p>The other thing that I struggled to work out was which test were failing in which parsers too; if this was obvious (perhaps something that could be published in Markdown to Github pages with some JS to make it similar to a simple caniuse) then I think the parsers themselves could have bugs filed.</p>
+<p>Anyway I appreciate the great waves you have made into standardising this so far.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

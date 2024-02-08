@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Cached Content Updating and State Saving</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Cached Content Updating and State Saving</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-30</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/disabling-automatic-scroll-restoration-on-navigation/1012/2">Disabling automatic scroll restoration on navigation</a>:</p>
+<aside class="quote" data-full="true" data-post="2" data-topic="1012">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/><a href="//discourse.wicg.io/t/disabling-automatic-scroll-restoration-on-navigation/1012/2">Disabling automatic scroll restoration on navigation</a>
+</div>
+<blockquote>
+<p>Beyond just scroll position, I’d like there to be mechanisms for controlling <em>other</em> UA behaviors around history. I started writing some thoughts on those, but I think, since they’re separate (albeit related) concerns, they should be proposed in their own thread.</p>
+</blockquote>
+</aside>
+<p>As a user, I want better platform-wide base support for things like caching page content/state and saving/restoring form state across history traversal (and whether restoring state should happen <em>before</em> or <em>after</em> the scripts on the page first synchronously run, to allow JS to calculate defaults without having to care if this has happened).</p>
+<p>For example, right now on GitHub, if I visit an issue’s thread and stay on the page until a new comment comes in, that new comment is added to the thread in real-time. However, if I navigate away from the page and use Back to return to it, those comments <em>disappear</em>.</p>
+<p>This could maybe be solved with an application-specific use of the state object with <code>replaceState</code>, but it would make just as much sense to have a mechanism by which a page can say “the current DOM content is the new cached version of the page, use it to replace the content currently in the cache”. (Even with Service Workers, this kind of cache-replacement is non-trivial: I guess you could override the cache, do “document.html.outerHTML” and then make some kind of secret-handshake Fetch to inform the service to use it, but now you’ve killed UA caching, especially UA cache eviction, just to implement a trivially different version.)</p>
+<p>As an example of the interaction of form behavior with history, when I navigate away from a page where I’m filling something out (specifically, the “New issue” page, or the comment field on an existing issue), the  form will be re-filled with what I had been typing… <em>sometimes</em>. I’m not sure if this is a UA feature or a GitHub feature, but it seems to differ between the New Issue page and the Add Comment form, and between.</p>
+<p>This is another thing that could be solved with some mechanism to snapshot page state in history at a page-content level: it could also be given special treatment, where a page may request a behavior like “save the page content, but don’t save the form content”, or “save the form content, but not the page elements” (to prevent ephemeral things like dynamically-generated tooltips from being pegged as page content).</p>
+<h2>Declarativity and Default Behavior</h2>
+<p>lt would be nice if the default behaviors of the UA were made helpful-by-default for users (including mechanisms like declarative properties to control this behavior) and authors (developers), rather than requiring pages to opt-in to recovering form state (or, worse, right a hacky implementation to do it themselves).</p>
+<p>Of course, there are potential issues in situations where a user on a shared computer navigates away from a page and expects sensitive form content to be cleared - however, this is <em>already</em> a problem to some extent, and the way the Web ecosystem is gravitating toward solving it is, rightly, to add browser-level feature support for shared computing, like incognito/private browsing, kiosk mode, and associating session / history to user accounts. Pages <em>may</em> opt to tighten their history if necessary for their <em>specific</em> case, but forcing this level of paranoia on <em>all</em> pages is <em>not</em> called for (the benefits of it working as intended outweigh the risks of it being exploited).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1014">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>whether restoring state should happen before or after the scripts on the page first synchronously run, to allow JS to calculate defaults without having to care if this has happened</p>
+</blockquote>
+</aside>
+<p>I agree that web apps need more control over browser state restoration timing. However I don’t think having the ability to change restoration timing to <em>before</em> or <em>after sync JS</em> is flexible enough. For example consider cases when calculating the new values to restore requires async operations (e.g., fetching new content from net). IMHO a more flexible and powerful approach is to give applications the ability to disable automatic restoration and also the ability to trigger it at a time of their choosing.</p>
+<aside class="quote" data-post="1" data-topic="1014">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>it would make just as much sense to have a mechanism by which a page can say “the current DOM content is the new cached version of the page, use it to replace the content currently in the cache”. (Even with Service Workers, this kind of cache-replacement is non-trivia</p>
+</blockquote>
+</aside>
+<p>Perhaps the solution is to make it easier to do something like that using ServiceWorker. I don’t think adding a third mechanisms beside replaceState and Service worker just to achieve caching of DOM is justified. Also, why is it needed to cache the DOM rather than the data behind it which is what most single page applications are doing.</p>
+<aside class="quote" data-post="1" data-topic="1014">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>could be solved with some mechanism to snapshot page state in history at a page-content level</p>
+</blockquote>
+</aside>
+<p>It can be but why is it not fixed with existing form restoration feature? I am curious as what is the fundamental issue? I can imagine restoration timing issue detailed above may be the cause but that can be fixed without introducing a heavy feature like page snapshot.</p>
+<aside class="quote" data-post="1" data-topic="1014">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>This is another thing that could be solved with some mechanism to snapshot page state in history at a page-content level: it could also be given special treatment, where a page may request a behavior like “save the page content, but don’t save the form content”, or “save the form content, but not the page elements” (to prevent ephemeral things like dynamically-generated tooltips from being pegged as page content).</p>
+</blockquote>
+</aside>
+<p>As you have pointed out the exact thing that needs to be cached is very application (or even page) specific. I am not yet convinced that APIs to snapshot the page (DOM?) are necessary or useful here.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

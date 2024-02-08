@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for WebRadio API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for WebRadio API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OpenLocationServices</div>
+          <div class="creation_date">2018-06-04</div>
+          <div class="post_content">
+<p>Hi,</p>
+<p>I’m a developer at Open Location Services. We are creating an open database for location services. As of right now the API’s that allow us to make our services work are those exclusively provided to native applications. The web Geolocation API is limited to the database of the browser vendor, which we think is an arbitrary limitation.</p>
+<p>The proposed API is divided into two main parts.</p>
+<ol>
+<li><strong>WebRadio.scan()</strong></li>
+<li><strong>WebRadio.control()</strong></li>
+</ol>
+<p>As the name says, the WebRadio.scan() is used to scan the networks upon request by the app, where as the WebRadio.control() is used to control the networks the device uses.</p>
+<p>The WebRadio API should be behind a two permission requests because this has privacy implications.
+The WebRadio API should have two levels, level 1 and level 2.</p>
+<p>In level 1, <strong>WebRadio.scan()</strong> permission is allowed.
+In level 2, <strong>WebRadio.scan()</strong> and <strong>WebRadio.control()</strong> permission is allowed.</p>
+<p>It is difficult to make the user understand the impact of this on their privacy.</p>
+<p>We propose the Title and Body of permissions to help better make the user understand the impact.</p>
+<p>For level 1:</p>
+<p><strong>Scan nearby radio networks</strong></p>
+<p>Allows the app to scan for GPS, WiFi, Bluetooth and Cellular Towers.
+<strong>This may allow the app to access your location.</strong></p>
+<p>For level 2:</p>
+<p><strong>Scan and control radio devices</strong></p>
+<p>Allows the app to control GPS, WiFi, Bluetooth and Cellular Towers.
+<strong>This may allow the app to access your location.</strong></p>
+<p>The <strong>WebRadio.scan()</strong> and <strong>WebRadio.control()</strong> have 4 more sub properties</p>
+<p><strong>1. GPS</strong></p>
+<p><strong>2. Bluetooth</strong></p>
+<p><strong>3. WiFi</strong></p>
+<p><strong>4. Cellular Towers</strong></p>
+<p>The <strong>WebRadio.control()</strong> has two additional sub property that it can control</p>
+<p><strong>1. WiFi hotspot</strong></p>
+<p><strong>2. Bluetooth hotspot</strong></p>
+<p>The WebRadio.scan() returns several things:</p>
+<p>For <strong>WiFi</strong>, the BSSID, SSID, Strength (in decibels), type (ie. 802.11n), Channel, Frequency are returned.</p>
+<p>For <strong>Bluetooth</strong> the address, Strength are returned.</p>
+<p>For <strong>GPS</strong>, if GNNS is supported, it is returned.</p>
+<p>For <strong>Cellular Tower</strong>, nearby towers, their strength and Cell id are returned. The currently connected to tower’s id and strength is also returned.</p>
+<p><strong>Use cases of this API:</strong></p>
+<ol>
+<li>
+<p>Allows independent mapping services without using the default geolocation provider of the browser vendor.</p>
+</li>
+<li>
+<p>Allows independent information auditing.</p>
+</li>
+<li>
+<p>Allows for mesh networks to be formed.</p>
+</li>
+<li>
+<p>Allows apps like sharing of mobile data with nearby devices.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npdoty</div>
+          <div class="creation_date">2018-06-10</div>
+          <div class="post_content">
+<p>The Geolocation API was designed specifically to be agnostic to the source of location information. Rather than an arbitrary decision, it was an intentional choice to provide location information that would be useful to lots of different websites without asking them to handle all the details of location inference from different types of data.</p>
+<p>There are indeed lots of privacy implications for a feature that would instead allow for access to all potential radio connections on the device. As you note, that would certainly imply precise geolocation. But Bluetooth connections could also provide detail on nearby devices (who is sitting near me, or what other devices am I carrying with me) which could be revealing, in ways that are hard to anticipate for the user. If I carry my cellphone with Bluetooth on, that would let any web page easily collect a permanent, unique hardware identifier about my other device so that they could persistently remember me. Knowing the connected cell tower reveals that I am connected to a cell tower, that my device has cellular capabilities, and might also reveal details about my cellular service. With such a scan API, user agents would no longer have the user-configurable control to limit the precision of location data about themselves.</p>
+<p>I’m not entirely sure what you have in mind for controlling device WiFi and Bluetooth hotspots. That a web page I visit could switch on my WiFi hotspot or change my network connection seems like a potentially extremely intrusive proposition. I believe there has been work on standardizing Bluetooth access as a Web API through a Community Group, though the potentially severe security and privacy implications make it challenging: <a href="https://webbluetoothcg.github.io/web-bluetooth/">https://webbluetoothcg.github.io/web-bluetooth/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChrisP</div>
+          <div class="creation_date">2018-06-11</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/npdoty/40/690_1.png" width="20"/> npdoty:</div>
+<blockquote>
+<p>I’m not entirely sure what you have in mind for controlling device WiFi and Bluetooth hotspots. That a web page I visit could switch on my WiFi hotspot or change my network connection seems like a potentially extremely intrusive proposition.</p>
+</blockquote>
+</aside>
+<p>It could allow for apps like Uber for WiFi. Or mesh networks.
+One use case is this. I subscribe to 70GB plan for mobile data. Usually around 30% is left useless at the end of the month.This could allow nearby users to use my data, and credit me with virtual in app currency. In the same way, when I need data, nearby user who has lots of data left to expire could just share with me. The added benefit is reduced friction.</p>
+<aside class="quote no-group" data-post="2" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/npdoty/40/690_1.png" width="20"/> npdoty:</div>
+<blockquote>
+<p>There are indeed lots of privacy implications for a feature that would instead allow for access to all potential radio connections on the device. As you note, that would certainly imply precise geolocation. But Bluetooth connections could also provide detail on nearby devices (who is sitting near me, or what other devices am I carrying with me) which could be revealing, in ways that are hard to anticipate for the user. If I carry my cellphone with Bluetooth on, that would let any web page easily collect a permanent, unique hardware identifier about my other device so that they could persistently remember me. Knowing the connected cell tower reveals that I am connected to a cell tower, that my device has cellular capabilities, and might also reveal details about my cellular service. With such a scan API, user agents would no longer have the user-configurable control to limit the precision of location data about themselves.</p>
+</blockquote>
+</aside>
+<p>Any concerned users could spoof this information if they’d like. But informing users that this could be used to get the location is sufficient IMHO. Any user who wants to gives consent could do so, without downloading an app that is essentially a web view and serves such simple and same purpose.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChrisP</div>
+          <div class="creation_date">2018-06-11</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/npdoty/40/690_1.png" width="20"/> npdoty:</div>
+<blockquote>
+<p>But Bluetooth connections could also provide detail on nearby devices (who is sitting near me, or what other devices am I carrying with me) which could be revealing, in ways that are hard to anticipate for the user.</p>
+</blockquote>
+</aside>
+<p>The users understand that if they are giving location information it is easy to know who they are. The most intrusive thing is location, and if that permission for location is given, there is no reason why users wont share that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-06-11</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/87869e/40.png" width="20"/> ChrisP:</div>
+<blockquote>
+<p>Any concerned users could spoof this information if they’d like. But informing users that this could be used to get the location is sufficient IMHO.</p>
+</blockquote>
+</aside>
+<p>I don’t think you quite understand the scenario presented. The issue is <em>other people around a user</em> could have <em>their privacy invaded</em> by a radio picking up their radio devices with unique identifiers and in mass tracking users through other users. This isn’t something you can easily inform every possible person about.</p>
+<p>Consent is not a golden ticket of, “Let us ignore all concerns because someone consented”. In this case, you’re saying that one person in a room consents to having a tattoo put on them, therefore everyone else is fine with it as well by default. The web does not work with this kind of trust model.</p>
+<p>Now, on the point of tracking other users this is technically fixable. As detailed in the <a href="https://webbluetoothcg.github.io/web-bluetooth/#remote-device-identifiers" rel="nofollow noopener">Web Bluetooth Specifications privacy concerns section</a> It requires UA’s to implement the access in such a way that the agent would map the remote device ID to an internal identifier that is unique to a given user. So the application would in effect just have some ID specific to itself in this API and any calls to it get mapped by the UA to the right identifier before going out to the OS/hardware.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">OpenLocationServices</div>
+          <div class="creation_date">2018-06-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>I don’t think you quite understand the scenario presented. The issue is <em>other people around a user</em> could have <em>their privacy invaded</em> by a radio picking up their radio devices with unique identifiers and in mass tracking users through other users. This isn’t something you can easily inform every possible person about.</p>
+</blockquote>
+</aside>
+<p>Don’t native applications also have this ability? On Android it is provided without even asking for permission. There is no possible way to ask for consent for nearby users, and though the web is very restricted, any person who wants to do the same thing can make users download the native app. PWA’s would simple allow for reduced friction. We can’t prevent everything, that is okay.</p>
+<aside class="quote no-group" data-post="5" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>Consent is not a golden ticket of, “Let us ignore all concerns because someone consented”. In this case, you’re saying that one person in a room consents to having a tattoo put on them, therefore everyone else is fine with it as well by default. The web does not work with this kind of trust model.</p>
+</blockquote>
+</aside>
+<p>All I am saying is that it is equally possible to do it natively. Many apps are possible with this technology, like mesh networks, and data sharing, or independent mapping.</p>
+<p>Because we can make users install a native app, all it takes is a few extra clicks and more load time. No security or privacy is enhanced by restricting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-06-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="6" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/4af34b/40.png" width="20"/> OpenLocationServices:</div>
+<blockquote>
+<p>Don’t native applications also have this ability?</p>
+</blockquote>
+</aside>
+<p>Just because native applications have an ability doesn’t mean the web needs to allow it as well. User privacy is extremely important on the web and it needs to be thought about as early as possible in discussions around new additions.</p>
+<aside class="quote no-group" data-post="6" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/4af34b/40.png" width="20"/> OpenLocationServices:</div>
+<blockquote>
+<p>We can’t prevent everything, that is okay.</p>
+</blockquote>
+</aside>
+<p>But, we can prevent privacy from being invaded using web technologies. The web operates on a fundamentally different platform of trust than native apps. With that, there are other considerations that need to be taken into account.</p>
+<aside class="quote no-group" data-post="6" data-topic="2828">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/4af34b/40.png" width="20"/> OpenLocationServices:</div>
+<blockquote>
+<p>No security or privacy is enhanced by restricting.</p>
+</blockquote>
+</aside>
+<p>This seems to be the equivalent of, “I can invade privacy on native so why can’t I do it on the web?”. If your only standing point for why an API should be a certain way is native allows it, it isn’t a good point to stand on. There needs to be an active discussion over how use-cases can be achieved <em>while</em> protecting people’s privacy. In the case of radio access, it isn’t only the user in control of the device using the app. It is also the privacy of the people around them which can be seen from those radios.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

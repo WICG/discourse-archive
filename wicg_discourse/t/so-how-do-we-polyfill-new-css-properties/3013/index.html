@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>So how DO we polyfill new CSS properties?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">So how DO we polyfill new CSS properties?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-09-06</div>
+          <div class="post_content">
+<p>It is difficult to make custom CSS properties that have custom rendering abilities.</p>
+<p>Using tools like PostCSS, it is not possible to make custom properties with specific rendering abilities because PostCSS (etc) compile new language features into old language equivalents. This does not give us any opportunity to define rendering effects, only language features.</p>
+<hr/>
+<p>So, if I want to make a new property called <code>distort</code> that will bend the shape of an object in 3D space…</p>
+<p><em>How</em> would I do that?</p>
+<hr/>
+<p>I already have the graphical requirement fulfilled, which is that I can render things using <code>Three.js</code> and expose the 3D objects as Custom Elements.</p>
+<p>So the question is, how do I define a custom property in CSS, and react to changes of this custom property so I can update rendering?</p>
+<p>This is basically a re-make of my other thread, <a href="https://discourse.wicg.io/t/a-way-to-observe-changes-in-css-custom-properties/2738/2">A way to observe changes in CSS custom properties</a>, but I wanted to start fresh.</p>
+<hr/>
+<p>Is there any established way of achieving this today?</p>
+<p>It would be great to have a conventional way to achieve this so that we can prototype new rendering features, not just language features (PostCSS).</p>
+<hr/>
+<p>This <a href="https://github.com/que-etc/resize-observer-polyfill/issues/9" rel="nofollow noopener">ResizeObserver polyfill</a> by <span class="mention">@que-etc</span> watches changes to style sheets, element style attributes, etc, using MutationObserver.</p>
+<p>If there’s no other options, I might just start by taking that approach and re-computing rendering based on that technique.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1693_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxArt</div>
+          <div class="creation_date">2018-09-06</div>
+          <div class="post_content">
+<p>If you want to implement new, custom ways to render an element, maybe the <a href="https://developers.google.com/web/updates/2018/01/paintapi" rel="nofollow noopener">CSS Paint API</a> is what you’re looking for. It lets you use a (limited) canvas to draw on, so you can get inventive there.</p>
+<p>On the plus side, you can actually <em>observe</em> custom properties and react to value changes - with JavaScript!</p>
+<p>On the down side, they’re <em>worklets</em>, so they live in their own realm and you can’t exchange data with them (to answer your question as if we can have a way to observe custom properties).</p>
+<p>But if it’s about new “properties” like <code>distort</code>, maybe you’re golden.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-09-06</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="3013">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/maxart/40/1693_1.png" width="20"/> MaxArt:</div>
+<blockquote>
+<p>On the plus side, you can actually <em>observe</em> custom properties and react to value changes - with JavaScript!</p>
+</blockquote>
+</aside>
+<p>How? Or do you mean only in the worklets?</p>
+<p>Basically, I have custom elements that you compose to make a 3D scene, powered by WebGL behind the scenes. For example:</p>
+<p><iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_rpegZR" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/trusktr/embed/preview/rpegZR?height=300&amp;slug-hash=rpegZR&amp;default-tabs=js,result&amp;host=https://codepen.io&amp;embed-version=2" title="HTML Buttons with Real Shadow" width="695"></iframe></p>
+<p>It is not possible to do this with a worklet canvas, as all the elements render into a single WebGL canvas (inspect the shadow root on the <code>i-scene</code> element to see where the canvas is).</p>
+<p>I’d like to react to property changes (f.e. <code>align</code>, <code>mount-point</code>, <code>cast-shadow</code>, etc) and update the WebGL graphics of this canvas.</p>
+<p>Basically, the attributes that the elements have could also be CSS properties, just like in SVG attributes are also CSS properties.</p>
+<hr/>
+<p>Another problem is, properties are global, so if we add properties for a specific use case, then they can conflict with properties that someone else might want to add. It’d be nice to scope properties on a per-element basis (f.e. <code>align</code> has certain meaning for my elements only, and if someone else defines it for their elements, then when applied to their elements it takes on <em>their</em> meaning instead of mine).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-09-14</div>
+          <div class="post_content">
+<p>The <a href="https://developers.google.com/web/updates/2016/05/houdini" rel="nofollow noopener">Houdini APIs</a> are aimed to provide the surface are to cover polyfilling and experimenting in CSS. It <a href="https://ishoudinireadyyet.com/" rel="nofollow noopener">isn’t ready yet</a> to be used in the wild, but Chrome is trying to push a workable implementation for developers to test with for feedback on the specs.</p>
+<p>As things are <em>today</em> if you need production polyfills, I have no idea. It’s really fallback into JS to detect support and script what isn’t available.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2018-09-14</div>
+          <div class="post_content">
+<p>Polyfills are available for some of the Houdini APIs.
+Specifically here is the paint polyfill. <a href="https://github.com/GoogleChromeLabs/css-paint-polyfill" rel="nofollow noopener">https://github.com/GoogleChromeLabs/css-paint-polyfill</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-09-15</div>
+          <div class="post_content">
+<p><span class="mention">@Garbee</span> <span class="mention">@iank</span> even with Houdini, I don’t see a way to react to property changes in a custom way other than with worklets (because they update with custom properties change), but in my case I can’t use a paint worklet because:</p>
+<ul>
+<li>I need WebGL (so far it is 2D only, but I imagine it’ll come later)</li>
+<li>I have a root i-scene element which contains a tree of nodes for rendering to WebGL, and I need those subtree nodes to have CSS properties that determine what is drawn in the root i-scene’s canvas (or paint worklet if it supported WebGL) but there’s no way for a worklet to detect changes of a (grand)child element CSS properties, and there’s just no way in general, not even that I see in Houdini.</li>
+</ul>
+<p>So it looks like the only way to do it is with all of the following steps:</p>
+<ul>
+<li>use MutationOberver to detect existing and newly inserted <code>&lt;style&gt;</code> elements.</li>
+<li>MutationOberver on all <code>&lt;style&gt;</code> elements. When their content changes, re-render all scenes after reading CSS property values and detecting if they changed.</li>
+<li>set up a polling mechanism on the <code>.sheet</code> JS property of all style elements and detect changes to the OM. Some libs like JSS do not output any text content to style elements, only to the OM directly, so MutationOberver won’t work in that case. <code>Object.observe</code> would’ve been awesome for this, if it was not deprecated.</li>
+<li>Similarly set up a MutationOberver on every node in my scene tree, to detect changes to <code>style=""</code> attributes and thus scan for changes to CSS properties.</li>
+<li>Similarly poll for changes to each node’s style OM in case those don’t update attribute text values.</li>
+<li>use MO to detect existing and newly inserted <code>&lt;link&gt;</code> elements.</li>
+<li>use MO to detect changes to link href values.</li>
+<li>fetch those href resources so we know when they’ve been received so we can then scan for CSS properties.</li>
+<li>poll the link’s style OM? I don’t know if this exists, but I’m guessing it doesn’t. I’ll have to check.</li>
+<li>if any <code>&lt;style&gt;</code> elements have <code>@import</code> we need to do the same fetch trick as with link elements (or some way to detect download of resource finished) then scan for property changes.</li>
+<li>if the DOM has shadow roots, we need to implement a way to traverse closed ShadowDOM boundaries (by monkey patching attachShadow) so that we can traverse the whole scene tree when detecting property changes so we can determine which nodes inside the shadow root need re-rendering in the top-level canvas.</li>
+<li>I’m sure I missed something. What else?</li>
+</ul>
+<p>Ideally, MutationOberver (or something) could just simply tell me when and which CSS properties of a given element have changed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1107_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">malyw</div>
+          <div class="creation_date">2018-09-15</div>
+          <div class="post_content">
+<p>Check the <a href="https://github.com/GoogleChromeLabs/css-paint-polyfill/blob/master/src/index.js" rel="nofollow noopener">https://github.com/GoogleChromeLabs/css-paint-polyfill/blob/master/src/index.js</a> Houdini polyfill implementation which <span class="mention">@iank</span> mentioned, and it may answer both of your questions, as it implements the listener/callback for selected style property changes.</p>
+<p>The implementation using MutationObserver for detecting style mutations and  CSSStyleDeclaration.cssText , HTMLElement.style otherwise + caching of prev observed values [o compare], so you can reuse it for your needs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-04-27</div>
+          <div class="post_content">
+<p>Thanks for that. I finally took a look.</p>
+<p>Looks like it uses requestAnimationFrame for poll-based observation of style sheets. I hope there’s a better push-based approach (like MutationObserver on textContent would be, but that doesn’t cover the direct CSS OM changes, I believe).</p>
+<p>Another issue is, unless I missed it, it doesn’t seem to cover CSS transitions. Someone may want to animate a polyfilled property. I suppose for this, the animation engine needs to be in JS, for those non-native properties. Then we’d need to detect, for example, class name changes so that we know which state to animate to.</p>
+<p>I may start with that as a starting point. I also found in another issue on GitHub someone else’s attempt at similar. I need to dig that up, and I’ll post it here.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

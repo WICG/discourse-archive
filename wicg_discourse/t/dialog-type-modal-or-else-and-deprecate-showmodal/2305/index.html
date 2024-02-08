@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Dialog type=&ldquo;modal&rdquo; or else(and deprecate showModal())</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Dialog type=&ldquo;modal&rdquo; or else(and deprecate showModal())</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">redbulaz</div>
+          <div class="creation_date">2017-08-26</div>
+          <div class="post_content">
+<h2>problems</h2>
+<p>Continuing from <a href="https://github.com/w3c/html/issues/860" rel="nofollow noopener">this GitHub issue</a>, the current dialog’s APIs seem a bit ugly. if the spec can be slightly fixed, it makes more pretty and consistent.</p>
+<h2>proposals</h2>
+<p>when opening modal  without showModal(), you just type this:</p>
+<pre><code>&lt;dialog type="modal" open&gt;
+   &lt;!--something content...--&gt;
+&lt;/dialog&gt;
+</code></pre>
+<p>or with show() method, you just type this:</p>
+<pre><code>show( { type : "modal" } )</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">redbulaz</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>but one question, is non-modal dialog necessary? Are there any situations where non-modal must be used?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-09-13</div>
+          <div class="post_content">
+<blockquote>
+<p>Are there any situations where non-modal must be used?</p>
+</blockquote>
+<p>Non-modal may be used in applications where you are building a set of components that can be individually moved around the page without stacking context. That way the user can see the contents of another dialog while working in the current one.</p>
+<p>On the note of <code>type="modal"</code>, I do think this is a useful addition. This would mean the JS API and HTML can both achieve the same result. Also I really dig the <code>show({type:'modal'})</code> setup vs having two separate methods of showing state in JS. This uses an extensible config option and allows for <code>showModal</code> to be safely deprecated encouraging the use of the object config on show to get the same result in JS without affecting compatibility with any existing sites.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-09-13</div>
+          <div class="post_content">
+<p>Since there is such a lack of implementations and it involves so much, is there a reason that this can’t be written as a custom element that implements precisely what you propose and then, if you can get that widely used, this is kind of easy?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-09-13</div>
+          <div class="post_content">
+<p>It’s still only shipping in the open in Blink based browsers. I think this is good feedback to digest and look into before other implementations (like Firefox’s currently behind a flag) get shipped. That way as few people are revisiting the element later to address any changes to the spec that may come from the discussion.</p>
+<p>It actually raises an interesting API consistency issue for future elements as well. How do we try to make sure triggers by JS APIs can be handled in markup as well to keep the markup reflective of expectations on display and controls?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-09-19</div>
+          <div class="post_content">
+<p>Also it seems more imperative to have a discussion around the API now rather than later. There is talk of <em>another</em> method being added to show without focus. This is a slope of adding methods to solve configuration options for everything that may be needed. Chromium is looking at a config option now for the new requested feature. However expanding that config to deprecate the <code>showModal</code> method as well could be critical at this juncture.</p>
+<p>References:</p>
+<ul>
+<li><a href="https://github.com/whatwg/html/issues/1929" rel="nofollow noopener">https://github.com/whatwg/html/issues/1929</a></li>
+<li><a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=24718">https://www.w3.org/Bugs/Public/show_bug.cgi?id=24718</a></li>
+<li><a href="https://bugs.chromium.org/p/chromium/issues/detail?id=677562" rel="nofollow noopener">https://bugs.chromium.org/p/chromium/issues/detail?id=677562</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-09-19</div>
+          <div class="post_content">
+<p>Without any other types even being discussed, I think making <code>modal</code> the property of a boolean value is better for the API.</p>
+<pre><code class="lang-javascript">show({
+  modal: true
+});
+</code></pre>
+<p><code>showModal()</code> can then just proxy <code>show({modal:true})</code> easily enough and have a log statement that <code>showModal</code> is deprecated to encourage people to move to <code>show</code> directly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-09-22</div>
+          <div class="post_content">
+<p>It would be nice to be able to use the type html attribute as the overrideable default for the modal option in show().</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eduardosada</div>
+          <div class="creation_date">2018-02-12</div>
+          <div class="post_content">
+<p>Or you just could use:</p>
+<pre><code>&lt;dialog&gt;
+    &lt;!--something content...--&gt;
+&lt;/dialog&gt;
+</code></pre>
+<p>and then:</p>
+<pre><code>element.setAttribute('type', 'modal');
+element.show();</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">carnoxen</div>
+          <div class="creation_date">2020-12-30</div>
+          <div class="post_content">
+<p>revive it</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

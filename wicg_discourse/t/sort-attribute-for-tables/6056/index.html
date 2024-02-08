@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Sort attribute for tables</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Sort attribute for tables</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-12-03</div>
+          <div class="post_content">
+<p>Making data tables dynamically sortable without JavaScript would be a big timesaver for devs and make the implementations consistent across the web for users. Since it’s possible to only want <em>some</em> columns or rows sortable, I propose adding <code>sort </code> as an attribute to <code>th</code> elements.</p>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;table&gt;
+  &lt;caption&gt;
+    Color names and values
+  &lt;/caption&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th sort scope="col"&gt;Name&lt;/th&gt;
+      &lt;th sort scope="col"&gt;HEX&lt;/th&gt;
+      &lt;th sort scope="col"&gt;HSLa&lt;/th&gt;
+      &lt;th sort scope="col"&gt;RGBa&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th sort scope="row"&gt;Teal&lt;/th&gt;
+      &lt;td&gt;&lt;code&gt;#51F6F6&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code&gt;hsla(180, 90%, 64%, 1)&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code&gt;rgba(81, 246, 246, 1)&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th sort scope="row"&gt;Goldenrod&lt;/th&gt;
+      &lt;td&gt;&lt;code&gt;#F6BC57&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code&gt;hsla(38, 90%, 65%, 1)&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code&gt;rgba(246, 188, 87, 1)&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+</code></pre>
+<p>To handle sorting different values, <code>sort</code> should accept values that are valid arguments for <code>Intl.Collator</code>.</p>
+<p>For accessibility, there should be some standard way of announcing the <code>th</code> elements as “sortable” and stating the sort order if engaged (“ascending”, “descending”) and responding to some keypresses to activate/toggle the sorting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<p>The values would not necessary match the cell text. Expanding, the comparator has to match the data type.  We need to associate the data with comparator, HTML already has <a href="https://developer.mozilla.org/en-US/docs/Learn/Forms/HTML5_input_types" rel="noopener nofollow ugc">input type</a>  which can be used as a value for <code>sort</code>. <code>text</code>, <code>number</code>, <code>date</code>, <code>datetime-local</code>, <code>month</code>, etc. Obviously it is not universal and can be extended via API.</p>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;tr&gt;
+      &lt;th sort &gt;Name&lt;/th&gt;
+      &lt;th sort="text"&gt;HEX is usual text comparable&lt;/th&gt;
+      &lt;th sort="date"&gt;Date&lt;/th&gt;
+      &lt;th sort="month"&gt;$$&lt;/th&gt;
+      &lt;th sort="brightness"&gt;color &lt;!-- needs overriding by JS --&gt; &lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td &gt; red &lt;/td&gt; &lt;!-- text --&gt;
+      &lt;td value="#F00"&gt; red &lt;/td&gt; &lt;!-- compared as hex string --&gt;
+      &lt;td value='2022-12-04T19:01:55.946Z'&gt; Dec 4th, 2022 &lt;/td&gt;
+      &lt;td value='12'&gt; December &lt;/td&gt;
+
+      &lt;!-- note the `value` with `type` --&gt; 
+      &lt;td value='rgb(128,128,128)' type="color"&gt; Gray &lt;/td&gt;
+
+    &lt;/tr&gt;
+&lt;script&gt;
+    import $ from 'css-chain';
+    $('[sort="brightness"]').sort = (c1,c2)=&gt; 
+    {   // not actual formula, just a sample
+        const brightness = (c) =&gt;  c.r*c.r + c.g*c.g + c.b*c.b; 
+        return brightness(c1) &gt;brightness(c2) ? c1==c2? 0:-1;
+    }; 
+&lt;/script&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<p>Along with sorting comparator type, additional attribute is needed to reflect the sort-direction:</p>
+<ul>
+<li><code>ascending</code></li>
+<li><code>descending</code></li>
+<li><code>none</code></li>
+<li><code>reverse</code></li>
+</ul>
+<p>also the <code>sort-order</code> to define which row/column would be sorted first, second , etc. value is 0-based <code>number</code>, defaults to 0 with incrementing.</p>
+<p>If several columns with same order (or none) occur, shall value be incremented or kept same?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<p>Proposals like this with incrementally added functionality are perfect fit for templates concept.
+Will cross-refer the template proposal once it is written. Current templating in HTML is not capable of such transformation.</p>
+<p>Only option is XSLT like in <a href="https://unpkg.com/@epa-wg/custom-element@0.0/index.html" rel="noopener nofollow ugc">custom-element</a>, would update demo with sortable table from <a href="https://cdn.xml4jquery.com/ajax/libs/XmlView/1.0.0/" rel="noopener nofollow ugc">XmlView</a> eventually.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<p>I’m not sure if sort order should be set in the markup. After all, you’ll author the table in the order you want the default to be.</p>
+<p>I agree that <code>datetime</code> should be an option for sorting, but other things like numeric order, case sensitivity, and ignoring punctuation are all options available in <code>Intl.Collator</code>. I can’t think of another attribute that takes such a complex JSON-like syntax but it would cover most usual/simple cases.</p>
+<p>For more complex or custom sorting, a new <code>sort</code> event (or <code>sortstart</code> and <code>sortend</code> events) could be dispatched when sort is triggered but before the sorting happens so that you could <code>preventDefault()</code> and do your own table manipulation. The event would have data on which <code>th</code> element triggered the sort and if it’s ascending or descending.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<p><span class="mention">@Nick_Gard</span> , W3C proposals should be based on actual needs, not a personal preferences. The list of actually required modifiers resides in the most popular enterprise-grade implementations. Would be handy to create such table and during review expose what is missing. For example, on API side we missed the <code>onSortChange</code> event for table and <code>onChange</code> on sorting header.</p>
+<blockquote>
+<p>I’m not sure if sort order should be set in the markup. After all, you’ll author the table in the order you want the default to be.</p>
+</blockquote>
+<p>Markup is just a reflection of the state. You do not want to make an exception of pairing the attributes and state properties. The Declarative Web Application would assume to have all functional and state aspects reflected in markup and exposed to JS. The integrity of data and initial state resides on markup producer. Developer could make a decision to trigger sorting programmatically on any hydration event but still needs the state expressed in table header. Going further the table data in many cases would be loaded dynamically. There you do need to have sorting parameters after data retrieved and ahead of table body population.</p>
+<blockquote>
+<p>I can’t think of another attribute that takes such a complex JSON-like syntax but it would cover most usual/simple cases.</p>
+</blockquote>
+<p>W3C have made a high bad impact decisions by taking “simplest” instead of sufficiently functional decisions. The MVP functionality as stated can be taken from stats of existing JS solutions.
+Could you, please, point where “JSON-like” syntax been mentioned?</p>
+<p>Any sorting has to be aware of:</p>
+<ul>
+<li>order</li>
+<li>direction</li>
+<li>sorting type</li>
+<li>data type</li>
+</ul>
+<p>It is true on any API( look for OData for example ) and UI( look into existing mature implementations )</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<blockquote>
+<p>new <code>sort</code> event (or <code>sortstart</code> and <code>sortend</code> events)</p>
+</blockquote>
+<p>Given approach is not as good as proposed overriding <code>sort</code> property by a callback.
+The callback can be used on any stage, from data retrieval to hydration while the <code>sort-start|sort-end</code> event  are  quite specific. In order to be efficient the callback would take a <code>value</code> and <code>type</code> parameters and does not need the DOM references. I.e. it is a data-aware callback vs DOM events.</p>
+<p>I am not sure should both be given in proposal. Callbacks approach has to manipulate DOM , while the callback would not change DOM directly, leaving it to browser implementation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-12-04</div>
+          <div class="post_content">
+<p>The JSON-like attribute value I was referencing was my proposed "arguments of <code>Intl.Collator</code>" value. Example:</p>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;th sort="[en, de, es], {numeric: true, ignorePunctuation: true, sensitivity: base}"&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2022-12-05</div>
+          <div class="post_content">
+<p>There are several approaches to sorting marked-up structures like HTML tables. Generally declarative approaches are preferred, as they can be implemented in multiple languages and contexts and are often amenable to optimizations.</p>
+<p>One approach is to add a sort key to each table cell. The keys are always compared (say) as strings using the HTML ASCIIlower collation. This means you can either do the sorting server-side or map values to a surrogate key for sorting when generating the markup.</p>
+<p>Another approach is to supply a function at runtime; this can either be a comparison function, as in languages like C, or it could generate a surrogate key for each entry, a string, and the implementation then sorts those. In some cases the surrogate keys can be integers and an O(1) radix sort can be used, but at the cost of slightly more memory to store all the keys.</p>
+<p>In any of these cases the values can be updated by JavaScript of course.</p>
+<p>If you are sorting people’s names, that’s not something you can necessarily do in JavaScript - you’d need to know which parts of the string were family names, and that Norman St John Stevas sorts as “Saint John Stevas, Norman”. So to sort names you often do need a hidden sort key; since it’s not script-dependent for sorting purposes it can be in an attribute.</p>
+<p>This reasoning leads to wanting something like</p>
+<p><code>&lt;td sortkey="Saint John Stevas, Norman"&gt;Norman St John Stevas&lt;/td&gt;</code></p>
+<p>Of course, the sortkey atribute can also be supplied (and changed) from JavaScript in a browser.</p>
+<p>Identifying which columns to sort, and which rows to move, especially in the presence of spans, is tricky, although simply saying that tables with spans outside the headers can’t be sorted is probably an acceptable first cut. So a sortable attribute that can have values of ascending, descending, none or sticky (where none means you can’t click on the heading to sort the column and sticky means the entries in the column don’t move when the table is sorted, e.g. for row numbers) may be sufficient.</p>
+<p>It would be nice if any table with  a “regular” structure could be sorted by default; it’d also be nice if, like some Braille systems, most user agents allowed transposition of regular tables by default.</p>
+<p>Then, finally, one can add a property to a table to indicate a sorting function. Or, can  use JavaScript unobtrusively to add or update sortkey attributes behind the scenes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-12-06</div>
+          <div class="post_content">
+<p>I like the idea of having <code>sortkey</code> on <code>td</code> elements override the default <code>innerText</code> value used to sort but I think it should be optional. If the value of the cell is what’s usually used for sorting, it would be painful and redundant to make devs write it both as the text node and as the <code>sortkey</code> attribute. But your use case of names is a great example of how such an attribute could enhance sorting declaratively instead of implementing a whole JavaScript override.</p>
+<blockquote>
+<p>The keys are always compared (say) as strings using the HTML ASCIIlower collation.</p>
+</blockquote>
+<p>We wouldn’t be able to rely on this sorting for all human languages. It’s why <code>Intl.Collator</code> exists. I think we should leverage that API or at least the thinking that went into that API to account for the many ways humans expect words to be sorted.</p>
+<blockquote>
+<p>it is a data-aware callback vs DOM events.</p>
+</blockquote>
+<p><span class="mention">@suns</span> I’m envisioning table sorting as a UI event, something the user can do to the table, if it’s enabled by the dev. Sorting and constructing the table server-side or on hydration can be done already with templating mechanisms.</p>
+<p>A user-initiated sort action would need at least an event dispatched prior to the DOM manipulation so that devs could call <code>preventDefault()</code> and do their own manipulation. I think an event at the end of the default DOM manipulation (like <code>animationend</code>) would be helpful for triggering code that needs to respond to the newly-sorted table.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-07</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="10" data-topic="6056" data-username="Nick_Gard">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/nick_gard/40/3700_2.png" width="20"/> Nick_Gard:</div>
+<blockquote>
+<p>I’m envisioning table sorting as a UI event</p>
+</blockquote>
+</aside>
+<p>Can we agree that declarative-only sufficiently functional approach was an initial intent and is a requirement for html extending proposals?</p>
+<p>And that js should have ability to access and override each aspect?</p>
+<p>If agreed, than complex json payload vs series of attributes is preferrable as this is html-first approach.</p>
+<p>Such approach would allow to tune up tables by <a href="https://unpkg.com/@epa-wg/custom-element@0.0/index.html" rel="noopener nofollow ugc">templates syntax</a> in raw attributes; validate the attribute values in raw HTML, etc. which is not achievable with JSON-like syntax by classic HTML validation techniques.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-07</div>
+          <div class="post_content">
+<p><span class="mention">@liamquin</span>, HTML already has an attribute for the key. It is a <code>value</code>. Since attribute is always a string, it has to be accompanied by either <code>type</code> or <code>keytype</code>. Semantic values of those are matching the <code>input</code> and <code>option</code> tags. See <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes" rel="noopener nofollow ugc">attributes in HTML</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3939_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brennanyoung</div>
+          <div class="creation_date">2023-02-14</div>
+          <div class="post_content">
+<p>I’m rather surprised that nobody has mentioned <code>aria-sort</code>, which is specified, documented and supported by assistive technology today.</p>
+<p>MDN has updated (2022) docs on this at <a class="inline-onebox" href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-sort" rel="noopener nofollow ugc">aria-sort - Accessibility | MDN</a></p>
+<p>I <strong>don’t</strong> accept the idea that UI state should be excluded from markup. A signficant part of ARIA exists for this very purpose. Also (prior art from the HTML spec) attributes like <code>hidden</code> and <code>disabled</code> are UI state expressed in markup - and remember that state attributes of this kind can be used in CSS selectors, which is a far leaner and more explicit way to synchronise UI state with presentation than cooking up your own class names - which might not be understood by the next dev that sees your code. Class names are also ignored by assistive tech.</p>
+<p>Remember, there is currently <strong>no way</strong> for browser code to communicate with assistive tech <strong>except through markup</strong>. (<a href="https://github.com/WICG/aom" rel="noopener nofollow ugc">AOM</a> will provide a javascript API for the accessibility tree, but is still not fully specified, let alone implemented).</p>
+<p>So yes, we need certainly do need UI state such as <code>sorted</code> to be expressed in markup. Today, that means using ARIA. In the future, maybe HTML will get sorted.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

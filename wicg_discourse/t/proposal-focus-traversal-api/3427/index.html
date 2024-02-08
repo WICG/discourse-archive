@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Focus Traversal API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Focus Traversal API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-13</div>
+          <div class="post_content">
+<h1>Focus Traversal API</h1>
+<p>The current system for programmatically manipulating focus within a web page leaves a lot to be desired. A single element can request the focus with the <code>focus()</code> method but that is the extent of the programatic focus navigation options.  Advancing the focus to the next focusable element or the previous focusable element involves a complex dance of DOM traversal and guess work as to what elements can recieve focus or not.  Most solutions to manipulating focus are complicated; the very simple need to manipulate focus in a meaningful and accessalbe manner is significantly lacking.</p>
+<h2>Proposed</h2>
+<p>The creation of a unified Focus Traversal API that makes understanding, manipulating, and traversing the focus simple.  This must include the ability to assign the focus, move the focus forward and backward, and understand both the next and previous focusable elements.</p>
+<p>A rough example of this API might be the following:</p>
+<p><code>window.focusManager.currentlyFocused</code> - Contains the element currently holding the focus, if any.</p>
+<p><code>window.focusManager.previouslyFocused</code> - Contains the element that held the focus prior to the current focus, if any.</p>
+<p><code>window.focusManager.history</code> - An array of the last n historical focus holders.</p>
+<p><code>window.focusManager.hasFocus(element)</code> - Returns true if the given element currently has the focus.  Functionally equivelent to <code>window.focusManager.currentlyFocused===element</code>.</p>
+<p><code>window.focusManager.focus(element)</code> - Focus on the given element. Functionally the same as <code>element.focus()</code>. Returns void.</p>
+<p><code>window.focusManager.forward()</code> - Move the focus to the next focusable element.  Returns void.</p>
+<p><code>window.focusManager.backward()</code> - Move the focus to the previous focusable element.  Returns void.</p>
+<p><code>window.focusManager.next(element)</code> - Returns the element that would revieve the focus if <code>window.focusManager.forward()</code> was called when the given element has the focus.  If no element is given, the currently focused element is used.</p>
+<p><code>window.focusManager.previous(element)</code> - Returns the element that would revieve the focus if <code>window.focusManager.backward()</code> was called when the given element has the focus.  If no element is given, the currently focused element is used.</p>
+<p><code>window.focusManager.orderedElements()</code> - Returns an array of all focusable elements in the order that focus traversal would occur.</p>
+<h2>Illustrative User Issues</h2>
+<ul>
+<li><a href="https://stackoverflow.com/questions/7208161/focus-next-element-in-tab-index" rel="nofollow noopener">https://stackoverflow.com/questions/7208161/focus-next-element-in-tab-index</a></li>
+<li><a href="https://stackoverflow.com/questions/3639908/retrieving-previously-focused-element" rel="nofollow noopener">https://stackoverflow.com/questions/3639908/retrieving-previously-focused-element</a></li>
+</ul>
+<h2>Example Polyfill</h2>
+<p>An example implementation of the above as well as this document can be found at <a href="https://github.com/awesomeeng/FocusTraversalAPI" rel="nofollow noopener">https://github.com/awesomeeng/FocusTraversalAPI</a>.</p>
+<h2>Similar Works</h2>
+<p><a href="https://github.com/davidtheclark/tabbable" rel="nofollow noopener">https://github.com/davidtheclark/tabbable</a> - A very popular library for getting a list of all the elements in a element that can recieve the focus.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2019-03-15</div>
+          <div class="post_content">
+<p>It’s great idea, I had this issue myself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-19</div>
+          <div class="post_content">
+<p>Updated Polyfill to v1.1.0 with support for Shadow DOM traversal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2019-03-19</div>
+          <div class="post_content">
+<p>If a new API is being proposed, why is it synchronous? Is there a technical issue if these return Promises that resolve to their values?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-19</div>
+          <div class="post_content">
+<p>Why would it need to be Asynchronous? None of what it does happens asynchronously. See the Polyfill for examples.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2019-03-19</div>
+          <div class="post_content">
+<p>I’m just curious as to whether it would have any known implications. I get the feeling going forward web standards are trying to make anything new as asynchronous as possible. That way we can do as much work as possible without blocking the main thread. Simply because the APIs currently available are all synchronous doesn’t mean investigating new ones being async isn’t an option.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-20</div>
+          <div class="post_content">
+<p>I currently don’t foresee any type of asynchronous need around focus traversal. focus has always been a synchronous process and I am not proposing changing that in any manner. Focus Traversal as proposed is an addition to existing focus systems, a quality of life improvement without any major impact on the existing focus system. If anyone can foresee any asynchronous need, please do share.</p>
+<p>I am also purposely not proposing the addition of any of the higher level ideas around focus such as trapping or focus groups.These are great ideas and I would love to see them, but keeping the proposal simple, clean and very implementable was my first priority.</p>
+<p>Glen</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2019-03-20</div>
+          <div class="post_content">
+<p>The problem is something like <code>orderedElements</code>. This could end up returning a large set of nodes. While the array is being compiled this could block the main thread. So at least this item should be async. Sure a few hundred nodes shouldn’t be a huge issue. But in poorly built systems they could have/end up with multiple thousands on a page.</p>
+<p>At least in that case, async makes sense. Which is why I’m bringing up async investigation for the whole API if it moves forwards. Could it be done? What would the drawbacks be in engines to implement that?</p>
+<p>I love the idea and I’d personally like to see it brought into browsers. I just want to see some investigation into async if it moves forward so the path doesn’t go untravelled.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-21</div>
+          <div class="post_content">
+<p>I can see what you are saying there.  The question is do we drop <code>orderedElements</code> entirely or make it an async function? Is there a need for it?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-03-23</div>
+          <div class="post_content">
+<p>Another use case for it to be synchronous is that when you focus to the “next element” and it happens to be offscreen, the viewport may need to scroll a bit to bring it into view. And the scrolling aspect would make it asynchronous. Scrolling methods are being updated to be asynchronous in the spec btw (I know because I’m the one who requested for it to implemented in browsers, which has since been accepted).</p>
+<p>I love this idea btw. <img alt=":+1:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/+1.png?v=6" title=":+1:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-03-23</div>
+          <div class="post_content">
+<p>I meant to say “Another use case for it to be <em><strong>a</strong>synchronous</em>” – not “synchronous”. But the silly forum settings here won’t let me update the typo in my original comment <img alt=":roll_eyes:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/roll_eyes.png?v=6" title=":roll_eyes:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-23</div>
+          <div class="post_content">
+<p>I am beginning to come around on this, but let me ask you this… does calling <code>focus()</code> on an element actually imply that focus will be received by said element or is it just a request.  I think the answer to that question dictates whether or not Async is needed for calls like <code>forward()</code> and <code>backward()</code>. If there is a garauntee of focus getting received, then sure, async might be in order. But if it’s more of just a request, then sync is fine.</p>
+<p>Also, another thought, but what happens if you call <code>focus()</code> a second time while waiting for the first <code>focus()</code> to resolve? If the resolve condition of focus is the focus event and that never occurs, how would we know?</p>
+<p>Glen</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2019-03-26</div>
+          <div class="post_content">
+<p>Here’s what I’m understanding of <code>HTMLElement.focus()</code> (which could be awry, so grain of salt.)</p>
+<ol>
+<li>Check a flag to prevent running focus on an element it is already running on. If true, return to prevent overlap.</li>
+<li>Set the flag mentioned previously to true.</li>
+<li>
+<a href="https://html.spec.whatwg.org/multipage/interaction.html#focusing-steps">Focusing Steps</a> run, which I believe at the end of it all (assuming the element is validly focusable) it forces the element to receive focus.</li>
+<li>Unset the flag from step 1 so a new focus call can succeed.</li>
+</ol>
+<p>For more info you can see the <a href="https://html.spec.whatwg.org/multipage/interaction.html#dom-focus">WhatWG spec</a> on focus requirements. I don’t see how it being required or a request is the linchpin of it being async or not though. The async APIs can always verify the state at the end and return an indicator <code>true/false</code> as to whether the request to focus succeeded or not.</p>
+<p>And the flag mentioned in the focus steps clears up what happens if it is called multiple times on an element before one finishes resolving. It just returns and does nothing on subsequent calls.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-03-29</div>
+          <div class="post_content">
+<p>I think the question of async/sync comes down to whether or not the focusing steps have async behaviors in them (i.e. does any of the focus steps have an async nature).  What caught my in in the spec regarding this was this:</p>
+<blockquote>
+<p>User agents must <a href="https://html.spec.whatwg.org/multipage/infrastructure.html#immediately">immediately</a> run the <a href="https://html.spec.whatwg.org/multipage/interaction.html#focusing-steps">focusing steps</a> for a <a href="https://html.spec.whatwg.org/multipage/interaction.html#focusable-area">focusable area</a> or <a href="https://html.spec.whatwg.org/multipage/browsers.html#browsing-context">browsing context</a> candidate whenever the user attempts to move the focus to candidate.</p>
+</blockquote>
+<p>Which seems to imply a syncronous nature (i think).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">neil</div>
+          <div class="creation_date">2019-04-09</div>
+          <div class="post_content">
+<p>Another similar work: <a class="inline-onebox-loading" href="https://github.com/medialize/ally.js" rel="nofollow noopener">https://github.com/medialize/ally.js</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-04-16</div>
+          <div class="post_content">
+<p>So what is the next step for moving forward on this? Whom do I need to contact? How does this process work from here?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-20</div>
+          <div class="post_content">
+<p>I think a good next step would be to create a GitHub repository for the proposal and write an explainer for it.</p>
+<p>An example: <a href="https://github.com/bokand/root-scroller/blob/master/explainer.md" rel="nofollow noopener">https://github.com/bokand/root-scroller/blob/master/explainer.md</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2229_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arei</div>
+          <div class="creation_date">2019-04-24</div>
+          <div class="post_content">
+<p>Sounds good. I will work on it over he next few days.  Some questions:</p>
+<p>1). Can I use the current polyfill repo which already has the proposal in it?
+2). What do I do once the explainer is done?</p>
+<p>Thanks.</p>
+<p>Glen</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-04-24</div>
+          <div class="post_content">
+<p>Sure, just an <code>explainer.md</code> file in the project’s root directory should be fine.</p>
+<p>Once the document is ready for feedback, don’t hesitate to contact the relevant people directly (e.g., accessibility experts) to get their opinion on the proposed API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-04-25</div>
+          <div class="post_content">
+<p>Yeah! And dont forget to ping this thread when ready! Excited to see what you come up with!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

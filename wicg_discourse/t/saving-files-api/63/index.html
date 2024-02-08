@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Saving Files API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Saving Files API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1831_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kennydude</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I would really like to see a proper API to save files in the browser to my hard drive. This would mean I could open a webpage/webapp and edit documents on a computer/cloud/memory-stick without much effort.</p>
+<p>I know there is a lot about security so I think there are only two cases where permission would be granted:</p>
+<ul>
+<li>An <code>&lt;input type="file" request="save" /&gt;</code> or something to allow writing to existing files</li>
+<li>A way to select a new file to save to</li>
+</ul>
+<p>This would be similar in the way OSX does it’s sandbox for Mac App Store applications.</p>
+<p>I know there was some work on this previously, but I would love for it to to get to a stage where it is actually implemented in browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>Are you familiar with <code>&lt;a download&gt;</code>? It is implemented as far as I can tell in all browsers. Combined with data or object URLs, you can pretty much save anything that you could possibly generate client-side.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1831_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kennydude</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I have seen that but it does not work really well. I want to be able to save files, once given permission, without bugging the user.</p>
+<p>Download can just be messy, as each save would put a new file in the downloads or popup a save box. This means autosaving is next to impossible <img alt=":frowning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/frowning.png?v=5" title=":frowning:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>Oh, so you want direct access to the user’s hard disk? That is a much bigger ask. I don’t think even iOS, Android, or Windows 8 give that ability, except perhaps for certain limited folders (e.g. pictures library).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1831_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kennydude</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>Not directly. Only to the files the user has allowed.</p>
+<p>Like the file reading API can only read files dropped on the page or selected through an input, this would have a similar method.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I guess I still don’t understand. <code>&lt;a download&gt;</code> is the current mechanism for explicitly allowing you to save to a file. When you said that wasn’t good enough, you asked about “autosaving” and wanted to avoid “popping up a save box,” and the ability to save files “without bugging the user.”</p>
+<p>I don’t see how to reconcile that with “only to the files the user has allowed”—you have to bug the user to ask them which files they allow. You can’t do autosaving, or avoid popping up a save box, since doing so would bypass user permission.</p>
+<p>It might be helpful to more concretely outline:</p>
+<ul>
+<li>What the use case is (in a real world website)</li>
+<li>What you expect the API to look like</li>
+<li>At what point the user is, or is not, prompted</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>I think I know what <span class="mention">@kennydude</span> wants. Imagine you build an image editing web app, and the idea is that the user can save her images to disk (but still keep editing them). Today’s solution, using <code>&lt;a download&gt;</code> really sucks: every time she makes an edit and hits save, she gets prompted with a picker -&gt; OK -&gt; You sure you want to replace? -&gt; OK.</p>
+<p>I believe that <span class="mention">@kennydude</span> wishes to replace that with a situation in which the <em>first time</em> you get prompted in the usual save-as manner, but once that has happened the application can keep a hold on the File (or perhaps only on the Blob, don’t want it changing the name) and can keep saving it. Arguably, this could even be made permanent (if the UA so wished).</p>
+<p>Do I get it right <span class="mention">@kennydude</span>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1831_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kennydude</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>Pretty much</p>
+<p>So to be clear on those bullet points:</p>
+<ul>
+<li>
+<p>A use a case would be a text editor (really simple). I open a web page, I can open an existing file, edit and save that file (multiple times) without issues. I can also create a new file which I can save to a location I specify on my hard-drive.</p>
+</li>
+<li>
+<p>I expect it to look similar to the <a href="http://www.html5rocks.com/en/tutorials/file/dndfiles/" rel="nofollow noopener">file reading api</a> so I could do:</p>
+<pre><code>  new FileWriter( evt.target.files[0] ).writeText("Hello World");
+</code></pre>
+<p>and it would work</p>
+</li>
+<li>
+<p>The user would likely see either:</p>
+<ul>
+<li>An area on an existing file selection box saying “Allow this website to write to this file” (f.e via <code>&lt;input type="text" request="write" /&gt;</code> or something)</li>
+<li>A new file would be assumed write access. (f.e via <code>&lt;input type="newfile" /&gt;</code>)</li>
+</ul>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Libertardian</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>iOS only allows writing in your sandbox container. There is no user-facing filesystem of any kind, documents are moved from apps through explicit sharing only.</p>
+<p>Android’s the same, except not, but it really is. At issue is the SD card, which you can request access to using the WRITE_EXTERNAL_STORAGE permission, which is a free-for-all. Google has been clamping down on this since Android 3.x, where non-primary SD cards (on most phones, the external SD card is non-primary for stupid reasons) require WRITE_MEDIA_STORAGE, which is a Google/OEM-only permission. 4.4 gives auto-generated sandbox container permissions on the SD card and a proper file picker, obsoleting the use of either permission for everything but file managers (which are pretty much screwed on 4.4 devices that follow the WRITE_MEDIA_STORAGE restriction).</p>
+<p>Windows is a desktop operating system and thus does not sandbox filesystem access. Modern UI applications on Windows 8, however, are sandboxed, but there’s a sandboxed file picker that grants access to user files. However, most productivity applications on Windows don’t use Modern UI anyway, primarily because secure file pickers hamper their primary use case.</p>
+<p>And, on broader points raised in this thread, I would like to point out that it’s fairly difficult to have productivity applications on platforms with no generic file storage. For work apps to, well, work, they need to be able to:</p>
+<ul>
+<li>Pick files from a user-facing filesystem</li>
+<li>Write to picked files arbitrarily, for the length of the user session</li>
+<li>Not be restricted to only picking files the application originated</li>
+</ul>
+<p>Notably, you <em>could</em> have a permission-granting file picker ala Android 4.4 and Modern UI Windows.</p>
+<p>The tricky part is documents that span multiple files. OSX is a prime offender as they encourage directory hives as a standard way to segregate multiple types of data present in a document, and just structure all the UI to pretend that the documents are actually single files. Also, you have file formats that allow other data to be embedded by linked paths, e.g. a 3D modeler which allows pulling assets from other files. I’m not sure how to handle either usecase as it would require making the user approve opening potentially hundreds of unique file paths every time they want to work with a document, quickly turning into a “mother may I” situation.</p>
+<p>Given that the implied use-case is productivity apps I don’t know how to provide these functionalities in ways which are both secure and don’t pose UX issues. In any case, we should <em>not</em> be giving web applications full-disk access.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>This is something that has been discussed before, in fact it’s a use case that I’ve previously explained. There is no disagreement that it would be useful, but the devil is in the details.</p>
+<p>Some platforms don’t provide general-purpose FS access as <span class="mention">@Libertardian</span> correctly points out, but I don’t think that that’s an actual problem. Just because some platforms don’t have {a camera, geolocation, a colour screen, etc.} doesn’t mean we can’t have a given feature. It just means that its behaviour needs to be defined when it can’t physically be supported. (In this case, you probably get nothing or some form of disabled affordance — and that’s okay.)</p>
+<p>The problems have more to do with how to scale it both over time and over number of files, without introducing security issues, and while remaining usable.</p>
+<p>Let us start small and assume this only works on a file by file case, without handling the directory issue (which as <span class="mention">@Libertardian</span> also points out, is likely to confuse people on OSX for some file types). The issue is of extension over time: if I edit my text file using this mechanism and later return to the app, does it automatically have access to that file again? Can I reasonably expect the app’s state to just be restored with the file open and ready to be written?</p>
+<p>If the answer is no, there’s a bit of a usability issue (but not a huge one in many cases). If the answer is yes, the situation is more complicated. Maybe I gave access to a web app to write some of my HTML files with, but after a while I realise that they’re doing something I don’t like. I’m not talking about something outright malicious (though that could be the case), just something I’m not happy about. Maybe they add a little tracking code to get an idea of how many people visit pages made with their tool. Maybe they just add a comment pointing to their site. Nothing illegal, but I want them to stop. The problem is: whenever I visit their site (say, because it has great documentation) they regain writing rights to those files and automatically add those annoying comments. This means that users need a clear and simple way in the browser UI to know that a given web app has access to a given set of files (and ways of revoking that). Honestly, I have no idea how to do that cleanly.</p>
+<p>The issue of extension over number of files is also annoying. For an image editor in many cases you can probably work fine accessing images one by one (and even then, it depends on the workflow). For a text editor in a great majority of cases you often need access to an entire subdirectory in order to be useful. This could be done: just let people pick a directory, and expose all the files in that. But naturally this increases the danger, and increases the complexity of exposing the user’s actions safely.</p>
+<p>Maybe the right approach is to start from a minimal option that can only do one file and only for the lifetime of the given document hosting it. And if that works, build atop it to add more capabilities. But the question is: would something this limited be enough for the functionality to prove useful and take off?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2774_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomByrer</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="63">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/kennydude/40/93_1.png" width="20"/> kennydude:</div>
+<blockquote>
+<p>once given permission, without bugging the user</p>
+</blockquote>
+</aside>
+<p>A good way to fill up someone HD.  Too easy to exploit IMHO.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Doesn’t the proposed <a href="http://w3c.github.io/filesystem-api/Overview.html">FileSystem API</a> in WebApps address this? It offers a sandbox (with limited quota to avoid the “fill up hard drive” issue) in which the Web App gets total freedom in creating/saving files.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>It’s very easy to limit this to either n bytes or an increase of n% if the file was initially already bigger.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>That works great if you’re creating the file: you can forever keep it there. But it might be less good for existing files.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/66_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">arun</div>
+          <div class="creation_date">2014-06-02</div>
+          <div class="post_content">
+<p><span class="mention">@dontcallmedom</span>: yes, the FileSystem API is designed to address this. It’s had fits and starts, but I think it’s safe to assume that we’re mostly in starts still.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1369_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">addyosmani</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>I would be very interested to understand what limitations in the FileSystem API don’t quite capture kennydude’s use-cases. I’ve seen developers use it as a sandboxed storage mechanism for apps that, as requested:</p>
+<ul>
+<li>Open files / allow editing / saving multiple times</li>
+<li>Create new files with ease</li>
+</ul>
+<p>Do you need the ability to write/save multiple data-chunks continuously to disk? Something else?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1831_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kennydude</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>The FileSystem API is “okay”, but it isn’t what I am looking for, assuming <a href="http://dev.w3.org/2009/dap/file-system/file-dir-sys.html">this</a> is the spec you’re talking about.</p>
+<p>I would like to be able to access those files outside of the website. What if I wrote a webapp to write novels with, and I moved the website or closed it without notice? I can’t access all of that work now, especially on platforms like Chrome OS and I have lost (potentially) lots of work.</p>
+<p>As the developer, I could add Dropbox support. But then User X, Y and Z want <a href="http://Copy.com" rel="nofollow noopener">Copy.com</a>, Google Drive, FTP and more? However, if I write a native app I don’t have this trouble. Even using something like node-webkit gets around this problem.</p>
+<p>Ideally, I want to achieve this in the web browser in a way where by default everyone is happy.</p>
+<p>Also thanks to iOS8; I think what I am wanting is achievable on iOS. Android 4.4 implements something similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2014-06-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="63">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/kennydude/40/93_1.png" width="20"/> kennydude:</div>
+<blockquote>
+<p>The FileSystem API is “okay”, but it isn’t what I am looking for, assuming this is the spec you’re talking about.</p>
+</blockquote>
+</aside>
+<p>FWIW, this is not the filesystem API we were talking about; <a href="http://w3c.github.io/filesystem-api/Overview.html">http://w3c.github.io/filesystem-api/Overview.html</a> is.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

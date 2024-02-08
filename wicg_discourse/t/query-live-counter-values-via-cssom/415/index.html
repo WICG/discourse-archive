@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Query live counter values via CSSOM</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Query live counter values via CSSOM</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-16</div>
+          <div class="post_content">
+<p>The value of a CSS counter on an element cannot be queried directly. One has to jump through loops, querying the stylesheets and searching for previous DOM nodes to re-calculate it (or copy the logic from CSS to the JS file).</p>
+<p>CSSOM should attend to it. The <code>Element</code> interface should therefore be extended like this:</p>
+<pre><code>partial interface Element {
+  Integer getCounterValue(DOMString counterName);
+};
+</code></pre>
+<blockquote>
+<p>The method <code>element.getCounterValue('counter-name')</code> returns the value of the counter <code>counter-name</code> at the position of <code>element</code> in the DOM. If no counter with this name exists, the method returns <code>0</code>. (This is in sync with the specced behavior for non-existing counters.)</p>
+</blockquote>
+<h3>Example:</h3>
+<pre><code>&lt;body&gt;
+  &lt;h2&gt;Foo&lt;/h2&gt;
+  &lt;p&gt;Bar&lt;/p&gt;
+&lt;/body&gt;
+
+/* stylesheet: */
+h2 { counter-increment: foo; }
+</code></pre>
+<p>Then the following holds:</p>
+<pre><code>document.querySelector('body').getCounterValue('foo') === 0;
+document.querySelector('h2').getCounterValue('foo') === 1;
+document.querySelector('p').getCounterValue('foo') === 1;
+document.querySelector('p').getCounterValue('non-existing') === 0;
+</code></pre>
+<h3>Use case</h3>
+<p>One use case is cross-referencing figures. If <code>&lt;figure&gt;</code> elements increment a counter and display it in the <code>&lt;figcaption&gt;</code>, it would be great to auto-generate references on other positions in the document, like <code>see fig. 4</code>, much like LaTeX’s <code>\ref{figure}</code>.</p>
+<pre><code>&lt;figure id="foo"&gt;
+  &lt;img src="getCounterValue_enhances_workflow.png" alt="Proof for thesis"&gt;
+  &lt;figcaption&gt;Labeled with :before { content: "Fig. " counter(figure); }&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;See &lt;a href="#foo"&gt;the figure above&lt;/a&gt; for a more detailed image.&lt;/p&gt;
+                      ^---- replace with "figure 4"</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>At first when I read this I was pretty sceptical but the use case provided seems to do it some justice and actually I have found that myself as a use case.</p>
+<p>Would it be worth considering querying the active counters on the elements also to get back as an array?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>I wanted to keep it simple intentionally. My guess from implementations would be, that such a list might be expensive to calculate, whereas calculating a single counter on request is something the CSS processor does all the time.</p>
+<p>However, when such a list is indeed cheap to compile, it could be of good use, e.g. to decouple CSS and JS further by dynamically retrieving defined counter names.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>I think that was my initial fear that this feature adds a pretty deep coupling from JS to CSS, which feels pretty ugly.
+My main suggestion for exposing the counters was to remove some of that coupling; however as you mention that could be expensive to compute dependent on browser implementation.</p>
+<p>My other reason for feeling this was ugly is that it does feel a little like a work around for the use case you are after.
+For example the following:</p>
+<ol>
+<li>Moving the DOM elements around would change the counters; Mutation observers could be used etc - however its getting pretty heavyweight.</li>
+<li>Unlike LaTeX; HTML is changed and modified often across multiple documents. You couldn’t split up a document easily across a URL and keep the same counters. (To my knowledge there is no counter extension to start at a certain offset)</li>
+</ol>
+<p>I think for those two reasons I would perhaps be opting for data attributes which you can then use in <code>content: attr(data-heading-number) -</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="415">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>(To my knowledge there is no counter extension to start at a certain offset)</p>
+</blockquote>
+</aside>
+<p>counter-reset lets you start the counter at whatever value you want.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> I should sleep more often; thanks.</p>
+<p>Realistically you would likely want counter-reset exposed in CSSOM too if this feature were to go ahead; which certainly the recalculation of counters after paint doesn’t appear to be possible with CSS using animations at the moment in modern browsers (<a href="http://jsfiddle.net/8uNsq/" rel="nofollow noopener">Quick mockup</a>) so potentially another cost with the repainting etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>What do you mean by “exposed in CSSOM”? You can read and set the property via the normal APIs already.</p>
+<p>Your example doesn’t make much sense.  The counter-* properties aren’t animatable.  Even if they were, you can’t animate from counter-reset to counter-increment.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span> I mean editable much like the rest of element.style works; you mention that you already can yet what would be the point of this proposal? If I set or read from style.counterReset or style.counterIncrement nothing happens in JS. So I was suggesting a setter as well as the proposed getter method.</p>
+<p>That was mostly my point; it wasn’t really a sensible example per se; just that it is not possible whatever I try - so browsers are unlikely to be geared to expecting the counters to change.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>counter-reset and counter-increment are definitely editable from .style, like every other property.  This proposal is about getting the current value of a given counter at some point in the dom, which is <em>not</em> directly exposed today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>Ah I get it now; accept my apologies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2014-09-02</div>
+          <div class="post_content">
+<p>Does this address the use case? <a href="http://books.spec.whatwg.org/#cross-references">http://books.spec.whatwg.org/#cross-references</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2016-10-18</div>
+          <div class="post_content">
+<p>Yes, for simple cross references. However, I doubt that browser vendors are too pumped to implement this (given the current support for <code>@page</code> properties <em>et al.</em>).</p>
+<p>Also more complex situations would be easier addressed in Javascript. So I’d still love to be able to do that in the DOM, too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2016-10-20</div>
+          <div class="post_content">
+<p><a href="https://drafts.csswg.org/css-content/#target-counter">https://drafts.csswg.org/css-content/#target-counter</a> is a better reference than the books spec, which is more of a single person’s research project than a work-in-progress specification.</p>
+<p>And while it is true that browsers are not in a hurry to support paginated stuff, that feature can still be used for other use cases, since it can be used with any counter, not just the page counter:</p>
+<p><a class="onebox" href="http://vivliostyle.github.io/vivliostyle.js/viewer/vivliostyle-viewer.html#x=http://output.jsbin.com/xowuro&amp;spread=false&amp;f=epubcfi(/2!)" target="_blank">http://vivliostyle.github.io/vivliostyle.js/viewer/vivliostyle-viewer.html#x=http://output.jsbin.com/xowuro&amp;spread=false&amp;f=epubcfi(/2!)</a></p>
+<p>Source here (<a href="http://output.jsbin.com/xowuro">http://output.jsbin.com/xowuro</a>)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

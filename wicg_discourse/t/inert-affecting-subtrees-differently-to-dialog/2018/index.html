@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Inert affecting subtrees differently to dialog</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Inert affecting subtrees differently to dialog</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>I’ve been reading <a href="https://github.com/WICG/inert#spec" rel="nofollow noopener">the inert proposal</a> and I’m curious why the design is for the inert attribute to apply to the entire tree of shadow-inclusive descendants.</p>
+<p>The dialog element has a similar concept of making the page content inert, but it works differently—it makes the document inert, <em>except</em> for the subtree starting at the dialog.</p>
+<p>When you use these two features together, you get something flexible enough to do, over the path from document root to leaf node:</p>
+<p>non-inert → inert (inert attribute)
+inert → non-inert (dialog)
+inert → non-inert → inert (dialog and an inert attribute, see the example below)</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;div&gt;
+  This is made inert by the dialog
+  &lt;dialog id="d"&gt;
+    This is non-inert, it's in the dialog
+    &lt;div inert&gt;
+      This subtree is inert because of the attribute
+    &lt;/div&gt;
+  &lt;/dialog&gt;
+&lt;/div&gt;
+&lt;script&gt;d.showModal();&lt;/script&gt;
+</code></pre>
+<p>It seems dialog and the inert attribute are slightly non-orthogonal in how they affect inert-ness. It will also be necessary to decide how they interact, for example, what happens to a dialog in an inert subtree that’s then shown modally?</p>
+<p>This kind of complexity makes me wonder if it would be worth generalizing the attribute a bit so it can turn inert “on” or “off” at any level of the tree. Then dialog is not a special case, just implicitly turns inert off if shown or something like that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<blockquote>
+<p>This kind of complexity makes me wonder if it would be worth generalizing the attribute a bit so it can turn inert “on” or “off” at any level of the tree.</p>
+</blockquote>
+<p>I think this would make the most sense. Similar to the cascading style of CSS, a child element could/should take priority over its parent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>Similar to the cascading style of CSS, a child element could/should take priority over its parent.</p>
+</blockquote>
+</aside>
+<p>Counter-example: <code>display: none</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>True, but <em>in general</em> CSS cascades. It’s literally in the name.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>Not allowing escaping out of inert subtrees makes things much simpler.</p>
+<p>To allow escaping out of subtrees:</p>
+<ul>
+<li>A bare attribute would no longer work; it would have to be <code>inert=true</code> or <code>inert=false</code>.</li>
+<li>We would need to carefully consider what is “allowed” to break out of an inert subtree. For example, consider a custom element like this:</li>
+</ul>
+<pre><code class="lang-auto">  &lt;custom-thing inert=true&gt;
+    &lt;div inert=true&gt;
+        &lt;div inert=false&gt;
+          Hi!
+        &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/custom-thing&gt;
+</code></pre>
+<p>…the <code>div</code> in the middle should probably be still inert, because it was probably only intended to undo the inert within the custom element template. But what if it was intended as a dialog? How could you express “jump out of all the inert”?</p>
+<ul>
+<li>Similarly, could elements in Shadow DOM jump out of inert set on or above the shadow host? What about iframes? You could imagine embedding an iframe which has <code>&lt;div inert=false&gt;</code> inside it potentially breaking out to the main page.</li>
+</ul>
+<p>As discussed elsewhere, I agree we need another primitive to explain <code>&lt;dialog&gt;</code>. I don’t think <code>inert</code> should be generalised to this case.</p>
+<p>In terms of the interaction between <code>inert</code> and today’s <code>&lt;dialog&gt;</code> - consistency with the existing <code>&lt;dialog&gt;</code> implementation in Chrome would seem to suggest that a modally shown dialog can jump out of an inert subtree. This would need to be explained, or revisited. However, I don’t think that is urgent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>Not allowing escaping out of inert subtrees makes things much simpler.</p>
+</blockquote>
+</aside>
+<p>How does this affect use cases? The explainer mentions polyfilling dialog, but maybe the argument would be stronger without mentioning polyfilling dialog because of the difference in the attribute applying to subtrees and dialog applying inertness from document root except the dialog subtree.</p>
+<p>The idea that it makes dialog easier to implement also might be stronger with some clarification—it requires an “inert” property for nodes which dialog also requires, but it doesn’t simplify how that property is computed or interactions between things defining that property.</p>
+<aside class="quote" data-post="5" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>… But what if it was intended as a dialog? How could you express “jump out of all the inert”?</p>
+</blockquote>
+</aside>
+<p>Yes, there’s an encapsulation problem with the idea of it switching on and off.</p>
+<aside class="quote" data-post="5" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>In terms of the interaction between inert and today’s &lt;dialog&gt; my proposed solution is:- Whatever is further up the tree “wins”, i.e. a &lt;dialog&gt; can’t jump out of an inert subtree and become un-inert.</p>
+</blockquote>
+</aside>
+<p>It would be good to have a name for this idea. The HTML spec has “inert” and “expressly inert”, and this proposal is a third thing—“sticky inert” or something—because in your proposal it takes precedence over dialogs which aren’t inert, despite having inert ancestors, because they’re active and not expressly inert.</p>
+<p>Untangling these concepts would be good.</p>
+<p>I wonder if I’m just confused, that your proposal is a separate parallel concept which has the same effect on focus, etc. as inert does (or disabled for that matter) but exists separately, and I was just confused by overloading an existing coincidental spec term.</p>
+<p>I think English works against us here, by the way, because “ert” isn’t a thing; there’s just in-ert and not in-ert looks like a double negative.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>How does this affect use cases? The explainer mentions polyfilling dialog, but maybe the argument would be stronger without mentioning polyfilling dialog because of the difference in the attribute applying to subtrees and dialog applying inertness from document root except the dialog subtree.</p>
+</blockquote>
+</aside>
+<p>I didn’t say it would be a high fidelity polyfill <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> You would need to put all body content inside a container element, and have all dialogs exist outside that container. However, that would still be an improvement on today’s situation, which requires hackery to prevent focus leaving the dialog, and still requires a container element to host the <code>aria-hidden</code> attribute.</p>
+<aside class="quote" data-post="6" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>The idea that it makes dialog easier to implement also might be stronger with some clarification—it requires an “inert” property for nodes which dialog also requires, but it doesn’t simplify how that property is computed or interactions between things defining that property.</p>
+</blockquote>
+</aside>
+<p>I said it was almost a strict subset of implementing dialog - dialog requires the concept of “inertness” to be wired up as one of the steps, and this proposal more or less stops there (after exposing this concept via an attribute)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>Oops, hit the wrong button!</p>
+<aside class="quote" data-post="6" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>It would be good to have a name for this idea. The HTML spec has “inert” and “expressly inert”, and this proposal is a third thing—“sticky inert” or something—because in your proposal it takes precedence over dialogs which aren’t inert, despite having inert ancestors, because they’re active and not expressly inert.</p>
+</blockquote>
+</aside>
+<p>Yeah I changed my mind on that:</p>
+<aside class="quote" data-post="5" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>In terms of the interaction between inert and today’s &lt;dialog&gt; - consistency with the existing &lt;dialog&gt; implementation in Chrome would seem to suggest that a modally shown dialog can jump out of an inert subtree. This would need to be explained, or revisited. However, I don’t think that is urgent.</p>
+</blockquote>
+</aside>
+<p>Editing to add: I don’t think explaining <code>&lt;dialog&gt;</code>'s ability to jump out of inert is urgent, I just think we should be consistent about whether <code>&lt;dialog&gt;</code> can jump out regardless of how a subtree comes to be inert.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>I think a better analogy is CSS properties which inherit. Inherit is about taking property values from ancestor elements in the DOM. Cascading in CSS is about combining sets of properties from different rules and stylesheets.</p>
+<p>This proposal considers whether DOM ancestors have an attribute, which is more like inheritance than cascading. For example, if we tried to “translate” this proposal to CSS, it would be more likely with a property (say, <code>inertness</code>) for the effective value and then inheritance to make it work for subtrees:</p>
+<pre><code>/* CSS spec somewhere:
+   inertness: lively | pining-for-fjords | inherit;
+   default value is 'inherit' */
+
+BODY { inertness: lively; }     
+[inert] { inertness: pining-for-fjords; }
+</code></pre>
+<p>What’s missing here is the idea that once turned on for a subtree, it can’t be turned off.</p>
+<p>(I don’t think this proposal should be mapped to CSS in this way, for what it’s worth.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>Yes, that’s what I was trying to get at; I just mixed up cascading and inheritance.</p>
+<p>I personally don’t see the issue with having a boolean “toggle switch”, so to speak. If you turn it on, it’s on until you say otherwise (within its DOM descendents). Likewise with off.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-02-16</div>
+          <div class="post_content">
+<p>So - I was involved in the discussions/creation of the polyfill and we spent probably a couple of days discussing this then… It is definitely a common “first reaction” but that comes largely from the fact that we are primarily visually minded, I think.  I would encourage you to attempt to fork the speculative polyfill, think through how it would work and add what you are thinking of.  I <em>think</em> that you will find that while it is easy to describe a simple display property like “font-size” that way, it is a very different beast to describe something with meaning that plays into the accessibility tree and interaction.</p>
+<p>Keep in mind that we do have functional modal dialogs implemented today and the approach to all of them is more or less universal - you create a root level container for all of the things except “top level stuff” and another one for “top level stuff”.  When you place a dialog, it goes into “top level stuff” and then you inert the other – all the way down… just like the polyfill.  I would posit that browsers would probably effectively need to create something similarly simple to explain/implement rather than “ragged or interruptible inert regions”… But experimentation will tell you for sure and, maybe you can come up with something great.  If so, it’d be very interesting to see and discuss.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2017-02-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>Keep in mind that we do have functional modal dialogs implemented today and the approach to all of them is more or less universal - you create a root level container for all of the things except “top level stuff” and another one for “top level stuff”.  When you place a dialog, it goes into “top level stuff” and then you inert the other – all the way down… just like the polyfill.</p>
+</blockquote>
+</aside>
+<p>One potential problem here is that HTML’s dialog element doesn’t work this way in the DOM tree. You can have a dialog buried deep in the DOM tree (which is a nice property to have for composition) and when it is shown the tree “around” it becomes inert.</p>
+<p>It can do this because of the invention of the toplayer which is the special pocket of a root level container, and it goes in there. But toplayer is not DOM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>It can do this because of the invention of the toplayer which is the special pocket of a root level container, and it goes in there. But toplayer is not DOM.</p>
+</blockquote>
+</aside>
+<p>Right: my feeling is that “top layer” should be the primitive to explain <code>&lt;dialog&gt;</code> - but that that work should be done later.</p>
+<p>Edit: I don’t mean “some day”, I mean “I am happy to take this on next quarter”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-02-17</div>
+          <div class="post_content">
+<p>ok, but: a) the idea is very similar and we can’t polyfill that and b) the dialog element is currently not much more than useful fiction for discussion.</p>
+<p>What we’re trying to do is create achievable, smaller steps that deliver low level things that can explain these concepts concretely, EWM style.  This makes it easier to do non native s (and kind-of-dialog-like things) that are accessible until we arrive there.  Today only one browser implements it or even has any plans to.</p>
+<p>If, ultimately, we need to slightly change the spec’s inner-workings for dialog itself to get others on board, it is in my own estimation probably ok… Especially since arguably that one browser has the most resources  and this is kind of the cost of being the first-mover.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>a) the idea is very similar and we can’t polyfill that</p>
+</blockquote>
+</aside>
+<p>I’ve lost the thread of discussion—which idea is similar to which other idea?</p>
+<aside class="quote" data-post="14" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>b) the dialog element is currently not much more than useful fiction for discussion.</p>
+</blockquote>
+</aside>
+<p>Chrome has an implementation of DIALOG, albeit with some <a href="https://bugs.chromium.org/p/chromium/issues/list?can=2&amp;q=component%3ABlink%3EHTML%3EDialog+&amp;colspec=ID+Pri+M+Stars+ReleaseBlock+Component+Status+Owner+Summary+OS+Modified&amp;x=m&amp;y=releaseblock&amp;cells=ids" rel="nofollow noopener">known bugs.</a></p>
+<aside class="quote" data-post="14" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>EWM style</p>
+</blockquote>
+</aside>
+<p>That is Extensible Web Manifesto, right? From memory that wants to: 1. Add new low-level capabilities; 2. “Explain” existing features by breaking them into orthogonal, low-level parts; 3. Build high-level features in JavaScript frameworks first; 4. Don’t do other things.</p>
+<p>This is a new low-level capability. I’m not sure how many of the other boxes it ticks; you can’t really make the dialog element out of this and toplayer, for example. Even if you’re willing to move polyfilled dialogs up to the body, which changes a lot related to style, I don’t think you’ll be able to make something where the polyfilled dialog is non-inert and some text that’s a child of body is inert.</p>
+<aside class="quote" data-post="13" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>my feeling is that “top layer” should be the primitive to explain &lt;dialog&gt;</p>
+</blockquote>
+</aside>
+<p>I view dialog as having a few parts:</p>
+<ul>
+<li>Top layer interaction</li>
+<li>Inertness</li>
+<li>Magic and possibly dubious sizing and positioning</li>
+<li>Dialog stack management</li>
+<li>API: events, return values, etc.</li>
+</ul>
+<p>I think you want the UA involved in most of those. Having toplayer alone is probably not enough.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="15" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>I view dialog as having a few parts:</p>
+</blockquote>
+</aside>
+<p>Definitely agreed.</p>
+<aside class="quote" data-post="15" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>Top layer interaction
+Inertness</p>
+</blockquote>
+</aside>
+<p>I think we should bundle these together. Requesting top layer + any kind of ::backdrop style -&gt; rest of page becomes inert.</p>
+<aside class="quote" data-post="15" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>Magic and possibly dubious sizing and positioning</p>
+</blockquote>
+</aside>
+<p>Could these be done with regular CSS?</p>
+<aside class="quote" data-post="15" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>Dialog stack management</p>
+</blockquote>
+</aside>
+<p>I think this is also a part of a top layer notion. Essentially you end up with the “blocking elements” idea but with the emphasis placed on presentation.</p>
+<aside class="quote" data-post="15" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>API: events, return values, etc.</p>
+</blockquote>
+</aside>
+<p>Agreed.</p>
+<aside class="quote" data-post="15" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dominic_cooney/40/967_1.png" width="20"/> Dominic_Cooney:</div>
+<blockquote>
+<p>I think you want the UA involved in most of those. Having toplayer alone is probably not enough.</p>
+</blockquote>
+</aside>
+<p>I misspoke in seeming to imply that it was; I meant more that it should explain dialog’s ability to both “jump out of” inert and also make everything else inert.</p>
+<p>To stay on-topic, though: do we both agree that <code>inert</code> should <em>not</em> be expected to explain the above?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/967_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dominic_Cooney</div>
+          <div class="creation_date">2017-02-23</div>
+          <div class="post_content">
+<p>Whether dialog’s magic sizing and positioning can be done by CSS is a good question for <span class="mention">@tabatkins</span> and others. My impression is dialog positioning is stateful, the HTML spec says (vaguely) to do it when what Blink would call a layout object is created for it. CSS tends not to be stateful in that way.</p>
+<aside class="quote" data-post="16" data-topic="2018">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>do we both agree that inert should not be expected to explain the above?</p>
+</blockquote>
+</aside>
+<p>I think inert should not be expected to explain dialog in general, but it should work consistently with how dialog inertness works. I’m fine with that being layered: dialog built on toplayer + ::backdrop and having toplayer + ::backdrop affect inertness. But the reality of the HTML spec today is that dialog interacts directly with inert.</p>
+<p>I think the explainer would be clearer if it separated two things. One is the concept of inertness, which is a property of nodes, and effects things like “how does this appear to accessibility tech?” In this sense of “inert” I think the statements the explainer makes about dialog, like being an implementation prerequisite, make sense.</p>
+<p>Then there’s a second concept, the inert attribute, and how it sets the inertness property of a subtree. In this sense a lot of the statements about inert polyfilling dialog seem dubious to me. For example, I don’t think the inert attribute is useful for polyfilling dialog. The DOM structure constraints the inert attribute put you under will “break” CSS selectors and you will need to polyfill CSS to undo that breakage.</p>
+<p>I also think you can’t polyfill dialog without toplayer/blockingElements. Without toplayer the polyfill-dialog will have to be a child of body to be rendered, and with the inert attribute I’m not sure there’s a  way to make text node children of body be inert without also making the polyfill-dialog be inert. Can shadow DOM do it by a slot being inert?</p>
+<p>I’m wondering the same kind of things about the explainer’s claim that inert is useful for polyfilling blocking elements. The impression I get is that inert is sufficient to polyfill dialog and toplayer but I don’t think that is intended.</p>
+<p>My $0.02: I think I could understand the explainer more readily if it separated the inert bit on content from the inert attribute, and focused more on the positive use case of offscreen, hidden and non-interactive content. That dialog and blocking elements may also “set” the inert bit is an important technical detail to consider.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-23</div>
+          <div class="post_content">
+<p>That all makes sense - will update the explainer to clarify. Thanks <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2017-02-25</div>
+          <div class="post_content">
+<p>Updated the <a href="https://github.com/WICG/inert/blob/master/README.md#the-case-for-inert-as-a-primitive" rel="nofollow noopener">README</a> to explain how this helps with <code>&lt;dialog&gt;</code>/<code>blockingElements</code>, and linked to an <a href="https://github.com/PolymerLabs/blockingElements" rel="nofollow noopener">example implementation</a>.</p>
+<p>Note that no, it’s not a drop dead easy implementation - that is, it doesn’t remove the need for the things it’s polyfilling! - but since there is no existing notion of <code>inert</code> it removes a lot of hacks and compromises that are necessary today.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

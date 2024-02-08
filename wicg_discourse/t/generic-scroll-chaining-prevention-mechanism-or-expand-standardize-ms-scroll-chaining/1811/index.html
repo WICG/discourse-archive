@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Generic Scroll Chaining Prevention Mechanism (or expand/standardize -ms-scroll-chaining)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Generic Scroll Chaining Prevention Mechanism (or expand/standardize -ms-scroll-chaining)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<h1>Problem</h1>
+<p>Scroll chaining is the process of propagating the scroll delta to the the nearest scrollable parent element once an scrollable reaches its limit. Scroll chaining is not always desirable. For example consider a fixed/absolute position scroller whose scroll should not chain to parent scroller i.e., the document. You can find this UX pattern used in most chat boxes that live at the bottom of the page such as in Facebook or Gmail UI. (See <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=162179#c75" rel="nofollow noopener">this chrome bug</a> for example)</p>
+<p>To give you a sense of how popular preventing scroll chaining may be, according to my quick http-archive search <code>-ms-scroll-chaining: none</code> is used in 0.4% of top 300K pages despite being limited in functionality and only supported on IE/Edge.</p>
+<h1>Current Solution</h1>
+<p><a href="https://msdn.microsoft.com/en-ca/library/windows/apps/hh466007.aspx" rel="nofollow noopener">-ms-scroll-chaining</a> is a vendor specific API which I believe is only supported by IE and Edge at the moment. The CSS property provides a simple declarative way to prevent propagation of scroll gestures to parent containers but unfortunately it is only limited to touch/touchpad scrolls.  [1]</p>
+<p>This means that currently the best cross-browser compatible way to prevent scroll propagation is to have a combination of blocking wheel event listener (bad for performance), blocking keyboard listeners for all scroll inducing keys, carefully crafted touch-action values, and perhaps even -ms-scroll-chaining. These are rather ugly and complex hacks that “-ms-scroll-chaining” should have been able to replace but it cannot in its current form.</p>
+<h1>Proposal</h1>
+<p>I think <code>scroll-chaining</code> is not really useful until it can be used to prevent scroll propagation in the general case. Enabling that will make it much more useful to web developers and thus more compelling for UAs to implement. So I propose the following changes to its semantic:</p>
+<ol>
+<li>
+<p><code>scroll-chaining</code> should apply to all user scrolls including mouse, touch, keyboard, and others. Programmatic scroll APIs such as <code>Element::scrollIntoView</code> are not affected by this.</p>
+</li>
+<li>
+<p>Scroll chaining be controlled independently for each axis. For example a component which does not overflow on horizontally should not prevent propagation on that axis if it only needs to prevent the vertical propagation. I suggest using <code>scroll-chaining-{x,y}</code> long-hands to match the overflow property.</p>
+</li>
+</ol>
+<h2>Bonus Change</h2>
+<p>Specify what scroll-chaining means if it is added to the viewport defining element. Many browsers do navigation actions once user overscrolls the viewport. Lack of control over this behaviour has been a well-known pain for developers. We are experimenting with a <a href="https://discourse.wicg.io/t/proposal-api-to-control-user-gesture-navigation/1536">new API</a> to address this usecase but I think there is an opportunity here to leverage <code>scroll-chaining</code> here and avoid a slightly different API. For example, if chaining is disabled on viewport  then it should disable navigation actions.</p>
+<p>Note that (1) and (bonus change) may pose some compat risk however I feel these would be limited.
+We can try to better understand these risks once there is some consensus that these are useful changes.</p>
+<h1>Side Notes</h1>
+<p>I am not sure why <code>scroll-chaining: none</code> specifies a “bounce effect”. To me this looks like a user-agent specific affordance that does not need to be in the spec.</p>
+<p>According to my tests the current definition is also bit out-dated compared to the current implementation in latest IE/Edge implementation. In particular, the property is not limited only to take effect <em>during a manipulation</em> but it also takes effect at the start of the manipulation. I think this is the right behavior anyways.</p>
+<p>[1]</p>
+<blockquote>
+<p>This property only applies to touch and touchpad input. Regardless of –ms-scroll-chaining value, for keyboard input the scroll does not chain, and for mouse input the scroll will always chain up to the nearest scrollable ancestor element.</p>
+</blockquote>
+<p>[2]</p>
+<blockquote>
+<p>Value that indicates the behavior that occurs when a user hits the scroll limit.
+chained :   Initial value. The nearest scrollable parent element begins scrolling when the user hits a scroll limit during a manipulation. No bounce effect is shown.
+none:  A bounce effect is shown when the user hits a scroll limit during a manipulation.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<p><span class="mention">@jacobrossi</span> <span class="mention">@teddink</span> I would specially appreciate to know your take on this proposal. In particular, was there any specific reason as to why IE team decided to limit -ms-scroll-chaining to only touch/touchpad?</p>
+<p>P.S. I should mention that I am a Chromium engineer and would be happy to drive this work from our end.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-11-14</div>
+          <div class="post_content">
+<p>I’ve created <a href="https://output.jsbin.com/nicere/quiet" rel="nofollow noopener">a demo</a> and from what I see <code>-ms-scroll-chaining</code> is <em>not</em> supported in Edge or IE11. Could you check?</p>
+<p>(To test, position the mouse cursor inside the yellow box and start scrolling with the mouse wheel; once you reach the end of the box, the browser should not “switch” to the main scrollbar.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-11-14</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1811">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>To test, position the mouse cursor inside the yellow box and start scrolling with the mouse wheel;</p>
+</blockquote>
+</aside>
+<p>Currently -ms-scroll-chaining is only applicable to touch and touchpad scrolling**. It has no effect on mouse wheel which is what you are testing. This is indeed one of the things I am proposing to change so that it applies to all scrolling.</p>
+<p>** I verified that your demo works (i.e., chaining is disabled) with touch scrolling on a Edge/Win10/SurfaceBook combination.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2291_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChumpChief</div>
+          <div class="creation_date">2016-11-14</div>
+          <div class="post_content">
+<p>I like the proposal and agree with your proposed 1, 2 and bonus changes.  The limitation of support to touch+touchpad is an implementation artifact and not by design.  Agreed that the property should take effect both at the start and throughout the manipulation.</p>
+<p>Agreed the “bounce effect” is implementation-specific and seems correct to omit that particular phrasing from the spec.  However we may want to merge this solution with a solution for suppressing all UA-specific UI affordances when reaching the boundary of a non-chained scroller (we’ve received this request from multiple sources trying to improve their control over this behavior).  So the 3 behaviors would be chain, resist chain with UI affordance, resist chain with no UI affordance.  Doing so might point to alternative naming, maybe something like</p>
+<p><code>scroll-boundary-behavior: scroll-parent | contain-scroll | none</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-11-15</div>
+          <div class="post_content">
+<blockquote>
+<p>I like the proposal and agree with your proposed 1, 2 and bonus changes. The limitation of support to touch+touchpad is an implementation artifact and not by design. Agreed that the property should take effect both at the start and throughout the manipulation.</p>
+</blockquote>
+<p>Great!</p>
+<blockquote>
+<p>However we may want to merge this solution with a solution for suppressing all UA-specific UI affordances when reaching the boundary of a non-chained scroller (we’ve received this request from multiple sources trying to improve their control over this behavior)</p>
+</blockquote>
+<p>I like this idea. Here is another <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=333021" rel="nofollow noopener">example</a> (related to elastic bounce effect on Mac OS) where controlling the overscroll UI affordance is desired.</p>
+<blockquote>
+<p>Doing so might point to alternative naming, maybe something like
+scroll-boundary-behavior: scroll-parent | contain-scroll | none</p>
+</blockquote>
+<p>How about:
+<code>scroll-boundary-behavior: propagate | contain | none</code></p>
+<ul>
+<li>
+<code>propagate</code>: propagate scroll to the parent scroller. If there is no parent scroller (e.g., viewport) user-agent may perform a default action (e.g. navigation) or show any appropriate overscroll UI affordance. This is the <strong>default</strong> value.</li>
+<li>
+<code>contain</code>: do not propoagate. The user agent may show an appropriate overscroll UI affordance such as glow/bounce etc.</li>
+<li>
+<code>none</code>: same as contain but also prevents any affordance UI affordance.</li>
+</ul>
+<p>There will be <code>scroll-boundary-behavior-{x,y}</code> long-hands too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2016-11-23</div>
+          <div class="post_content">
+<p>The name should probably be more different from the existing <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-behavior" rel="nofollow noopener"><code>scroll-behavior</code></a>, which has this constraint:</p>
+<blockquote>
+<p>The <strong><code>scroll-behavior</code></strong> CSS property specifies the scrolling behavior for a scrolling box, when scrolling happens due to navigation or CSSOM scrolling APIs. Any other scrolls, e.g. those that are performed by the user, are not affected by this property.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-11-28</div>
+          <div class="post_content">
+<p>I still like “scroll-boundary-behavior” myself. I think whatever the name, this property belongs to CSSOM spec which also defines “scroll-behavior”. So I will opened an issue for <a href="https://drafts.csswg.org/cssom-view/" rel="nofollow noopener">CSSOM VIEW</a> to see what its editor think about this feature and in particular if they have any objection/suggestion w.r.t naming.</p>
+<p>I personally don’t think the fact that “scroll-behavior” is scoped to be limited to programmatic scrolls should prevent us to use ‘scroll’ and ‘behavior’ in other context where the scope is not limited to programmatic scrolls.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-11-28</div>
+          <div class="post_content">
+<p>I went ahead and created a <a href="https://github.com/w3c/csswg-drafts/issues/769" rel="nofollow noopener">github issue</a> against CSSOM View to get its editors feedback on naming and it being the potential home for this feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1714_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Benoit_Girard</div>
+          <div class="creation_date">2017-04-13</div>
+          <div class="post_content">
+<p>I’m working on a WICG repo for this issue. If you don’t mind I’d like to use your initial problem statement for the <a href="http://explainer.md" rel="nofollow noopener">explainer.md</a>. I should have something up in a few weeks or earlier.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2017-04-17</div>
+          <div class="post_content">
+<p>This is great to hear. Please feel free to use any of the material in this thread or on the <a href="https://github.com/w3c/csswg-drafts/issues/769" rel="nofollow noopener">github issue</a> in the WICG repo. I am happy to collaborate as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>Looks like Benoit has a repo started <a href="https://github.com/bgirard/scroll-boundary-behavior" rel="nofollow noopener">here</a>, thanks Benoit!  CSSWG also recently <a href="https://github.com/w3c/csswg-drafts/issues/769#issuecomment-293111694" rel="nofollow noopener">resolved</a> to work on this in WCIG.  We’ll get the process started to move this to the WICG org.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2017-11-03</div>
+          <div class="post_content">
+<p>Incidentally, this repo has been renamed to match the new name - <a href="https://github.com/WICG/overscroll-behavior">https://github.com/WICG/overscroll-behavior</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-11-03</div>
+          <div class="post_content">
+<p>Chrome 63 (current beta) should have support for <code>overscroll-behavior</code>, per <a href="https://www.chromestatus.com/feature/5734614437986304" rel="nofollow noopener">chromestatus</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

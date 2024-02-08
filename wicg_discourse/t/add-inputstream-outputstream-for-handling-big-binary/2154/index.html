@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add inputstream/outputstream for handling big binary</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add inputstream/outputstream for handling big binary</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-05-14</div>
+          <div class="post_content">
+<p>I m trying to save a big file receicing chunks dinamically. Now i can make it converting it in a Blob … but it means all data is in memory. it is not a best practice and it dont work for big files
+It would be necessary to add a inputstream/outputstream so i can append chunks
+dinamically and the saver can save it using i fixed memory space .
+The same is for the object Response. I d like pass in constructor a inputstream so i can simulate a http chunks response.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-05-15</div>
+          <div class="post_content">
+<p>Perhaps the <a href="https://streams.spec.whatwg.org/">streams API</a> is what you need.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-05-15</div>
+          <div class="post_content">
+<p>yes thanks . I hope Firefox Edge will implement fastly them</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2017-05-17</div>
+          <div class="post_content">
+<p>If you need support today, <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/response" rel="nofollow noopener">Firefox supports XHR streaming with <code>responseType = 'moz-chunked-arraybuffer'</code>, and IE supports it with <code>responseType = 'ms-stream'</code></a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-05-17</div>
+          <div class="post_content">
+<p>We did some initial work on streams. I don’t expect us to implement until next year or the year after, however.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-06-04</div>
+          <div class="post_content">
+<p>I saw there is a problem with stream designed by w3c.</p>
+<p>scenario 1) i want call a url and receive a stream object for parsing chunks. I wont load all in one. now it is impossible
+scenario 2) i want save a video stream but now the recorderd stream is a blob (considering a video can be long as you want in memory) you can create easly a crash of the mobile or pc .</p>
+<p>Too many objects  for doing a simple thing: to read a stream and when exist you cant do waht you want</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Cristian_Lorenzetto</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>sincerely your proposal is technical not architectural … so you will return on the same problem with other technologies.
+the problem is simple.
+i dont mind if is ajax , websocket or a magic lbrary …
+The  browser expects a object of a specific prototype … permitting to append chunk for sending or receice chunk for receiver . It is very simple to implement . It works everywhere with any techonlogy and it is robust.
+I  need just
+var stream=new Stream()
+new Response(stream)
+stream.appendChunck(chunk)
+I want save a stream from a request ? i want preprocess a input file? I want save a video stream ? it is simple
+stream.onData=function(chunk,isLast){  do something … }</p>
+<p>This permits also to solve a big problem in all browsers to handle streams using Blob concept that is not really really really a good pragmatical pratice. It permits out of memory programmatically !</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mark</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>You are right , i have the same problem in my project. I don t know how to save a video stream. I cant use  Media Recorder … it creates a big file in memory … just for little video.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mark</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>There is websocket performing better for streams instead of ajax ms-stream the problem is not how to receive a stream from server but how to pass a stream to server from a client stream . I m thinking above all about video/audio stream</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pinkos</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>We have a platform that produces and edits video. We have been waiting for a year to save audio streams on our servers without using complex proprietary solutions. Hopefully w3c will soon offer us a way to save streams using chunks</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

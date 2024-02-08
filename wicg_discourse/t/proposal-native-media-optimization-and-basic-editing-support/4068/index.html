@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Native media optimization and (basic) editing support</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Native media optimization and (basic) editing support</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2019-11-07</div>
+          <div class="post_content">
+<p><em>Related discussion: <a href="https://crbug.com/1018022" rel="nofollow noopener">crbug.com/1018022</a></em></p>
+<p>Images account for <a href="https://httparchive.org/reports/page-weight" rel="nofollow noopener">~50% of transferred
+bytes</a> and remain one the biggest
+optimization problems and opportunities on the web. The reasons why this problem
+persists are numerous and complex. An incomplete list and in no particular
+order…</p>
+<ul>
+<li>Most users who upload media are not tech savvy enough to know about formats,
+file sizes, etc (<em>nor should they be!</em>). The natural flow is to pick the file
+from a media picker and hit upload.</li>
+<li>The torso and long tail of the web are not setup to bear the cost of image
+optimization: the economics of the long tail are to host the most number of
+sites and assets at lowest cost; format optimization, resizing, etc., is
+CPU+storage costly and is omitted.</li>
+<li>Image optimization is hard™ and setting up CDNs or open source services
+requires awareness, technical know-how, and often a credit card.</li>
+</ul>
+<p>We (the webperf community and web developers at large) have been beating our heads against this problem for over a decade but the “solution at scale” remains an unsolved challenge.</p>
+<p>I will suggest that <strong>the only way to make progress in this space is to ensure that media leaving the device is optimized against criteria specified by the upload target.</strong>
+That is, the optimization should happen on the users device, before it is
+uploaded, and according to criteria specified by the service or site that is
+initiating the upload. Such common criteria are: accepted file type, file size,
+aspect ratio or max width/height, or duration for video/animated images.</p>
+<p><strong><img alt="" height="233" src="https://lh6.googleusercontent.com/8qwuUmf2y1pUSNyhi4tYOgqW6jF9JN_vEv-an4Q7_i2oIsKZkk03tvQ737UuCBLT9PSo7Keajz4cumcEytFGZUVOVFxcVE8nkN6c6MqrZipacBEa3dC4LL6Ysm_CcAPWA9mqHjY4" width="603"/></strong></p>
+<p>Prompts like the above are common on the web and are a terrible user experience.
+As the user faced with such dialogue: how do I resize the image to fit, how do I
+reduce the file size, how do I crop?</p>
+<p><strong>The browser can fix both the technical and cost problem faced by site owners, as well as significantly improve the user experience (latency, cost) for the user who is initiating the upload.</strong></p>
+<h2>A smarter (image) file input ~ MVP</h2>
+<p><em>Note: all names below are examples, subject to naming bikeshed, etc.</em></p>
+<pre><code class="lang-auto">&lt;input type="file" accept="image/*"&gt;
+</code></pre>
+<p>We already support some control over the inputs (via `accept`) to file upload.
+What is missing are the output controls, which the site owner could specify to
+instruct the browser on how it should assist the user. Such outputs could be…</p>
+<h3>Output filetype</h3>
+<pre><code class="lang-auto">&lt;input type="file" 
+   accept="image/*"
+   output="image/jpeg"&gt;
+</code></pre>
+<p>Transcoding files on the server incurs the cost of potentially unoptimized
+upload for the user, as well as CPU transcoding costs for the server. In many
+cases the site knows the exact format it needs to receive, and the browser
+should be able to transcode it before it is uploaded.</p>
+<h3>Maximum upload size</h3>
+<pre><code class="lang-auto">&lt;input type="file" 
+   accept="image/*"
+   output="image/jpeg"
+   outputMaxSize="1MB"&gt;
+</code></pre>
+<p>The browser should automatically re-encode the image on behalf of the user, with
+the best quality it can, against the specified limit. For example, if the user picks a
+32MB image from their mobile gallery, it shouldn’t throw an error but do the work
+on behalf of the user to meet the page specified criteria.</p>
+<h3>Dimension and aspect ratio constraints</h3>
+<pre><code class="lang-auto">&lt;input type="file" 
+   accept="image/*"
+   output="image/jpeg"
+   outputDimensions="1:1"&gt; // or “100x100px”, “1024px”...
+</code></pre>
+<p>The browser should automatically resize the image against specified width or
+height requirement on behalf of the user. If the aspect ratio does not match the
+input image, it should have a simple UI that allows them to figure out what to
+crop. For bonus points, the browser can also provide smart crop previews to
+assist the user; apply and demonstrate some of that ML magic we keep hearing about!</p>
+<hr/>
+<h2>A smarter (video) file input ~ beyond MVP</h2>
+<p><em>(Note: I would suggest we start by exploring image oriented use cases first, but we should keep in mind that video has similar (and even more acute and amplified) challenges for sites and users)</em></p>
+<p>Many of our mobile devices are now shooting at 4K resolution, which clocks in at
+10Mbps. Such uploads are costly for the user, prone to fail due to large
+filesizes, expensive to store and extremely expensive to manipulate on the
+server, and are rarely what is desired to be served to the user — for these
+reasons, free video optimization CDN’s (modulo, YouTube) are not a thing on the
+web.</p>
+<p>The browser is in a position to help both the user and site owner: it can
+downsample the video prior to upload, convert to alternate format if necessary,
+and provide a UI for the user to trim prior to upload, e.g…</p>
+<pre><code class="lang-auto">&lt;input type="file" 
+   accept="image/*"
+   output="image/mp4"
+   maxLength="10s"
+   outputSize="10MB"&gt;
+</code></pre>
+<ul>
+<li>Provide a UI to trim video to specified length prior to upload</li>
+<li>Enable the site to provide and enforce max filesize, accepted format.</li>
+<li>…</li>
+</ul>
+<hr/>
+<h2>FAQ</h2>
+<h3>Doesn’t canvas already allow me to resize, re-encode? Also, WASM?</h3>
+<p>In theory, yes, some of this is possible today (<a href="https://squoosh.app/" rel="nofollow noopener">squoosh.app</a> is an example) and <a href="https://github.com/WICG/web-codecs/blob/master/explainer.md" rel="nofollow noopener">proposed capabilities like WebCodecs</a> might unlock even more powerful use cases in the future. However, the fact that something is or may be possible in the future does not automatically mean that it will be adopted at scale and by all sites.</p>
+<p>In practice, implementing resizing, size optimization, cropping, etc., are hard
+technical problems. Case in point, it’s been possible to resize images via
+canvas for a long time, but that’s not a common or widely used best practice.
+The browser can and needs to own this problem if we want to see change at scale.
+At the same time, for those that want to pop the hood and implement own variant:
+great, we’ve got APIs for you!</p>
+<h3>How have others solved it today?</h3>
+<p>This problem space is hard. In fact, entire companies have been built around it:
+<a href="https://uploadcare.com/business/" rel="nofollow noopener">UploadCare</a>,
+<a href="https://www.filestack.com/" rel="nofollow noopener">FileStack</a>, etc. What’s described in this doc is a
+(small) subset of the services they offer, but a critical subset that should not
+require a credit card or technical knowledge to integrate.</p>
+<h3>There are free image CDNs, doesn’t that solve the problem?</h3>
+<p>No, CDNs do not solve all the problems.</p>
+<p>At upload time, the important criteria is that the media is optimized locally and before it is sent to the upload (potentially, CDN) server: the user must be able to perform basic editing operations like crop, video trim, rotate, etc, locally and with low latency; the file must (re)encoded prior to upload to maximize likelihood of upload success and minimize data cost for the user, as well as processing and storage costs for the server. Further a CDN should not be a requirement for delivering a reasonable user experience on the web — perhaps a recommended one, but not required…</p>
+<p>At serving time, yes, CDNs are and will remain an important best practice, as they can perform further device specific optimizations (e.g. re-encode and serve different formats for various browsers), apply further customizations and transforms, provide media management, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2019-11-07</div>
+          <div class="post_content">
+<blockquote>
+<p>Output filetype</p>
+</blockquote>
+<p>Could this be a list in priority order? “Please give me webp if you can, otherwise JPEG”.</p>
+<blockquote>
+<p>Maximum upload size</p>
+</blockquote>
+<p>This is great. However, the quality of browsers’ JPEG encoders is pretty varied. Would it be worth including a ‘quality’ option instead, where the way to determine quality was standardised. This means browsers with poorer JPEG encoders would produce larger files, but quality would be consistent.</p>
+<p>It feels like this would be in addition to the maximum upload size, where the maximum upload size would take priority.</p>
+<blockquote>
+<p>Dimension and aspect ratio constraints</p>
+</blockquote>
+<p>It isn’t clear to me how the user would specify “200px height but auto width” or “300px width but auto height”. Maybe use <code>200h</code> and <code>300w</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2019-11-07</div>
+          <div class="post_content">
+<aside class="quote no-group quote-modified" data-post="2" data-topic="4068">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_2.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>Could this (output) be a list in priority order? “Please give me webp if you can, otherwise JPEG”.</p>
+</blockquote>
+</aside>
+<p>Yeah, that makes sense! Accept header enables the client to advertise what it is able to accept from the server, and in this case it’s the inverse with the server expressing what it is able to accept from the client.</p>
+<aside class="quote no-group" data-post="2" data-topic="4068">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_2.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>However, the quality of browsers’ JPEG encoders is pretty varied. Would it be worth including a ‘quality’ option instead, where the way to determine quality was standardised.</p>
+</blockquote>
+</aside>
+<p>Personally, I would steer clear of this. As you said yourself, “quality” settings vary between formats and for each format between encoders — I don’t think that’s a problem we can solve, or need to drag in into this discussion. I would still focus on output size as leading signal, and defer to browser to do its best.</p>
+<aside class="quote no-group" data-post="2" data-topic="4068">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_2.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>It isn’t clear to me how the user would specify “200px height but auto width” or “300px width but auto height”. Maybe use <code>200h</code> and <code>300w</code> ?</p>
+</blockquote>
+</aside>
+<p>Not sure what the best syntax here is but yeah that makes sense. I’m hoping that we can find some precedent that we can lean on here. Something in CSS? The key use cases I see are: constrain by width, constrain by height, constrain by width and height, constrain by aspect ratio… which, I guess is similar to previous.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2661_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azaozz</div>
+          <div class="creation_date">2019-11-09</div>
+          <div class="post_content">
+<p>Pre-processing of images by the browser before uploading them sounds great. True, this can be achieved (more or less) by using <code>canvas</code> but that has several drawbacks. Apart from scaling, another common case is rotating JPEG images according to EXIF orientation.</p>
+<p>A common use case is uploading photos directly from a phone. Ideally they would be scaled and auto-rotated, and the EXIF orientation updated to reflect the change.</p>
+<p>In addition some access to overwriting/removing some of the values in EXIF would be great. Sometimes there may be low-res previews or other binary data, in other cases there may be privacy related information. Being able to filter or remove these parts before uploading an image would be very useful.</p>
+<aside class="quote no-group quote-modified" data-post="3" data-topic="4068">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/igrigorik/40/1793_2.png" width="20"/> igrigorik:</div>
+<blockquote>
+<p>Not sure what the best syntax here is…</p>
+</blockquote>
+</aside>
+<p>Yes, assuming aspect ratio will always be “locked”, a relatively simple way to look at it is by specifying “max width” and “max height”. For example <code>300x300</code> would be “maximum width of 300px for landscape or maximum height of 300px for portrait”. Then having a zero as one of the values would be auto/unlimited. The same can also be <code>300w 0h</code>, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">b7s9</div>
+          <div class="creation_date">2019-11-09</div>
+          <div class="post_content">
+<p>Now that so much of the web is user-generated content, I think it makes sense to approach a solution with the HTML file input. And as you said, it’s unfair to server owners to do costly media encoding at scale.</p>
+<p>I have no clue how feasible this would be, but from a UX perspective, if the browser is to handle this, I’m imagining some kind of media encoding queue across all browser windows. It would work asynchronously in the background and once a file is done, it directly uploads to the specified server, even if the user no longer has that window open – kind of like how the browser can continue downloading files even after closing the window.</p>
+<p>Given the interesting history of the <code>&lt;img&gt;</code> tag, I wonder if Tim Berners-Lee has been thinking about this problem lately…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jesup</div>
+          <div class="creation_date">2019-11-10</div>
+          <div class="post_content">
+<p>Resizing video in the client on upload… that can be very slow (especially on mobile) – and very expensive in battery, and also be a real drain on system performance until completed.  and it might run into problems with disk space unless it’s streamed out as re-encoded, in which case you’re seriously increasing the risk of a failed upload.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2019-11-11</div>
+          <div class="post_content">
+<p>Welp, the timing couldn’t be more perfect for this - we plan to propose the following video editing API to the Web Application WG this week but we can start it in the WICG since I think this overlaps many different teams (Web Apps, Perf &amp; Media): <a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/master/MediaBlob/explainer.md" rel="nofollow noopener">https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/master/MediaBlob/explainer.md</a></p>
+<p>We decided to start with video editing because we haven’t heard any complaints from webdevs regarding image editing on the client; while the pain for video editing is quite large (all you need to do is edit a video on YouTube and get the queue message to feel the poor UX).</p>
+<p>We’ve been working with partners on an early prototype and have seen a minimum of 40x perf improvements due to uploading only necessary bits and only transcoding when necessary. The benefit of this way is that many of the scenarios you don’t want to simply transcode video but manage how or what is transcoded.</p>
+<p>Interested to hear your feedback on the proposal. <span class="mention">@yoavweiss</span> <span class="mention">@marcosc</span> <span class="mention">@igrigorik</span> Where do you all feel is the best place to formally propose this as we’d like to start working out more of the specifics (eg: we’re trying to think about error)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-11-12</div>
+          <div class="post_content">
+<p>WICG feels like the right place… Just a heads up also to <span class="mention">@mounir</span>, as co-chair of the Media WG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2019-11-19</div>
+          <div class="post_content">
+<p>So it seems that a WICG repo seems reasonable. Since this is in our Edge explainer repo which I’m not going to transfer can an admin spin up a video-editing repo and I’ll move the explainer over. I’ll detangle the image editing from this as Ilya and I discussed this at CDS and we don’t think they should be coupled.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-11-19</div>
+          <div class="post_content">
+<p>I’ve set up a video-editing repo here: <a href="https://github.com/WICG/video-editing">https://github.com/WICG/video-editing</a></p>
+<p>Let me know if you want me to also spin up a separate image-editing one.</p>
+<p>Happy incubating!!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2019-11-21</div>
+          <div class="post_content">
+<p>Thanks all for the great feedback! There’s a few different places where related discussions took place, want to capture a few highlights and use cases for reference to help scope what we explore here…</p>
+<hr/>
+<h3>WordPress core media</h3>
+<p><span class="mention">@azaozz</span> for reference, copying some of the points you made in the  WP <a href="https://app.slack.com/client/T024MFP4J/C02SX62S6/thread/C02SX62S6-1573194021.441500" rel="nofollow noopener">core-media slack thread</a>:</p>
+<blockquote>
+<p>In Core we’ve looked at “in browser” image manipulations (scaling and rotating) several times since the media modal was added in 3.5. The main problems at the time were that it won’t work on phones as it takes huge amount of RAM, and that there was no good way to write EXIF after rotating…</p>
+<p>The EXIF thing is the biggest hurdle at the moment. There’s no good/straightforward way to change the “orientation” value there from js… Also some phones and cameras add… things there that need to be removed, like “low-res preview” etc.</p>
+<p>If this was handled by the browser more or less “automatically”, I’d be a bit +1 to implement in WP as soon as possible (even if it would mean dealing with “polyfills” etc.)</p>
+</blockquote>
+<h3>Tinder</h3>
+<p>Roderick, <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1018022#c3" rel="nofollow noopener">crbug comment</a>:</p>
+<blockquote>
+<p>Web app could have the UI to show the maximum size user could upload then user could choose the size within the range without client side calculation after uploaded. Will be also helpful if we could directly define max/min size on the input html tag, and browser will directly hide/fade the file options for ineligible file.</p>
+</blockquote>
+<h3>Twitter</h3>
+<p>Nolan O’Brien (Images lead at Twitter), <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1018022#c7" rel="nofollow noopener">crbug comment</a>:</p>
+<blockquote>
+<p>"Having access to that native photo picker (for resizing) would obviously be great. The options of original, large, medium and small are not as useful to us and our needs, and we’d frankly want to specify something specific for size constraints, but see the generalized use cases value for most app/site devs that don’t have our scale.</p>
+<p>Going into what would really be valuable, us being able to specify the encoding format would be big.  We could start with image/png and image/jpeg - then we could have room to experiment with different formats like adding webp or heic support.  That way, when there is a photo in an unsupported file format, it can be auto converted to a supported format.</p>
+<p>Granular “preferred” format encoding config options would be great too, avoid us having to double encode things and introducing quality loss.  Such as: image/jpeg;q=85;chroma-subsampling=4:2:0</p>
+<p>Specifying the target size bounds would be ideal too. Then we could have 2048x2048 uploads for mobile and 4096x4096 for desktop/tablet and experiment."</p>
+</blockquote>
+<blockquote>
+<p>“we transcode the image before upload – same with other sites.  Feel free to upload at larger sizes, it should just get shrunk by our client for you, but we won’t preserve the quality with sizes larger than 5MBs.” — <a href="https://twitter.com/NolanOBrien/status/1204804177920053248" rel="nofollow noopener">Twitter</a></p>
+</blockquote>
+<h3>Other</h3>
+<blockquote>
+<p><span class="mention">@Jake_Archibald</span> (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1018022#c9" rel="nofollow noopener">crbug</a>): this should include an option to strip metadata. This has huge file size benefits, especially since some phones embed video data within the image, but it’s also great for privacy, since users may not be aware that images can include geo tags etc. Do we strip any of this stuff already?</p>
+</blockquote>
+<blockquote>
+<p><span class="mention">@Matthieu</span> (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1018022#c10" rel="nofollow noopener">crbug</a>): Love the idea of native resize.Would love it even more with a declarative way to specify the desired resolution, quality, … which of course would depend on the browser support and user approval. +1 the option to strip metadata, and please don’t add any new metadata as the images are resized/re-encoded.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2019-12-08</div>
+          <div class="post_content">
+<p>As a brief aside, recently <a href="https://www.youtube.com/watch?v=vtIfVPtN6io" rel="nofollow noopener">gave a talk / retrospective at performance.now()</a> on why we haven’t been able to solve the image optimization problem at scale, and how we ought to approach this problem moving forward. Spoiler, if you’re reading this, you won’t be shocked that — I believe — providing the primitives outlined in this thread is a critical part of that solution.</p>
+<div class="lazyYT" data-height="270" data-parameters="feature=oembed&amp;wmode=opaque" data-width="480" data-youtube-id="vtIfVPtN6io" data-youtube-title="Ilya Grigorik | performance.now().reject(reasons) | performance.now() 2019"></div>
+<hr/>
+<p><span class="mention">@gregwhitworth</span> to close the loop on our CDS discussion…</p>
+<p>First off, said it in person but for public record want to add a <strong>strong +1</strong> to the proposal and the API you are exploring. I have some questions and feedback on the specifics, but I’ll file those on the new WICG repo (update: <a href="https://github.com/WICG/video-editing/issues/created_by/igrigorik" rel="nofollow noopener">here</a>). The one big thing that’s probably worth calling out here is…</p>
+<p>I flagged video as a potential (declarative markup) use case to explore in this proposal, but there are definitely more considerations and complications when it comes to video. For example, implications of how large clips are processed, how progress is communicated to the user, how the upload is handled, and so on. In that light, starting with a promise-based API approach is the right strategy here.</p>
+<p>We can run these things in parallel and adjacent tracks. I’ll focus this exploration on declarative primitives for (basic) image manipulation, we can pursue an API approach for (basic) video editing, and perhaps somewhere down the road we can revisit a declarative solution for video as well.</p>
+<hr/>
+<p><span class="mention">@marcosc</span> <span class="mention">@yoavweiss</span> tactical question… I think there is substantial amount of support and feedback here (see above) for exploring this space, and I’d like to create an explainer and engage interested site+browser developers in the design. Would you be open to creating a WICG repo for this work?</p>
+<p>In terms of the name, perhaps WICG/image-editing to keep things simple and mirror</p>
+<ul>
+<li>WICG/image-constraints</li>
+<li>WICG/image-optimization</li>
+<li>WICG/image-editing</li>
+</ul>
+<p>I think I’d lean towards constraints or optimization, since that’s what it’s mostly all about. WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-12-23</div>
+          <div class="post_content">
+<p>Hey <span class="mention">@igrigorik</span>, sorry it took me a while to get to this. <em>Personally</em>, I really like what you are prosing with the images and letting the browser handle the outputs.</p>
+<blockquote>
+<p>Would you be open to creating a WICG repo for this work?</p>
+</blockquote>
+<p>Yes. Absolutely. I’m scared of the amount of work browser vendors would need to do to adequately support this, but you are right that it would be hugely beneficial to all constituents and the web at large.</p>
+<p>It’s up to you how you want to split up the work - but maybe start with a single repo (image-output?) and then spin off new incubations as needed?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-12-23</div>
+          <div class="post_content">
+<p><span class="mention">@igrigorik</span>, I’ve created <a href="https://github.com/WICG/image-output">https://github.com/WICG/image-output</a> … made you admin.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2019-12-23</div>
+          <div class="post_content">
+<p>Awesome, thank you Marcos! I’m hopeful that the amount of work here for browsers is actually not <em>that much</em> and we can certainly tackle things in pieces. Hoping we can make good progress here in 2020.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-12-24</div>
+          <div class="post_content">
+<p>No problem. Filed a Mozilla standards position for the proposal too: <a href="https://github.com/mozilla/standards-positions/issues/237">https://github.com/mozilla/standards-positions/issues/237</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-12-31</div>
+          <div class="post_content">
+<p>Hypothetical: Let’s say we could do this in a very incremental way, what would be the 2 or 3 high-impact/low-complexity/high-interop things you would pick?</p>
+<p>On the Mozilla side, we have concern with runaway complexity of this proposal… so if we can get agreement on just tiny subset of things, then that might be a really good start.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2020-01-01</div>
+          <div class="post_content">
+<p>min/max dimensions and aspect ratio would be my number one and number two.</p>
+<p>A lot could be implicitly built around that. The browser could just reject files that fail to match in the first version and later automatically handle necessary scaling or provide a UI for cropping when it’s needed.</p>
+<p>Similarly, if the file input is accept=image/jpeg and it’s given a TIFF the browser could reject that or allow it and re-encode the file to jpeg on behalf of the user.</p>
+<p>Being able to declare a max file size and have the browser say “no, that’s too big” would be handy in general. If the browser then chooses to re-encode image files to fit within the size limits, that’s just a bonus.</p>
+<p>I imagine there would need to be some way for js to get a list of what operations the browser provides and a means to disable it if it’s not sufficient. (Use case: browser says “I reject images that are too big but don’t provide any UI for the user to crop or scale the images” and js says “well, in that case, I’ll load a polyfill and handle it myself”).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2784_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zspitzer</div>
+          <div class="creation_date">2020-02-24</div>
+          <div class="post_content">
+<p>Quality is a very important setting and needs to be consistent.</p>
+<p>Currently using the canvas approach, WebKit encodes JPEGs from Canvas at a different size (i.e not at jpeg compression level) to other browsers, resulting in huge images on iOS.
+<a class="onebox" href="https://bugs.webkit.org/show_bug.cgi?id=154713" rel="nofollow noopener" target="_blank">https://bugs.webkit.org/show_bug.cgi?id=154713</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2784_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zspitzer</div>
+          <div class="creation_date">2020-02-25</div>
+          <div class="post_content">
+<p>Sorry, I forgot that bug was locked down. Here is a simple demo of the problem with output quality <a href="https://jsfiddle.net/49uwfrqy/8/" rel="nofollow noopener">https://jsfiddle.net/49uwfrqy/8/</a></p>
+<p>At canvas.toDataURL(‘image/jpeg’, 60) Webkit produces a 23.51kb file, other browsers 12.96Kb</p>
+<p>With Chrome (Firefox matches Chrome)
+<div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/38c3908ad57840c608d128bb384c5aba4913c59c" href="//discourse.wicg.io/uploads/default/original/2X/3/38c3908ad57840c608d128bb384c5aba4913c59c.png" title="chrome canavas toDataUrl"><img alt="chrome canavas toDataUrl" data-base62-sha1="869JtZgMHh2S7FpJIfOATl8PBBa" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/3/38c3908ad57840c608d128bb384c5aba4913c59c_2_10x10.png" height="500" src="//discourse.wicg.io/uploads/default/optimized/2X/3/38c3908ad57840c608d128bb384c5aba4913c59c_2_527x500.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/3/38c3908ad57840c608d128bb384c5aba4913c59c_2_527x500.png, //discourse.wicg.io/uploads/default/original/2X/3/38c3908ad57840c608d128bb384c5aba4913c59c.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/3/38c3908ad57840c608d128bb384c5aba4913c59c.png 2x" width="527"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">chrome canavas toDataUrl</span><span class="informations">600×569 314 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>With Webkit (i.e. Safari and all browsers on iOS)
+<div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/0fdfd9f9c47472e17f4020b8df4d438570a873fb" href="//discourse.wicg.io/uploads/default/original/2X/0/0fdfd9f9c47472e17f4020b8df4d438570a873fb.png" title="webkit canavas toDataUrl"><img alt="webkit canavas toDataUrl" data-base62-sha1="2gqLdDSCKnyEJm90xCEhU5MJygr" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/0/0fdfd9f9c47472e17f4020b8df4d438570a873fb_2_10x10.png" height="500" src="//discourse.wicg.io/uploads/default/optimized/2X/0/0fdfd9f9c47472e17f4020b8df4d438570a873fb_2_527x500.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/0/0fdfd9f9c47472e17f4020b8df4d438570a873fb_2_527x500.png, //discourse.wicg.io/uploads/default/original/2X/0/0fdfd9f9c47472e17f4020b8df4d438570a873fb.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/0/0fdfd9f9c47472e17f4020b8df4d438570a873fb.png 2x" width="527"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">webkit canavas toDataUrl</span><span class="informations">600×569 311 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>The output size problem is more dramatic with larger images/resolutions</p>
+<p>As a result, in order to save bandwidth for Safari or iOS users, browser sniffing is required to produce consistent results.</p>
+<p>The spec does say the following</p>
+<blockquote>
+<p>Different implementations can have slightly different interpretations of “quality”. When the quality is not specified, an implementation-specific default is used that represents a reasonable compromise between compression ratio, image quality, and encoding time.</p>
+</blockquote>
+<p><a class="onebox" href="https://html.spec.whatwg.org/multipage/canvas.html#serialising-bitmaps-to-a-file" target="_blank">https://html.spec.whatwg.org/multipage/canvas.html#serialising-bitmaps-to-a-file</a></p>
+<p>Quality <em>should</em> be jpeg compression level for jpegs, as that is what developers expect.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

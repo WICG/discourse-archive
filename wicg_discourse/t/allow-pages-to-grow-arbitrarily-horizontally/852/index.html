@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allow pages to grow arbitrarily horizontally</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allow pages to grow arbitrarily horizontally</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/600_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Oblomov</div>
+          <div class="creation_date">2015-05-15</div>
+          <div class="post_content">
+<p>There is an essential disparity in current implementations between the horizontal and vertical directions. While the overall document height is automatically extended to accommodate content, the overall document width in automatic computations is implicitly clamped to the initial containing block (i.e. viewport) width. Consider for example this simple document:</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Horizontal width limit&lt;/title&gt;
+&lt;style&gt;
+html {
+width: auto; max-width: none;
+border: 1px solid black;
+}
+body {
+width: auto; max-width: none;
+border: 1px solid red;
+}
+div {
+width: auto; max-width: none;
+display: inline-block;
+border: 1px solid blue;
+height: 12ex;
+max-height: 12ex;
+column-width: 60em;
+-o-column-width: 60em;
+-moz-column-width: 60em;
+-webkit-column-width: 60em;
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>where the actual <code>div</code> content is omitted, and where the <code>width</code> and <code>max-width</code> specifications have been made explicit even though they are the initial values.</p>
+<p>The expected result in this example would be to have the div (and consequently the body) expand <em>horizontally</em> to accommodate the content, with columns added as needed. Combined with some max-height binding, this would allow to have a infinite horizontally scrolling canvas not unlike the “standard” vertically scrolling one. <em>However</em>, on all present user agents the above document renders as if the html and body width were clamped by the viewport width. The div columns end up overflowing the limited size, which is shown by the border location. In fact, the unbound horizontal document <em>cannot</em> be achieved currently.</p>
+<p>I would like to propose this limitation to be removed, and to treat both the horizontal and vertical directions in essentially the same way. For compatibility with existing documents, this cannot be done arbitrarily, but a possible solution that is backwards compatibility is to specify that documents have a initial value of <code>max-width: 100%</code> on the document root, and to allow it to be overridden with a <code>max-width: none</code> to allow automatic horizontal expansion. The implicit initial <code>max-width:100%</code> specification would be on the <code>:root</code> pseudo-element, which has higher specificity than the <code>html</code> and isn’t a fully published standard yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-05-15</div>
+          <div class="post_content">
+<p>There’s an important reason why width and height are asymmetric right now: <strong>people don’t like to scroll in two directions at once</strong>.  More specifically, people don’t like having to scroll back and forth to read continuous content.  (This is why the current implementation of MultiCol on the web is broken; long multicol documents require you to scroll up and down repeatedly as you finish each column.)</p>
+<p>If you did change this, you have to change a bunch more of CSS, too.  A lot of things depend on the fact that the available space in the inline axis (the width axis) is always finite.  When this assumption is violated, they break.  Currently, this only happens if you use the writing-mode property to mix horizontal and vertical writing modes, and we have explicit patches in the layout algorithms to handle this, by limiting the inline size to the viewport size (so text will wrap at a half-reasonable width) and forcing multicol (so long documents won’t cause the page to scroll horizontally).</p>
+<p>There are several ways to get around this, but ultimately the web’s layout algorithms are going to be biased towards infinite-height/finite-width, because that’s better for laying out text.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/600_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Oblomov</div>
+          <div class="creation_date">2015-05-16</div>
+          <div class="post_content">
+<p>That’s some very useful insight, thanks. I agree that having to scroll in two directions is extremely unpleasant: heck, even pages that use a fixed horizontal width can be affected by this, if they force huge widths.</p>
+<p>However, in this way it becomes impossible (I think) to design a page that develops arbitrarily in width, at a fixed (viewport-limited) height. You mention:</p>
+<blockquote>
+<p>There are several ways to get around this</p>
+</blockquote>
+<p>but everything I’ve tried requires manual tuning of the width, since simply relying on the possibility for overflow completely messes up the block decorations. I’ve also tried the experimental support in Firefox for <code>writing-mode</code> by setting to to <code>vertical-lr</code> for <code>html</code> and <code>body</code>, but the <code>div</code> still gets blocked at the viewport. I’m guessing this is the “explicit patches in the layout algorithms” that you mention, but I still think this involves too much second-guessing and ultimately prevents things that should be possible otherwise. Could you mention one way to achieve a fixed-height, horizontally developing, column-based layout?</p>
+<blockquote>
+<p>ultimately the web’s layout algorithms are going to be biased towards infinite-height/finite-width, because that’s better for laying out text.</p>
+</blockquote>
+<p>Well, that’s only true for western text, and even then it’s only true in the sense that we don’t want lines of arbitrary length, which is solved with columns.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

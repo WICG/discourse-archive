@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Fallback for when external script times out</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Fallback for when external script times out</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-08-26</div>
+          <div class="post_content">
+<p>In bad network conditions, an external <code>&lt;script&gt;</code> may take a very long time to load (or not load at all). Is there a standard approach to provide a fallback to the user in this scenario?</p>
+<p>If not, how about a <code>&lt;noscript&gt;</code> inside the <code>&lt;script&gt;</code> which would only be triggered if the browser “decides” that the external script load failed or took too long.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-08-26</div>
+          <div class="post_content">
+<p>You could have an inline script that registers a timeout which is cancelled by an external script’s load event, and runs if the script haven’t loaded by the time the timeout expired. Then your inline script can perform the desired fallback behavior.</p>
+<p>I suspect that having a built-in mechanism would hit some difficulties. In particular:</p>
+<ul>
+<li>What happens when/if the script eventually loads?</li>
+<li>What is the reasonable timeout that would fit most Web pages?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-26</div>
+          <div class="post_content">
+<p>If we are going the scripted route - service workers to monitor if the script loads would be a pretty good alternative to refire a fetch request for a different URL.
+Obviously a service worker won’t be there all the time however it would likely provide a route which was more robust if it was there (So using both techniques would be required I suspect).</p>
+<p>I see the merits in the built in HTML route however I think this was a point of contention for the SRI spec which had a fallback route which was similar and was removed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-08-26</div>
+          <div class="post_content">
+<p>Indeed, it would be nice to have a simple standard method to specify a fallback URL for a timed-out script, for example to load a local script if an external one’s load takes too long:</p>
+<pre><code>&lt;script src="http://example.com/foobar.js" timeout="1" fallback="/js/foobar.js"&gt;
+</code></pre>
+<p>The <code>timeout</code> attribute in the example is a timeout in seconds after which the fallback URL should be retrieved instead of the one specified in the <code>src</code> attribute.</p>
+<p>Moreover, this approach could probably apply to loading any resources (e.g. stylesheets and images), not just scripts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-26</div>
+          <div class="post_content">
+<p>So as mentioned the SRI spec did have a fallback feature but was dropped through time implications and will be added back for v2+.</p>
+<p><a class="onebox" href="https://lists.w3.org/Archives/Public/public-webappsec/2014Dec/0045.html" target="_blank">https://lists.w3.org/Archives/Public/public-webappsec/2014Dec/0045.html</a></p>
+<p>It seems like the browser vendors were happy to implement this and it actually makes sense that this would be part of the Fetch specification rather than with SRI. <span class="mention">@annevk</span> any issue with this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p>I don’t think that we need to handle a fallback URL (if the second fails, why not a third one, etc).</p>
+<p>However, I find the idea of fallback JS useful.</p>
+<p>The immediate use-case I have in mind is to enable image lazy-loading (a la <a href="https://github.com/aFarkas/lazysizes">lazysizes</a> ), with a decent fallback that displays the images when the script has failed to load.</p>
+<p>Adding a <code>timeout</code> attribute that indicates an opt-in to this timeout behavior, as well as the actual time that the user should be left waiting for the script to arrive makes sense to me.</p>
+<p>The main question that remains is “what would be the fallback?”.
+I think that in order for that to be a robust fallback (that covers more use-cases than the ones we can think of right now), the fallback should be defined as an inline script.</p>
+<p>That inline script can be either:</p>
+<ul>
+<li>The content of the <code>&lt;script&gt;</code> node.</li>
+<li>An <code>ontimeout</code> based event handler.</li>
+</ul>
+<p>That can be polyfilled using a ServiceWorker, or even simply by a timeout based script (if <code>onload</code>|<code>onerror</code> haven’t happened yet, remove the script and do something else instead).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p>Why can’t the inline script handle the timeout mechanism as well?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p>I guess it could. What do you have in mind?</p>
+<p>We probably want to avoid a situation where legacy content like <code>&lt;script&gt;//Code that currently doesn't run&lt;/script&gt;</code> will change behavior.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p>Yeah I meant you would use a separate inline &lt;script&gt; that handles timeout and fallback. So no new browser features.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p>Yeah, we could start with a prollyfill that does that, and see how usage goes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<blockquote>
+<p>I don’t think that we need to handle a fallback URL (if the second
+fails, why not a third one, etc).</p>
+</blockquote>
+<p>Because there are two things: external URL and local URL. External one could be temporarily unavailable. Local one is available if the local page it is loaded by is available.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-09-07</div>
+          <div class="post_content">
+<p>One of the main use cases here is similar to the sites that offer a fallback script if the code hasn’t loaded. So a fallback URL to a local copy fills these use cases:</p>
+<ul>
+<li>SRI failure</li>
+<li>CDN down</li>
+<li>Opt in timeout behaviour</li>
+<li>Fallback behaviour</li>
+</ul>
+<p>However I get the point these might want to be separated with numerous fallbacks etc.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

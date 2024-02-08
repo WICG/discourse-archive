@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Media Controls API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Media Controls API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2014-12-19</div>
+          <div class="post_content">
+<p>(Originally proposed on Mozilla’s Dev Platform list by Andrea Marchesini and Ehsan Akhgari - moving here to begin formal standardization discussions.)</p>
+<h1>Use cases</h1>
+<ul>
+<li>I have a media player app, and I want to use the media keys on my keyboard on desktop to control it.</li>
+<li>I have a media player app and I want to use the headset controls on my headphones to control it.</li>
+<li>I have a media player app and I want to use the mobile soft keys (e.g. as done on iOS and Android lock screens) to control it.</li>
+</ul>
+<h1>Possible future use cases</h1>
+<ul>
+<li>I have registered a media player app and I want it to start up when I press the play key. (We could possibly dispatch an event to the SW, etc., out of scope for now)</li>
+</ul>
+<h1>Relevant sources</h1>
+<ul>
+<li><a href="http://smus.com/remote-controls-web-media/">http://smus.com/remote-controls-web-media/</a></li>
+<li><a href="http://paulrouget.com/e/mediaevents/">http://paulrouget.com/e/mediaevents/</a></li>
+<li><a href="http://beardedspice.com/">http://beardedspice.com/</a></li>
+<li><a href="https://groups.google.com/forum/#!msg/mozilla.dev.webapi/TSDZCeWYiDU/kEXkuQG83ngJ">https://groups.google.com/forum/#!msg/mozilla.dev.webapi/TSDZCeWYiDU/kEXkuQG83ngJ</a></li>
+<li><a href="http://developer.ubuntu.com/api/devel/ubuntu-13.10/javascript/web-docs/">http://developer.ubuntu.com/api/devel/ubuntu-13.10/javascript/web-docs/</a></li>
+</ul>
+<h1>Platform specific implementation notes</h1>
+<h2>Windows</h2>
+<p>It seems like Windows will dispatch a WM_APPCOMMAND message when a media key is pressed. The application has an opportunity to handle the message and return TRUE, or pass it along to DefWindowProc to allow the message to be delivered to another application.</p>
+<p>See <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms646275%28v=vs.85%29.aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms646275(v=vs.85).aspx</a></p>
+<h2>Mac OS X</h2>
+<p>You need to write specific code to relinquish the event interceptor when your application goes to the background. <a href="http://overooped.com/post/2593597587/mediakeys">http://overooped.com/post/2593597587/mediakeys</a> explains the reason. This is how to do it: <a href="https://github.com/nevyn/SPMediaKeyTap">https://github.com/nevyn/SPMediaKeyTap</a>. This library is used by apps such as VLC.</p>
+<h2>iOS</h2>
+<p>There is a way to capture the ipod music controls on the lockscreen: <a href="http://stackoverflow.com/questions/3196330/how-to-enable-ipod-controls-in-the-background-to-control-non-ipod-music-in-ios-4">http://stackoverflow.com/questions/3196330/how-to-enable-ipod-controls-in-the-background-to-control-non-ipod-music-in-ios-4</a> But it seems like we need to know in advance whether we need to capture these keys, which maps well with what we are thinking of (navigator.requestMediaKeys).</p>
+<p>The same API seems to give you access to the media keys on the headphones too. This is documented here: <a href="https://developer.apple.com/library/ios/documentation/EventHandling/Conceptual/EventHandlingiPhoneOS/Remote-ControlEvents/Remote-ControlEvents.html#//apple_ref/doc/uid/TP40009541-CH7-SW3">https://developer.apple.com/library/ios/documentation/EventHandling/Conceptual/EventHandlingiPhoneOS/Remote-ControlEvents/Remote-ControlEvents.html#//apple_ref/doc/uid/TP40009541-CH7-SW3</a></p>
+<p>It seems like your app can claim to be the first responder to the event, and if the event is not handled by your app, iOS will send it to the next one, and so on.</p>
+<h2>Android</h2>
+<p><a class="onebox" href="https://developer.android.com/training/managing-audio/volume-playback.html" target="_blank">https://developer.android.com/training/managing-audio/volume-playback.html</a></p>
+<p>The app has to register a BroadcastReceiver in its manifest that listens for the ACTION_MEDIA_BUTTON action broadcast. When the action is received it contains EXTRA_KEY_EVENT informations such as KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE, and others.</p>
+<p>The receiver has to be registered and unregistered.</p>
+<h2>Linux</h2>
+<p>Xorg has custom X codes for media buttons such as XF86AudioMute, XF86AudioNext, XF86AudioPause, XF86AudioPlay etc. They are emitted as normal events.</p>
+<h1>Rough sketch of a proposal</h1>
+<p><strong>NOTE</strong>: We are aware that <code>MediaController</code> clashes with an existing HTML interface - we plan to rename it something else!</p>
+<pre><code class="lang-auto">partial interface navigator {
+  Promise &lt;MediaController&gt; requestMediaController();
+};
+enum MediaKeyEventType {
+  "play", "pause", "playpause", "next", "previous",
+  // possibly other codes
+};
+dictionary MediaKeyEventInit: EventInit {
+  MediaKeyEventType detail = "play";
+};
+[Constructor(DOMString type, optional MediaKeyEventInit init)]
+interface MediaKeyEvent: Event {
+  readonly attribute MediaKeyEventType detail;
+};
+interface MediaController: EventTarget {
+  attribute EventHandler onmediakey;
+  // Do we need a revoke method?
+  // void revoke();
+  // This attribute is used to see if the play/pause event has been received correct.
+  attribute boolean mediaActive;
+  // An image to show when the device is locked.
+  attribute(DOMString or URL or Blob or HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) mediaImage;
+  // Extra info to show.
+  attribute DOMString mediaTitle;
+  attribute DOMString mediaDuration;
+  // other attributes.
+};
+</code></pre>
+<h1>Usage</h1>
+<pre><code class="lang-auto"> navigator.requestMediaController().then(function(controller) {
+   controller.audioActive = true;
+   controller.mediaTitle =
+     "Maurice Ravel - Piano Concerto for the left hand"
+   controller.onmediakey = function(e) {
+     switch (e.detail) {
+       case "play":
+         // ...
+         break;
+       case "pause":
+         // ...
+         break;
+     }
+   };
+ }).catch(function() {
+   alert("Access to media keys not granted");
+ });
+</code></pre>
+<h1>Notes</h1>
+<p>We intentionally do not use the DOM3 media KeyboardEvent keys, since on some OSes such as Android and iOS it would not be possible to map these events to a keydown/keyup event in a sensible way.</p>
+<p>Technically we could get rid of MediaController, and dispatch the event on Window/Navigator/etc. ehsan has no strong preferences, and baku prefers to keep things this way. ehsan likes the fact that this model plays nice with the promise returned from requestMediaKeys.</p>
+<p>The asynchronous requestMediaKeys() function provides a chance for the UA to show a UI asking the user to confirm if they choose to do so, etc.</p>
+<p>In the future we may be able to extend MediaController to allow the application to provide some information about the currently playing track, such as the title, the picture, etc. That will enable us to build soft media controls on the lockscreen for example similar to the way that iOS and Android do.</p>
+<p>We should also add the ability for the webapp to use the MediaController to send information to the platform about song-name/album-name/artist-name/album-art/timeposition.</p>
+<p>We also need the webapp send information about if it’s currently playing or not, so that the platform knows if it should display a “play” or a “pause” button on a software keyboard or a widget. This can also be useful to enable the platform to display playing-status next to song name etc. This might also enable us to dispatch the “play” or “pause” event rather than the “playpause” event.</p>
+<h1>Open questions</h1>
+<p>The MediaKey* terminology is closed to what is used in the EME spec. ehsan thinks this is fine because it is not likely for most apps to want to use EME, so there are no big chances for confusion.</p>
+<p>Is it OK to diverge from the DOM KeyboardEvent codes for this?</p>
+<p>The policy choice as to what to do when two web apps request access to this API is left to the UA, and the UA has the freedom to adopt their own policies. Is that OK? (ehsan thinks yes.)</p>
+<p>As far as the ergonomics of using the API is concerned, should we return the same MediaController object from requestMediaKeys() no matter how many times the author calls it?</p>
+<p>Given the possibility of future extensions to add more things to MediaController as discussed above, should we pick a better name for it?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2014-12-19</div>
+          <div class="post_content">
+<p>I’m glad to see you driving this discussion to a public forum. I do not have much time to tackle the details of the API for the moment but I hope to get more time for this after the holidays.</p>
+<p>I’m not a big fan of <code>navigator.requestMediaController()</code> and the fact that the <code>MediaController</code> object seems fairly static afterwards (except for the <code>mediakey</code> event). What would happen if I hang on to my <code>controller</code> and read <code>mediaActive</code>, <code>mediaTitle</code> or <code>mediaDuration</code>. I wonder if we should instead have a <code>MediaDescriptor</code> dictionary that would take <code>title</code> and <code>duration</code>. It could even be a class, in which case we could have events like <code>finished</code> that would allow the owner of the <code>MediaDescriptor</code> to play the next item from the play list.</p>
+<p>What would you think of an API that looks like:</p>
+<pre><code class="lang-auto">dictionary MediaDescriptor {
+  DOMString title;
+  DOMString duration; // why a DOMString btw?
+};
+
+interface MediaController : EventTarget {
+  static Promise&lt;boolean&gt; setActiveMedia(MediaDescriptor);
+  // In some environment, like Firefox OS system applications you could even expose getActiveMedia().
+  static attribute EventHandler onmediakey;
+};
+</code></pre>
+<p>This said, I think we should have media focus in scope for this work. The API behvaiour might be very different with media focus. For example, the UA might not send the events on a web app that doesn’t have media focus.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-12-19</div>
+          <div class="post_content">
+<blockquote>
+<p>This said, I think we should have media focus in scope for this work.</p>
+</blockquote>
+<p>What’s “media focus”?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2014-12-22</div>
+          <div class="post_content">
+<p>I guess “media focus” is the application or media that currently has focus for the purpose of controlling media playback (independent of window focus)… for example, I have iTunes and Spotify running simultaneously while writing this response. Spotify has “media focus” because (I assume) it is the last application I brought into focus (or the last app to claim the media focus, because it was on some screen that could play media). So, when I hit “play/pause” on my keyboard Spotify responds accordingly.</p>
+<p>If I close Spotify, then iTunes gets media focus automatically.</p>
+<p>Then, if I then open Spotify, it reclaims the media focus.</p>
+<p>Simply bringing an application to the foreground can cause an application to get media focus.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/508_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ehsan</div>
+          <div class="creation_date">2014-12-23</div>
+          <div class="post_content">
+<p>Mounir, how is this proposal supposed to work?  For example, you’d be able to do MediaController.onmediakey = function(){ … } but you won’t be able to use addEventListener() to register the event (since it seems like you can’t create a MediaController)?  Or is that not what you intended?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richt</div>
+          <div class="creation_date">2015-01-05</div>
+          <div class="post_content">
+<p>Interesting idea and thanks for sharing all the related links.</p>
+<p>I got to thinking whether we could implement this as a way to ‘focus’ media elements sequentially to determine which media element is currently using the media controls.</p>
+<h3>Media Controls API</h3>
+<p>This proposal introduces the concept of queuing up media elements to use media controls and consists of just two additional methods directly available on the <a href="https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement">HTMLMediaElement</a> interface.</p>
+<pre><code class="lang-auto">partial interface HTMLMediaElement {
+  void enqueue();
+  void dequeue();
+
+  readonly attribute boolean queued; // whether this element is current enqueued in the UA playlist
+}
+</code></pre>
+<p>Where:</p>
+<ul>
+<li>
+<code>enqueue()</code> - adds this media element to the list of elements waiting to use the media controls.</li>
+<li>
+<code>dequeue()</code> - removes this media element from the list of elements waiting to use the media controls.</li>
+</ul>
+<hr/>
+<p>Calling <code>videoElement.enqueue()</code> adds this object to a UA-controlled ‘playlist’. Media controls are then only active on the currently ‘focused’ enqueued media element in the UA’s playlist (i.e. the topmost enqueued media element at any given time).</p>
+<p>The topmost media element in the playlist then comes under the control of any available media controls. Standard HTMLMediaElement events are fired toward the media element when it is played, paused, skipped or stopped as normal.</p>
+<p>Applying media controls directly to media elements removes the need to wire up <code>mediakey</code> events to the media element being controlled (as per the OP proposal above). Media controls apply directly only to the topmost media element on the UA playlist. Users can then skip forward or back through the playlist to focus and play back different media elements sequentially.</p>
+<p>Using such a queueing approach seems to solve a number of problems:</p>
+<ul>
+<li>The problem of which tab or media element currently owns the hardware/software-based media controls is removed.</li>
+<li>It avoids two or more media elements trying to take control of the media controls at the same time.</li>
+<li>It allows web sites such as Spotify and YouTube to create playlists by enqueueing two or more media elements at the same time or enqueuing new media elements once the first enqueued media element is finished.</li>
+<li>A queue provides a logical way to enable skipping forward and back between media elements originating from different web pages.</li>
+</ul>
+<p>In addition we may also want to add more media metadata attributes directly to the HTMLMediaElement interface as follows (inspired from the OP proposal above):</p>
+<pre><code class="lang-auto">partial interface HTMLMediaElement {
+  attribute(DOMString or URL or Blob or HTMLImageElement or HTMLCanvasElement) mediaImage;
+  attribute DOMString mediaTitle;
+}
+</code></pre>
+<p>Different web pages running in different tabs/windows can enqueue media elements with this approach. When you navigate away from a web page (e.g. close that tab or transition pages) then all media elements that were enqueued from that context are removed from the UA’s playlist and the playlist continues at the next available enqueued playlist media item (if any) registered from other tabs/pages.</p>
+<h4>Example API Usage</h4>
+<pre><code class="lang-javascript">var videoEl = document.getElementById("video#item1");
+
+if (videoEl.enqueue !== undefined) {
+    videoEl.mediaTitle = "Maurice Ravel - Piano Concerto for the left hand";
+
+    // Add this item to the UA playlist.
+    videoEl.enqueue();
+} else {
+    // UA playlists not supported. Play on load instead.
+    videoEl.play();
+}
+
+// Register standard HTMLMediaElement event listeners as normal
+
+videoEl.addEventListener('playing', function(event) { 
+    console.log('Video playback started');
+}, false);
+
+videoEl.addEventListener('ended', function(event) { 
+    console.log('Video playback ended');
+    
+    // Optionally, enqueue the next media element...
+}, false);
+</code></pre>
+<hr/>
+<p>Is it worth exploring this idea further or are there specific reasons we want to decouple media controls from media elements as per the other proposals?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-01-05</div>
+          <div class="post_content">
+<p>I am worried about this proposal being too complicated to get consensus/implementations. I am wondering if we could at least agree on a minimal subset of it first. The portion I am most concerned about is relaying the play/pause/next/previous/stop buttons to <em>a currently-focused window</em>.</p>
+<p>It seems to me this could be done simply by adding new key-codes. (I guess this is already done <a href="https://dvcs.w3.org/hg/dom3events/raw-file/tip/html/DOM3Events-code.html#key-media">by DOM 3 Events</a>, but the status of that spec is … unclear.)</p>
+<p>This would take care of some of the most glaring omissions from the current platform. For example, at my NYE party last week we were playing music on the TV via a media center PC. When using iTunes, we could use the remote control’s play/pause button successfully. But when we switched over to YouTube in Chrome, even though the tab was active and full-screened, the remote control’s buttons no longer worked, and I had to go get the wireless keyboard and use the spacebar.</p>
+<p>Could we just get consensus to fire appropriate keydown/keyup/keypress events with appropriate codes, first? That won’t work for when the tab doesn’t have focus, and then you need something more complicated like your original post. But it would still help a lot.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2015-01-06</div>
+          <div class="post_content">
+<p>I believe <code>addEventListener</code> comes with the <code>EventTarget</code> interface so the static <code>MediaController</code> instance should have <code>addEventListener</code> or am I missing something?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2015-01-06</div>
+          <div class="post_content">
+<p><span class="mention">@richt</span> I think you are missing one feature: if I’m playing music from Music App and then want to play a podcast from Podcast App, I want the music to stop and the podcast to start. Your solution would allow me to add the podcast after the Music App playlist, right?</p>
+<p><span class="mention">@domenic</span> It would indeed be a good incremental improvement to have those keys supported by UAs and websites. Actually, I wonder if a UA support those keys. Though, I try to look at things mostly with a mobile point of view and supporting those keys wouldn’t help much in that context and mobile is in a way worse state with regards to media applications on the web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/508_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ehsan</div>
+          <div class="creation_date">2015-01-06</div>
+          <div class="post_content">
+<p>There is no static <code>MediaController</code> instance.  You will get a normal instance of the object when the promise returned by <code>Navigator.requestMediaController()</code> is resolved, and all of the <code>EventTarget</code> machinery works like normal on that object.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/508_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ehsan</div>
+          <div class="creation_date">2015-01-06</div>
+          <div class="post_content">
+<p><span class="mention">@domenic</span> that is indeed the number 1 use case that we are interested in as well.  In addition to remote controls, think of using the play/pause keys on headsets, or an OS wide music control UI such as the one on the Android lock screen.</p>
+<p>However, using the key events in the DOM3 Events spec is problematic.  Please see the OS study section above, but to give you a summary, different OSes put restrictions on which applications can receive these keys, and you sometimes also need to be able to tell the OS where you handled the event in some way or whether it should be passed to the next application.  Because of that, you kind of need an explicit way to tell the UA “hey, I’m interested in receiving these events”.  We can’t even just look at whether there is an event handler for keydown and friends is registered because obviously such event handlers can deal with other keypresses.</p>
+<p>This is why I originally suggested <code>Navigator.requestMediaController()</code>.  As a bonus, we can make the MediaController object do more interesting things in addition to handling the key events.  It’s fine by me if we only start by supporting the key events on it though.  This proposal is basically the minimum we’d need for Firefox OS to support system-wide media player web apps, which is why it has the additional bits on top of it.</p>
+<p>I hope this helps explain the thinking on why we did not choose to use the DOM3 key events for this purpose.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/508_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ehsan</div>
+          <div class="creation_date">2015-01-06</div>
+          <div class="post_content">
+<p><span class="mention">@richt</span> Thanks for the thoughtful comment!  I actually thought about a possible direction such as this, but I ended up deciding against it.  The biggest difficulty with tying things too much to <code>HTMLMediaElement</code> is that it would exclude use cases that do not (directly) use a media element for playing audio.  For example, a web based music player can use Web Audio in order to implement a bunch of very common audio effect such as gapless playback, cross fading, normalization, etc.  Also, except for the simplest cases, it may not be obvious for the UA to know how to play the element.  Think of YouTube for example that has a video element with custom video controls, etc.  The website needs to cooperate with the UA if we’re going to play the next video in the playlist based on an event that is invisible to the page.  These are the reasons why I decided to not go ahead with something based on <code>HTMLMediaElement</code>.  What do you think?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richt</div>
+          <div class="creation_date">2015-01-07</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="718">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mounir/40/67_1.png" width="20"/> mounir:</div>
+<blockquote>
+<p><span class="mention">@richt</span> I think you are missing one feature: if I’m playing music from Music App and then want to play a podcast from Podcast App, I want the music to stop and the podcast to start. Your solution would allow me to add the podcast after the Music App playlist, right?</p>
+</blockquote>
+</aside>
+<p>Good point. Yes, the media would simply be appended to the playlist in the normal case. If that enqueued media is played by the user or page then the playlist should skip to that item in the playlist and would continue onward from there. User’s can skip forward and back from this point too (to e.g. recover the music playback). Closing the music app would also advance the playlist to the podcast media. This behavior would be specified in a non-strawman proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richt</div>
+          <div class="creation_date">2015-01-07</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="12" data-topic="718">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ehsan/40/508_1.png" width="20"/> ehsan:</div>
+<blockquote>
+<p><span class="mention">@richt</span> The biggest difficulty with tying things too much to HTMLMediaElement is that it would exclude use cases that do not (directly) use a media element for playing audio.  For example, a web based music player can use Web Audio in order to implement a bunch of very common audio effect such as gapless playback, cross fading, normalization, etc.</p>
+</blockquote>
+</aside>
+<p>It’s a good point about the potential of using the Web Audio API for playback. Playlist hooks could be provided independently from the HTMLMediaElement and could accept both that interface and AudioContext objects.</p>
+<p>Seperating this out to a separate interface brings this more in line with the OP. The main difference being that pages need to push media items on to a playback stack/timeline so it is clear to which media any hardware/software media controls should be currently applied.</p>
+<aside class="quote" data-full="true" data-post="12" data-topic="718">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ehsan/40/508_1.png" width="20"/> ehsan:</div>
+<blockquote>
+<p>Also, except for the simplest cases, it may not be obvious for the UA to know how to play the element.  Think of YouTube for example that has a video element with custom video controls, etc.  The website needs to cooperate with the UA if we’re going to play the next video in the playlist based on an event that is invisible to the page.</p>
+</blockquote>
+</aside>
+<p>The page would receive <a href="https://html.spec.whatwg.org/multipage/embedded-content.html#mediaevents">standard playback events</a> on the media element being manipulated by the media controls (e.g. ‘playing’, ‘pause’, ‘ended’, etc). That would require less work on the part of web developers to integrate media control usage in to their web pages.</p>
+<aside class="quote" data-full="true" data-post="12" data-topic="718">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ehsan/40/508_1.png" width="20"/> ehsan:</div>
+<blockquote>
+<p>These are the reasons why I decided to not go ahead with something based on HTMLMediaElement.  What do you think?</p>
+</blockquote>
+</aside>
+<p>I think you are right RE: not basing a solution only on HTMLMediaElement. But then I’m not sure that excludes the idea of establishing an ordered, sequential list of playback items. Having a queued media model seems to fit the modality of using media controls very well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1816_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mounir</div>
+          <div class="creation_date">2015-01-08</div>
+          <div class="post_content">
+<p>The proposal I made has a static instance instead of <code>requestMediaController</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richt</div>
+          <div class="creation_date">2015-01-16</div>
+          <div class="post_content">
+<p>I wrote up some notes on potential scoping, lifecycle and event handling issues for web-based Media Focus and Control at <a href="https://gist.github.com/richtr/2235fdae25c74186297d" rel="nofollow noopener">https://gist.github.com/richtr/2235fdae25c74186297d</a>. I’d appreciate some review and feedback on this thread.</p>
+<p>There are a number of open questions around the scope of media output that media keys should relate to. Should media focus be concerned with media output at the tab/document/origin/element level? How should media focus be delegated between requestors? Should scope-related media output be forcibly muted/paused/stopped when media focus is lost to ensure a good user experience?</p>
+<p>There may also be incompatibilities between API proposals on this thread and native media focus models. e.g. In iOS media focus and remote control media keys can only be grabbed when media playback has been started.</p>
+<p>Finally, I think the lifecycle of media focus (e.g. requesting/granting/revoking/regaining/transferring focus between scopes) is something we should commit to paper before designing an API.</p>
+<p>Looking forward to your feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2006_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">richt</div>
+          <div class="creation_date">2015-01-23</div>
+          <div class="post_content">
+<p>Philip Jägenstedt and I discussed this topic at length. I have put up our current thoughts on Github @ [<a href="https://github.com/richtr/html-media-focus" rel="nofollow noopener">HTMLMEDIAFOCUS</a>]. This link includes our initial set of use cases, a design Q&amp;A, an initial proposal and a simple web-based prototype of the initial proposal.</p>
+<p>This proposal mandates tighter integration with HTML media than other proposals on this thread. This tighter integration allows us to directly <em>reflect</em> current media state between HTML media and any connected media control interfaces. It makes media control work across platforms (particularly within the iOS model where media key capture is only possible when media content is currently being played). It also avoids the <em>indirection</em> required in other proposals on this thread where web developers are required to implement media state matching themselves between their in-page media and a separate Media Controls API.</p>
+<p>Please consider filing any issues you may have against the Github project.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2015-02-03</div>
+          <div class="post_content">
+<p>So, I’ve been reading over all the proposals and I’m also landing at a similar place as <span class="mention">@richt</span> and Philip Jägenstedt.</p>
+<p>IMHO, the most sensible thing seems to be amending <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code> to be remote-controlled (through an attribute). This gets rid of a whole bunch of unnecessary API surface, while allowing reuse of existing HTML MediaController machinery. It also allows much easier targeting of (mostly HTML-predefined) events directly on the  elements being remote controlled - rather than through an intermediate <code>MediaController</code> instance.</p>
+<p>The invariants here are:</p>
+<ol>
+<li>Not all media is created equal: only certain media elements need to be designated as capable of receiving media-key-related events. In Chrome on iOS, this already happens automatically even without the need of any special attribute - what is not clear to me yet is how next/prev will work, specially as it assumes a fully active web document running in the background capable of receiving these events.</li>
+<li>Media should be able to receive the events, and the UA can send their streams to be “remote controlled” by the underlying OS (as per IOs - both Safari and Chrome already do this, btw). Registering a media controller without actual media seems like a bad disconnect - which would be possible with <code>.requestMediaController()</code> - events could be routed nowhere (yes, this is also true with a video without a <code>src</code>, or a bad <code>src</code>, but it’s easier to deal with that at the UA level).</li>
+<li>Stack order or the focus media player can be handled by the UA (also as per Boris Smus’ proposal).</li>
+<li>Web Audio’s busted API needs to be fixed to work with Audio elements - we’ve been saying that for years now. Let’s deal with that later - it’s not the 90% use case.</li>
+<li>Reusing <code>poster</code> and <code>title</code> as metadata seems sensible - though we might need to make some additional enhancements in the future.</li>
+<li>As shown already in iOS (Chrome and Safari), it’s not necessary to have a door-hanger for “Allow <a href="http://foo.com">foo.com</a> to receive media key events?”.</li>
+</ol>
+<p>Given that we have a pretty clear understanding of the use cases, I would suggest we consider starting with the existing HTML elements first. If that doesn’t work, we can look at adding a new API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">philipj</div>
+          <div class="creation_date">2015-02-03</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="4" data-topic="718">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/marcosc/40/83_1.png" width="20"/> marcosc:</div>
+<blockquote>
+<p>Simply bringing an application to the foreground can cause an application to get media focus.</p>
+</blockquote>
+</aside>
+<p>This is interesting. If I pause app A and then switch to app B which has previously played, it makes sense for B to start playing when the hardware play/pause key is pressed. This could be done entirely automatic on a per-tab level I think, but for multiple widgets within a page it seems tricky to have a corresponding concept.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">philipj</div>
+          <div class="creation_date">2015-02-03</div>
+          <div class="post_content">
+<aside class="quote" data-post="18" data-topic="718">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/marcosc/40/83_1.png" width="20"/> marcosc:</div>
+<blockquote>
+<p>Given that we have a pretty clear understanding of the use cases</p>
+</blockquote>
+</aside>
+<p>Do you think that <a href="https://github.com/richtr/html-media-focus/blob/gh-pages/USECASES.md" rel="nofollow noopener">https://github.com/richtr/html-media-focus/blob/gh-pages/USECASES.md</a> is exactly the set of problems worth solving? Notably, it doesn’t say anything about previous/next keys or custom notification / lock screen UI.</p>
+<p>Other than use cases there are a few technical decisions which would impact the design. I think these are at least:</p>
+<ul>
+<li>Must audio playback begin before one can get audio focus? (I think yes.)</li>
+<li>Should a user of the Web Audio API be able to use this? (I think yes.)</li>
+<li>Should pausing/muting be enforced if the page doesn’t do the right thing? (I’m skeptical.)</li>
+<li>What is the lifetime of the audio focus? If it is tied to a media element one cannot implement a playlist using multiple media elements, at least not without a way to hand over the focus. (Simply getting focus anew means that there will be at least milliseconds where the keys would do nothing, making e.g. the pause and next keys seem glitchy in the transition between tracks.)</li>
+<li>Should existing pages that don’t use the new API react at all to media keys? (I think yes, good enough defaults will allow it to just work in 90% of cases.)</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

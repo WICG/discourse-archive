@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Get Installed Related Apps API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Get Installed Related Apps API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">benwells</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p><a href="https://github.com/benfredwells/get-installed-related-apps" rel="nofollow noopener">Get Installed Related Apps</a></p>
+<p>The proposal <a href="https://github.com/benfredwells/get-installed-related-apps" rel="nofollow noopener">in this Git repo</a> presents an API to determine if native apps related to the current web app are installed.</p>
+<p>From our <a href="https://github.com/benfredwells/get-installed-related-apps/blob/master/EXPLAINER.md" rel="nofollow noopener">explainer document</a>:</p>
+<blockquote>
+<p>As the capabilities of the web grow, the functionality of web apps begins to match that of corresponding native apps. The situation of users having a web app and the corresponding native app both installed on the same device will become more common, and the feature sets of these apps will converge.</p>
+</blockquote>
+<blockquote>
+<p>It is important to allow apps to detect this situation to allow them to disable functionality that should be provided by the other app.</p>
+</blockquote>
+<p>The explainer document has more details.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">owencmoore</div>
+          <div class="creation_date">2016-08-03</div>
+          <div class="post_content">
+<p><em>Context: I am the PM for push notifications on the Chrome team.</em></p>
+<p>We have repeatedly heard requests from current and future potential push adopters for this feature. Specifically, many companies are very anxious about annoying users by accidentally sending them push notifications multiple times if they have enabled them from the web but also have the native app installed.</p>
+<p>I believe this feature is generally useful, and will have extremely large value for push notifications adopters on the web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1079_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">CelsoSantos</div>
+          <div class="creation_date">2016-09-17</div>
+          <div class="post_content">
+<p>This should already be a thing.</p>
+<p>And yes, it’s very, VERY annoying to get the same notifications on at least 3 devices (usually more)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-09-21</div>
+          <div class="post_content">
+<p>So, I’m in full support around the problem that this sets out to solve (and that we need to solve it)… though I’m still trying to digest the current proposal: at first glance, it worries me that an application is reaching into the OS to get information about installed apps.</p>
+<p>Going to go read a bit more, as I’ve just had a super quick glance (so probably should not even be commenting, but YOLO ^_^)… but I would expect some kind of “request ownership” model (similar to intents today) and some kind of browser or OS provided UI: where the user is given the choice as to where push notifications should be routed (either the native app or the web app - but the user is given the ultimate control).</p>
+<p>Maybe the API allows for this… will take a detail look now. Just my initial 2c.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">owencmoore</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>The current proposal allows sites to determine whether the corresponding native app is installed.</p>
+<p>That site can then choose to:</p>
+<ul>
+<li>Automatically disable notifications for one of the implementations</li>
+<li>Give the user choice between receiving notifications from each</li>
+</ul>
+<p>This sounds like a pretty good solution to me, I can’t see any “platform solution” to allowing the user to choose between getting notifications from each hence supporting this proposal. This feels like a pretty good layering of APIs too - this way sites can check if their native app is installed, and if so simply not request push permission in the first place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/583_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinthomson</div>
+          <div class="creation_date">2016-09-28</div>
+          <div class="post_content">
+<p>I think that this is a dangerous implement as specified.  But the goal is laudable.</p>
+<p>A lot of this comes down to how the relationship is discovered.  For instance, an application on an arbitrary platform does not have an origin in the web sense, so it cannot possibly identify itself to the browser as being able to control that origin.  Thus, from the perspective of a browser, this needs to be a thing involving mutual consent.</p>
+<p>To add further complication, enumerating applications - or origins - without some sort of gatekeeper function is difficult from a privacy perspective.  The explainer doesn’t really address this very well.</p>
+<p>I use a couple of native applications that manage the relationship between native and web presence fairly elegantly.  The application just opens a browser tab to a site that the application controls and then web login information (latent in cookies) is coupled to my application details.  This might require authorization or login, but the basic premise is simple enough.  You could even hide this until the first case where a browser is plausibly needed, like when the user clicks on a link.</p>
+<p>The opposite might be more difficult, since we’re still very much in the throes of working out how a web application talks to a native application, and I’m not up on the latest there.</p>
+<p>My point being that it’s not clear that there isn’t any need for a spec here.  The explainer is a little worrying in its current form.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">benwells</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>Thanks for the comments! I recently put <a href="https://github.com/WICG/get-installed-related-apps/issues/1" rel="nofollow noopener">this issue</a> on the github repo which raises the same privacy concern and also larger questions of whether this is the right approach.</p>
+<p>It would probably be best to discuss the API on the github, but since we’re here already…</p>
+<p>Regarding the privacy issue, on Android it is possible to define a two way relationship between a native app and a web app. A given web app would only be able to query native apps defined in this way.</p>
+<p>The link from the web app to the native app is made through the existing <code>related_applications</code> field in the manifest spec. Similarly native Android apps can define relationships to web apps via their manifest.</p>
+<p>Do you think this is sufficient? Are the problems you’re seeing that the explanation isn’t detailed enough, is just Android, or that these mechanisms are insufficient?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>Although it would be nifty to have this functionality, I’m not sure I understand the use cases or whether or not it is some serious need for it. I guess, like a few people already mentioned, this is helpful when notifications are sent from both website and native app, but the user does have the ability to silence notifications from either place if they get overwhelming. I actually prefer to have this control as a user and not allow the website author to do this for me.</p>
+<p>Are there any other use cases where this API would be beneficial to warrant the work involved?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1096_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">delapuente</div>
+          <div class="creation_date">2016-10-06</div>
+          <div class="post_content">
+<p>This particular case is, in my humble opinion, a totally solvable problem from the developer side. Since the client app should send the endpoint to the app server, that request can identify the client as the web or native client. The server can choose between replacing the current endpoint or instructing the client to prompt a dialog to the user and let they decide instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1088_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">beverloo</div>
+          <div class="creation_date">2016-10-12</div>
+          <div class="post_content">
+<p>You cannot use the endpoint of a push subscription to identify a particular device, unless you also require the user to log in. That would be a significant security issue.</p>
+<p>In essence, the problem of duplicated functionality is not unique to Web apps. Having both the stable and experimental version installed of any app can lead to the very same issues. Android Apps can solve this by using the Device ID. iOS apps can use a UUID that’s unique per app vendor.</p>
+<p>The Web (fortunately) does not expose any sort of unique Id to users. Instead, Web apps tend to use a combination of the device, OS and screen size information to try to reach a similar result. That is not always sufficient, but more importantly, may lead to races <em>when</em> events happen, e.g. when receiving a notification.</p>
+<p>By that time we’ve already lost, because the user is presented with the same information twice.</p>
+<p>I believe this proposal has a lot of potential. It definitely addresses a real issue. We can give developers more certainty and enable them to build the UI for allowing users to make a decision. Requiring both sides to declare the relationship seems good, although we might want to think about limiting that to the origin as opposed to <code>related_applications</code>.</p>
+<p>One case that advocates for Marcos’ thoughts is using different kinds of apps for different accounts. Some form of limited negotiation or acknowledgement could work there. While that’s not super common, it’d be good to at least keep the door open.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">thanhtungka91</div>
+          <div class="creation_date">2019-09-10</div>
+          <div class="post_content">
+<p>it is really useful, currently we are using TWA app and Webapp. In the case if user has installed TWA we dont want to show the banner ‘Add to home screen’ and it is very confusing if user install both TWA app and PWA on android.
+We are using trial and working perfect, waiting for public.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

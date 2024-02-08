@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Element scroll with ease options</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Element scroll with ease options</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-09-24</div>
+          <div class="post_content">
+<p>I have created a very very rough, first iteration of a proposal to add a <code>Element.scroll</code> method to the spec that will allow a developer to programmatically scroll an element with easing options.</p>
+<p>Please see the explainer at: <a href="https://github.com/mkay581/proposal-element-scroll" rel="nofollow noopener">https://github.com/mkay581/proposal-element-scroll</a></p>
+<p>I would love to get your thoughts!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p><span class="mention">@tabatkins</span>, you seem to be a go to resource for getting answers in the forum. If not, please feel free to point me to someone else. What are some suggestions on this proposal?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>There already is a specification for smooth scroll, which is implemented by Firefox. <a href="http://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface">W3C</a> / <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView" rel="nofollow noopener">MDN</a></p>
+<p>Returning Promise seems great, though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@SaschaNaz</span> for the link and the compliments.
+I did see that and that spec is great, but, unless I’m missing something, it doesn’t seem to account for scrolling individual elements–only the Window, as addressed in my proposal.</p>
+<p>Is there any intention to add that API at the Element-level?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>The same specification contains extension to the Element interface, which allows scrolling individual elements. <a href="http://www.w3.org/TR/cssom-view-1/#extension-to-the-element-interface">http://www.w3.org/TR/cssom-view-1/#extension-to-the-element-interface</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>Ah, yes. I missed that part–sorry.</p>
+<p>So it does look pretty solid.</p>
+<p>The <code>ScrollBehavior</code> options don’t give much flexibility. I’d like to see more control of the scrolling behavior left up to the developer. And you’re right. It doesn’t seem to have promises in there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<h2>Adding Custom Timing to Existing Scroll APIs</h2>
+<p>I wonder if the CSSOM has intentionally limited <code>ScrollBehaviour</code> to only “smooth” and “instant” so that user-agent can match the platform conventions in case of “smooth”. There is a hint of that in the spec but <span class="mention">@zcorpan</span> is the current editor and can shed some light there.</p>
+<p>The proposed change suggests adding a easing function but not a duration. This feels incomplete to me in particular if the user agent decides to scroll with duration = 0 then the easing function becomes irrelevant! This would be a lot more powerful and flexible tool for scroll animations if it did support duration (and even delay) too. At which point, we probably want to have something that is actually part of <a href="https://w3c.github.io/web-animations/" rel="nofollow noopener">Web Animation</a> and not tacked onto the CSSOM scroll APIs.</p>
+<p>Also I feel that a user-specified timing function makes sense only for a single element scroll operations but it may be inappropriate for ‘scrollIntoView’ case where multiple elements may be scrolled (potentially in parallel).</p>
+<h1>Returning a Promise</h1>
+<p>+1 for returning a promise. Although it should be possible to polyfill that using ‘scroll’ event but there are a few corner cases which need to be covered (e.g., reaching to boundaries, scroll being interrupted by use input, etc.) which can make it tricky. This feels like a good extension.</p>
+<h1>Scroll Animation</h1>
+<p>I agree that a way to animate scroll positions without jank is missing from the platform. We (in Chrome) certainly are <a href="https://discourse.wicg.io/t/proposal-animationworklet-a-primitive-for-scroll-linked-and-high-performance-procedural-animated-effects/1710">thinking</a> about introducing new primitives for high performance animations which do include scroll position. This does not preclude adding other declarative options where it makes sense.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-09-28</div>
+          <div class="post_content">
+<p>Yes, the options are intentionally limited so we can match platform conventions.  It turns out that users get really used to how their platform of choice scrolls, and get pretty annoyed when individual apps or pages try to override it.  (There’s some scrolling library in the wild that drives me <strong>crazy</strong> whenever it’s used, because it’s subtly but very noticeably different than how my Chromebook normally scrolls for slow pans.)</p>
+<p>There has been explicit pushback from implementors at allowing webpages to customize scrolling behavior for this reason.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>Understood, <span class="mention">@tabatkins</span>.</p>
+<p>However, I don’t think it’s a good idea refuse to implement a feature because we are afraid that developers will use it incorrectly or in a way that we did not intend. I also hate when websites hijack native scroll, but hijacking native scroll or user-initiated scrolls is not my goal here. In fact in the proposal I created, it explains that any user-initiated scrolls will cancel out any JS-initiated scrolls (along with any of their effects). I do think this is the same behavior of the existing Element scroll API also.</p>
+<p>One of the bigger use cases is when a user visits urls that are mapped to anchors (sections) on a page. The jarring effect that happens when a user reloads the page or stumbles upon the url is undesirable and, in some cases, confuses the user, making it difficult to get a true sense of where they are on the page. Having these options gives the user a better sense of what section of the page the user is being taken to. This is just one use case, however. I go into a few more on <a href="https://github.com/mkay581/proposal-element-scroll" rel="nofollow noopener">my proposal</a> (i.e. chat windows, etc)</p>
+<p>I do think that promises are a good idea (as echoed throughout this thread). Should I open a request against the <a href="https://github.com/w3c/csswg-drafts" rel="nofollow noopener">w3c/csswg-drafts</a> repository for that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-09-30</div>
+          <div class="post_content">
+<blockquote>
+<p>I do think that promises are a good idea (as echoed throughout this thread). Should I open a request against the w3c/csswg-drafts repository for that?</p>
+</blockquote>
+<p>Yes. That is the right place to open an <a href="https://github.com/w3c/csswg-drafts/labels/cssom-1" rel="nofollow noopener">issue</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2017-06-25</div>
+          <div class="post_content">
+<p>UPDATE: I’ve created the<a href="https://github.com/w3c/csswg-drafts/issues/1562" rel="nofollow noopener"> cssom-view issue</a> requesting that scroll methods return promises. Thanks <span class="mention">@majidvp</span>!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

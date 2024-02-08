@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[IDEA] Making some HTML APIs more intuitive</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[IDEA] Making some HTML APIs more intuitive</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-03-31</div>
+          <div class="post_content">
+<p>For example, it is intuitive to do this:</p>
+<pre><code class="lang-auto">&lt;input type="text" disabled="false" /&gt;
+</code></pre>
+<p>and to someone’s dismay, it won’t be disabled.</p>
+<p>New people to JavaScript often learn with jQuery. If we have</p>
+<pre><code class="lang-auto">&lt;input type="text" disabled="true" /&gt;
+</code></pre>
+<p>the form will start as disabled (yay!). The new user might be tempted to do</p>
+<pre><code class="lang-auto">$('input').attr('disabled', 'false')
+</code></pre>
+<p>Things like that should work (though it doesn’t). It would make HTML better (easier to learn).</p>
+<p>Proposal: if the value of a <code>disabled</code>, <code>checked</code>, etc, property is anything other than <code>"false"</code>, make it behave as <code>true</code>, otherwise make it behave a <code>false</code>, not relying strictly on the existence of the property. These types of changes to HTML would make HTML more friendly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-03-31</div>
+          <div class="post_content">
+<p>This is a non-backwards-compatible change, so then ultimately will end up breaking some existing websites (even more subtle changes can have surprisingly far-reaching effects, especially if a popular framework relies on it). All backwards-incompatible changes have to be weighed up against the benefit they bring. I’m not sure you will get much traction with browser vendors if you are proposing breaking changes only to make things a bit more friendly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-01</div>
+          <div class="post_content">
+<p>It could (but not necessarily would) make sense if designed this way from scratch. But not now that the specific attribute is supported by all browsers for many years.</p>
+<p>And actually, once we have switched from XHTML back to HTML(5), boolean attributes became again quite cool in terms of that they provide a clean, <em>nonredundant</em> way to turn on something on code level. I really like the ability to specify:</p>
+<pre><code>&lt;input name="example" required autofocus /&gt;
+</code></pre>
+<p>instead of something unreasonably longer like:</p>
+<pre><code>&lt;input name="example" required="true" autofocus="true" /&gt;
+</code></pre>
+<p>As for your jQuery example, I believe that result of any development should be (and usually is) tested anyway. And if something does not work, it’s probably time to read some docs and, in particular, figure out what are differences between HTML attributes and DOM properties.</p>
+<p>P. S. Suddenly realized the topic could be an April fools’ joke. %)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1423">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>&lt;input name=“example” required autofocus /&gt;</p>
+<p>instead of something unreasonably longer like:</p>
+<p>&lt;input name=“example” required=“true” autofocus=“true” /&gt;</p>
+</blockquote>
+</aside>
+<p>In this proposal, you’d be able to do</p>
+<pre><code class="lang-auto">&lt;!-- nice and short --&gt;
+&lt;input name="example" required autofocus /&gt;
+
+&lt;!-- would behave the same as --&gt;
+&lt;input name="example" required="true" autofocus="true" /&gt;
+
+&lt;!-- and this --&gt;
+&lt;input name="example" /&gt;
+
+&lt;!-- would behave the same as --&gt;
+&lt;input name="example" required="false" autofocus="false" /&gt;
+</code></pre>
+<blockquote>
+<p>It could (but not necessarily would) make sense if designed this way from scratch</p>
+</blockquote>
+<p>True indeed. That’s the only problem with the web. All other frameworks deprecate or break API if they want. Too bad the web isn’t so flexible in that regard. It makes it harder to improve things.</p>
+<p>Side note: It seems web APIs are breakable, f.e. things on MDN with a <a href="https://developer.mozilla.org/en-US/docs/Web/API/NavigatorID/userAgent" rel="nofollow noopener">thumbs-down icon</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-06</div>
+          <div class="post_content">
+<p>We already have a <code>true</code> / <code>false</code> mechanism in HTML: if an element has specific boolean attribute, this means <code>true</code>, while if the attribute is absent, this means <code>false</code>. This is already intuitive enough while elegant on code level (and works for many-many years since earliest versions of HTML created long before HTML5).</p>
+<p>For the purpose of XML conformedness, XHTML allows to write <code>required=""</code> or <code>required="required"</code>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

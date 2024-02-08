@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Geo-Origins (location-based triggering standards)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Geo-Origins (location-based triggering standards)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>If you’ve used any location based triggering systems (iBeacons, etc) in practice, you will immediately notice they are fraught with show-stopping UX and a generally terrible, app-centric trust model that prevents wide-scale implementations that provide content from a diverse range of sources. I have a proposal to fix this, let me know what you think: <a href="https://github.com/csuwildcat/geo-origins/blob/master/explainer.md" rel="nofollow noopener">https://github.com/csuwildcat/geo-origins/blob/master/explainer.md</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>I have to be honest - I’m not entirely sure I get it.  You say it would be like the geolocation thing in web pages - would it only apply in web pages?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>Yeah, I’ll try to explain again:</p>
+<p>If the UA/platform (any UA: web, Android, iOS, etc.) knows that a given area of space is tied to an origin - like a Target store is tied to <a href="http://target.com" rel="nofollow noopener">target.com</a> - we can create an organic system of trust that does not rely on apps to all listen just to do the same thing, or contorted UX flows that are incredibly cumbersome.</p>
+<p>Here’s how the user flow works:</p>
+<ol>
+<li>The user walks into a store and receives a first ping from a beacon (or other location-based trigger)</li>
+<li>The platform/UA shows a bit of UI asking the user if they would like to receive LBT content from the entity - for example, <a href="http://Target.com" rel="nofollow noopener">Target.com</a>. (this all I meant by a geo-location-esque permission prompt). There are 3 options: disallow, allow for this location (aka: “Just this Target store location”), or allow for all locations (as in: “Allow notifications from all Target store locations”)</li>
+<li>After the user allows notifications for this entity’s single location (or all of the entity’s locations), the user no longer needs to do anything, they can receive content URLs directly from beacons within the location.</li>
+<li>All LBT pings in the location are safe, because they adhere to the entity.json file tied to the location. This file specifies the domains that are allowed to activate in the location’s bounds.</li>
+</ol>
+<p>Does that help?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>Interesting! I like the idea of tying this into the origin model that underlies the web.</p>
+<p>I suggest following RFC5785 and defining the well-known location of the geofencing data to be at <code>/.wellknown/</code>, with some more descriptive name.</p>
+<p>What prevents malicious (or just stupid) entities from over-claiming space?  The location file lets you specify any number of locations; a dumb store could accidentally claim an entire mall, for instance, and override anyone else wanting to do physical pings, or an origin could claim public spaces with addresses.</p>
+<p>Do you envision any scoping in the file being necessary?  Target has thousands of locations; listing all of them in the one file can easily mean a meg of data being slurped down on first ping.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-09-12</div>
+          <div class="post_content">
+<p>The base descriptor file must live on root, so it is always accessible cross-origin in an expected place.</p>
+<p>As far as claiming space you do not own, that part is a function of the platform and geofencing. The platform must determine which domains pertain to which geo areas. Google already does this in its map product - points and buildings are already associated with the domains of businesses, entities, and organizations. When a location cannot be linked, or has yet to be linked, to a domain by the platform, it reverts to the open model described in Scott Jensen’s Physical Web proposal.</p>
+<p>As far as scoping or truncation in the entity.json file, I would love to see any potential size issues handled via JSON-LD.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

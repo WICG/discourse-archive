@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Why is canvas 2d so slow?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Why is canvas 2d so slow?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2017-07-09</div>
+          <div class="post_content">
+<p>For example, compare WebGL version to Canvas2d version here (scroll to bottom to change mode): <a href="http://pixijs.github.io/pixi-particles-editor" rel="nofollow noopener">http://pixijs.github.io/pixi-particles-editor</a></p>
+<p>Here’s a WebGL demo with 10000 particles: <a href="http://pixijs.github.io/examples/#/demos/batch.js" rel="nofollow noopener">http://pixijs.github.io/examples/#/demos/batch.js</a></p>
+<p>And here’s a canvas 2d demo with only 1000 particles: <a href="http://fabricjs.com/particles" rel="nofollow noopener">http://fabricjs.com/particles</a></p>
+<p>Canvas 2d is accelerated (right?) yet so slow. Libs like Pixi (which offer very similar APIs) are so much faster.</p>
+<p>What prevent Canvas 2d from being as fast as WebGL libs like Pixi?</p>
+<p>Maybe the Canvas 2d backend needs a more polygon approach, like Pixi?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Justin_Novosad</div>
+          <div class="creation_date">2017-07-10</div>
+          <div class="post_content">
+<p>When rendering a large number of small primitives to a 2D canvas, rendering performance is limited by the CPU. Because each primitive requires an individual API call. There is currently no way to batch 2d context draws (except for paths, but they’s intrinsically slower than drawImage).  A few years ago, I made a proposal to create a batch version of drawImage(), which I think could go a long way in accelerating sprite-based games and particle animations: <a href="https://wiki.whatwg.org/wiki/Canvas_Batch_drawImage">https://wiki.whatwg.org/wiki/Canvas_Batch_drawImage</a> .  That proposal never went anywhere.  Perhaps we should revive that effort.  In blink/Chrome we do batching under the hood in skia’s GPU backend, which batches the GPU API calls, but we still suffer from lack of batching at the JS API call level. The feedback I got is that before moving forward with the spec, we should make an experimental implementation in at least one major browser to get some stats and prove there is significant performance to be gained in reducing the JS bindings and other per-call overhead.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

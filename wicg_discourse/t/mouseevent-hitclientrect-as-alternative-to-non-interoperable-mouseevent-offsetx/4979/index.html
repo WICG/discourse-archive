@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>MouseEvent.hitClientRect as alternative to non-interoperable MouseEvent.offsetX</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">MouseEvent.hitClientRect as alternative to non-interoperable MouseEvent.offsetX</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-10-27</div>
+          <div class="post_content">
+<p><code>MouseEvent.offsetX/Y</code> is in an unfortunate state, especially for inline elements. Blink/WebKit calculate it from the target element’s offsetParent, and Gecko calculates it from the target element (as per spec).
+This makes it impossible to get reliable offset-from-target measurements without calling <code>getClientRects()</code> or another form of synchronous measurement.</p>
+<p>This causes several issues:</p>
+<ul>
+<li>Synchronous measurements, depending on the point in which they’re done, can cause undesired additional layouts (layout thrashing)</li>
+<li>The client rect at the time of measurement might be different from the client-rect in the time of hit-testing, as the layout/scroll-position may have already changed by the time the event was handled.</li>
+<li>
+<code>getClientRects</code> is especially costly, as it has to account for inilne elements in split rows, transforms etc and is generally not cached by the user agent.</li>
+</ul>
+<p>Proposing the following:</p>
+<ul>
+<li>The MouseEvents (and perhaps other pointer events) will come with a ready <code>hitClientRect</code> property. It would be equivalent to calling <code>getClientRects</code> at the time of the pointer hit-test, and picking the rectangle that contains the hit point (<code>clientX</code>, <code>clientY</code>). In this case, <code>offsetX</code> is roughly equivalent to <code>clientX - hitClientRect.left</code>, but in an interoperable way.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2020-10-27</div>
+          <div class="post_content">
+<p>Out of curiosity, is there a known blocker against fixing the offsetX/Y behavior?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-10-27</div>
+          <div class="post_content">
+<p>Since this is an old issue, there are currently many websites who rely on the current status-quo, e.g. by checking the user-agent and using different measurements for Firefox/IE vs. the rest.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-10-27</div>
+          <div class="post_content">
+<p>I wonder if there’s no path for conversion there. Do you have specific examples of sites that rely on the current divergent behavior?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2020-10-27</div>
+          <div class="post_content">
+<p>I personally do not. This was the opinion I’ve received both from discussion on WebKit Slack and from the relevant Chromium bug (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1054515#c25" rel="noopener nofollow ugc">https://bugs.chromium.org/p/chromium/issues/detail?id=1054515#c25</a>)</p>
+<p>I also believe that we can convert it with an addEventListener flag, e.g.</p>
+<p><code>element.addEventListener('mouseover', handler, {offsetDimensions:'strict'})</code></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

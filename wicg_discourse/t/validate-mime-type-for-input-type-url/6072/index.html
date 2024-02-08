@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Validate mime type for input type=url</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Validate mime type for input type=url</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-12-14</div>
+          <div class="post_content">
+<p>It would be interesting to validate the mime type not just for <code>input type=file</code>, but also for <code>input type=url</code>.</p>
+<p>For example:</p>
+<pre><code class="lang-auto">&lt;input type="url" accept="image/png, image/jpeg"&gt;
+</code></pre>
+<p>The browser would need to use a HEAD or GET request to get the mime type and validate it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3977_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">camdyn</div>
+          <div class="creation_date">2022-12-14</div>
+          <div class="post_content">
+<p>Could this have performance concerns? My initial thoughts are when and how often these requests would be made</p>
+<p>I might be getting to in the weeds of the implementation details but some questions I had:</p>
+<ul>
+<li>Would it request every time the user focuses away from the input? Likely not after every keystroke</li>
+<li>Would there be some sort of debounce mechanism to ensure the network isn’t hit too hard?</li>
+<li>Would this automatically validate if the HEAD / GET request fails?</li>
+</ul>
+<p>Though maybe only performing the check on form submit and highlighting the input on fail (similar to how required behaves) could be a solution to all of these. Just some input, I like the idea though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2022-12-18</div>
+          <div class="post_content">
+<p>Users probably don’t expect that entering a URL causes that URL to be requested in the background, so browsers would have to communicate that beforehand.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-12-18</div>
+          <div class="post_content">
+<blockquote>
+<p>so browsers would have to communicate that beforehand.</p>
+</blockquote>
+<p>A permission for a normal GET request? Are you kidding? Websites can do as many GET requests as they want to arbitrary URLs today…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-18</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#are-there-other-samples-of-backend-requests-initiated-for-form-validation-1" name="are-there-other-samples-of-backend-requests-initiated-for-form-validation-1"></a>Are there other samples of backend requests initiated for form validation?</h1>
+<p>Interesting aspect. In web 3.0 world this pattern is used extensively by real aps but in <strong>JS stack</strong>, not by <span class="hashtag">#DeclarativeHtml</span> defined behavior. For <span class="hashtag">#DeclarativeWebApplication</span> it is a “must” to be supported pattern. Added it to DWA manifesto:</p>
+<h3>
+<a class="anchor" href="#external-resources-2" name="external-resources-2"></a>External resources</h3>
+<p>in the form is the usual case, those can be referenced as by direct URL as by some unique ID. The input value would match the ID but the validator has to be capable of</p>
+<ul>
+<li>Injecting the ID into request</li>
+<li>Define validation rule like 200 HTTP request status or presence of ID in one of response objects</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2022-12-18</div>
+          <div class="post_content">
+<p>I would downvote the <code>input type=url</code> validation aspect in favor of reference to external declarative validation rule with declarative request/response.</p>
+<p>Still the <code>input type="url"</code> has a sense as type of field and particular case for <code>input type="httprequest"</code> with request  parameters default to <code>accept=xxx</code> by content-type, <code>method="get"</code>, …</p>
+<p>The trouble comes in the need for another request parameters set for validation. Which is same heavy as input value request itself.</p>
+<p>If we would give a preference to proposed particular implementation , how it fits to generic approach and would it conflict with generic use?</p>
+<p>PS. OPTIONS http method is not necessary the best for image sniffing. LIST on the container would be more efficient for the list of images and can be cached. Of course the validation URL  would be different.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

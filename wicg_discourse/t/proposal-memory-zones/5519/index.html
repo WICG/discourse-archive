@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Memory Zones</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Memory Zones</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2742_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">exx8</div>
+          <div class="creation_date">2021-08-24</div>
+          <div class="post_content">
+<p>As web has shifted dramatically, in the last decade, and apps turn richer and richer, and while modular systems such as npm has risen, one thing remained static: which is the memory.
+While developing in native, there are many way to separate different instruction sets to different memory zones (the simplest way is just creating a process), the management of the memory in js is quite global. Technically any reachable memory of js, is reachable from any function; which of course poses a great challenge for all:</p>
+<ol>
+<li>If for some reason an XSS vulnerability is able to run code, it can potentially can read the entire user data in the same scope.</li>
+<li>If for some reason, an attacker is able to inject to existed npm package code, it might be able, also to kidnap data, from any app that uses that module.</li>
+</ol>
+<p>The most extreme example I can think of, is for example, an etherum wallet, and a dapp. Most of the code of a dapp should not be able to read the data of the wallet or even interact with, and though it seems there is some progress regarding how to store this data, we can do better.</p>
+<p>The proposal:</p>
+<p>A script should be able to create a  memory sandbox which prevents a from in the sandbox from accessing different  function or variable outside the scope. by the default that includes DOM element. Therefore, creating privileged  section of code, while maintaining that most of the code will be access only its own “yard”, in an OS-ring like fashion.
+It can be done by adding a native function, “sandbox”, which accept function and parameters, and returns a sandboxed function. In the future the bundler of the eco-systems, for example webpack, hopefully, will auto sandbox entire modules by default.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3565_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">theScottyJam</div>
+          <div class="creation_date">2021-08-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="5519" data-username="exx8">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/exx8/40/2742_2.png" width="20"/> exx8:</div>
+<blockquote>
+<p>Technically any reachable memory of js, is reachable from any function</p>
+</blockquote>
+</aside>
+<p>Not really true, there’s plenty of stuff you can hide from others, using private state or lexical scoping. But, point taken.</p>
+<p>As for your overall proposal, they’re actually working on a way to provide sandboxes, so you can better contain any Javascript that you wish to run. See the <a href="https://github.com/tc39/proposal-realms" rel="noopener nofollow ugc">realms</a> proposal. It would be really nice to have such a feature.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

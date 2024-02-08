@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS4 element() good alternative - CSS4 paint-source()</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS4 element() good alternative - CSS4 paint-source()</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">acterhd</div>
+          <div class="creation_date">2016-07-31</div>
+          <div class="post_content">
+<p>I think Mozilla <code>element()</code> - old age.</p>
+<h3>About</h3>
+<p>I suggest alternative for CSS element(). I suggest CSS4 image property <code>paint-source(id_or_name)</code>.
+With this API can be used any element that have paint-source for canvas. Element can be located in shadow DOM, or document. Element should have “id” for identity. These elements: <code>img</code>, <code>canvas</code>, <code>video</code>. Also possible register any paint source for CSS through JS.</p>
+<h3>Examples</h3>
+<pre><code class="lang-css">/* Declare DOM id of paint source directly */
+.paint {
+  background-image: paint-source("#domcanvas");
+}
+
+/* Declare path to paint source of element, or parent (should defined by JS) */
+.paint2 {
+  background-image: paint-source("anyjs");
+}
+</code></pre>
+<h3>JS</h3>
+<p>I suggest <code>[element].style.setPaintSource(name, paintSource)</code> for any DOM element, that applies paint source to this element, and every children.</p>
+<pre><code class="lang-auto">let canvas = document.createElement("canvas");
+canvas.width = 100;
+canvas.height = 100;
+let ctx = canvas.getContext("2d");
+let imageData = ctx.getImageData(0, 0, 100, 100);
+document.body.style.setPaintSource("anyjs", imageData);
+</code></pre>
+<p>Also, <code>setPaintSource</code> available not only for document, but for any element, like CSS variables.</p>
+<pre><code class="lang-auto">let canvas = document.createElement("canvas");
+//...
+image.style.setPaintSource("mycanvas", canvas)
+</code></pre>
+<h3>Paint API</h3>
+<p>Paint source can be applied with CSS Paint API.</p>
+<pre><code class="lang-css">.some {
+  --image: paint-source("anything");
+  background: paint(something);
+}
+</code></pre>
+<h3>DOM Element JS</h3>
+<p>Available for any parent element. Set paint source from DOM.</p>
+<pre><code class="lang-auto">element.style.setPaintSourceFromId("anyjs", "element");
+</code></pre>
+<h3>Advantages</h3>
+<p>Pro:</p>
+<ul>
+<li>No need recursion detection</li>
+<li>Used only recommended elements for canvases</li>
+<li>Flexible as CSS variables</li>
+<li>Can be emulated through CSS variables and dynamic exporting images</li>
+</ul>
+<p>Con:</p>
+<ul>
+<li>No background, border, text, etc… I think this is not need!</li>
+<li>Required static size (except <code>background-size</code>)</li>
+</ul>
+<h3>Limitation</h3>
+<p>These paint source NOT applying element background images, colors, etc.</p>
+<p>Function <code>paint-source()</code> declare to draw only video or image data to background of element.</p>
+<p>Sources for <code>paint-source()</code> <strong>should have intrinsic size.</strong> So SVG should be rasterized or defined size.</p>
+<h3>Polyfill</h3>
+<p><a class="onebox" href="https://github.com/acterhd/css-paint-source-polyfill" rel="nofollow noopener" target="_blank">https://github.com/acterhd/css-paint-source-polyfill</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

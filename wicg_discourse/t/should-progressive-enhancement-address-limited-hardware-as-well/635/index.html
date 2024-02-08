@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Should “Progressive Enhancement” address limited hardware as well?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Should “Progressive Enhancement” address limited hardware as well?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2014-09-18</div>
+          <div class="post_content">
+<p>Progressive enhancement revolves around the principle of creating websites that are accessible and usable in all <strong>browsers</strong>. However, with the recent advent of Firefox OS devices, the “limiting factor” becomes not the browser (which is on par with modern mobile browsers, afaik), but the device’s <strong>hardware</strong>. A recent <a href="http://arstechnica.com/gadgets/2014/09/weve-got-a-35-firefox-os-phone-what-do-you-want-to-know/" rel="nofollow noopener">Ars Technica article</a> demonstrates this: Ars’s 900KB website performs awfully on the new $35 Firefox OS device.</p>
+<p>It makes sense to me to expand the meaning of Progressive Enhancement to cover not only limited browsers, but limited hardware as well. The implementation of this extension would be centered around minimizing the work that the browser has to perform to render the page, e.g. don’t load and execute all the JavaScript files at once and don’t request all the page’s resources (images, webfonts, etc.) at once; rather perform these tasks in iterations and adjust them to match the browser’s performance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2014-09-18</div>
+          <div class="post_content">
+<p>I’m pretty much convinced that the answer to that should be yes, but I’m not yet convinced what are the best mechanisms that we can add that would enable us to do that.</p>
+<p>As you say, current “cutting the mustard” techniques rely on the fact that the browser is old, but with FirefoxOS devices, that’s no longer the case.
+I was at Velocity NYC and a few talks were very much related to this subject. Tim Kadlec had a great talk about delivering Web sites to third world countries where a majority of devices are likely to choke on simple things like a large number of images.
+Daniel Espeset had a great talk about measuring JS parsing and execution times, and how they take forever on low end devices.</p>
+<p>I started thinking about memory MQs, but then there are tons of questions regarding “what is memory?”. Alex Russel suggested the use of custom MQs to do these things, but after thinking about it some more I have no clear picture how imperative custom MQs would work with the preloader, so they may not be enough to answer all use cases. Anssi Kostiainen suggested adding some indicators to Resource Timing.</p>
+<p>I suggest we start by gathering ues cases. What do we want to avoid on low end devices? Downloading large resources? Decoding/parsing/executing them? Something else entirely?</p>
+<p>Let’s start hashing this stuff out to get a better picture of what’s needed</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/471_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tkadlec</div>
+          <div class="creation_date">2014-09-21</div>
+          <div class="post_content">
+<p>On the project I was specifically referring to in the presentation Yoav was mentioning, we used a blanket “cut the mustard” using the typical (querySelector, addEventListener). In that case, we cut out most images, JS, webfonts and enhanced CSS. Works great, but as Yoav points out, does nothing for newer devices with low powered hardware.</p>
+<p>Primary use cases that come to mind for things that we should consider avoiding sending to devices with low-end hardware:</p>
+<ul>
+<li>
+<strong>Heavy JS.</strong> I have worked on projects where we tested on some older devices that completely choked (crashed) when jQuery was loaded. Not because of the code itself, but the size of the JS. Now, most of the default browsers on those devices wouldn’t “cut the mustard”, but a newer, low-end device with a browser with better support may run into issues as well—if not completely bringing the browser to a halt, then at least significantly impacting parse/execution time in a very negative way.</li>
+<li>
+<strong>Too many images.</strong> Similar argument to the JS above. Low-end devices are likely to choke on many of today’s image heavy sites.</li>
+</ul>
+<p>It’s probably also worth nothing that while Firefox OS is the easiest example, with the majority of internet growth poised to come from emerging markets, we’re likely to see other manufacturers producing similar devices. The explosion of other form factors, too, comes into play (ex: while not having a browser by default at the moment, Android Wear devices do have a Chromium based browser available for download).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/89_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">madcampos</div>
+          <div class="creation_date">2014-09-22</div>
+          <div class="post_content">
+<p>Low end android phones suffer the same, they have not enough computational power to run pages more complex, like facebook.
+I think we need to share infos about the hardware profile so that developers can adapt to the enviroment. Some infos like core numbers and speed, memory and gpu presence/info are usefull, but the question I think is how to inform this things and don’t be “too revealing” about the user’s hardware.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2014-10-10</div>
+          <div class="post_content">
+<p>I agree that it could be really powerful to be able to determine how powerful the hardware we are developing for is.</p>
+<p><span class="mention">@tkadlec</span> highlighted the two key areas this would help being <strong>Heavy JS</strong> and <strong>too many images</strong> however I think their is much more that we do that could harm performance on lower power devices. The key thing that springs to mind is excessive use of some of the new CSS3 properties, in particular background gradients springs to mind where excessive usage can actually cause jarring on the scrollbar.</p>
+<h1>Suggested Implementation</h1>
+<p>Implementation wise, I think there are multiple ways this could be implemented, firstly as part of the next version of media queries. Alternatively (or additionally) it could be made available as a part of the window object.</p>
+<p>#<span class="hashtag">#Media</span> queries implementation</p>
+<p>So in CSS we might want to adapt our CSS based on the power of the device, the way we already do this for size of devices is media queries so makes sense to continue with this for performance.</p>
+<pre><code>@media only screen and (min-device-performance: "low") {
+    .element {
+            border-radius: 10px;
+    }
+}
+</code></pre>
+<p>In JavaScript this media query would then work with the matchMedia API.</p>
+<p>#<span class="hashtag">#Global</span> object</p>
+<p>The second implementation would be having information about the specification simply avaliable on the window object of the browser, available by simply querying the value. Similar to how we</p>
+<pre><code>window.device.memory
+window.device.performance
+</code></pre>
+<p>#<span class="hashtag">#Potential</span> values</p>
+<p>This is probably the most controversial thing, as its hard to choose values that would work in all situations, these are just suggestions off the top of my head.</p>
+<p>window.device.memory = 512 (value would be an integer measured in Mb’s)
+window.device.processing = low (low, medium or high could be the values).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

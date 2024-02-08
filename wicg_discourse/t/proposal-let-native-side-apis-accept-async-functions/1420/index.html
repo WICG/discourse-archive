@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[PROPOSAL] Let native-side APIs accept async functions</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[PROPOSAL] Let native-side APIs accept async functions</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-03-30</div>
+          <div class="post_content">
+<p>For example, what if we could do</p>
+<pre><code class="lang-auto">document.querySelector('a#some-link').addEventListener(async function() {
+  let result = await someThingThatWeNeed()
+
+  // ... possibly show a loading icon, or something ...
+
+  // Finally, abort default behavior depending on the result.
+  if (!result) return false
+
+  // otherwise the action continues as normal.
+})
+</code></pre>
+<p>It might be possible to monkey-patch <code>addEventListener</code> to make a POC of this, as well as any other native places where behavior can depend on the result of a function passed to native code.</p>
+<p>What are your thoughts and feedback on this idea?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-03-31</div>
+          <div class="post_content">
+<p>It is difficult to allow calls to things like <code>preventDefault()</code> in an async handler, because usually the browser needs to know synchronously if you will do that, e.g. so it knows not to scroll the page if you block a scroll event. But then maybe the new <code>passive</code> option for events could enable this…?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-03-31</div>
+          <div class="post_content">
+<p>Agreed that we can’t expose a lot of functionality to an async function, because it needs to tell the browser syncly about things.  Passive listeners help since they <em>also</em> disable the ability to tell the browser about things from the event.</p>
+<p>I don’t think one can tell from the function that something is async or not; all it does as far as the outside world is concerned is make it so that the function immediately returns a promise when called.  So we can’t have the browser help out and throw when you use an async function in a non-passive listener accidentally. <img alt=":confused:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/confused.png?v=5" title=":confused:"/></p>
+<p>One can use async functions fairly easily by themselves, tho:</p>
+<pre><code class="lang-auto">el.addEventListener('click', function(e) {
+ let p = (async function(e) { await somePromiseThing(); })(e);
+ // do whatever sync things you want to do for the event here
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

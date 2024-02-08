@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Human Interface Device (HID) API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Human Interface Device (HID) API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2018-09-27</div>
+          <div class="post_content">
+<p>A Human Interface Device (HID) is a type of device that takes input from or provides output to humans. It also refers to the HID protocol, a standard for bi-directional communication between a host and a device that is designed to simplify the installation procedure.</p>
+<p>The web already supports input from HID devices. Keyboards, mice, touchscreens, and gamepads are all typically implemented using the HID protocol. However, this support relies on the operating system’s HID drivers to transform incoming HID reports into native input events. Devices that are not well supported by the generic HID driver are often inaccessible to web applications. Similarly, the outputs on most devices are also inaccessible.</p>
+<p>This issue is particularly painful when it comes to HID gamepads. The HID standard defines many usages that are relevant for gamepads, but the mapping of these usages to physical button locations is inconsistent across manufacturers. As a result, it is almost always the case that some device-specific logic is needed. Native applications typically leave this device-specific logic to a dedicated library.</p>
+<p>We propose an API for requesting access to HID devices using a chooser-based permission model similar to the one used for <a href="https://wicg.github.io/webusb/" rel="nofollow noopener">WebUSB</a> and <a href="https://webbluetoothcg.github.io/web-bluetooth/" rel="nofollow noopener">Web Bluetooth</a>. The API would enable a web application to send output and feature reports to the device as well as listen for input reports. Direct access to devices using the HID protocol would allow the device-specific logic to move out of the user agent and into the application layer, enabling the use of more devices on the web and reducing the complexity of the user agent.</p>
+<p>Please take a look at our <a href="https://github.com/nondebug/webhid/blob/master/EXPLAINER.md" rel="nofollow noopener">WebHID explainer</a>. The API is similar to the <a href="https://developer.chrome.com/apps/hid" rel="nofollow noopener">chrome.hid API</a> and is intended to fill a similar niche.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2018-10-03</div>
+          <div class="post_content">
+<p>Thanks for putting this proposal together, together with the comprehensive README.</p>
+<p>Just making a few notes/reactions/reactions… this seems to have a similarity to Web MIDI - does it exhibit potentially the same security characteristics? (i.e., can messages be sent that could cause the HID device to be misused/hijacked).</p>
+<p>There might be some relationship in design with the <a href="https://github.com/WICG/serial">Web Serial API.</a></p>
+<p>If the main use case is gamepads, could we continue to improve the GamePad API instead? Are there mainstream HID devices in common use where this API would bring significant value to users?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2018-10-03</div>
+          <div class="post_content">
+<p>Yes, this API would have similar security characteristics to APIs like MIDI, USB, Bluetooth, and Serial that allow bidirectional communication with external devices. To mitigate the risk, we require that the device is selected from a chooser before any data can be sent or received. As an additional mitigation, we will block HID access to devices that generate trusted input events.</p>
+<p>I would prefer to see more gamepads supported through the Gamepad API. However, the design of the API makes it difficult to support new devices as well as the long tail of less-popular devices. To support a device, the browser must be able to recognize the device’s input report format so it knows how to transform the button and axis data to match the Standard Gamepad layout. The work to add support for a device typically requires access to the device itself, relies on undocumented behavior, is difficult to test for regressions, and is unlikely to be undertaken by browser vendors for all but the most popular devices.</p>
+<p>Some mainstream HID devices that could take advantage of WebHID:</p>
+<p>Nintendo Switch Joy-Cons are Bluetooth HID devices and can be used on several OSes as Bluetooth gamepads. However, they typically need additional software to support the mode where two Joy-Cons are used together as one gamepad. Furthermore, Switch users are accustomed to a complex GUI-driven procedure for pairing and associating the gamepads which is not feasible to implement within the browser. Enabling the page to communicate HID directly to the devices would allow applications to provide their own association flow for unusual devices like these.</p>
+<p>The Logitech Unifying receiver is a USB HID device that forwards input events from a wireless device but does not use the OS’s support for wireless protocols like Bluetooth. Once a wireless device is paired with the receiver, it generally does not require any device-specific logic beyond what is provided by the OS’s generic HID drivers. However, it does require some device-specific logic to initiate the pairing process. On most platforms this is provided by a native executable, but sometimes this is not possible. By enabling access to HID devices, the pairing app could be implemented as a web app. This is important on platforms like Chrome OS where the native app functionality may be difficult to access or unavailable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2094_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jracle</div>
+          <div class="creation_date">2018-10-24</div>
+          <div class="post_content">
+<p>Thanks Matt,</p>
+<p>Indeed, at Logitech, our mice and keyboards leverage standard HID functionality for most user input operations, but also communicate through HID vendor collections for more advanced functionality (proprietary HID++ protocol).</p>
+<p>We use <a href="https://drive.google.com/file/d/0BxbRzx7vEV7eNDBheWY0UHM5dEU/view?usp=sharing" rel="nofollow noopener">HID++ v1</a> in our Unifying receiver (USB dongle with a proprietary 2.4 Ghz radio), most noticeably to pair wireless devices. Back in 2014 we shipped a <a href="https://chrome.google.com/webstore/detail/logitech-unifying-for-chr/agpmgihmmmfkbhckmciedmhincdggomo?hl=en" rel="nofollow noopener">pairing utility using chrome.hid</a>.</p>
+<p><a href="https://drive.google.com/open?id=0BxbRzx7vEV7eU3VfMnRuRXktZ3M" rel="nofollow noopener">HID++ v2</a> provides advanced device configuration and firmware update capability.</p>
+<p>Please notice that HID++ is also used over USB (mostly gaming devices), Bluetooth classic (HID profile) and Bluetooth smart (HID over Gatt).</p>
+<p>In the same way as for web-bluetooth and web-usb, leveraging standards and the power of the Web Platform is far better than shipping potentially flawed / platform-specific drivers.</p>
+<p>A web API also provides way better (seamless) user experience than going through traditional software/driver installers.</p>
+<p>Cheers,</p>
+<p>Julien</p>
+<p>Logitech, Inc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robatwilliams</div>
+          <div class="creation_date">2019-03-05</div>
+          <div class="post_content">
+<p>Has support for concurrently-used special-purpose keyboards been considered, e.g. <a href="https://www.google.co.uk/search?q=trading+keypad&amp;source=lnms&amp;tbm=isch&amp;sa=X&amp;ved=0ahUKEwiQkpb4h-zgAhVCLewKHbbqAXEQ_AUIDygC&amp;biw=1352&amp;bih=866" rel="nofollow noopener">trading keypads</a>?</p>
+<p>These are commonly used alongside a normal full-size keyboard, and are used for quick access to regular/time-sensitive operations. The key codes they expose as far as I know are the same as the normal keyboard, so the listening application would need to use the source of the key event to determine what action to take.</p>
+<p>From what I can see, these would not be served by either WebHID or the Keyboard API. You mention that WebHID is not intended for keyboards, and security concerns which I appreciate. The web Keyboard API assumes a single keyboard, and the keyboard lock feature is only usable in fullscreen mode. I see that WebUSB prohibits devices that expose an HID profile - this is how I came to find WebHID.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2019-03-06</div>
+          <div class="post_content">
+<p>The input report for keys on a trading keypad would most likely be defined inside a top-level collection with usage GenericDesktop/Keyboard or GenericDesktop/Keypad, which will be considered protected usages. Reports defined in a top-level collection with a protected usage will not be accessible through WebHID. I would expect that the OS’s HID driver would pick up these keypads and make them accessible through the Keyboard API. It’s unfortunate that the KeyboardEvent API doesn’t provide an ID to identify the device a key event came from.</p>
+<p>If the keypad exposes additional controls in a separate top-level collection with a non-protected usage, those controls would be accessible through WebHID.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robatwilliams</div>
+          <div class="creation_date">2019-03-06</div>
+          <div class="post_content">
+<p>Thanks for confirming.</p>
+<p>I’ve created a new topic for this: <a href="https://discourse.wicg.io/t/identify-which-of-multiple-keyboards-an-event-came-from/3416">Identify which of multiple keyboards an event came from</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2554_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TijmenvanGulik</div>
+          <div class="creation_date">2019-09-10</div>
+          <div class="post_content">
+<p>Hello, I tried hid api in canary on my mac. I could connect, send/receive commands to my concept2 ergometer. (Really cool!, this is enough to make it possible to make <a href="http://ergometer-space.org" rel="nofollow noopener">ergometer-space.org</a> connect using usb)
+I have one problem, I do not receive any disconnect events. Where can I file bugs? There is not yet an hid component in de chromium bug tracker.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2019-09-10</div>
+          <div class="post_content">
+<p>Connect/disconnect events aren’t implemented yet. Please file bugs against the Blink&gt;HID component.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2554_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TijmenvanGulik</div>
+          <div class="creation_date">2019-09-10</div>
+          <div class="post_content">
+<p>Thanks</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robatwilliams</div>
+          <div class="creation_date">2019-09-23</div>
+          <div class="post_content">
+<p>I started an awesome list: <a href="https://github.com/robatwilliams/awesome-webhid" rel="nofollow noopener">https://github.com/robatwilliams/awesome-webhid</a></p>
+<p>In case anyone’s looking for reference information, devices list, ideas, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2716_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Arne_Gebert</div>
+          <div class="creation_date">2019-12-19</div>
+          <div class="post_content">
+<p>Greetings,
+is there a way to automatically reconnect to a device you already connected to, without having to explicitly grant access to the same device again? In our use case, we have a website using the HID API to configure custom sensors which all appear as the same device via the HID protocol. We have several hundred of them and would like to sequentially configure them, without needing to confirm via the ‘requestDevice’-popup that we want to connect to the sensor for every single device.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2019-12-19</div>
+          <div class="post_content">
+<blockquote>
+<p>is there a way to automatically reconnect to a device you already connected to, without having to explicitly grant access to the same device again?</p>
+</blockquote>
+<p>Not yet, but the plan is to support persistent permissions before the API is default-enabled in Chrome stable. Relevant Chromium bug: <a href="https://crbug.com/958918" rel="nofollow noopener">https://crbug.com/958918</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2745_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">CiriousJoker</div>
+          <div class="creation_date">2020-01-17</div>
+          <div class="post_content">
+<p>sendReport() fails with “Permission denied” when trying to send data to a custom HID microcontroller.</p>
+<p>The device shows up in Windows like this:
+<img alt="72636362-2d207680-395f-11ea-8a77-6ea287627973" data-base62-sha1="crOoNey5RnD7amWf32ddDVwsalb" height="88" src="//discourse.wicg.io/uploads/default/original/2X/5/573ef20821a3243bf88cd7e8ac97510abe0c3d89.png" width="686"/>
+In “Devices &amp; Printers” (middle section), it shows up as “Unspecified”.</p>
+<p>I can imagine that “Input device” is the problem here, but since it’s a game controller, that seems like the correct category. Should my device lie so I can connect to it or is there an “official” way of doing it?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2020-04-15</div>
+          <div class="post_content">
+<p>This is most likely due to the HID report descriptor. To protect against input logging, Chrome blocks all input, output, and feature reports contained in a HID collection that the OS would recognize as a keyboard or pointing device. To avoid this, move the game controller input reports to a new top-level HID collection with usage Generic Desktop / Game Pad (usage page 1, usage 5).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3305_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Henrik_Rasmussen</div>
+          <div class="creation_date">2021-01-13</div>
+          <div class="post_content">
+<p>I have been spending my x-mas vacation with webHID and I absolutely love it.</p>
+<p>I got most of it to work, and to be honest, I was happy over the new year, but then, all of a sudden a change was seen upon disconnect/reconnect of my device.</p>
+<p>I can swear it used to work, but shortly into 2021, I am experiencing, that my device collection is one smaller than before disconnect.</p>
+<p>It seems the telephony page (0x0B) dissapears…</p>
+<p>Upon disconnect I have 3 collections, then upon reconnect I only have 2…</p>
+<p>I am going out of my mind, and the only thing I can think of, if an updated Canary browser…</p>
+<p>Please if anyone can take me out of my misery, I would be forever grateful…</p>
+<pre><code>navigator.hid.addEventListener('disconnect', ({device}) =&gt; {
+        console.log(device.collections.length);//**output 3**
+    });
+
+navigator.hid.addEventListener('connect', ({device}) =&gt; {
+        console.log(device.collections.length);//**output ONLY 2**
+    });</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2555_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mattreynolds</div>
+          <div class="creation_date">2021-01-19</div>
+          <div class="post_content">
+<p>Sounds like an implementation bug… can you file it on the <a href="https://bugs.chromium.org/p/chromium/issues/entry" rel="noopener nofollow ugc">Chromium bug repo</a>? Please set the Components field to “Blink&gt;HID”.</p>
+<blockquote>
+<p>updated Canary browser</p>
+</blockquote>
+<p>That’s probably it. I recently made some changes in the Windows backend that could result in behavior like you describe.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

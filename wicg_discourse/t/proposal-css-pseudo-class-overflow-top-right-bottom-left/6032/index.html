@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] CSS pseudo class :overflow (-top, -right, -bottom, -left)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] CSS pseudo class :overflow (-top, -right, -bottom, -left)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinwinkler</div>
+          <div class="creation_date">2022-10-30</div>
+          <div class="post_content">
+<p>There are valid use-cases for which the UI must react to an occurring overflow (beyond just showing a scrollbar).
+Currently those cases always require a javascript solution.
+The required code to deal with such use-cases could be simplified if the fact that an overflow occurred was accessible in the CSS.
+A new CSS pseudo class <code>:overflow-&lt;side&gt;</code> would satisfy this need.</p>
+<h2>
+<a class="anchor" href="#proposed-mechanism-1" name="proposed-mechanism-1"></a>Proposed Mechanism</h2>
+<p>The following CSS pseudo class selectors are added to the standard:</p>
+<ul>
+<li>
+<p><code>:overflow-top</code></p>
+<p>A selector that matches any HTML element which has content overflowing its top boundary.
+For this the element must be a scroll container i.e. the content must exceed the available size
+and the computed style for <code>overflow</code> in this direction must be <code>visible</code>, <code>hidden</code>, <code>scroll</code>, or <code>auto</code>; it must not be <code>clip</code>.</p>
+</li>
+<li>
+<p><code>:overflow-right</code></p>
+<p>analogous to <code>:overflow-top</code> but concerned with the right boundary</p>
+</li>
+<li>
+<p><code>:overflow-bottom</code></p>
+<p>analogous to <code>:overflow-top</code> but concerned with the bottom boundary</p>
+</li>
+<li>
+<p><code>:overflow-left</code></p>
+<p>analogous to <code>:overflow-top</code> but concerned with the left boundary</p>
+</li>
+</ul>
+<p>Further shorthand selectors could be added:</p>
+<ul>
+<li>
+<p><code>:overflow-x</code>
+matches an element if it matches at least one of <code>:overflow-left</code> or <code>:overflow-right</code></p>
+</li>
+<li>
+<p><code>:overflow-y</code>
+matches an element if it matches at least one of <code>:overflow-top</code> or <code>:overflow-bottom</code></p>
+</li>
+</ul>
+<h2>
+<a class="anchor" href="#use-case-examples-2" name="use-case-examples-2"></a>use-case Examples</h2>
+<h3>
+<a class="anchor" href="#indicate-content-scrolled-out-of-sight-due-to-overflow-3" name="indicate-content-scrolled-out-of-sight-due-to-overflow-3"></a>indicate content scrolled out-of-sight due to overflow</h3>
+<p>For text content for which it is important that the user is aware of potentially concealed parts of the text due to overflow we can show a shadow overlaying the content towards the edge where the overflow occurs.</p>
+<p><img alt="example with scroll shadow" height="199" src="https://raw.githubusercontent.com/teetotum/exploration/master/scroll_shadow/screenshot_marked.png" width="652"/></p>
+<ul>
+<li>
+<a href="https://gleaming-peppered-lifeboat.glitch.me/" rel="noopener nofollow ugc">Link</a> to live example implementation using javascript</li>
+<li>
+<a href="https://glitch.com/edit/#!/gleaming-peppered-lifeboat" rel="noopener nofollow ugc">Link</a> to code</li>
+</ul>
+<p>A pure CSS solution using the proposed pseudo class would work with the following CSS:</p>
+<pre><code class="lang-css">.scroll-container {
+  /* inset | offset-x | offset-y | blur-radius | spread-radius | color */
+  --top-shadow: inset 0 80px 48px -64px #00000021;
+  --bottom-shadow: inset 0 -80px 48px -64px #00000021;
+}
+
+.scroll-container:overflow-top {
+  box-shadow: var(--top-shadow);
+}
+
+.scroll-container:overflow-bottom {
+  box-shadow: var(--bottom-shadow);
+}
+
+.scroll-container:overflow-top:overflow-bottom {
+  box-shadow: var(--top-shadow), var(--bottom-shadow);
+}
+</code></pre>
+<h3>
+<a class="anchor" href="#show-custom-controls-to-enable-scrolling-when-a-scrollbar-is-undesired-4" name="show-custom-controls-to-enable-scrolling-when-a-scrollbar-is-undesired-4"></a>show custom controls to enable scrolling when a scrollbar is undesired</h3>
+<p>When the design omits the default scrollbar but offers custom buttons to scroll the content we want to <em>a)</em> display the buttons only when there is actually an overflow and <em>b)</em> enable a button to receive clicks only when there is scrollable area in the respective direction.</p>
+<p><img alt="custom scroll buttons example" height="97" src="https://raw.githubusercontent.com/teetotum/exploration/master/custom_scroll_buttons/custom_scroll_buttons_example.png" width="416"/></p>
+<ul>
+<li>
+<a href="https://humorous-glass-file.glitch.me/" rel="noopener nofollow ugc">Link</a> to live example implementation using javascript</li>
+<li>
+<a href="https://glitch.com/edit/#!/humorous-glass-file" rel="noopener nofollow ugc">Link</a> to code</li>
+</ul>
+<p>A pure CSS solution using the proposed pseudo class would work with the following CSS:</p>
+<pre><code class="lang-css">/* .scroll-left disabled */
+.scroll-container:not(:overflow-left) + .scroll-buttons .scroll-left {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* .scroll-right disabled */
+.scroll-container:not(:overflow-right) + .scroll-buttons .scroll-right {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.3;
+}
+</code></pre>
+<h2>
+<a class="anchor" href="#roadblocks-5" name="roadblocks-5"></a>Roadblocks</h2>
+<p>The proposed feature does not fit well into how browsers currently render a document.
+Selectors are matched, resulting in styles being applied, resulting in layout, causing overflow, which would now need to trigger matching of <code>:overflow</code> selectors and applying corresponding styles, which could cause more overflow or undo an overflow; potentially causing an infinite cycle.
+The same concern has been discussed <a href="https://discourse.wicg.io/t/add-truncated-to-css-pseudo-selector-specification/621">here</a> without a feasible solution.</p>
+<h2>
+<a class="anchor" href="#alternatives-6" name="alternatives-6"></a>Alternatives</h2>
+<p>Some use-cases could be solved with a pure CSS solution, using other proposed CSS features:
+As of writing this proposal <code>scroll-linked-animations</code> are still an experimental feature.
+However, it has progressed quite far; it seems the spec for version 1 is nearing a stable state.
+At the moment a <a href="https://github.com/flackr/scroll-timeline" rel="noopener nofollow ugc">polyfill</a> is available.
+An <a href="https://github.com/teetotum/exploration/blob/master/scroll_shadow/css_solution_with_scrolltimeline.html" rel="noopener nofollow ugc">alternative implementation</a> of the first use-case using <code>scroll-linked-animations</code> would look like this:</p>
+<pre><code class="lang-css">@keyframes adjust-shadow {
+  0% {
+    box-shadow: var(--hidden-top-shadow), var(--visible-bottom-shadow);
+  }
+  1%,
+  99% {
+    box-shadow: var(--visible-top-shadow), var(--visible-bottom-shadow);
+  }
+  100% {
+    box-shadow: var(--visible-top-shadow), var(--hidden-bottom-shadow);
+  }
+}
+
+.scroll-container.with-shadow {
+  --visible-top-shadow: inset 0 80px 48px -64px #00000021;
+  --visible-bottom-shadow: inset 0 -80px 48px -64px #00000021;
+  --hidden-top-shadow: inset 0 80px 48px -64px #00000000;
+  --hidden-bottom-shadow: inset 0 -80px 48px -64px #00000000;
+  animation: 1s linear both adjust-shadow;
+  animation-timeline: scroll();
+}
+</code></pre>
+<h2>
+<a class="anchor" href="#potential-polyfill-to-allow-experimentation-7" name="potential-polyfill-to-allow-experimentation-7"></a>Potential polyfill to allow experimentation</h2>
+<p>An implementation of a polyfill could be attempted to allow experimentation and exploration of the proposed feature, verifying whether it simplyfies dealing with overflow.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

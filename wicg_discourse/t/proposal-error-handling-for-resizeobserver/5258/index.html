@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Error handling for ResizeObserver</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Error handling for ResizeObserver</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leobalter</div>
+          <div class="creation_date">2021-04-13</div>
+          <div class="post_content">
+<p>The Salesforce Web Standards team have been working on a solution to <a href="https://github.com/salesforce/standards-explainers/tree/HEAD/observer-errors" rel="noopener nofollow ugc">handle errors for observer</a>.</p>
+<p>For some TL;DR:</p>
+<p>The error from the callback function cannot be captured from registering the elements through the .observe method. The registration does not imply a call to that function.</p>
+<pre><code class="lang-javascript">const observer = new ResizeObserver(function() {
+    throw new Error();
+});
+
+try {
+    observer.observe(elem1);
+} catch (e) {
+    // the only error to be captured here is if elem1 don't meet the parameters requirements
+    // the Error thrown would leak up to `window.onerror`
+}
+</code></pre>
+<p>This proposal adds a <code>.catch</code> method with a callback to remove the bubbling out.</p>
+<p>This method captures errors triggered in the callback function. E.g.:</p>
+<pre><code class="lang-javascript">var observer = new ResizeObserver(function(entries) {
+    throw new Error('meep');
+});
+observer.observe(elem1);
+observer.observe(elem2);
+
+// The new proposed method
+observer.catch(function(err) {
+    console.log(err.message); // 'meep'
+});
+</code></pre>
+<p>We want to bring this to the proper standards venues with the adequate members and implementers support. Therefore, we’re happy to discuss this proposal in order to advance it.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

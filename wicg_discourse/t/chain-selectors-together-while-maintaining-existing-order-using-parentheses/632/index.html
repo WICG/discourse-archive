@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Chain selectors together while maintaining existing order using parentheses</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Chain selectors together while maintaining existing order using parentheses</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/467_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TylerH</div>
+          <div class="creation_date">2014-09-16</div>
+          <div class="post_content">
+<p>We can already select for scenarios where multiple elements, IDs, or classes are used to filter, e.g.:</p>
+<pre><code>div + div {
+    background: #000;
+}
+</code></pre>
+<p>or</p>
+<pre><code>.apples &gt; .oranges {
+    text-decoration: none;
+}
+</code></pre>
+<p>We can also already select for situations where we want only an element that is the last of its type, or is the last child, etc.:</p>
+<pre><code>.apples:nth-of-type(2n) {
+    border: 1px solid black;
+}
+</code></pre>
+<p>or</p>
+<pre><code>.oranges:last-child {
+    font-size: 2em;
+}
+</code></pre>
+<p>What we don’t have, and what I think we could really use, is a way to combine these two in order to select for situations where we want more complicated filtering. This would be especially useful for situations where mixed classes are used.</p>
+<p>My suggestion is to chain selectors together, a la the mathematical order of operations, using parentheses. Take for example the following two code snippets:</p>
+<pre><code>div + div:last-of-type {
+    color: red;
+}
+</code></pre>
+<p>and</p>
+<pre><code>(div + div):last-of-type {
+    color: red;
+}
+</code></pre>
+<p>or</p>
+<pre><code>(div + div):last-child {
+    color: red;
+}
+</code></pre>
+<p>The first snippet of CSS above would apply the red color only in instances where there is a div that is a last-child of its parent, where that div is also preceded by another div. The <em>second</em> and <em>third</em> snippet of CSS above would apply to both divs, assuming one of them is the <code>last-of-type</code> or <code>last-child</code>, and assuming that that last div has a preceding immediate sibling that is also a div.</p>
+<p>This differs from <code>nth-of-type</code> and <code>nth-child</code> in that you can have dynamic pages where divs or other elements are inserted/shown based on different criteria, and still have CSS alter the appearance conditionally. Dynamicity is important to consider here; it’s why we can’t just “add another class”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-16</div>
+          <div class="post_content">
+<p>If I’m understanding what you intend correctly, you can do this with existing selectors in the draft:</p>
+<pre><code class="lang-css">div:last-of-type, div:has(+div:last-of-type) { ... }
+</code></pre>
+<p>etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/467_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TylerH</div>
+          <div class="creation_date">2014-09-16</div>
+          <div class="post_content">
+<p>It’s my understanding that the <code>:has()</code> pseudo selector will <a href="http://dev.w3.org/csswg/selectors4/#profiles">not be included</a> in CSS Selectors Level 4.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-16</div>
+          <div class="post_content">
+<p>It’s in level 4, just not in the Fast profile.</p>
+<p>Rephrasing something doesn’t change its speed, though, so most things that can be done with <code>:has()</code> would be equally excluded from the Fast profile.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/467_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">TylerH</div>
+          <div class="creation_date">2014-09-17</div>
+          <div class="post_content">
+<p>Unless the various web browsers disagree that <code>:has()</code> is too slow to implement, then it will only be accessible in the DOM for JavaScript and similar languages, not for CSS.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

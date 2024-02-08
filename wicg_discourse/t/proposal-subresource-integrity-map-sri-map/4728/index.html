@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Subresource Integrity Map (sri-map)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Subresource Integrity Map (sri-map)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3052_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MylesBorins</div>
+          <div class="creation_date">2020-08-13</div>
+          <div class="post_content">
+<p>Currently there is no way to enforce or check integrity of resources being imported as an ESModule.</p>
+<p>There is an existing <a href="https://www.w3.org/TR/SRI/">SRI Standard</a> at W3C which outlines <a href="https://www.w3.org/TR/SRI/#cryptographic-hash-functions">cryptographic hashing functions</a>, <a href="https://www.w3.org/TR/SRI/#response-verification-algorithms">an algorithm for response verification</a>, and defines <a href="https://www.w3.org/TR/SRI/#the-integrity-attribute">an integrity attribute</a> which is utilized by various elements in HTML. There is an <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity" rel="nofollow noopener">MDN Article on SRI</a> that does a great job of covering some of the higher level benefits as well as provides examples of SRI being used to verify resource in script tags.</p>
+<p>There have been <a href="https://github.com/tc39/notes/blob/master/meetings/2017-05/may-23.md#16iib-module-import-options-discussion-potentially-for-stage-1" rel="nofollow noopener">a number</a> of <a href="https://github.com/tc39/notes/blob/master/meetings/2020-02/february-6.md#module-attributes-status-update" rel="nofollow noopener">discussions</a> at TC39 that have resulted in the committee holding the opinion that Integrity data belongs out of band. There are a number of reasons for this, module cycles and maintainability being the some of the easier to explain.</p>
+<p>WICG is already incubating the Import Map proposal, but the explainer outlines that <a href="https://github.com/WICG/import-maps#supplying-out-of-band-metadata-for-each-module" rel="nofollow noopener">integrity is currently out of scope</a>. There is a possibility that an integrity map and an import map could merge into a single manifest, but it would appear that it should be explored and spec’d on its own merits first.</p>
+<p>A straw proposal for syntax below</p>
+<pre><code class="lang-json">{
+  "https://example.com/example-framework.js": "sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
+}
+</code></pre>
+<p>The left hand side is the resource, the right hand side the SRI. This would scale to various resource types, not limited to JavaScript. it could integrate into the existing integrity checks already in HTML for any resources in the map. I would imagine that it would likely support all the types of meta data currently support <a href="https://www.w3.org/TR/SRI/#the-integrity-attribute">by the integrity attribute</a></p>
+<p>As we see more adoption of modules in JavaScript and individuals consuming resources VIA HTTPS URLs I think having a mechanism for integrity checks with be extremely important, having a standard mechanism for this even more so.</p>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2470_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guybedford</div>
+          <div class="creation_date">2020-08-13</div>
+          <div class="post_content">
+<p>There is no full integrity modules story right now. This is because lazy loading of modules with dynamic <code>import()</code> does not support integrity. Working towards a concrete solution for the integrity of modules is clearly an important problem so thanks for bringing this up!</p>
+<p>SystemJS recently came up across this integrity limitation and without any other proposals being available had to implement a custom solution here. I’d be very interested to see further collaboration in this space.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2791_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jkrems</div>
+          <div class="creation_date">2020-08-13</div>
+          <div class="post_content">
+<p>Other relevant threads include:</p>
+<ul>
+<li>
+<span class="mention">@Jake_Archibald</span>’s suggestion for fetch maps (a more general “stable [module] source text by externalizing hashed names in specifiers”): <a class="inline-onebox" href="https://discourse.wicg.io/t/proposal-fetch-maps/4259">[Proposal] fetch-maps</a>
+</li>
+<li>SystemJS’ preload map because a preload map also has to repeat each URL: <a href="https://github.com/systemjs/systemjs/issues/1953" rel="nofollow noopener">https://github.com/systemjs/systemjs/issues/1953</a>
+</li>
+</ul>
+<p>Given the potential size of this data and that it likely would have to be shipped in the initial HTML, I think that being cautious with the total size would be important. Collapsing some of these could help but maybe even a less human-readable format could be great.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2946_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mike_Samuel</div>
+          <div class="creation_date">2020-08-20</div>
+          <div class="post_content">
+<p>What is the scope of integrity solutions?</p>
+<p>In general, integrity solutions provide answers to the question “does this resource have a property that is easy for a trusted source to arrange it to have but hard for an untrusted source to arrange it to have.”</p>
+<p>There are non-hash based ways to answer that question; e.g. signature verification which would require metadata (a public key chain) that is specified once for potentially many modules, not per-URL.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2946_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mike_Samuel</div>
+          <div class="creation_date">2020-08-20</div>
+          <div class="post_content">
+<p>Are module resolution metadata files like import maps in scope for resource integrity checks?</p>
+<p>If resource integrity checks apply to all loaded modules but not to import maps, then I could cause</p>
+<pre><code>import "a"
+import "b"
+</code></pre>
+<p>to load modules out of order.  Being able to do anything other than deny service would probably be incredibly situationally dependent, but perhaps:</p>
+<pre><code>import "tweak-environment-so-its-safe-to-run-foo"
+import "foo"</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2946_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Mike_Samuel</div>
+          <div class="creation_date">2020-08-20</div>
+          <div class="post_content">
+<p>One argument for putting signature verification explicitly out of scope might be that resources can come from the cache, and it might be tricky for the cache to store enough information to verify a signature for a resource that was initially fetched outside the scope of any integrity metadata.</p>
+<p>I just don’t know enough about signed HTTP bodies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2470_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guybedford</div>
+          <div class="creation_date">2020-08-27</div>
+          <div class="post_content">
+<p>I believe import map scripts themselves do support integrity attributes, which is crucial since the import map does have such a high security position.</p>
+<p>That said I just checked the Chrome implementation and apparently it does not, which seems like a problem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2470_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guybedford</div>
+          <div class="creation_date">2020-08-27</div>
+          <div class="post_content">
+<p>I’ve posted <a href="https://github.com/WICG/import-maps/issues/223" rel="nofollow noopener">https://github.com/WICG/import-maps/issues/223</a> to follow up on this.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

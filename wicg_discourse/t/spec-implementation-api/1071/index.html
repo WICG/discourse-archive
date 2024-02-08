@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Spec Implementation API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Spec Implementation API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>With the rise of “prollyfill” shims implementing speculative standards, there’s an increasing risk of “stepping on each others’ toes” in both namespace and functionality.</p>
+<p>The problem with conventional “feature sniffing” is that it’s not really guaranteed to be capable of determining, in a safe and non-destructive fashion, whether the implementation of a feature is <em>precisely</em> what it’s expecting - feature-detection within prollyfills written today may miss nuances of changes that are only specified later.</p>
+<p>I believe it is within our grasp to add mechanisms for prollyfill and end content authors in a way that lets these prollyfills “back off”. These would also supersede many of the tests that have previously been handled by sniffers like Modernizr.</p>
+<p>Here are some of the approaches I’ve considered (names and return types still <em>very</em> loose):</p>
+<h2>Canonical addresses</h2>
+<p>All specs that are compatible with this approach should explicitly state a canonical URL they can be accessed at, both for the “latest” (ie. future) and “current” (ie. documented) versions of the spec. Prollyfill authors should check against the “current”, then the “latest”, with different behaviors if the “current” is not implemented (ie. display a warning).</p>
+<h2>Hash revisions or Etags</h2>
+<p>This would be a nice way to ensure <em>precise</em> content matches (ie. presenting a warning if a potential minor-but-crucial adjustment was made to a spec), but since a spec, by definition, cannot specify its own hash in its content, I’m not sure how reliable this could be. These could <em>maybe</em> be accepted as inputs by some functions, for scenarios like specs on GitHub where a document’s hash is presented above its rendering.</p>
+<h2>userAgentSpecs.addressingUseCasesFrom(url)</h2>
+<p>Returns a list of URLs of implemented specs to address the use cases described in a location. (User agents would keep the list of all use case documents specifically linked by the specs.)</p>
+<p>This would be used for printing a warning in the console to developers that a spec they’re prollyfilling has been superseded by another standard they should look into, or (maybe) to handle shimming in the event that one known spec has been implemented</p>
+<p>Could maybe be tweaked to give (ie. via fragment) different responses for specific use cases within a spec (eg. if two mechanisms handle different use cases and one handles specific use cases in a much more performant fashion).</p>
+<h2>userAgentSpecs.implementsSpec(url)</h2>
+<p>This is something like the above, but it would provide a boolean (or possibly a more detailed object, ie. possibly listing caveats described in a mailing list post or something) describing whether the details described in that spec have been implemented.</p>
+<p>Since it’s possible for a user-agent to only implement parts of a spec, this function MUST NOT return true if ANY PART of the given URL is not followed. This could be solved with further granularity, ie. by fragment identifier, in the spec address specifier.</p>
+<h2>userAgentSpecs.specifiedBy()</h2>
+<p>Returns a list of specs dictating the behavior of the given object or function (including both the “current” and the “latest”).</p>
+<h2>userSpaceSpecs.register()</h2>
+<p>This would be some kind of space prollyfills could use to declare and “negotiate” their implementations. The <code>userSpaceSpecs</code> object would further provide a similar interface to <code>userAgentSpecs</code>, for detecting specs that have been implemented by scripts.</p>
+<h2>features</h2>
+<p>This would be some subset / superset of the above, for end content authors, for determining whether a various specs have been implemented, without regard for whether they’ve been implemented by the UA or by a script.</p>
+<hr/>
+<p>I’m guessing I’m probably not the first to suggest a solution like this, and I’m aware the space of asking a platform what it implements is a hairball of “unknown unknowns”, but I want to know the challenges previous swings in this space have encountered, since it’s my belief that there <em>is</em> a reasonable sweet spot we can agree upon, as a platform, to solve this real problem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<p>This feels like something that could be solved by API versioning. Is there value in a direct reference to the spec itself?</p>
+<p>Would it make sense for spec authors to have a standard <strong>getVersion()</strong> or similar
+method on all APIs that they are expected to include in the spec.</p>
+<p>i.e. In each version of the spec they indicate the expected version that will be returned by this call.</p>
+<p>Perhaps it should return semver version number? (<a href="http://semver.org/" rel="nofollow noopener">http://semver.org/</a>)</p>
+<p>Example:
+The <a href="http://www.w3.org/TR/geolocation-API/">Geolocation spec</a> could include something like this:</p>
+<pre><code>[NoInterfaceObject]
+interface Geolocation { 
+   void getCurrentPosition(PositionCallback successCallback,
+                               optional PositionErrorCallback errorCallback,
+                               optional PositionOptions options);
+
+   long watchPosition(PositionCallback successCallback,
+                      optional PositionErrorCallback errorCallback,
+                      optional PositionOptions options);
+
+   void clearWatch(long watchId);
+
+   APIVersion getVersion();
+
+};
+</code></pre>
+<p>The APIVersion could be a globally defined type</p>
+<pre><code>  [NoInterfaceObject]
+  interface APIVersion {
+    readonly attribute DOMString version; //1.1.20131024
+    readonly attribute URL specificationUrl; //http://www.w3.org/TR/2013/REC-geolocation-API-20131024/
+  };
+</code></pre>
+<p>There should probably also be a section of the spec where the version number is more clearly stated (not just a comment in the API spec).</p>
+<p>I imagine some pretty powerful automated API test tools that could be developed if this type of API versioning was accessible programmatically since most specs these days also have test cases.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-08-22</div>
+          <div class="post_content">
+<p>Today I learned about <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/implementation" rel="nofollow noopener"><code>document.implementation.hasFeature()</code></a>, which was apparently a legacy attempt at providing <em>exactly</em> what I’m describing here. <a href="https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/hasFeature" rel="nofollow noopener">Further documentation</a> states:</p>
+<blockquote>
+<p>The different implementations fairly diverged in what kind of features were reported. The latest version of the spec settled to force this method to always return true, except for SVG features, where the functionality was accurate and in use.</p>
+</blockquote>
+<p>So, apparently, the problem with a function like this is that engineers have enough trouble just <em>implementing</em> the features; they don’t care enough to go back and <em>report</em> that they’ve implemented the feature, especially if there’s some further fuzziness, like a violation of something impractical in the spec.</p>
+<p>So yeah: looks like it’s down to polyfills with a fleet of embedded unit tests, and nothing can ever really change that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-08-22</div>
+          <div class="post_content">
+<p>Yeah, exactly.  The one case where we do have reasonably-reliable feature-testing support is the <code>@supports</code> rule, which is actually just a generic parsing test - does this property/value get recognized as valid by your CSS parser? - which means browser implementors don’t have to remember to do anything special to accurately report results.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

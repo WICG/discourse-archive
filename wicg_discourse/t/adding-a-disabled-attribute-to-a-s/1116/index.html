@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Adding a [disabled] attribute to &lt;a&gt;s</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Adding a [disabled] attribute to &lt;a&gt;s</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2015-09-29</div>
+          <div class="post_content">
+<p><strong>TL;DR:</strong> I propose to add a <code>disabled</code> attribute to the <code>&lt;a&gt;</code> element, which would work the same as it already does for the <code>&lt;button&gt;</code> element. See also <a href="http://w3bug.com/28673" rel="nofollow noopener">http://w3bug.com/28673</a></p>
+<h2>Background: Interchangeability</h2>
+<p><strong>Lemma 1:</strong> <code>&lt;button&gt;</code> and <code>&lt;a&gt;</code> are largely interchangeable. Visually, <a href="http://getbootstrap.com/css/#buttons-tags" rel="nofollow noopener"><code>&lt;a&gt;</code>s can be styled into buttons</a> and <a href="http://getbootstrap.com/css/#buttons-options" rel="nofollow noopener"><code>&lt;button&gt;</code>s can be styled to look like links</a>. They semantically indicate the opportunity for user interaction (as opposed to e.g. <code>&lt;div&gt;</code>) and are typically focusable by default. Setting an appropriate <code>click</code> event handler on a <code>&lt;button&gt;</code> that sets <code>window.location</code> approximates an <code>&lt;a&gt;</code>. Setting an appropriate <code>javascript:</code> URL on an <code>&lt;a&gt;</code>, or setting an appropriate <code>click</code> event handler and either omitting <code>href</code> or setting a dummy <code>href="#"</code> approximates a <code>&lt;button&gt;</code>.</p>
+<p>I readily agree that there are many cases where using an <code>&lt;a&gt;</code> instead of a <code>&lt;button&gt;</code>, or vice-versa, is suboptimal. Regardless, the fact remains that authors do interchange them for various reasons, some more justified than others. For example:</p>
+<ul>
+<li>"It’s harder (or perhaps impossible) to get my framework/library/template/etc. to emit a <code>&lt;button&gt;</code> here instead of an <code>&lt;a&gt;</code>"</li>
+<li>"I need it to get focused when clicked and <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#Clicking_and_focus" rel="nofollow noopener">that’s only possible in all environments when using an <code>&lt;a&gt;</code></a>, not <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#Clicking_and_focus" rel="nofollow noopener">when using a <code>&lt;button&gt;</code></a>"</li>
+</ul>
+<hr/>
+<h2>Alternatives to adding a <code>disabled</code> attribute to <code>&lt;a&gt;</code>
+</h2>
+<p>So, we’ve established that <code>&lt;a&gt;</code> and <code>&lt;button&gt;</code> are largely interchangeable. Since the designers of HTML saw fit to give <code>&lt;button&gt;</code> a <code>disabled</code> attribute that disables it, let us assume that, for any given button-ish widget, it’s reasonable to want <em>some means</em> to disable it. (See e.g. <a href="https://github.com/18F/web-design-standards/issues/493#issuecomment-139652953" rel="nofollow noopener">https://github.com/18F/web-design-standards/issues/493#issuecomment-139652953</a> . This also would have come in handy <a href="http://getbootstrap.com/css/#anchor-element-1" rel="nofollow noopener">at Bootstrap</a>.) Not necessarily <em>the same means</em> (this is HTML after all, king of needless inconsistency), but at least one means for each such widget. We now sadly observe that <code>&lt;a&gt;</code> doesn’t have a <code>disabled</code> attribute or any other reasonably similar equivalent under some other name. We cry briefly, wipe our tears, pick ourselves up and say: “Okay, no big deal. This is the modern Web™. Surely we can polyfill this?” Well, here are the possibilities I was able to come up with:</p>
+<h3><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events" rel="nofollow noopener"><code>pointer-events: none</code></a></h3>
+<p>What if we did something like:</p>
+<pre><code class="lang-css">a[disabled] { pointer-events: none; }
+a.disabled  { pointer-events: none; }
+</code></pre>
+<p>Then the <code>&lt;a&gt;</code> would no longer receive mouse events, just like a disabled <code>&lt;button&gt;</code>! Unfortunately:</p>
+<ul>
+<li>This only affects pointing devices, not the keyboard. Users can still <code>Tab</code> to the input and emit a <code>click</code> on it by pressing <code>Enter</code>/<code>Spacebar</code>. And AFAIK, there is no <code>keyboard-events: none</code> property to remedy this.</li>
+<li>Click events aren’t fully suppressed, but rather will target the element behind the <code>&lt;a&gt;</code> instead, which could be problematic in some cases.</li>
+<li>The <code>[disabled]</code> attribute version will break HTML validation.</li>
+<li>This doesn’t communicate semantic disabledness to users of assistive technology, unless the AT software resorts to using heuristics based on the class name, which can easily fail if the author opts to name the class something other than <code>disabled</code> (e.g. to comply with some CSS class naming convention or for namespacing purposes). Authors could use the <code>[aria-disabled="true"]</code> attribute to remedy this, but this requires additional effort and knowledge on the part of authors, which cannot generally be relied upon.</li>
+</ul>
+<h3>Global event handler</h3>
+<p>What about:</p>
+<pre><code class="lang-auto">document.addEventListener('click', function (e) {
+    if (this.classList.contains('disabled')) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+}, true);
+</code></pre>
+<p>Downsides:</p>
+<ul>
+<li>Same accessibility concerns as <code>pointer-events: none</code>
+</li>
+<li>This must run before any other JavaScript; otherwise, other event listeners could get setup before it.</li>
+<li>Third-party code that wants to ascertain or toggle the disabledness of an <code>&lt;a&gt;</code> has to “just know” about this convention somehow.</li>
+<li>Are folks still familiar with the Capture Phase these days? (I have no solid data here.)</li>
+<li>Is using the Capture Phase performant? (I have no idea.)</li>
+</ul>
+<h2>Status quo</h2>
+<p>At this point, I’m out of ideas for drop-in polyfill-style solutions. My guess is that folks are currently coping via:</p>
+<h3>Explicit check in every click event handler</h3>
+<pre><code class="lang-auto">buttonIshElement.addEventListener('click', function (e) {
+    if (this.tagName === 'A' &amp;&amp; this.classList.contains('disabled')) {
+        return;
+    }
+
+    // ...actual logic here...
+
+}, true);
+
+// ...repeat for ALL CLICK EVENT HANDLERS that could involve an &lt;a&gt;...
+</code></pre>
+<p>This “solution” leaves much to be desired:</p>
+<ul>
+<li>This adds annoying boilerplate to all my event handlers. A decorator would decrease the number of repeated tokens, but there’d still be some repetition, the extra layer of function call might negatively affect performance, and there’s the danger of human error in forgetting to apply the decorator to every click handler.</li>
+<li>This doesn’t work for event handlers in third-party code.</li>
+<li>Third-party code that wants to ascertain or toggle the disabledness of an <code>&lt;a&gt;</code> has to “just know” about this convention somehow.</li>
+<li>This doesn’t solve the problem of “I have a normal <code>&lt;a href='http://...'&gt;</code> that I want to disable.”. You could remove the <code>href</code> and store its value into a <code>data-*</code> attribute, but it’s a bit klunky and merely a convention.</li>
+<li>Writing a generic “toggle the disabledness of a form control” function becomes more painful (likewise for “get the current disabledness of a form control”):</li>
+</ul>
+<pre><code class="lang-auto">function toggle(elem) {
+    if (elem.tagName === 'A') {
+        elem.classList.toggle('disabled');
+    } else { // input, button
+        if (elem.hasAttribute('disabled')) {
+            elem.removeAttribute('disabled');
+        } else {
+            elem.setAttribute('disabled', 'disabled');
+        }
+    }
+}
+</code></pre>
+<p>And I want a generic function for this because I might switch back and forth between using an <code>&lt;a&gt;</code> or a <code>&lt;button&gt;</code> to maintain appropriate semantics as my UI evolves. For example: “Yesterday, this was an <code>&lt;a&gt;</code> that linked to a separate ‘edit’ page. Today, I made it a <code>&lt;button&gt;</code> that activates a modal ‘edit’ dialog. I don’t wanna rewrite the code that enables/disables the ‘edit’ button/link.”</p>
+<h2>Proposed solution</h2>
+<p>The proposed solution is to “simply” add a <code>disabled</code> attribute to <code>&lt;a&gt;</code> which would have the same semantics as <code>&lt;button&gt;</code>'s existing <code>disabled</code> attribute. Since it’s built-in, accessibility will also be built-in, third-party event handlers won’t need to be modified, the HTML validator won’t complain, and it’ll work correctly for keyboard users. And no event handler boilerplate code or magic global event handler will be required.</p>
+<hr/>
+<p>Well, what do you think? Is there some existing technique I’m unaware of that already solves this problem nicely?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">awwright</div>
+          <div class="creation_date">2015-09-30</div>
+          <div class="post_content">
+<p>A fundamental principle of the Web architecture is the <em>uniform interface</em>, one implication of which is that if you don’t want to make an assertion about another page, you simply don’t present a link. In user interface design, this is called <em>progressive disclosure</em>.</p>
+<p>Links (including <code>&lt;link/&gt;</code>, <code>&lt;a/&gt;</code>, and the <code>Link:</code> HTTP header) and buttons (<code>&lt;button/&gt;</code> and <code>&lt;input/&gt;</code>) are not generally interchangeable, and carry different semantics. A link indicates a directional relationship to another resource from the current one.  The act of following a link is always supposed to be ‘safe’ - it won’t change the state of the application, or at least not the persisted data, just the user interface.</p>
+<p>Buttons, on the other hand, are used so some action, in conjunction with other form elements, can be activated, thereby modify the state of the underlying data and/or server.</p>
+<p>This is not just a user interface issue, but an accessibility issue. Automated robots, or people using a hypermedia API, will treat buttons and links fundamentally differently.</p>
+<blockquote>
+<p>It’s harder (or perhaps impossible) to get my framework/library/template/etc. to emit a <code>&lt;button&gt;</code> here instead of an <code>&lt;a&gt;</code></p>
+</blockquote>
+<p>Which seems more impossible, getting this change into user agents, and breaking the semantics of links; or just fixing the framework/library/template in question?</p>
+<blockquote>
+<p>"I need it to get focused when clicked and that’s only possible in all environments when using an <code>&lt;a&gt;</code>, not when using a <code>&lt;button&gt;</code>"</p>
+</blockquote>
+<p>Why not fix this directly? Either case will involve modifying user agents. Fixing this directly will mean fixing only the problematic ones; changing the semantics of links means recognizing the feature in <em>all</em> (hypermedia) user agents.</p>
+<p>Also consider that, in some cases, this is a feature. Since links and buttons <em>are</em> different, accessibility tools will want to activate them differently, too.</p>
+<p>Here is the main issue:</p>
+<p>What does it mean when you have link in a document, it’s in the DOM tree, it has a href to another resource, but it’s “disabled”? It doesn’t serve any purpose to say “this is a link to another page (thus creating a formal relationship between the two resources), but we won’t let you follow it.”</p>
+<p>Overall, applying this technique, I can’t say I’ve ever run into this issue. If you absolutely need a placeholder for a link for UI purposes, render a <code>span</code>. Programmatically applying this change to the DOM, worst case, means:</p>
+<ol start="0">
+<li><code>var span = document.createElement('span')</code></li>
+<li>Copy the <code>href</code> (if necessary, e.g. into a <code>data-href</code> attribute)</li>
+<li>Move the children into <code>span</code>
+</li>
+<li>Append <code>span</code> right before the obsolete link</li>
+<li>Delete the old link</li>
+</ol>
+<p>jQuery can probably do it in two lines:</p>
+<pre><code>var href = $('#link').attr('href');
+$('#link').replaceWith('&lt;span&gt;' + $('#target').html() +'&lt;/span&gt;').data('href', href)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2015-09-30</div>
+          <div class="post_content">
+<p>I’ve hit this boundary as well and did some tests. Here’s what <a href="https://github.com/medialize/ally.js/blob/master/src/element/disabled.js#L122-L135">ally.js element/disabled</a> will do to render <em>any</em> element disabled:</p>
+<ul>
+<li>adding <code>tabindex="-1"</code> attribute to remove element from document’s focus navigation sequence</li>
+<li>adding the <code>focusable="false"</code> attribute on <code>SVGElement</code>
+</li>
+<li>removing the <code>controls</code> attribute from <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code> elements</li>
+<li>overwriting <code>element.focus()</code> to prevent focusing the element by script</li>
+<li>adding the CSS property <code>pointer-events: none;</code> to prevent any interaction from mouse and touch</li>
+<li>adding <code>aria-disabled="true"</code> to inform the AccessibilityTree of the element’s state</li>
+</ul>
+<p>You’re proposing <code>disabled</code> only for <code>&lt;a&gt;</code>. I believe we need this for <em>all</em> interactive content (which basically is everything that can receive focus). I believe this is more or less what the <code>inert</code> attribute would’ve done, if it hadn’t been <a href="https://html5.org/r/8536">dropped from HTML5</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2015-10-04</div>
+          <div class="post_content">
+<p>I agree that it would be sensible and useful to extend <code>[disabled]</code> to all interactive elements. But my guess is that this more modest proposal would be more likely to succeed over a shorter timescale. More general proposal = More time needed to discuss+spec+implement.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2015-10-04</div>
+          <div class="post_content">
+<blockquote>
+<p>if you don’t want to make an assertion about another page, you simply don’t present a link. In user interface design, this is called progressive disclosure.</p>
+</blockquote>
+<p>Yes, and I’m pretty sure there’s another UI design principle that favors disabling UI elements when they’re not applicable rather than removing them entirely, so as to aid spatial memory and to show the universe of options that the application generally supports. Some apps go a step further and even show a tooltip explaining why the element is currently disabled and what action would be necessary to enable it.</p>
+<blockquote>
+<p>A link indicates a directional relationship to another resource from the current one. The act of following a link is always supposed to be ‘safe’ - it won’t change the state of the application, or at least not the persisted data, just the user interface.</p>
+</blockquote>
+<p>Resources that use GET where they should use POST are indeed bad, but my argument is in no way predicated on accepting that bad practice.</p>
+<blockquote>
+<p>Buttons, on the other hand, are used so some action, in conjunction with other form elements, can be activated, thereby modify the state of the underlying data and/or server.</p>
+</blockquote>
+<p>“In the wild”, on the real web, buttons and links don’t fall into such neat-and-tidy categories. For example, if I have a <code>&lt;button&gt;</code> that summons a modal dialog to edit the details of an entity, no server state is changed. Folks might quibble about whether or not the modal deserves its own URL or not, in which case an <code>&lt;a&gt;</code> could be more appropriate, but whether the control that opens the dialog is a <code>&lt;button&gt;</code> or an <code>&lt;a&gt;</code> doesn’t make a huge difference in practice.</p>
+<blockquote>
+<p>Which seems more impossible, getting this change into user agents, and breaking the semantics of links; or just fixing the framework/library/template in question?</p>
+</blockquote>
+<p>I’m approaching this with my Bootstrap-contributor hat on. I’m two levels of indirection away from being able to fix such libraries (I work on Bootstrap; Bootstrap is used on someone’s webpage; and that webpage was created using library X) and there are several such libraries.<br/>
+So, equally impossible from where I stand.</p>
+<blockquote>
+<blockquote>
+<p>"I need it to get focused when clicked and that’s only possible in all environments when using an <code>&lt;a&gt;</code>, not when using a <code>&lt;button&gt;</code>"</p>
+</blockquote>
+<p>Why not fix this directly?</p>
+</blockquote>
+<p>I would love for this to be fixed directly. But this is merely one of what I’m sure are <em>several</em> arcane examples of ways in which browsers needlessly (and from a developer perspective, annoyingly) treat <code>&lt;a&gt;</code> and <code>&lt;button&gt;</code> differently. I expect that eradicating these differences would require a timescale equal to or greater than that of adding <code>&lt;a disabled&gt;</code>. And we’d still be left with an unpleasant developer experience when an <code>&lt;a&gt;</code> was indeed semantically appropriate but disable-ability was also required.</p>
+<blockquote>
+<p>Here is the main issue:</p>
+<p>What does it mean when you have link in a document, it’s in the DOM tree, it has a href to another resource, but it’s “disabled”? It doesn’t serve any purpose to say “this is a link to another page (thus creating a formal relationship between the two resources), but we won’t let you follow it.”</p>
+</blockquote>
+<p>It means that the link is not currently applicable, just like how the action that a disabled <code>&lt;button&gt;</code> would perform is not applicable while the button is disabled. You might as well claim that disabled <code>&lt;button&gt;</code>s serve no purpose; clearly they do.</p>
+<blockquote>
+<p>Overall, applying this technique, I can’t say I’ve ever run into this issue. If you absolutely need a placeholder for a link for UI purposes, render a <code>span</code>. Programmatically applying this change to the DOM, worst case, means:</p>
+<ol>
+<li><code>var span = document.createElement('span')</code></li>
+<li>Copy the <code>href</code> (if necessary, e.g. into a <code>data-href</code> attribute)</li>
+<li>Move the children into <code>span</code>
+</li>
+<li>Append <code>span</code> right before the obsolete link</li>
+<li>Delete the old link</li>
+</ol>
+</blockquote>
+<p>A. This thrashes a DOM a bit.<br/>
+B. Can’t do (5) because the link might have event handlers attached to it and this would irrevocably destroy those attachments.<br/>
+C. If the link has other attributes that need to be preserved (e.g. more <code>data-*="..."</code> attrs), the code gets longer.<br/>
+D. What if I don’t have the luxury of using jQuery? This code becomes much uglier, especially compared to “just toggle the <code>disabled</code> attribute”.<br/>
+E. This is semantically worse in that it does not express that there is the possibility of the link becoming applicable again if circumstances change. Whereas the <code>&lt;button disabled&gt;</code> equivalent would express this.</p>
+<p>The annoyingness of disabling/replacing an <code>&lt;a&gt;</code> is one of the better reasons, amongst a set of mostly bad reasons, to justify authors’ use of the indeed-quite-horrible <code>&lt;button onclick="window.location = '...';"&gt;</code> construction rather than a simple <code>&lt;a&gt;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">awwright</div>
+          <div class="creation_date">2015-10-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1116">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/cvrebert/40/474_1.png" width="20"/> cvrebert:</div>
+<blockquote>
+<p>It means that the link is not currently applicable, just like how the action that a disabled &lt;button&gt; would perform is not applicable while the button is disabled.</p>
+</blockquote>
+</aside>
+<p>Unfortunately for me this seems to be begging the question… What does it mean to be “not currently applicable”?</p>
+<p>If this is strictly a user-interface attribute that can be used anywhere, I would suggest it <em>should not</em> be used on links – the mere <em>existence</em> of a link makes an assertion, whether you can interact with it or not. The <code>link</code> element is the quintessential example of this phenomenon.</p>
+<aside class="quote" data-post="5" data-topic="1116">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/cvrebert/40/474_1.png" width="20"/> cvrebert:</div>
+<blockquote>
+<p>You might as well claim that disabled &lt;button&gt;s serve no purpose; clearly they do.</p>
+</blockquote>
+</aside>
+<p>Same thing with <code>input</code> elements. A text field can be editable, disabled, or even hidden, in the form of <code>type="hidden"</code></p>
+<p>The “disabled” state suggests “this is what will submit the form, but you can’t use it right now because of the current state of the application.” So it works well as a placeholder. It also retains its semantic meaning with respect to the form.</p>
+<p>I don’t think this makes sense to do with links. The equivalent of a hidden form element for links is the <code>link</code> element (or <code>Link</code> HTTP-header). The equivalent of this ‘disabled’ link is a placeholder text of some sort.</p>
+<p>The only semantics I could think of giving a “disabled” link is to say that “yes, this is a link, but there’s nothing to dereference at the other side”, or nothing to dereference <em>yet</em>. Suppose you want to make a reference to a non-URL URI, like a UUID or ISBN. It doesn’t make sense to dereference these kinds of links. These kinds of links can also be minted even with the <code>http:</code> scheme, too, even though they’re not supposed to be used as URLs, only as URIs.</p>
+<p>With these semantics, the attribute would not be HTML specific, but instead would need to be a general link attribute so it can be used in all hypermedia formats that support Web links, in the same fashion as <code>type</code>, <code>title</code>, <code>hreflang</code>, etc.</p>
+<p>However, it doesn’t sound like this is <em>quite</em> what you’re doing.</p>
+<aside class="quote" data-post="5" data-topic="1116">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/cvrebert/40/474_1.png" width="20"/> cvrebert:</div>
+<blockquote>
+<p>Can’t do (5) because the link might have event handlers attached to it and this would irrevocably destroy those attachments.</p>
+</blockquote>
+</aside>
+<p>It seems like a better proposal here is to add a DOM method to convert element types. What if we want to convert an <code>input type="text"</code> to a <code>textarea</code>? A solution to convert between elements would fix this, too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2290_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RSheppard</div>
+          <div class="creation_date">2019-04-22</div>
+          <div class="post_content">
+<p>Hadn’t though about it that way before. I had been hacking around it by removing the href and altering the style (similar to the original post), but I like the distinction this creates between button and anchor tags.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-04-22</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="1116">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_2.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<p>I believe this is more or less what the <code>inert</code> attribute would’ve done, if it hadn’t been <a href="https://html5.org/r/8536" rel="nofollow noopener">dropped from HTML5 </a>.</p>
+</blockquote>
+</aside>
+<p><span class="mention">@rodneyrehm</span> Looks like the <code>inert</code> attribute is <a href="https://github.com/whatwg/html/pull/4288" rel="nofollow noopener">being picked back up by WHATWG</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

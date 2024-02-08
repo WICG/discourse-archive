@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Disable scripts API (standardised cut the mustard failure handling)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Disable scripts API (standardised cut the mustard failure handling)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/506_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wheresrhys</div>
+          <div class="creation_date">2016-01-28</div>
+          <div class="post_content">
+<p>Cut the mustard, recently a popular approach to managing progressive enhancement, means a page is placed in one of 3 states:</p>
+<ol>
+<li>full enhanced experience with scripts delivered and running</li>
+<li>synthesised non javascript experience, with scripts suppressed after performing a test of the browser’s capabilities</li>
+<li>actual non javascript experience, where the browser has scripts disabled</li>
+</ol>
+<p>Browsers have <code>&lt;noscript&gt;</code> for delivering a different experience to 3. It would be useful if this mechanism could be used to deliver a noscript experience to 2 too. (see e.g. <a href="https://github.com/Financial-Times/ft-origami/issues?utf8=%E2%9C%93&amp;q=is%3Aissue+is%3Aclosed+ctm+noscript" rel="nofollow noopener">https://github.com/Financial-Times/ft-origami/issues?utf8=✓&amp;q=is%3Aissue+is%3Aclosed+ctm+noscript</a> and <a href="https://github.com/Financial-Times/o-tracking/issues/83" rel="nofollow noopener">https://github.com/Financial-Times/o-tracking/issues/83</a> for the hurdles jumped over to try to achieve a similar effect)</p>
+<p>What might work would be a javascript API that can be called to force the page into a genuine noscript state, halting javascript execution, the event loop etc. My initial thoughts would be something like <code>window.disableScripting()</code>, which would only have an effect if some strict criteria were met (e.g. must be called in the first inline script within <code>&lt;head&gt;</code>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2016-01-30</div>
+          <div class="post_content">
+<p>I like this idea.  I can imagine there might be some complexities around things like:</p>
+<ul>
+<li>What do you do if the <code>disableScripting()</code> call is not the last statement in the block?</li>
+<li>What would be the effect on <code>&lt;noscript&gt;</code> elements already encountered when parsing the page</li>
+</ul>
+<p>Could it be easier to reload the page?  So <code>disableScripting</code> acts like a <code>window.reload()</code> but when the page is reloaded it has JS disabled?</p>
+<p>Obviously this also opens the possible wider question of whether pages should be able to disable certain web platform features, which is Content Security Policy territory. I’m not familiar with CSP but I think this would disable JavaScript entirely:</p>
+<pre><code class="lang-auto">Content-Security-Policy: script-src 'none'
+</code></pre>
+<p>So perhaps what is being hinted at here is the option for pages to dynamically adjust the CSP of the current page (presumably they would only be permitted to tighten the ruleset). The only problem is that typically developers who want to opt-out of JavaScript execution are doing so because the browser is out of date, and that may well mean that it also doesn’t support CSP (though obviously that equally applies to introducing a new <code>disableScripting</code> or equivalent)</p>
+<p>Andrew</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

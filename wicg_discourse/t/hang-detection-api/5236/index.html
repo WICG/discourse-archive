@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Hang detection API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Hang detection API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3414_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sethbrenith</div>
+          <div class="creation_date">2021-03-24</div>
+          <div class="post_content">
+<p>I imagine this has probably been discussed before, but I can’t find it. <strong>Is anybody aware of prior art in this area?</strong> In short, I’d like a way to report the stack trace at the time when the browser decides that a webpage has become unresponsive.</p>
+<h3>Problem description</h3>
+<p>With <code>window.onerror</code>, we have an excellent tool for reporting JavaScript exceptions that occur on customer machines. On the last web site I worked on, we discovered and fixed many bugs thanks to reports uploaded by a <code>window.onerror</code> handler. However, there are two other categories of catastrophic failure that never showed up in our server-side logs: out-of-memory crashes (a hard problem I won’t attempt to address here) and code that just ran for a really long time. Browsers detect when a page has become unresponsive and they put up a dialog asking whether to terminate the page, but script on the page has no way to respond to this condition.</p>
+<h3>API options</h3>
+<p>I could imagine a couple of different designs for this API; there are probably more options not covered here.</p>
+<ol>
+<li>The declarative approach: Sometime during page setup, script code calls a function <code>sendBeaconOnHang</code> and specifies the URL where hang reports should go, along with any additional data (such as session ID) that should be included. If the browser detects a page hang and decides to put up the unresponsive-page dialog, it also sends a hang report to the specified URL. The format of the hang report is standardized and includes the current JS call stack. Of course some details in the call stack may be omitted subject to CORS restrictions, just like for any other features that include call stacks.</li>
+<li>The procedural approach: Sometime during page setup, script code registers a callback function which will get invoked during a hang. If the browser detects a page hang, it will interrupt running script and synchronously call the callback. The callback can use the current call stack (<code>new Error().stack</code> or similar) for reporting. This option provides more flexibility at the cost of higher complexity.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3414_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sethbrenith</div>
+          <div class="creation_date">2021-04-16</div>
+          <div class="post_content">
+<p>Quick follow-up to document an offline conversation. The Reporting API already covers crash reporting, and one of the possible reasons in a <a href="https://developer.mozilla.org/en-US/docs/Web/API/CrashReportBody" rel="noopener nofollow ugc">CrashReportBody</a> is “unresponsive”, so there’s already a proposal in progress which would allow detecting that hangs happened. I think it would be great to extend CrashReportBody to optionally include a JS call stack.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

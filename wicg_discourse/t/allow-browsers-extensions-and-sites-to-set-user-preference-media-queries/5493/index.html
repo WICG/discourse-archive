@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allow browsers, extensions, and sites to set user preference media queries</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allow browsers, extensions, and sites to set user preference media queries</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-08-13</div>
+          <div class="post_content">
+<p>For each user preference query have the following hierarchy:</p>
+<ol>
+<li>OS</li>
+<li>browser</li>
+<li>extensions</li>
+<li>site</li>
+</ol>
+<p>start at the bottom. If the default is no preference, check the next level and so on until a recorded preference is returned and then use that as the preference in media queries. I’m going to use light/dark mode for examples but it could be any preference.</p>
+<p>At the site level a dark mode toggle would cause a dark mode media query to match so there’d be no need to either duplicate the dark mode code or to check the media query in js and set a class to trigger dark mode which then only allows users with js enabled to select dark mode.</p>
+<p>At the extension level this would allow an extension to pin dark mode or light mode for some sites that may not work as well with the users default preference.</p>
+<p>The browser level would let preferences be stated even if the OS does not natively support the preference in question. This may be unnecessary as an extension could equally fill this role.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2021-08-13</div>
+          <div class="post_content">
+<p>The “OS” level is already subsumed by the “browser” level - the browser mediates what information we can possibly obtain from the OS, so we can’t tell the difference between the two.</p>
+<p>Extensions are also generally out of scope for us to specify in web tech; they occupy the “magic browser abilities” area that can do ~whatever~. (I do think that if a browser doesn’t allow the user to specify what they want the pref queries to match, they <em>should</em> make them available for extensions to set, but there’s not a lot we can actually require there.) (I also agree that letting an extension “pin” certain queries for certain sites, overriding the overall pref, is something that can be very useful for users, and is probably more complex than the browser wants to expose in its own UI anyway, making it perfect for extensions to handle for those that care enough about it.)</p>
+<p>For the “site” level, this should be covered by <a href="https://drafts.csswg.org/mediaqueries-5/#custom-mq">custom media queries</a> - these are sketched but not fully specified, and we haven’t gotten impl interest yet, but it’s definitely something I plan to push in the relatively near future. This way a site can set up a script-based query to do what it wants, deferring to the standard MQ if desired or overriding it with a specific value instead, and then just using that custom MQ in their styles instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jimmyfrasche</div>
+          <div class="creation_date">2021-08-13</div>
+          <div class="post_content">
+<p>If I have a site that has a dark mode option but no dark mode toggle, with my very vague request I could add something like</p>
+<pre><code class="lang-auto">// from a toggle and/or cookie,
+// defaulting to (prefers-color-scheme: dark)
+// if there's nothing else set so far
+if(useDark) { 
+  window.overrideUserPreference("color-scheme", "dark");
+}
+</code></pre>
+<p>and the CSS wouldn’t need to be changed since the JS is overriding the default result of the (prefers-color-scheme: dark) query. If the JS failed to load the site would still switch to the appropriate general preference, there just wouldn’t be a way for a visitor to override it for the site.</p>
+<p>In the same situation with custom media queries I would have to update all the (prefers-color-scheme: dark) media queries to (–use-dark). That’s probably not an issue on a well designed site as there’s probably just the one that updates some custom properties. But now if JS fails to load or is disabled it defaults to light mode even if (prefers-color-scheme: dark) would have matched.</p>
+<p>Maybe custom media queries would work if I could do something like:</p>
+<pre><code class="lang-auto">/* script sets --js-use-dark: true if it runs */
+@custom-media --use-dark (
+  (isSet(--js-use-dark) and (--js-use-dark: true))
+  or (not isSet(--js-use-dark) and (prefers-color-scheme: dark))
+)
+</code></pre>
+<p>I don’t see a clear way to handle checking is js set a custom media query.</p>
+<p>Regardless the idea of overriding the preference in js seems much cleaner and more straightforward for this case. The CSS doesn’t need to care where or how the preference is stated: it just needs to react to the preference.</p>
+<p>I brought the broader vision of allowing web extensions similar power into this as they’d have a similar benefit, a similar API, and I imagine it would be easier for browsers to implement it all in one go.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2021-08-13</div>
+          <div class="post_content">
+<p>Hrm, yeah, I started actually writing out the code necessary to make it JS-toggleable <em>and</em> robust against loss of JS, and it gets pretty tricky to do right.  I’m actually convinced now that something does need to be done here; I’ll file an issue over in the CSSWG.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

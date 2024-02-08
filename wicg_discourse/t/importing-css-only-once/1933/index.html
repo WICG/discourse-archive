@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Importing CSS only once</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Importing CSS only once</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2016-12-30</div>
+          <div class="post_content">
+<p>If you have two css files:</p>
+<p><strong>a.css</strong></p>
+<pre><code class="lang-css">@import "./c.css";
+</code></pre>
+<p><strong>b.css</strong></p>
+<pre><code class="lang-css">@import "./c.css";
+</code></pre>
+<p>c.css’ rules are applied twice.  Can we have an alternative syntax where the stylesheet is only applied if not already done so?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-01-02</div>
+          <div class="post_content">
+<p>AFAIK current best advice is simply to avoid <code>@import</code> entirely due to performance problems: <a href="https://gtmetrix.com/avoid-css-import.html" rel="nofollow noopener">https://gtmetrix.com/avoid-css-import.html</a></p>
+<p>A redesigned <code>@import</code> should probably address the performance issue too.</p>
+<p>Note that interestingly HTML imports have de-duplication, so using those to bring in stylesheets is sort-of there.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-01-02</div>
+          <div class="post_content">
+<p><span class="mention">@AshleyScirra</span> The performance problem that article describes is fixed by <code>&lt;link rel="preload"&gt;</code>. Is there another performance issue you are thinking of?</p>
+<p>Interesting note about Imports, but does it make sense for a stylesheet to not be able to describe its own dependencies?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-01-02</div>
+          <div class="post_content">
+<p>If such a case did exist in nature, it seems like the two would actually do something potentially different in terms of rendering because of the cascade, no?  Is there a reason that one or more is better or worse besides perf?  Just curious.  I’m not entirely sure why it is designed that way as opposed to the other - have you checked the archives of www-style?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-01-02</div>
+          <div class="post_content">
+<p><span class="mention">@briankardell</span> You are comparing two things but I’m not sure what the two things you are comparing, so I can’t answer. Can you clarify?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-03</div>
+          <div class="post_content">
+<p>Just mocking this up with these three files, what is the expected <code>currentColor</code> value in <code>three.css</code>? Doing an <code>importOnce</code> style system messes with the natural cascading order of CSS. This is just once simple example of where things go wonky and get confusing. I’m sure there are more examples that could be thought of with more complex selectors becoming problematic as well, which would make for a difficult time debugging things.</p>
+<details>
+<summary>one.css</summary>
+```css
+.something {
+  color: red;
+}
+```
+</details>
+<details>
+<summary>two.css</summary>
+```css
+@importOnce('one.css');
+<p>.something {
+color: blue;
+}</p>
+<pre><code class="lang-auto">&lt;/details&gt;
+
+&lt;details&gt;
+&lt;summary&gt;three.css&lt;/summary&gt;
+```css
+@importOnce('two.css');
+@importOnce('one.css');
+
+.anotherThing:has(.something):after {
+  color: currentColor;
+}
+</code></pre>
+</details>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-01-03</div>
+          <div class="post_content">
+<p>I don’t find that confusing at all. Your example is equivalent to writing:</p>
+<pre><code class="lang-auto">&lt;link rel="stylesheet" href="one.css"&gt;
+&lt;link rel="stylesheet" href="two.css"&gt;
+&lt;link rel="stylesheet" href="three.css"&gt;
+</code></pre>
+<p>If you had used <code>@import</code> instead it would be equivalent of writing:</p>
+<pre><code class="lang-auto">&lt;link rel="stylesheet" href="one.css"&gt;
+&lt;link rel="stylesheet" href="two.css"&gt;
+&lt;link rel="stylesheet" href="one.css"&gt;
+&lt;link rel="stylesheet" href="three.css"&gt;
+</code></pre>
+<p>You can write a similar example of JS modules that clobber each other, but I don’t think that’s a good reason not to have modules.</p>
+<p><code>@importOnce</code> would be useful, for example, if you have a <code>variables.css</code> that contains <code>:root</code> defined variables that you want to use in other stylesheets.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2017-01-03</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1933">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/matthewp/40/1159_1.png" width="20"/> matthewp:</div>
+<blockquote>
+<p>c.css’ rules are applied twice.  Can we have an alternative syntax where the stylesheet is only applied if not already done so?</p>
+</blockquote>
+</aside>
+<p>I’m curious, what’s the underlying issue you’re trying to solve?</p>
+<p>With <code>@import</code>, you’re presumably using preload and technologies like appcache or service workers can be used to mitigate the extra http call so it’s probably not performance related.</p>
+<p>While the sheet may be imported twice, it doesn’t change the specificity of the rules, just the cascade (which <span class="mention">@Garbee</span> pointed out) which is something you’d want when <code>@import</code>-ing twice.</p>
+<p>If it’s merely to help identify dependencies, why not use a preprocessor and skip native <span class="mention">@import</span> altogether?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-01-03</div>
+          <div class="post_content">
+<p>I’m saying that the current behavior works as <span class="mention">@Garbee</span> illustrated and… yeah, it seems wonky… Same as including two links really though - should that change too?  I’m not arguing one way or another, your thing sounds… kinda rational to me, but  I presume there was probably discussion in making that set of choice tradeoffs (i.e. how it works now) as opposed to “if it already isn’t imported”/once thing you are suggesting which would effectively disallow import from creating that kind of situation.  So i’m saying: have you looked to see if there are design conversations around this from way back already and read through them?  I expect that recognition of/debate with original points as to why they are proving inadequate would be necessary to offer an alternative.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2019-04-30</div>
+          <div class="post_content">
+<p>I really like this idea!<br/>
+Also consider the following:</p>
+<pre><code class="lang-auto">&lt;link once rel="stylesheet" href="component.css"&gt;
+&lt;link once rel="stylesheet" href="component-extend.css"&gt;
+&lt;component&gt;my component&lt;/component&gt;
+
+&lt;!-- this will possibly overwrite rules in component-extend.css --&gt;
+&lt;link once rel="stylesheet" href="component.css"&gt; 
+&lt;component&gt;my component again&lt;/component&gt;
+</code></pre>
+<p>I dont want <strong>component-extend.css</strong> to overwrite some rules in <strong>component.css</strong></p>
+<p>And - since LESS 1.4.0, <code>@import-once</code> is removed and is now <strong>default behavior</strong> for <code>@import</code>!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-08-21</div>
+          <div class="post_content">
+<p><code>@import-once</code> would be great! It makes sense for code organization and not duplicating the CSS code. Sure runtime could be slow loading all the files (just like with ES Modules), but tooling can compile/bundle it for production., and specialized HTTP/2 servers can also help without requiring build steps.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2021-05-20</div>
+          <div class="post_content">
+<p>The biggest pain point I have with CSS is that I can’t write shared re-usable CSS code in a robust way.</p>
+<p>If I have two features, A.css and B.css, if they both need to import shared styling that they both with to extend or override, one would be tempted to write <code>@import shared.css</code> in both files.</p>
+<p>This is bad because, if an end user imports A and B like so:</p>
+<pre><code class="lang-css">@import "path/to/A.css";
+@import "path/to/B.css";
+</code></pre>
+<p>then it is effectively the same as if the CSS were written pasted into a single sheet in the following order:</p>
+<pre><code class="lang-auto">shared
+A
+shared (duplicate)
+B
+</code></pre>
+<p>This is problematic because if A.css intended to override values in shared.css, then the import of B.css will undo the override and set it back to the original value. Only any override in B.css will work, because it comes last.</p>
+<p>What we’d want is a syntax like <code>@import-once "shared.css"</code>, that would result in <code>shared.css</code> only ever being imported once, on the first occurrence of the import. If A.css and B.css both used <code>@import-once "shared.css"</code> (or some similar syntax), then the result would be similar to having pasted all the styling into a single sheet like this:</p>
+<pre><code class="lang-auto">shared
+A
+B
+</code></pre>
+<p>This is a lot better, because A and B can override shared with less chance of undoing each other.</p>
+<p>There still exists the possibility that A and B can override properties in the same class, but that would be due to bad design on the author’s end. A would want to specify overrides for a unique selector, different from the one in B. The main difference is that the author has the choice (using selectors) to decide whether or not B overrides anything in A in a sane way.</p>
+<p>Without <code>@import-once</code> the author can not make the choice to override or not in a sane way without sacrificing developer ergonomics. The library author of A.css and B.css would have to <em>not</em> use <code>@import "shared.css"</code> inside of A.css and B.css, and would need to tell the end users to write the code in the following fashion that does not scale:</p>
+<pre><code class="lang-css">@import "shared.css"
+@import "A.css"
+@import "B.css"
+</code></pre>
+<p>In otherwords, the status quo, currently, is that a library author needs to tell end users to worry about what all the dependencies of a feature are, and to import those dependencies only once.</p>
+<p>Imagine if A.css and B.css actually depended on 10 more files each. It would be huge pain for the end user of A.css and B.css to have to also write up to 20 other <code>@import</code> statements just to be able to use A.css and B.css.</p>
+<p>Furthermore, the dependencies of A.css and B.css may be <em>implementation details</em> that the end user need not necessarily case about. If the dependencies need to be changed by the library author, the author needs to tell the end user to update the <code>@import</code> statements, which is very non-ideal.</p>
+<p>With <code>@import-once</code>, the library author would write the dependencies of A.css and B.css, and does not need to tell the end user to update dependencies when they change.</p>
+<p>Imagine if in JavaScript with ES Modules, the end user of a library was responsible for importing all the dependencies of the end user dependencies. That would be very burdensome and would not scale well, and such a feature would simply never land in a runtime. Thank goodness ES Module in reality allow dependencies to specify dependencies without modules be re-evaluated for every time they are imported in any file. That would be a very bad developer experience to have to live with.</p>
+<p>This is what (native pure) CSS developers have to live with, and why they always have to reach out for build tools; writing re-usable robust shared CSS code is currently not possible, and taking advantage of <code>@import</code> means delegating all dependency resolution of import statements to the end user.</p>
+<p>I opened a GitHub issue for this. Please share any thoughts there:</p>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/csswg-drafts/issues/6130" rel="noopener nofollow ugc" target="_blank">github.com/w3c/csswg-drafts</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/w3c/csswg-drafts/issues/6130" rel="noopener nofollow ugc" target="_blank">@import-once</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2021-03-23" data-format="ll" data-time="18:45:29" data-timezone="UTC">06:45PM - 23 Mar 21 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/trusktr" rel="noopener nofollow ugc" target="_blank">
+<img alt="trusktr" class="onebox-avatar-inline" height="20" src="https://avatars.githubusercontent.com/u/297678?v=4" width="20"/>
+          trusktr
+        </a>
+</div>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">css-cascade-6</span>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-body-container">Cascade Layers (https://github.com/w3c/csswg-drafts/issues/4470) does give us th<span class="show-more-container"><a class="show-more" href="" rel="noopener">…</a></span><span class="excerpt hidden">e ability to manage duplication caused by files `@import`ing the same shared files: it allows us to place the (duplicate) imports in a high-cascade layer so that duplicates will not override the overrides of files that import the shared code to override the shared values.
+
+(If that's not clear, let me know and I'll make a live example of the unexpected problems it causes.)
+
+Although this will help, it won't actually prevent the duplication.
+
+Adding something like `@import-once` would solve the duplication problem regardless of cascade layers, but would still be complimentary to cascade layers.
+
+`@import-once` would do what the name implies: *it only does what `@import` normally does when a fully-qualified URL has not been imported before.*
+
+- On first occurrence of `@import-once "/some.css"` it behaves exactly like `@import`.
+- On every occurrence after that for the same URL (based on it's fully-qualified value), it is effectively skipped (no-op).
+   - Maybe it isn't a complete no-op: perhaps all style sheets that import the same style URL with `@import-once` will have a link to the same `CSSStyleSheet` in their `import-once` rule object.
+   - The feature is a "no-op" behavior-wise when it comes to the style rules that are actually applied to the DOM.
+
+Only one stylesheet with content from `some.css` will be loaded. The behavior is based on the fully-resolved URLs, otherwise differing relative paths pointing to the same file would still load, causing duplication.
+
+So it's not *completely* a no-op after the first occurrence: it still needs to resolve the URL, and it determines whether to continue or not based on the fully-qualified URL.
+
+Sidenote, CSS ES Modules will behave like `@import-once`. They also talked about making `@import` behave like this `@import-once` idea for various good reasons (but that would be a hack, better to let the CSS work as expected, and give CSS `@import-once` in addition).
+
+- [CSS Modules v1 Explainer](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/css-modules-v1-explainer.md)
+- [CSS Modules discussion issue](https://github.com/WICG/webcomponents/issues/759)
+
+---
+
+Also see the [`@import (once)`](http://lesscss.org/features/#import-atrules-feature-import-options) syntax from Less. It is the default behavior for `@import` in Less.
+
+`@import-once` syntax is bike-sheddable.</span></p>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

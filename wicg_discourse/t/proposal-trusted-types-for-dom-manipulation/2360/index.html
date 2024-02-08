@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Trusted Types for DOM Manipulation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Trusted Types for DOM Manipulation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2017-09-20</div>
+          <div class="post_content">
+<p>TL;DR: Some folks on Google’s security team and I have sketched out <a href="https://github.com/mikewest/trusted-types">https://github.com/mikewest/trusted-types</a>. Feedback on the general notion would be very helpful.</p>
+<p>DOM-based XSS attacks keep popping up on websites (and it’s only becoming a more common vector as <a href="https://www.blackhat.com/docs/us-17/thursday/us-17-Lekies-Dont-Trust-The-DOM-Bypassing-XSS-Mitigations-Via-Script-Gadgets.pdf">folks discover gadgets in popular libraries</a>). Internally, Google has had a good deal of success at combating this kind of problem with compile-time enforcement of a set of <a href="https://github.com/google/safe-html-types/blob/master/doc/index.md">safe HTML types</a> that allow security reviewers to concentrate their time on the places that generate strings meant for the DOM, rather than auditing each DOM manipulation.</p>
+<p>Our goal here is to determine whether there’s something generic that we can extract from the various rule sets enforced internally.</p>
+<p>The approach is quite vague at the moment, but breaks into three pieces:</p>
+<ol>
+<li>
+<p>We’ll introduce a set of types that correspond to various DOM APIs that convert strings to DOM / URLs / etc. These types will auto-escape the characters that would be interesting in a given context, or allow explicit unsafe creation of an unescaped string.</p>
+</li>
+<li>
+<p>We’ll enumerate the DOM sinks we’re interested in protecting, and overload each with a variant that accepts a relevant type rather than a <code>DOMString</code>.</p>
+</li>
+<li>
+<p>We’ll give developers some mechanism to disable the <code>DOMString</code> variants to force themselves through the type system.</p>
+</li>
+</ol>
+<p>We’ve started prototyping what this might look like in Chrome, and plan to upstream tentative tests as we go (see <a href="https://github.com/w3c/web-platform-tests/pull/6457">https://github.com/w3c/web-platform-tests/pull/6457</a>, for example). But central questions like layering with libraries and etc. are up in the air at the moment, so y’all’s input would be quite helpful.</p>
+<p>Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2017-10-05</div>
+          <div class="post_content">
+<p>Based on interest from folks in Chrome and Mozilla, I’d like to move this proposal to a WICG repository. I’ll poke the chairs about doing so.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2017-10-18</div>
+          <div class="post_content">
+<p>Transferred in WICG: <a href="https://github.com/WICG/trusted-types">https://github.com/WICG/trusted-types</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

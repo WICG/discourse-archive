@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Sandbox Policy</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Sandbox Policy</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-03-28</div>
+          <div class="post_content">
+<p><strong>TL;DR:</strong> The existing HTML spec <a href="https://html.spec.whatwg.org/#sandboxing">provides sandboxing capability</a> that restricts abilities of iframed content. We would like to propose extending this:</p>
+<ol>
+<li>Allow the policy to be applied to the top-level document with granular opt-in</li>
+<li>Allow the top-level policy set in (1) to propagate to subframes</li>
+<li>Allow the policy to run in report-only and enforce+report modes</li>
+<li>Extend existing sandbox flags with additional restrictions:</li>
+</ol>
+<ul>
+<li>no-sync-script</li>
+<li>no-sync-xhr</li>
+<li>no-docwrite</li>
+</ul>
+<p><em>Note: this proposal is an iteration on <a href="https://discourse.wicg.io/t/content-performance-policy/1380">a subset of the functionality proposed by CPP</a>; it’s not the goal of this proposal to address all of the points raised by CPP; it’s not a competing proposal.</em></p>
+<h2>Overview</h2>
+<p>We want to give the developers a mechanism to modify the behavior of, or disable, certain web platform features within their application. By doing so, developers can assert a promise about the use—or lack of thereof—of such features within their application, which enables:</p>
+<ul>
+<li>Developers to lock down their application against regressions caused by own and third party resources; it enables violation auditing and reporting against specified standards.</li>
+<li>Third parties to validate enforced policies and use them as signals about runtime/UX/performance characteristics of the content.</li>
+</ul>
+<h2>Motivation</h2>
+<p>The web-platform provides an ever-expanding set of features and APIs, offering richer functionality, better developer ergonomics, improved performance and so on. However, the web-platform has limited ability to deprecate features or some parts of their behavior: full removal of a feature or a change in its behavior will often inevitably break some sites, which makes it nearly impossible to determine potential negative impact of such change. As a result, the platform tends to maintain both the old and the new API’s, even in cases where the new API offers better functionality and performance.</p>
+<p>A well-versed developer can avoid the use of API’s that impose unwanted behaviors (e.g. block processing or rendering of the application) through careful design and audits. However, today, the developer is unable to assert a promise about the use—or lack of thereof—of such features to the browser, which results in the following problems:</p>
+<ol>
+<li>The application developer can carefully craft their code to avoid use of costly and unwanted API’s and behaviors—e.g. avoid use of parser-blocking scripts, render-blocking fonts, synchronous touch event handlers, and so on—but is unable to “lock down” their application and enforce it as a policy, to protect the application against various regressions:</li>
+</ol>
+<ul>
+<li>Other developers on their extended team from (un)knowingly or accidentally introducing behaviors that regress their application.</li>
+<li>Third party content executing within their application from introducing behaviors that regress their application.</li>
+</ul>
+<ol>
+<li>It is impossible to infer upfront that certain features and behaviors are unnecessary or unwanted by the application. As a result:</li>
+</ol>
+<ul>
+<li>The browser is unable to modify its behavior, which prevents certain types of “fast path” optimizations.</li>
+<li>External embedders (e.g. social, search, etc, applications) cannot infer properties of the content being linked to, and in absence of such guarantees are compelled to create own formats or frameworks to constrain the developer and to obtain the required guarantees about the structure and performance of content – e.g. Facebook Instant Articles, Apple News, Accelerated Mobile Pages, and so on.</li>
+</ul>
+<p>“Sandbox Policy”, which builds on the existing sandboxing functionality, could resolve some of the above problems by allowing the developer to declare, upfront, a policy about the use—or lack of thereof—of some features. For example…</p>
+<pre><code class="lang-auto">&lt;html&gt;
+...
+&lt;meta http-equiv="Sandbox-Policy" 
+      content="no-auxiliary-contexts; no-modals; 
+               no-sync-xhr; no-sync-script; 
+               no-docwrite"&gt;
+
+&lt;script src="//broken.com/cart.js"&gt;        &lt;!-- ignored --&gt;
+&lt;script src="//other.com/widget.js" async&gt; &lt;!-- processed --&gt;
+
+&lt;!-- subframes inherit parents sandbox policy by default --&gt;
+&lt;iframe src="//another.com/thing"&gt;&lt;/iframe&gt; 
+
+&lt;script&gt;
+var request = new XMLHttpRequest();
+request.open('GET', '/bar/foo.txt', false);
+request.send(null);    // error, due to no-sync-xhr
+document.write("..."); // error, due to no-docwrite
+&lt;/script&gt;
+...
+
+</code></pre>
+<p>The above sandbox policy declares that the application opts out from use of synchronous XHR’s, synchronous scripts, <code>document.write</code>, use of modal dialogs (<code>window.{alert,confirm,print,prompt}</code>, <code>beforeunload</code>), and will not open any auxiliary browsing contexts (via <code>target</code> attribute or <code>window.open()</code>). In turn, the browser should throw an error if such an API is used, or ignore the directive (e.g. synchronous script tag in the markup).</p>
+<ul>
+<li>The above policy would be applied to the top-level document, and can be set via a  element or the equivalent response header.</li>
+<li>The above policy would be propagated down to all subresources of the document.
+<ul>
+<li>The policy is communicated to all subresources, at request time, via a <code>Sandbox-Policy</code> request header.
+<ul>
+<li>E.g. a script request to a third party will contain a header advertising the policy set by the page, allowing it to ensure that it conforms to the set requirements and is able to execute.</li>
+</ul>
+</li>
+<li>A subresource is allowed to declare own policy (e.g. via response header), but the policy MUST be more restrictive a superset of the embedder’s policy (i.e. more restrictive)
+<ul>
+<li>E.g. the top-level document can enforce a “<code>no-sync-xhr</code>” policy, but the subresource is allowed to declare a “<code>no-sync-xhr; no-docwrite</code>”.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Optionally, the policy can be configured to run in report-only mode, as a means to audit and detect violations, prior to its enforcement. Or, can be configured to enforce and report violations to a designated reporting endpoint - i.e. same as CSP.</li>
+</ul>
+<p>As a result, in above example, if the policy is enforced:</p>
+<ol>
+<li>The first script tag (<a href="http://broken.com/cart.js" rel="nofollow noopener">broken.com/cart.js</a>) would be ignored by the browser because it is a synchronous script</li>
+<li>The second script (<a href="http://other.com/widget.js" rel="nofollow noopener">other.com/widget.js</a>) would be fetched, with an additional request header advertising the set policy (<code>Sandbox-Policy: no-auxiliary-contexts; no-modals; no-sync-xhr; no-sync-script; no-docwrite</code>).</li>
+<li>The request header communicates the policy set by the embedder.</li>
+<li>If the response script attempts to use <code>document.write</code> or synchronous XHR within it would fail.</li>
+<li>The iframe resource would be fetched (with same <code>Sandbox-Policy</code> request header as above) and the same document-wide policy would apply to its subresources.</li>
+</ol>
+<hr/>
+<h2>Plumbing &amp; delta from existing spec</h2>
+<h3>Opt-out vs opt-in</h3>
+<p>Current <a href="https://html.spec.whatwg.org/#sandboxing">sandboxing mechanism</a> follows an opt-out policy: enabling sandbox automatically enables a collection of predefined flags, but the developer can opt-out from some of them via allow-{forms, popups, scripts,…}. This works, but it means that we can’t introduce new flags without putting existing content at compatibility risk. Instead, we’d like to propose an opt-in policy:</p>
+<ul>
+<li>Policy starts as blank</li>
+<li>Developer explicitly declares their opt-in via “no-{feature}”</li>
+</ul>
+<p>Opt-in mechanism means we can add new flags at will, without breaking existing deployments.</p>
+<h3>Initial set of proposed Sandbox-Policy flags</h3>
+<ul>
+<li>
+<strong>(new) no-sync-script</strong>: disallows use of synchronous, parser-blocking scripts. When this policy is set, such scripts should be ignored by the user agent.</li>
+<li>
+<strong>(new) no-sync-xhr:</strong> disallows use of synchronous XHR’s. When this policy is set, the browser should throw an error when a sync XHR request is made.</li>
+<li>
+<strong>(new) no-docwrite:</strong> disallows use of document.write. When this policy is set, the browser should throw an error when called.</li>
+<li>
+<strong><a href="https://html.spec.whatwg.org/#sandboxed-auxiliary-navigation-browsing-context-flag">no-auxiliary-contexts</a>:</strong> prevents content from creating new auxiliary browsing contexts, e.g. using the target attribute or the window.open() method.</li>
+<li>
+<strong><a href="https://html.spec.whatwg.org/#sandboxed-modals-flag">no-modals</a>:</strong> prevents content from using any of the following features to produce modal dialogs:
+<ul>
+<li>window.alert()</li>
+<li>window.confirm()</li>
+<li>window.print()</li>
+<li>window.prompt()</li>
+<li>the beforeunload event</li>
+</ul>
+</li>
+<li>
+<strong><a href="https://html.spec.whatwg.org/#sandboxed-plugins-browsing-context-flag">no-plugins</a>:</strong> prevents content from instantiating plugins, whether using the embed element, the object element, the applet element.</li>
+</ul>
+<h3>Reporting</h3>
+<ul>
+<li>To assist developers in deploying sandboxing policies, we need an report mode where they can run the policy in audit-only mode: In this mode, violations do not cause errors but are logged to the specified URI—i.e. identical to CSP report-only mode.</li>
+<li>Once the policy is configured to “enforce”, violations should be reported if a report-uri provided - e.g. to detect violations by own or third party content.</li>
+</ul>
+<h3>Interop with existing <code>&lt;iframe sandbox&gt;</code>
+</h3>
+<p>By default, the sandbox policy should propagate to all subresources and subframes. As such:</p>
+<ul>
+<li>If the iframe does not declare its own sandbox policy, it still inherits embedders policy
+Embedder can specify a more restrictive policy on an iframe - e.g. top level document enforces no-modals only, but can enforce a stricter set on iframed content.</li>
+<li>The enforced policy on a subframe is always a union of the policies - i.e. if the top-level document enforces no-modals then the subframe also inherits this policy in all cases (i.e. allow-popups is ignored)</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-03-28</div>
+          <div class="post_content">
+<p>This looks like a good idea. It would be a good tool for good-citizen web developers to opt-out of dubious and difficult features like <code>document.write</code>.</p>
+<p>I have two questions:</p>
+<ol>
+<li>
+<p>This seems to sort of overlap with CSP in the spirit of locking down what a page can do. In fact CSP actually has a <code>sandbox</code> directive as far as I can tell, but apparently can’t be specified with a <code>&lt;meta&gt;</code> element. So could this not be implemented as part of that CSP directive? In particular things like CSP’s <code>referrer</code> directive seems to overlap with what this separate sandbox mechanism would specify, and the <code>no-plugins</code> sandbox directive appears to directly reimplement the CSP <code>object-src 'none'</code> directive. Should there be two mechanisms for this?</p>
+</li>
+<li>
+<p>Could this be extended to enforce other “good practice” or common development approaches, similar to how there’s a flag to turn off sync XHR? E.g. with some new flags like:</p>
+</li>
+</ol>
+<ul>
+<li>
+<code>force-strict-mode</code>: treat all scripts as if they had <code>"use strict";</code> at the top, eliminating “sloppy mode” from the whole document</li>
+<li>
+<code>top-level-only</code> for a browser-sanctioned way of preventing the page being iframed</li>
+<li>
+<code>no-sync-storage</code> to disable local/session storage (the old synchronous APIs superseded by IndexedDB) - the Chrome Web Store already implements this</li>
+<li>
+<code>no-prefixed-features</code> - disable all prefixes, forcing standards-compliant uses only</li>
+<li>
+<code>no-nonstandard-features</code> - similar to no prefixes, but to turn off all features not actually in the spec, e.g. <code>window.orientation</code> (replaced by <code>screen.orientation</code>), <code>node.innerText</code> (only exists for compatibility reasons), etc.</li>
+</ul>
+<p>In particular I think disabling prefixes and nonstandard features could help with ensuring content is standards-compliant and will work in other browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-03-28</div>
+          <div class="post_content">
+<p>+1 to the idea!</p>
+<p>If specified in a <code>&lt;meta&gt;</code>, does it have similar restrictions to charset declarations? That is, must be in the first kb or two of the page’s content?  If not, how do you handle a situation like:</p>
+<pre><code class="lang-auto">&lt;!doctype html&gt;
+&lt;script&gt;
+doc.write(...);
+&lt;/script&gt;
+&lt;meta http-equiv="Sandbox-Policy" content="no-docwrite"&gt;
+</code></pre>
+<p>Or, similarly, what happens if a script doc.write()s a <code>&lt;meta&gt;</code> declaring that doc.write isn’t allowed? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-03-28</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<ol>
+<li>This seems to sort of overlap with CSP in the spirit of locking down what a page can do. In fact CSP actually has a sandbox directive as far as I can tell, but apparently can’t be specified with a &lt;meta&gt; element. So could this not be implemented as part of that CSP directive?</li>
+</ol>
+</blockquote>
+</aside>
+<p>They are similar in spirit and some features (e.g. <code>no-docwrite</code>) may have security benefits as well. On the other hand we have directives that are not security related (e.g. no-sync-scripts, no-sync-xhr), and I expect that in the future we’ll see more of these – i.e. directives that focus on disabling performance/UX/etc footguns. That said, I do agree that we should not duplicate functionality: if it makes sense to adopt some parts of this proposal under CSP, then we should do so; if CSP already provides some functionality, then we should drop it from Sandbox.</p>
+<aside class="quote" data-post="2" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>In particular things like CSP’s referrer directive seems to overlap with what this separate sandbox mechanism would specify, and the no-plugins sandbox directive appears to directly reimplement the CSP object-src ‘none’ directive. Should there be two mechanisms for this?</p>
+</blockquote>
+</aside>
+<ul>
+<li>Can you elaborate on the overlap with referrer? I don’t follow that one.</li>
+<li>Re, <code>no-plugins</code> vs CSP <code>object-src: none</code>: that’s a great point, happy drop no-plugins. Less work for us! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/>
+</li>
+</ul>
+<aside class="quote" data-post="2" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<ol start="2">
+<li>Could this be extended to enforce other “good practice” or common development approaches…</li>
+</ol>
+</blockquote>
+</aside>
+<p>Yes, that’s an interesting list. That said, at least for the initial run, I’d prefer to keep the list reasonably small and focus on the “high value” footguns. Once (and if) we agree on the basic mechanism, and get the plumbing in place, adding new directives is relatively straightforward.</p>
+<aside class="quote" data-post="3" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>If specified in a &lt;meta&gt;, does it have similar restrictions to charset declarations? That is, must be in the first kb or two of the page’s content?</p>
+</blockquote>
+</aside>
+<p>In the same way as <a href="https://w3c.github.io/webappsec-csp/#meta-element" rel="nofollow noopener">we deal with this in CSP</a>: "Authors are strongly encouraged to place meta elements as early in the document as possible, because policies in meta elements are not applied to content which precedes them. "</p>
+<aside class="quote" data-post="3" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Or, similarly, what happens if a script doc.write()s a &lt;meta&gt; declaring that doc.write isn’t allowed? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+</blockquote>
+</aside>
+<p><em>/me melts into a puddle…</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/igrigorik/40/32_1.png" width="20"/> igrigorik:</div>
+<blockquote>
+<p>Can you elaborate on the overlap with referrer? I don’t follow that one.</p>
+</blockquote>
+</aside>
+<p>I think I was just confused by the overlap between CSP and this proposal. I was wondering if you’d add a <code>referrer</code> sandbox policy, but I see that you would not if CSP already covers it.</p>
+<aside class="quote" data-post="3" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Or, similarly, what happens if a script doc.write()s a &lt;meta&gt; declaring that doc.write isn’t allowed? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+</blockquote>
+</aside>
+<p>Since the sandbox policy can in general affect the way scripts work, perhaps it could be made an error to have the sandbox policy occur after a script?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Since the sandbox policy can in general affect the way scripts work, perhaps it could be made an error to have the sandbox policy occur after a script?</p>
+</blockquote>
+</aside>
+<p>That’s probably reasonable, but CSP’s wording also covers this - the <code>&lt;meta&gt;</code>, having been written <em>after</em> the <code>&lt;script&gt;</code>, doesn’t apply to the script. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/929_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jason_Nichols</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<p>“Subframe inherits parent’s policy” us not a sane default for the behavior of an iframe. AMP may have different goals for the web, but iframe is an element with a standard and a purpose, and there’s a near 100% chance of invalidating that original purpose (e.g. sandboxing untrusted but still functional content onto your page) as the default behavior.</p>
+<p>Not to mention the conflict, what if the iframe has a meta?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-03-29</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jason_nichols/40/929_1.png" width="20"/> Jason_Nichols:</div>
+<blockquote>
+<p>“Subframe inherits parent’s policy” us not a sane default for the behavior of an iframe. AMP may have different goals for the web</p>
+</blockquote>
+</aside>
+<p>The purpose of this proposal is to limit the possibilities of an iframe to hurt the overall performance and user experience of the embedding site, making it safer (from a UX perspective) for a site to include third party frames. Frames inheriting that policy is the whole point. The AMP project is just one possible client of this type of restriction, but hardly the only use case.</p>
+<aside class="quote" data-post="7" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jason_nichols/40/929_1.png" width="20"/> Jason_Nichols:</div>
+<blockquote>
+<p>iframe is an element with a standard and a purpose, and there’s a near 100% chance of invalidating that original purpose (e.g. sandboxing untrusted but still functional content onto your page) as the default behavior.</p>
+</blockquote>
+</aside>
+<p>Not sure what you mean there. An <a href="https://html.spec.whatwg.org/multipage/embedded-content.html#the-iframe-element">iframe</a> is a nested browsing context and it will continue to be that, just with a few extra restrictions regarding what APIs it can call.</p>
+<aside class="quote" data-post="7" data-topic="1414">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jason_nichols/40/929_1.png" width="20"/> Jason_Nichols:</div>
+<blockquote>
+<p>Not to mention the conflict, what if the iframe has a meta?</p>
+</blockquote>
+</aside>
+<p>If the iframe contains further sandbox restrictions itself, the will add up to the restrictions it inherited from the main page, to create a larger set of restrictions that will apply to it and to whatever browsing context it may embed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-05-06</div>
+          <div class="post_content">
+<p>A quick update on the status and where we’re heading…</p>
+<p>After circulating the original proposal we’ve spent a few weeks trying to understand the intersection and interop between Sandbox and <a href="https://html.spec.whatwg.org/multipage/embedded-content.html#attr-iframe-sandbox">HTML (iframe) sandbox</a>, <a href="https://www.w3.org/TR/2014/WD-CSP11-20140211/#sandbox">CSP sandbox</a>, and the new <a href="https://w3c.github.io/webappsec-csp/document/#directive-disable" rel="nofollow noopener">document features disable</a> + <a href="https://noncombatant.github.io/permission-delegation-api/" rel="nofollow noopener">Permission Delegation</a> proposals.</p>
+<p>Long story short, we decided that it makes sense to merge the “document features disable” and Sandbox into a single mechanism, which we’re now calling “Feature Policy”.</p>
+<p><span class="mention">@mikewest</span> and myself have started iterating on the spec. You can see the skeleton here:
+<a class="onebox" href="https://igrigorik.github.io/feature-policy/#introduction" rel="nofollow noopener" target="_blank">https://igrigorik.github.io/feature-policy/#introduction</a></p>
+<p>Take a look at the examples for the high level overview and the “Disable policy features” section for some concrete examples of how they would (likely) be enforced. There are still <em>many</em> gaps to fill in, but there should be enough there to paint the high-level picture.</p>
+<p>Let me know if you have any thoughts or comments: open an issue on the <a href="https://github.com/igrigorik/feature-policy/" rel="nofollow noopener">GitHub repo</a> and/or PR your suggestions.</p>
+<hr/>
+<p><em>p.s. If you want to follow along, I’ve also kicked off <a href="https://groups.google.com/a/chromium.org/forum/#!topic/platform-architecture-dev/haQ1MIjPDA8" rel="nofollow noopener">this thread to discuss enforcement strategies for various APIs</a>.</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-06-27</div>
+          <div class="post_content">
+<p>Update: we’re actively iterating on <a href="https://github.com/igrigorik/feature-policy" rel="nofollow noopener">Feature-Policy</a> and we sent out and <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/rBYR3Xd6Skw/oddIWad6AgAJ" rel="nofollow noopener">intent to implement</a> earlier today.</p>
+<p><span class="mention">@yoavweiss</span> <span class="mention">@cwilso</span> could we transfer igrigorik/feature-policy to WICG? It’d be great to get more eyeballs on it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-06-28</div>
+          <div class="post_content">
+<p>Definitely! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>Permissions to transfer the repo on their way</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

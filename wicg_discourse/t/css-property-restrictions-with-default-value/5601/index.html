@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS property restrictions with default value</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS property restrictions with default value</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-09-27</div>
+          <div class="post_content">
+<p>This idea came about from a specific problem I had: I wrote a component that needed its wrapper to “have position” in order to contain some absolutely positioned children, but I wanted to let consumers of the component give it whatever <code>position</code> value they wanted, <strong>except</strong> <code>static</code>.</p>
+<p>(I solved my particular problem by adding an extra inner wrapper and giving that <code>position: relative;</code> but this caused other smaller problems.)</p>
+<p>I would have liked to have had some syntax like this:</p>
+<p><code>constrain([not] value [, value [, ... ]] [/ initialValue])</code></p>
+<pre><code class="lang-css">/* Only allow these values */
+position: constrain(relative, absolute, fixed / relative);
+
+/* Disallow this value */
+position: constrain(not static / relative);
+</code></pre>
+<p>The initial value would have to be at a lower specificity than the selector it’s declared under, so that something like this would work:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  .my-wrapper {
+    position: fixed;
+  }
+
+  .uh-oh {
+    position: static;
+  }
+&lt;/style&gt;
+
+&lt;div
+  class="my-wrapper"
+  style="position: constrain(not static / relative) !important" &gt;
+  My position is fixed!
+&lt;/div&gt;
+
+&lt;div
+  class="uh-oh"
+  style="position: constrain(not static / relative) !important" &gt;
+  My position is relative!
+&lt;/div&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-09-29</div>
+          <div class="post_content">
+<p>I think the constraint and default value would work like this: a higher specificity rule (or a matching rule with an <code>!important</code> declaration) would override the value, just like if it were any other value. The default value would only apply if no other authored rules with <em>the same or less specificity</em> matched.</p>
+<pre><code class="lang-auto">&lt;style&gt;
+  .card {
+    position: constrain(not static / relative);
+  }
+  .sticky.card {
+    position: constrain(absolute, fixed / fixed);
+  }
+
+  nav {
+    position: absolute;
+  }
+
+  #my-card {
+    position: static;
+  }
+&lt;/style&gt;
+
+&lt;div class="card"&gt;
+  I have position relative because that's my default
+&lt;/div&gt;
+
+&lt;div class="sticky card"&gt;
+  I have position fixed because that's my default
+&lt;/div&gt;
+
+&lt;nav class="card"&gt;
+  I have position absolute because that's allowed by my constraint
+&lt;/nav&gt;
+
+&lt;div id="my-card" class="card"&gt;
+  I have position static because my rule has higher specificity than the constraint rule
+&lt;/div&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

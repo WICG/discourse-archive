@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Canvas color spaces: wide-gamut, and high bit-depth rendering</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Canvas color spaces: wide-gamut, and high bit-depth rendering</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-14</div>
+          <div class="post_content">
+<p>Hello,</p>
+<p>Here is a <a href="https://github.com/junov/CanvasColorSpace/blob/master/CanvasColorSpaceProposal.md" rel="nofollow noopener">proposal</a> for adding color spaces to canvases (2d and WebGL).  The proposal so far is the result of prior discussions in other venues, as explained in the “Proposal History” section. We are moving the discussion here to solicit feedback from a broader community.  Please take a look and share your feedback.</p>
+<p>Cheers!</p>
+<p>-Justin</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/996_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kornel</div>
+          <div class="creation_date">2016-05-14</div>
+          <div class="post_content">
+<p><code>optimal</code> name is unclear, because it doesn’t say that it is optimal <em>for</em>. One could expect it to be optimal in terms of fitting display’s profile, others could assume it’s optimal for animation performance.</p>
+<p>The spec as currently written does not allow OS X to use its optimal/preferred mode which is 30-bit color + 2 bit alpha. This is efficient in terms of memory, supports full gamut, and is reasonably fast to work with. But doesn’t meet spec’s criteria, and <code>getImageData</code> is not allowed to expose it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/996_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kornel</div>
+          <div class="creation_date">2016-05-14</div>
+          <div class="post_content">
+<p>How the page is supposed to <em>use</em> the optimal color profile? Without knowing chromaticities and gamma curve it’s impossible to render anything correctly. It seems to suffer from the same problem as legacy-srgb which is impossible to use correctly and pages just write sRGB-like values and hope they won’t be too ugly on the screen.</p>
+<p>Perhaps instead of optimal, the page should be allowed to specify an array of profiles it knows how to use, and let UA pick any of them. Sort-of like the fallback list you’re proposing, but with more leeway for the UA to choose any of the variants.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/996_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kornel</div>
+          <div class="creation_date">2016-05-14</div>
+          <div class="post_content">
+<blockquote>
+<p>Should we support custom color spaces based on ICC profiles?</p>
+</blockquote>
+<p>I think it would best be avoided. With images it’s a source of pain - some programs embed invalid or needlessly complex profiles. For example all currently considered color spaces use D65 white point, but a custom ICC profile could pick another one.</p>
+<p>There are also many variants of profiles essentially expressing sRGB, so if authors use it the browsers will either do unnecessary conversions and slow path instead of GPU’s sRGB, or will have to be clever enough analyse the curves to see if they fit sRGB close enough.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-05-14</div>
+          <div class="post_content">
+<p>Nit: the <code>color-space</code> canvas creation parameter uses a hyphen so must be typed with string syntax (<code>"color-space":</code>). It should probably be <code>colorSpace</code> instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">msc</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1505">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/kornel/40/996_1.png" width="20"/> kornel:</div>
+<blockquote>
+<p>The spec as currently written does not allow OS X to use its optimal/preferred mode which is 30-bit color + 2 bit alpha. This is efficient in terms of memory, supports full gamut, and is reasonably fast to work with. But doesn’t meet spec’s criteria, and getImageData is not allowed to expose it.</p>
+</blockquote>
+</aside>
+<p>Is OS X doing blending etc. in compressed (non-linear) space? Or are they somehow getting the GPUs to do the non-linear - linear - non-linear conversions?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brianosman</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<p>OSX is not the only environment that use 30-bit color (10/10/10/2), it’s actually a very common format for deep color output to displays. However, it’s largely orthogonal to the format and technique used for any intermediate rendering. The 2-bit alpha, in particular, means that even simple compositing can’t be done directly. Additionally, as you’re alluding to, the 10-bit formats have very behavior wrt gamma. Like 8-bit formats, they are expected to contain non-linear (gamma encoded) values, when sent to the display hardware. However, unlike 8-bit formats, the GPU doesn’t do any sRGB conversion when reading/writing to them.</p>
+<p>What I think most people do is use 16-bit floating point intermediate render targets (with no gamma curve applied), then transfer the final results of rendering to a 10-bit buffer for display. In that scenario, you can manually apply the gamma curve during the final write.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brianosman</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<blockquote>
+<p>There are also many variants of profiles essentially expressing sRGB, so if authors use it the browsers will either do unnecessary conversions and slow path instead of GPU’s sRGB, or will have to be clever enough analyse the curves to see if they fit sRGB close enough.</p>
+</blockquote>
+<p>Devil’s advocate: Browser’s are going to need that logic anyway, to deal with images.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<blockquote>
+<p>and getImageData is not allowed to expose it. (referring to 10-10-10-2)</p>
+</blockquote>
+<p>My intent was to allow it when I wrote this:</p>
+<blockquote>
+<p>Non-standard color spaces that have more than 8bpc and use an integer format may use Uint16ClampedArray for <code>data</code>. Regardless of the number of bits used by the color space, the representation of color components as Uint16 values must use the range [0,65535].</p>
+</blockquote>
+<p>Perhaps you missed it, or maybe I missed something? Is there anything that needs to be further clarified about that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<blockquote>
+<p>How the page is supposed to use the optimal color profile?</p>
+</blockquote>
+<p>The idea is that the browser takes care of color management. With a 2D context, literal color values specified as fillStyle or strokeStyle would be color-corrected to the canvas color-space, samething for image media that is drawn via drawImage and createPattern. The only API that would not get color-converted is getImageData.  Is there a particular use case you have in mind that would be problematic?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<blockquote>
+<p>Additionally, as you’re alluding to, the 10-bit formats have very behavior wrt gamma. Like 8-bit formats, they are expected to contain non-linear (gamma encoded) values, when sent to the display hardware. However, unlike 8-bit formats, the GPU doesn’t do any sRGB conversion when reading/writing to them.</p>
+</blockquote>
+<blockquote>
+<p>What I think most people do is use 16-bit floating point intermediate render targets (with no gamma curve applied), then transfer the final results of rendering to a 10-bit buffer for display. In that scenario, you can manually apply the gamma curve during the final write.</p>
+</blockquote>
+<p>I think this is where “optimal” vs “optimal-strict” would come into play.  I think the requirement that alpha have at least 8-bits should be moved to “optimal-strict” instead of “optimal”. So “optimal” would only care about selecting a color space that fits the display well (e.g. good for drawImage), which could be 10-10-10-2. Those who care about compositing quality would go for “optimal-strict”.</p>
+<p>BTW, I agree these names should be changed. Any ideas? Something clear and concise. I was thinking maybe “display” intead of “optimal”.  I also think “strict” is not the best word to describe the additional constraints.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<p>Updated the <a href="https://github.com/junov/CanvasColorSpace/blob/master/CanvasColorSpaceProposal.md" rel="nofollow noopener">proposal</a> to rename color-space to colorSpace. Moved the 8-bit alpha requirement from “optimal” to “optimal-stict”, to allow 10-10-10-2 as an “optimal” mode.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<p>Thank you for putting together the spec, Justin.  I have some questions and feedback.</p>
+<p>Is there a way for a web developer to find out what colorspace the Canvas ended up with?  If I ask for linear-rec2020, how will I know that sRGB is the best my computer can do?  Will getContext return null or is there a property I can query?  If I ask for “optimal” or “optimal-strict” will I get back the string “optimal” or is there a way to get back the “real” colorspace?</p>
+<p>The answer to the last question is relevant for WebGL.  For WebGL, the browser has little direct control over the contents of the canvas, save for texImage2D. Hence, the web developer has to know the final color space of the Canvas so that he/she can arrange for things to end up in that color space after all blending is complete. Having the final color space be something not defined in the spec seems like it would cause problem for people.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<blockquote>
+<p>Is there a way for a web developer to find out what colorspace the Canvas ended up with?</p>
+</blockquote>
+<p>Yes. The proposal adds a “settings” read-only attribute to CanvasRenderingContext2D, and I would expect the WebGL spec to do the same thing for WebGLRenderingContext. The settings attribute reflects the result of coercing the second argument of getContext (the settings dictionary) from when the context was originally created. Unless we make changes to the algorithm for coercing the settings argument, the colorSpace parameter will simply fall back to its default value (legacy-srgb) when the colorSpace dictionary item is set to an unsupported value.</p>
+<blockquote>
+<p>If I ask for linear-rec2020, how will I know that sRGB is the best my computer can do?</p>
+</blockquote>
+<p>You can just try different spaces to see what sticks.  There is a suggestion that would make this simpler by adding support for a fallback list, e.g. { colorSpace: [myFavoriteSpace, mySecondChoice] }  There is a bigger problem though: What if the UA offers a non-standard colorspace that is close to myFavoriteSpace, but the app author did not know about it?  Fonts had the same issue, which was solved through CSS font-family which can contain any number of non-standard fonts, but requires a standard generic family at the end of the fallback list. We could do something similar here, but I’m not sure we need this for version 1. We should wait to observe a proven need for “color space families” before adding that sort of complexity to the spec, and be stuck with it forever.</p>
+<blockquote>
+<p>If I ask for “optimal” or “optimal-strict” will I get back the string “optimal” or is there a way to get back the “real” colorspace?</p>
+</blockquote>
+<p>Obviously, getting back the “real” color space is the behavior that would be most useful. I will clarify that in the proposal. Thanks for pointing that out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<p>Thank you for the clarification, Justin.</p>
+<p>Suppose I ask for “optimal” and get back a 10-10-10-2, rec2020 Canvases.  What will the colorspace be set to? It shouldn’t be linear-rec2020 because the values are not linear and the bitness is not floating point.</p>
+<p>I don’t think it is a good idea for the API to return colorspaces that are not in the spec, especially for the “optimal” request.  This creates a big moving target for developers wanting to write content that works across as many devices as possible.  Content will work great on devices the web developer happens to have access to but then falls apart in the wild. If you get back 10-10-10-2, then the Canvas may not even have full alpha blending. I think if we’re going to have “optimal” be a choice, then it should resolve to a known palette of choices.</p>
+<p>Also, if we’re going to have rec2020 sometimes be a floating point texture and sometimes be 10/10/10/2, then there should be a way for the developer to figure out the bitness and gamma of what was chosen. This is important for WebGL where the developer has to arrange for the final colors to be in the right colorspace/gamma. Either we have additional strings the web developer needs to compare against or individual strings that give the bitness and gamma separate from the colorspace.</p>
+<p>I recently ran your proposal by the DirectX team.  One of the pieces of feedback they gave was the worry about having one string for all combinations of gamma, bitness and colorspace. For bitness, we have 8bpc, 16fbpc and 10-10-10-2.  For colorspace, we have sRGB, AdobeRGB, DCI-P3, BT.2020 and others.  For gamma we have ST.2084, linear gamma, HLG (hybrid-log gamma) and others “surely to come” according to them. That’s a lot of enums if we do all combinations.  Now perhaps today, we keep it simple and support only a subset of combinations and see how things go.  But this is something to keep in mind as we design for the future.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="15" data-topic="1505">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/87869e/40.png" width="20"/> RafaelCintron:</div>
+<blockquote>
+<p>Suppose I ask for “optimal” and get back a 10-10-10-2, rec2020 Canvases.  What will the colorspace be set to?</p>
+</blockquote>
+</aside>
+<p>Since this would be a non-standard colorspace, the UA would have a vendor-specific name for it. Hmmm… Maybe this is not such a good idea.</p>
+<aside class="quote" data-post="15" data-topic="1505">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/87869e/40.png" width="20"/> RafaelCintron:</div>
+<blockquote>
+<p>I don’t think it is a good idea for the API to return colorspaces that are not in the spec, especially for the “optimal” request. (…) I think if we’re going to have “optimal” be a choice, then it should resolve to a known palette of choices.</p>
+</blockquote>
+</aside>
+<p>Good point. Perhaps we could have a standardized easy to parse nomenclature for color spaces names, or some kind of query API to get stats on a given colorspace. Or we just create a long registry of standard optionally supported colorspaces. Any better ideas?</p>
+<p>I am thinking about how CSS font strings can have all those modifiers to specify size, italic, bold, etc. We could do something like that. Then we’d have colorspace strings like “rec-2020 float16 linear”, “rec-2020 10-10-10-2”, “srgb 8-8-8-8”, etc. WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<p>Your suggestion seems good.  Instead of 8-8-8-8 or 10-10-10-2, I would use RGBA8 and RGB10_A2 respectively since they better convey what the numbers are referring to.</p>
+<p>I noticed in your strings that you sometimes state the gamma (linear) while others times, you leave it out. Do srgb and rec-2020 imply “standard” gammas web developers can easily infer or should we make the gamma be explicitly stated as well?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">junov</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="1505">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/r/87869e/40.png" width="20"/> RafaelCintron:</div>
+<blockquote>
+<p>Do srgb and rec-2020 imply “standard” gammas web developers can easily infer or should we make the gamma be explicitly stated as well?</p>
+</blockquote>
+</aside>
+<p>I was thinking standard gammas could be implied. It would avoid the combinatorial explosion of space/gamma combos.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RafaelCintron</div>
+          <div class="creation_date">2016-05-22</div>
+          <div class="post_content">
+<p>They could be implied but I think it’s better if we stated them explicitly when the browser knows what they are.  When the browser doesn’t know what they are, then it should leave them out.</p>
+<p>For instance, for “RGBA-Half-Float rec2020 linear”, it’s clear the browser knows the bitness, colorspace and gamma. We can spec “legacy-srgb” as simply returning RGBA8.  Here, the color space nor the gamma are well defined.  I suppose Chrome can include the device color profile if it is a standard one but things get muddy when you mix-in non-color managed colors together with images and video.</p>
+<p>The DirectX team also recommended that we consider composing the canvases using what they call a composition color space or CCS. In CCS, half float textures are used everywhere.  Zero through 1 is sRGB with no gamma. Colorspaces with gamuts outside of sRGB end up with negative numbers or numbers greater than 1.0.  With this approach, you can mix textures with different color spaces together quickly.  At the end of the pipeline, the gamut is clipped to the device profile and final gamma is applied.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-05-22</div>
+          <div class="post_content">
+<p>I think the proposal unnecessarily diverges from what WebGL already does regarding context creation attributes. The proposal has <code>CanvasRenderingContext2DSettings</code> and <code>context.settings</code>, whereas WebGL already has <code>WebGLContextAttributes</code> and a <code>context.getContextAttributes()</code> method to return the “actual” attributes used (e.g. if you pass <code>depth: true</code> but it wasn’t supported, <code>getContextAttributes()</code> returns <code>depth: false</code>, so you can identify what you really got).</p>
+<p>So for consistency I would recommend calling the canvas2d creation parameters <code>CanvasRenderingContext2DAttributes</code> and having a <code>getContextAttributes()</code> method on the 2D context instead of just a “settings” attribute.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

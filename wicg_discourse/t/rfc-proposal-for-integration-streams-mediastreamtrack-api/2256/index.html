@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>RFC: Proposal for integration Streams &lt;&ndash;&gt; MediaStreamTrack API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">RFC: Proposal for integration Streams &lt;&ndash;&gt; MediaStreamTrack API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1033_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">miguelao</div>
+          <div class="creation_date">2017-07-26</div>
+          <div class="post_content">
+<p>Proposal for a (small) API to allow creation of Streams out of a MediaStreamTrack:</p>
+<p><a href="https://github.com/yellowdoge/streams-mediastreamtrack" rel="nofollow noopener">https://github.com/yellowdoge/streams-mediastreamtrack</a> (the following text is mostly extracted from the <a href="http://README.md" rel="nofollow noopener">README.md</a>).</p>
+<p><a href="https://streams.spec.whatwg.org/#stream"><code>Streams</code></a> are designed to provide real time streams of data with powerful semantics (e.g. built-in backpressure and queuing) to allow users to build higher-level abstractions.</p>
+<p><a href="https://www.w3.org/TR/mediacapture-streams/#mediastreamtrack"><code>MediaStreamTracks</code></a> are opaque handles to Real-Time media being transported in the browser.  This media is produced or consumed via Sources and Sinks offered by the platform (and detailed in a number of Specs); however, if a given functionality is not readily available, user’s options vary. The capabilities for audio processing are quite developed thanks to the MediaStreamTrack-WebAudio bridge and its <a href="https://developer.mozilla.org/en/docs/Web/API/ScriptProcessorNode" rel="nofollow noopener">ScriptProcessorNode</a>.  For video, however, unsupported source/sink functionality forces users to resort to contortions such as reflexion on intermediate HTML elements (e.g. <code>&lt;canvas&gt;</code>, see <a href="#current-related-efforts-and-workarounds">the Workarounds Section</a>) or offline processing (e.g. using <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html" rel="nofollow noopener"><code>MediaRecorder</code></a>).  These approaches, however, lose the timing information, introduce friction in the interoperability between elements and need unnecessary processing steps.  This situation is made only more evident with the arrival of powerful programmable environments such as <a href="http://webassembly.org/" rel="nofollow noopener">WebAssembly</a> where users will naturally expect to be able to manipulate Real-Time media.</p>
+<p>This API reconciles these two existing ways to access Media on the browser, enhancing platform ergonomics and orthogonality while only attempting to define the minimum amount of new data types (VideoFrame).</p>
+<h2>Use cases</h2>
+<p>Use cases that depend explicitly on timing are enabled, e.g.:</p>
+<ul>
+<li>Measuring the amount of Video Frames produced; calculating the source frame rate.</li>
+<li>Calculating inter-frame measures, e.g. motion flow, presence/absence, stabilization,</li>
+<li>Adding subtitles to video/audio.</li>
+<li>Manipulating depth data streams.</li>
+</ul>
+<p>Whereas use cases that do not depend explicitly on timing are not enabled but are enhanced:</p>
+<ul>
+<li>Producing per-frame analysis and transformations and the endless array of digital image processing algorithms, e.g. edge enhancement or chrome keying.</li>
+<li>Adjusting the presentation timestamp of the media to speed up or slow down video, hence creating a timelapse or slow-motion effect.</li>
+</ul>
+<h2>Possible future use cases</h2>
+<p>Making a <code>MediaStreamTrack</code> both a <code>ReadableStream</code> and a <code>WritableStream</code> (i.e. a <code>TransformStream</code>) would allow for even more sophisticated use cases where users could ‘plug’ custom elements in <code>MediaStreamTrack</code>-based pipelines, e.g. WebAssembly operations between WebCam capture and Recording, etc.</p>
+<h2>Current Workarounds</h2>
+<p>The most usual hack to access Video data is to cast a given <code>MediaStreamTrack</code> onto a <code>&lt;video&gt;</code> element and in turn onto a <code>&lt;canvas&gt;</code>  that is subsequently read back – <code>&lt;video&gt;</code> elements provide no <code>drawn</code> event so it’s up to the user to blit from <code>&lt;video&gt;</code> to <code>&lt;canvas&gt;</code> on a timely basis (see e.g. <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas#Manipulating_the_video_frame_data" rel="nofollow noopener">this article</a>).  Moreover, usually reading from <code>&lt;canvas&gt;</code> implies a costly read back from GPU and potential pixel conversions needed.</p>
+<p>Chrome <a href="https://developer.chrome.com/native-client/pepper_dev" rel="nofollow noopener">Pepper API</a> introduced and supports both <a href="https://developer.chrome.com/native-client/pepper_dev/cpp/classpp_1_1_media_stream_video_track" rel="nofollow noopener">MediaStreamVideoTrack</a> and <a href="https://developer.chrome.com/native-client/pepper_dev/cpp/classpp_1_1_media_stream_audio_track" rel="nofollow noopener">MediaStreamAudioTrack</a> addressing a similar situation as the one described.</p>
+<p>WebAudio <a href="https://developer.mozilla.org/en/docs/Web/API/ScriptProcessorNode" rel="nofollow noopener">ScriptProcessorNode</a> (or its successor) enables similar use cases for Audio.</p>
+<h2>Potential for misuse</h2>
+<p>Security-wise none, since the security model of MSTrack still applies.  As with every media-related API, it can be maliciously used to drag down user’s CPU.</p>
+<h2>Rough sketch of a proposal</h2>
+<p>In a nutshell, it’s trivial:</p>
+<pre><code class="lang-auto">partial interface MediaStreamTrack {
+  // |any| should be ReadableStream, but that is not an idl type.
+  [CallWith=ScriptState] readonly attribute any readable;
+};
+</code></pre>
+<p>which produces <code>ImageData</code> with a <code>timecode</code> information. <code>ImageData</code> provides <code>width</code>, <code>height</code> and <code>data</code> in RGBA format, and can casted onto a <code>&lt;canvas&gt;</code>. The draft API has provisions for I420 formats though, which is more native to Real-Time video.</p>
+<p>See the <a href="http://rawgit.com/yellowdoge/streams-mediastreamtrack/master/index.html#videoframe-reading-and-casting-onto-a-canvas" rel="nofollow noopener">example</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2017-09-05</div>
+          <div class="post_content">
+<p>LGTM in general; <code>ReadableStream</code> is used an IDL type e.g. in <a href="https://fetch.spec.whatwg.org/#body-mixin">fetch</a>, so I would use it here as well.</p>
+<p><code>CallWith</code> on the other hand is a Blink-ism <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

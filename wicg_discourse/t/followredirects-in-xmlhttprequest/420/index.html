@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>FollowRedirects in XMLHttpRequest</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">FollowRedirects in XMLHttpRequest</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>I know the answer is likely to be no; however I feel I would not be doing my job if I did not raise this here. Back in November I wrote an article on following redirects in AJAX requests: <a href="http://jotter.jonathankingston.co.uk/blog/2013/11/08/give-the-world-back-followredirects-xmlhttprequest/" rel="nofollow noopener">Give the World Back FollowRedirects XMLHttpRequest</a></p>
+<p>My proposal is to add back in the optional flag into XMLHttpRequest which would let the developer opt out of following redirects; perhaps allowing them to get an optional follow callback/promise.</p>
+<p>The other option would be allowing the developer to see the call stack of URL’s that had been called.</p>
+<p>The merits from a front end perspective is clarity on what the server is doing; which at the moment is only is available when using CORS requests.</p>
+<p>Either way, I am quite happy to hear your feedback on reimplementing this into the specification.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><code>responseURL</code> (<a href="http://xhr.spec.whatwg.org/#the-responseurl-attribute">http://xhr.spec.whatwg.org/#the-responseurl-attribute</a>) may address some of these concerns.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><span class="mention">@josh</span> that is good to see things have evolved a little since when I wrote the article; That certainly solves one of the use cases of being able to see where the server has finally sent the client to. Which for example in a URL based single page application could indicate to the client which controller to render perhaps or some form of behaviour based upon the URL.</p>
+<p>I think however it still leaves a few issues:</p>
+<ul>
+<li>Clients can’t see the full set of URL’s used in the request</li>
+<li>Clients are not in control if they choose to allow the redirect
+<ul>
+<li>Think in a banking application perhaps where they might explicitly want to prevent any behaviour that was not expected; you know where paranoia is rife.</li>
+<li>Besides HTTPS, to my knowledge there is no protection against a man in the middle redirect to a an external server (mostly though a defence in depth approach):</li>
+<li>Client requests <a href="http://mysite.org" rel="nofollow noopener">mysite.org</a>
+</li>
+<li>
+<a href="http://mysite.org" rel="nofollow noopener">mysite.org</a> 302: <a href="http://hacker.org" rel="nofollow noopener">hacker.org</a> (to my knowledge if they serve Access-Control-Allow-Origin; they can then serve your application harmful content)</li>
+</ul>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="420">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Besides HTTPS, to my knowledge there is no protection against a man in the middle redirect to a an external server (mostly though a defence in depth approach):</p>
+</blockquote>
+</aside>
+<p>You can enforce that with CSP connect-src whitelisting. The new CSP 1.1 goes further to block redirects unless you opt in <code>"unsafe-redirect"</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>I doubt the redirect control would be added to XHR at this point.</p>
+<p>But good news! <span class="mention">@annevk</span> working out some awesome new APIs for the fetch spec. Maybe the full request/response change could be exposed somehow. I don’t know. I remember there was some tricky CORS permission stuff it’d have to be careful about.</p>
+<p><a class="onebox" href="http://fetch.spec.whatwg.org/#fetch-api" target="_blank">http://fetch.spec.whatwg.org/#fetch-api</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>From a XHR feature set perspective the following two statements are a little contradictory as <code>responseURL</code> appears to only have been in the specification since February. I know that there appears to be issues with the redirection however from an API perspective adding new features that are optionally off should never be an issue.</p>
+<aside class="quote" data-full="true" data-post="2" data-topic="420">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/josh/40/92_1.png" width="20"/> josh:</div>
+<blockquote>
+<p>responseURL (<a href="http://xhr.spec.whatwg.org/#the-responseurl-attribute">http://xhr.spec.whatwg.org/#the-responseurl-attribute</a>) may address some of these concerns.</p>
+</blockquote>
+</aside>
+<aside class="quote" data-post="5" data-topic="420">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/josh/40/92_1.png" width="20"/> josh:</div>
+<blockquote>
+<p>I doubt the redirect control would be added to XHR at this point.</p>
+</blockquote>
+</aside>
+<p>However with that being said; I wasn’t quite aware of the far reaching goals of fetch however I guess the following covers it:</p>
+<aside class="quote">
+<div class="title">
+<div class="quote-controls"></div>
+ http://fetch.spec.whatwg.org/#fetch-api:</div>
+<blockquote>
+<p>This is a work-in-progress section covering a new API that handles slightly more modes of fetching than XMLHttpRequest.</p>
+</blockquote>
+</aside>
+<p><span class="mention">@annevk</span> perhaps you would be able to clear up some of the CORS issues; I did quite a bit of digging before writing the above article back in November however its not always clear the motives and issues causes whilst trying to implement features into the spec - hence this discourse I guess.</p>
+<p>Some of my reasons for wanting full granularity of the request redirection and also control are:</p>
+<ol>
+<li>Headers are currently not visible for redirected requests</li>
+<li>Visibility of the redirected hops through for debug and also security reasons</li>
+<li>Josh has outlined CSP for a security perspective to prevent internal redirecting however for a per request granularity prevention this would need to be done at code time (Lets say for example an external agency owned a certain directory, subdomain or script on the same server)</li>
+<li>A way in which the browser can verify the server behaved exactly as expected.</li>
+<li>As mentioned for single applications; it is useful to behave in the same way for different content type responses from the server HTML/XML/JSON in the same manner; from a client perspective having a full trace of where they have landed is key to displaying the correct template (Assuming a design pattern where front and back end match in URL’s and behaviour).</li>
+</ol>
+<p>Thank you both for your time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p><a href="http://fetch.spec.whatwg.org/#atomic-http-redirect-handling">http://fetch.spec.whatwg.org/#atomic-http-redirect-handling</a> is why there is no such feature. I could see us providing a feature which returns a network error if there’s a redirect and the response otherwise, perhaps, but even that seems somewhat dangerous.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>Brilliant; that makes sense and I like the explicit call outs in the specification.</p>
+<p>The <code>responseURL</code> combined with the CSP certainly covers most of the use cases that I realistically needed from a client side perspective. It certainly appears that it should be possible to allow developers to basically return a null error handler or similar for a redirect - as you mention passing the response through is potentially dangerous… Essentially the followRedirects support back; is this likely something that might be added to the Fetch API?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>You mean the ability to get a network error returned if you stumbled upon a redirect rather than having the redirect followed? I think we might be able to add that at some point. I recommend filing a bug so we can keep track of the request. Probably better to wait a bit for now and have service workers et al get in browsers first.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p><span class="mention">@annevk</span> will do thank you for all your information.</p>
+<aside class="quote" data-post="9" data-topic="420">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/annevk/40/26_1.png" width="20"/> annevk:</div>
+<blockquote>
+<p>Probably better to wait a bit for now and have service workers et al get in browsers first.</p>
+</blockquote>
+</aside>
+<p>Are you suggesting that raising bugs would hold up browser implementation or whatwg should wait for service workers to solidify in browsers to make changes?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2014-06-19</div>
+          <div class="post_content">
+<p>I’m suggesting you file a bug and that I will wait with fixing it until at least service workers v1 is out of the door.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-30</div>
+          <div class="post_content">
+<p>Finally submitted the issue:
+<a class="onebox" href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=26238" target="_blank">https://www.w3.org/Bugs/Public/show_bug.cgi?id=26238</a></p>
+<p>Let me know if there are any issues.</p>
+<p>Thanks again.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

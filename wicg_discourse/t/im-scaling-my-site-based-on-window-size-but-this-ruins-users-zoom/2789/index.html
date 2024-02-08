@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>I&rsquo;m scaling my site based on window size, but this ruins user&rsquo;s zoom</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">I&rsquo;m scaling my site based on window size, but this ruins user&rsquo;s zoom</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<p>For example, check out <a href="http://stage.mapper.ai" rel="nofollow noopener">http://stage.mapper.ai</a>. If you resize your window, you’ll see that the size of things (f.e. the menu) scales up or down. It uses <code>transform:scale()</code> to achieve the affect. But, if you try to zoom (f.e. pressing <code>ctrl-+/-</code>) you’ll notice that this changes the window size, and therefore scale my size in the opposite direction of the user zoom.</p>
+<p>So, the only way to zoom as a user is to modify the font setting, which affects all sites.</p>
+<p>Inspect the <code>div#root</code> element to see the transform applied as you resize your window.</p>
+<p>Any thoughts on how to allow zoom to work? Should I add a UI component that lets the user scale the root font size as a workaround?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-06-23</div>
+          <div class="post_content">
+<p>Looks like an SVG problem — SVG does not support reflowing text to fit, but you might be able to get close by using ems in the <code>&lt;text&gt;</code> layout attributes, instead of <code>transform</code> to position each line:</p>
+<pre><code>&lt;text x="858.2422" y="69.8em" class="st25 st26 st46"&gt;
+  People are always
+  &lt;tspan x="858.2422"  dy="1.5em" class="st25 st26 st46"&gt;on the move.&lt;/tspan&gt;
+&lt;/text&gt;
+</code></pre>
+<p>This wouldn’t be a problem if the text was HTML elements, since those do reflow. It looks like the SVG is coming out of Adobe Illustrator, so good luck with that — Illustrator is as good at exporting SVG as Microsoft Word is at exporting HTML.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-08-05</div>
+          <div class="post_content">
+<p>Hello <span class="mention">@Tigt</span>, thanks for the reply! I think you misunderstood what I meant though. If you visit <a href="http://mapper.ai" rel="nofollow noopener">http://mapper.ai</a> then try zooming with <code>ctr</code>-<code>+</code> or <code>ctrl</code>-<code>-</code>, you’ll see that the site seems to remain the same size.</p>
+<p>This is because the CSS <code>transform</code> that is applied to the whole site (mostly HTML, not SVG) is proportional to the <code>window</code> CSS size. So when you zoom in, the <code>window</code> size gets smaller because the CSS “pixels” are bigger, so in the end the website looks almost the same.</p>
+<p>I’m wondering how to achieve this same thing, but also let the user be able to zoom the whole website.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

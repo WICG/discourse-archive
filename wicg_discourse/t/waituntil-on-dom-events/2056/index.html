@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>waitUntil on DOM Events</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">waitUntil on DOM Events</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-03-07</div>
+          <div class="post_content">
+<p>I would like to offload as much application logic into a Web Worker as possible. That includes logic that handles events. Since event propagation happens synchronously I cannot communicate with a Web Worker in order to determine if an event should be preventDefault-ed or stopPropagation-ed.</p>
+<p>I think a solution could be to add <code>waitUntil</code> (or something similar) to MouseEvents.</p>
+<pre><code class="lang-auto">anchor.addEventListener('click', ev =&gt; {
+  ev.waitUntil(new Promise((resolve) =&gt; {
+    let msg = Object.assign({}, ev);
+    worker.postMessage(msg);
+
+    worker.onmessage = ev =&gt; {
+      if(ev.data.preventPlease) {
+        ev.preventDefault();
+      }
+      resolve();
+    };
+  });
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-03-07</div>
+          <div class="post_content">
+<p>This also looks like a more elegant way to solve my previous concerns around using async code with the user-gesture requirement: <a href="https://discourse.wicg.io/t/user-gesture-restrictions-and-async-code/1640">User-gesture restrictions and async code</a></p>
+<p>So - thumbs up from me!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2017-03-10</div>
+          <div class="post_content">
+<p>I’ve asked the editor of the DOM spec to comment. The <a href="https://discourse.wicg.io/t/waituntil-on-dom-events/2056">use case</a> outlined by Ashley are quite helpful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2017-03-10</div>
+          <div class="post_content">
+<p>This basically breaks the way events work. You can’t just turn all synchronous checks for the canceled flag into asynchronous checks. That requires way too much changes.</p>
+<p>Handling user input differently somehow might be doable, but someone should first write up how user input actually works today in more detail, since that is all still rather messy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-03-10</div>
+          <div class="post_content">
+<p>It’s true you can’t asynchronously cancel all events, e.g. a wheel event needs to know synchronously if it will block scrolling. However I don’t see why it wouldn’t work in general with non-cancellable events. The <code>waitUntil</code> method also helps make the user gesture requirements more reasonable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-03-11</div>
+          <div class="post_content">
+<p>What about only adding waitUntil() for passive listeners? That might at least work for the user gesture requirement.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-03-13</div>
+          <div class="post_content">
+<p>I’m a bit concerned about the user experience of this. E.g. imagine a user clicking on a  <code>&lt;span&gt;</code> inside a link and the link is actually followed like a minute later because the event hadn’t propagated from the <code>&lt;span&gt;</code> to the <code>&lt;a&gt;</code> until then.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-03-13</div>
+          <div class="post_content">
+<p>I don’t really see how this would make that case worse than what is currently possible. For example, a site could be doing something like a sync xhr which could also block for a minute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-03-13</div>
+          <div class="post_content">
+<p>UX-sensitive actions like navigating the page could have a time limit imposed by the browser. For example the page must act on the event within 5 seconds, otherwise it loses the ability to perform the action.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-03-25</div>
+          <div class="post_content">
+<p>Thanks everyone for comments! I agree that there are some possible UX concerns here. I’m not sure if this proposal is worse than the status quo, as a lot of this can be done using <code>new Event</code>.</p>
+<p>Nevertheless, as a browser dev, <span class="mention">@annevk</span>, says this proposal isn’t possible I have to believe him and withdraw the idea.  I am still very much interested in a way to handle events off the main thread; if there is another possible avenue here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-03-26</div>
+          <div class="post_content">
+<p>What? It’s only not possible for cancelable events - non cancelable events can still use this mechanism, right?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-03-29</div>
+          <div class="post_content">
+<p>Here’s another motivating example: a real-world user using a real-world web app we’ve recently published, complaining that they can’t copy data directly, on day 1 of the launch: <a href="https://www.scirra.com/forum/copy-to-clipboard-is-blocked-by-chrome-repeatedly_t189480" rel="nofollow noopener">https://www.scirra.com/forum/copy-to-clipboard-is-blocked-by-chrome-repeatedly_t189480</a></p>
+<p>The reason for this is we have to asynchronously generate the data to copy, and so by the time the data to copy is ready, we no longer have permission to copy data to the clipboard, even if it only took milliseconds.</p>
+<p>We have similar problems with popup windows. We really need a way to relax these restrictions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2017-04-22</div>
+          <div class="post_content">
+<p>How about this modified way?</p>
+<pre><code class="lang-auto">anchor.addEventListener('click', ev =&gt; {
+  ev.preventDefault(); // prevent first
+  worker.postMessage({ ...ev });
+
+  worker.onmessage = ev =&gt; {
+    if (!ev.data.preventPlease) {
+      ev.doDefault(); // do the deferred default action
+    }
+  }
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-05-22</div>
+          <div class="post_content">
+<p>This problem becomes more pressing with OffscreenCanvas and the implications by browser vendors that heavy content like games ought to run in a worker.</p>
+<p>Things like calling preventDefault() and performing user-gesture-restricted actions (which even include playing audio on some platforms) become effectively impossible if you have to postMessage() to a worker in an event handler.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

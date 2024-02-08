@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Identify which of multiple keyboards an event came from</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Identify which of multiple keyboards an event came from</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robatwilliams</div>
+          <div class="creation_date">2019-03-06</div>
+          <div class="post_content">
+<p>When multiple keyboards are available, there is currently no way to distinguish which one a KeyboardEvent came from using web APIs. We should have one.</p>
+<p>Use case 1: special-purpose keyboards/keypads that are used alongside normal keyboards, for example financial <a href="https://www.google.co.uk/search?q=trading+keypad&amp;tbm=isch" rel="nofollow noopener">trading keypads</a> and retail POS keyboards. They are used to provide quick access to regular/time-sensitive actions, while the normal full-sized keyboard is used for other input. The key codes they expose (as far as I know) are the same as for the normal keyboard (but the mappings can be programmed), so the listening application needs to use the source of the key event to determine what action to take.</p>
+<p>Use case 2 (similar): <a href="https://www.google.co.uk/search?tbm=isch&amp;q=gaming+keyboard+one+hand" rel="nofollow noopener">gaming keyboards</a>, if use of the main keyboard is also needed (otherwise the Keyboard Lock API seems like it would do the job).</p>
+<p>Things I found, that don’t help:</p>
+<ol>
+<li>
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/location" rel="nofollow noopener">KeyboardEvent.location</a> - identifies which part of the keyboard the event came from, e.g. the numpad.</li>
+<li>
+<a href="https://w3c.github.io/keyboard-lock/" rel="nofollow noopener">Keyboard Lock API</a> - allows capturing more keys, but not distinguishing where they came from, only works in full screen mode, assumes a single keyboard.</li>
+<li>
+<a href="https://wicg.github.io/keyboard-map/" rel="nofollow noopener">Keyboard Map API</a> - describes the buttons on the keyboard, assumes a single keyboard.</li>
+<li>
+<a href="https://wicg.github.io/InputDeviceCapabilities/" rel="nofollow noopener">Input Device Capabilities</a> - <code>firesTouchEvents</code> lets you identify an on-screen keyboard, but doesn’t help when all keyboards have the same capabilities.</li>
+<li>
+<a href="https://github.com/WICG/webusb" rel="nofollow noopener">WebUSB</a> - prohibits access to devices that expose an HID profile.</li>
+<li>
+<a href="https://github.com/nondebug/webhid" rel="nofollow noopener">WebHID</a> - not intended for keyboards or other devices that are already well-supported through high-level input APIs.</li>
+</ol>
+<p>Some initial rough thoughts on what solutions (of increasing capability) would provide:</p>
+<ol>
+<li>Distinguish which keyboard a KeyboardEvent came from.</li>
+<li>Distinguish whether it came from the “main keyboard” or a secondary one.</li>
+<li>Inform what layout of keyboard it is (e.g. 48-key keypad).</li>
+<li>Inform what particular customised keyboard it is (e.g. FooBroker Fixed-Income trading keypad, where the buttons are labelled to do particular things, and some of the keys are blanked out and others are combined using multi-switch keycaps).</li>
+<li>Ability to discover the custom keyboard before any key presses are made on it</li>
+<li>
+<em>Perhaps the user should need to grant permissions for the above.</em> Allow the application to request distinguishability/information of/about a custom keyboard matching given filter criteria (like in WebUSB) - if a device satisfying the criteria was available, the user would be prompted to grant access.</li>
+<li>Some further capability as seen in WebUSB where the device could have embedded information about which website it should be used with, allowing a notification to be popped up when it’s plugged in.</li>
+</ol>
+<p>I’m not sure what this API would look like, especially given that the existing keyboard API assumes a single keyboard.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robatwilliams</div>
+          <div class="creation_date">2019-03-07</div>
+          <div class="post_content">
+<p>Cross posted to <a href="https://github.com/w3c/uievents/issues/226" rel="nofollow noopener">https://github.com/w3c/uievents/issues/226</a></p>
+<p>The more capable solution ideas above would probably be beyond the scope of UI Events.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robatwilliams</div>
+          <div class="creation_date">2019-03-09</div>
+          <div class="post_content">
+<p>At least some of these kinds of keyboards (e.g. <a href="http://xkeys.com/PISupport/DeveloperIntegration.php" rel="nofollow noopener">X-keys</a>) have multiple modes - including one that exposes the device on the USB HID Consumer Page. That page isn’t a protected usage under WebHID (unlike GenericDesktop&gt;Keyboard/Keypad, so the device could be accessed via WebHID and there is no need for what I’m asking for here.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

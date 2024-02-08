@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Preposal] MDNS Service Discovery API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Preposal] MDNS Service Discovery API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3259_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jcc10</div>
+          <div class="creation_date">2022-08-05</div>
+          <div class="post_content">
+<p>This is not intended to replace The <a href="https://discourse.wicg.io/t/proposal-foreign-origin-space-a-webmanifest-extension-granting-access-to-foreign-origins-to-pwas/5862">[Proposal] Foreign Origin Space</a>. It is meant to operate alongside it for Local Applications.</p>
+<p>This is intended to extend the MDNS (Multicast DNS). Some Example MDNS-SD FQDN:</p>
+<pre><code class="lang-auto">_service._proto.local.
+_sip._tcp.local.
+_googlecast._tcp.local.
+</code></pre>
+<p>Examples for this proposal however are:</p>
+<pre><code class="lang-auto">_80._fileserver._https.local.
+_my_first_chat_server._websocket.local.
+_p2p_game._webrtc.local.
+_walkie_talkie._webrtc.local.
+_closed_captions._webtransport.local.
+</code></pre>
+<p>The format is <code>_port._service._protocol.local</code> with the port being optional</p>
+<p>The following is a abstract TypeScript definition with details below.</p>
+<pre data-code-wrap="ts"><code class="lang-nohighlight">enum Protocols {
+    WebRTC,
+    WebSocket,
+    WebTransport,
+    HTTP, //Optional / Future / Intial Request Allows CORS Override?
+    HTTPS, //Optional / Future / Intial Request Allows CORS Override?
+}
+
+// See Preposal
+type FQDN = string;
+
+abstract class LocalServices {
+    static readonly Protocols = Protocols;
+
+    /**
+     * Begins to advertise a service avalability.
+     * @param MDNS_SD The FQDN of the service.
+     * @param signal Allows for the advertisement to be cancled / stopped.
+     */
+    abstract advertise(MDNS_SD: FQDN, signal: AbortSignal): AsyncIterable&lt;RTCPeerConnection|WebSocket|WebTransport&gt;;
+
+    /**
+     * Watches for newly avalable services. (Passive)
+     * @param MDNS_SD The FQDN of the service.
+     * @param signal Allows for the watch to be cancled / stopped.
+     */
+    abstract watch(MDNS_SD: FQDN, signal?: AbortSignal): AsyncIterable&lt;LocalServiceProvider&gt;;
+
+    /**
+     * Sends a request for devices providing a service to respond. (Active)
+     * @param MDNS_SD The FQDN of the service.
+     */
+    abstract find(MDNS_SD: FQDN): void;
+
+    /**
+     * Request approval to connect to service without connecting to service.
+     * @param MDNS_SD The FQDN of the service.
+     * @param name Name must fully include the protocol name in the FQDN, `_` may be converted into ` `, `-`, and punctuation(?) case insensitive.
+     */
+    abstract request(MDNS_SD: FQDN, name: string): Promise&lt;boolean&gt;;
+}
+
+abstract class LocalServiceProvider {
+    /**
+     * This allows for identifying the service provider in case of repeat appearances.
+     */
+    abstract uuid: Symbol;
+
+    /**
+     * The protocol of the Service Provider.
+     */
+    abstract protocol: Protocols;
+
+    /**
+     * Provides the upgrade / connection method for the ServiceProvider.
+     */
+    abstract get upgrade(): {WebRTC(): RTCPeerConnection} |
+                            {WebSocket(): WebSocket} |
+                            {WebTransport(): WebTransport}
+}
+</code></pre>
+<p>This should allow for fully offline services for everything from games to file transfers in PWA’s. Default ports may need to be decided on for protocols or a basic negotiation protocol may need to be implemented for ports.</p>
+<p>During first request / announcement the user will have to approve of the connection. It may also be a good idea to require the app be launched as a PWA first (similar to <a href="https://discourse.wicg.io/t/proposal-foreign-origin-space-a-webmanifest-extension-granting-access-to-foreign-origins-to-pwas/5862">[Proposal] Foreign Origin Space</a>), however this would limit local multiplayer in web-games that haven’t been installed for example.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

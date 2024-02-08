@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Foreign Origin Space - a Webmanifest extension granting access to foreign origins to PWAs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Foreign Origin Space - a Webmanifest extension granting access to foreign origins to PWAs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">whatcouldgowrong</div>
+          <div class="creation_date">2022-05-05</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#foreign-origin-space-1" name="foreign-origin-space-1"></a>Foreign Origin Space</h1>
+<p>This could be a proposal for adding a PWA only feature that would allow developers to fetch websites from predefined foreign origins.
+PWAs and the ongoing efforts from Chrome and Edge with new features like the FileSystemApi or desktop support for PWAs, changes the js landscape today to a point where we could scrap Electron and subtitute it with PWAs.
+But there is one important feature missing to make viable PWA apps today: The Cross Origin Fetch.
+Now with the implementation of CORS, developers have a hard time without a backend to create thirdparty clients for social-media sites, email clients, rss feeds, podcasts or other interact with other obscure APIs that tend to have not implemented cors or even refuse to. The Workaround for this is often times a (third party) backend that proxies every request, potentially exposing secret user information or secret data.
+Today there are multiple requests/proposals that requests like <a href="https://discourse.wicg.io/t/proposal-full-network-access-in-progressive-web-apps/3602">unrestricted network access</a>, which clearly shows the need for such an API but also currently misses a few points in the security model to prevent abuse.
+This Proposal has a different take on foreign origin fetches and tries to be as safe as possible, yet open to any improvement/input from the community.</p>
+<h2>
+<a class="anchor" href="#proposed-process-2" name="proposed-process-2"></a>Proposed Process</h2>
+<ol>
+<li>Developer declares a foreign origin space in his Webmanifest he would like to access.<pre><code class="lang-json">{
+ "foreign_origin_space": [
+     "https://graphqlapi.com/query"
+     "https://api.example.com/*",
+     "https://thirdexample.com/api/*",
+     "https://*.anotherexample.com/*",
+ ]
+}
+</code></pre>
+</li>
+<li>User installs the PWA.</li>
+<li>User opens the PWA and gets asked if he would like to allow the defined origin spaces, with checkboxes to deselect urls that he (or the company policy) doesnt want.</li>
+<li>PWA can detect which urls are granted through <code>grantedOriginSpace</code> which lists allowed urls.<pre data-code-wrap="js"><code class="lang-nohighlight">{
+ allowed: [
+     "https://api.example.com/*",
+     "https://*.anotherexample.com/*"
+ ],
+ disallowed: [
+     "https://thirdexample.com/api/*",
+     "https://graphqlapi.com/query"
+ ]
+}
+</code></pre>
+</li>
+<li>User can manage origin spaces in the permissions settings like every other permission (camera, microphone, etc.)</li>
+</ol>
+<h2>
+<a class="anchor" href="#how-to-secure-foreign-origin-spaces-3" name="how-to-secure-foreign-origin-spaces-3"></a>How to secure foreign origin spaces?</h2>
+<ul>
+<li>Only in a secure context (TLS/HTTPS)</li>
+<li>PWA has to be installed. (added to the Homescreen on firefox)</li>
+<li>User has to intentionally open the PWA and grant permission</li>
+<li>No Cookies are shared with the PWA. Using Partitioned Cookies like <a href="https://developer.chrome.com/docs/privacy-sandbox/chips/" rel="noopener nofollow ugc">CHIPS</a> for Chrome and Firefox <a href="https://hacks.mozilla.org/2021/02/introducing-state-partitioning/" rel="noopener nofollow ugc">State Partitioning</a>
+</li>
+<li>The Origin Space is bound to the Webmanifest.</li>
+<li>No additional urls can be requested through js calls</li>
+<li>User has the option to deselect certain urlspaces.</li>
+<li>Companies have an option to implement a Company Policy, which forbids certain urlspaces.</li>
+</ul>
+<h2>
+<a class="anchor" href="#potential-risks-4" name="potential-risks-4"></a>Potential Risks</h2>
+<ul>
+<li>
+<em>Drive-by Permission Grabbing</em> <br/>
+The User has to intentionally install the app <strong>and</strong> has to open the app to grant the permissions.
+The nagging website would have to go through some serious hoops to get permission.</li>
+<li>
+<em>User doesnt know about potential bad urls</em> <br/>
+Desktop apps typically dont reveal their apis, this approach shows them the urls in questions, asks for permission and sandbox existing cookie jars.</li>
+<li>
+<em>Companies could reveal internal websites, through this</em> <br/>
+Firefox, Edge &amp; Chrome have a Company Policy feature where companies can preset various amount of settings.
+A new setting for could be disallowed origin spaces.</li>
+<li>
+<em>A PWA could sniff the network and then ask for access</em> <br/>
+PWAs are bound to their Webmanifest and cannot dynamically ask for new urls through js calls.</li>
+</ul>
+<p>I hope that I could give this stalled request a new spin and am happy for your feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3259_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jcc10</div>
+          <div class="creation_date">2022-08-03</div>
+          <div class="post_content">
+<p>I was just about to write a half-baked proposal for this use case.</p>
+<p>I would like to add my two cents.</p>
+<p>It should be in the manifest, but it should act similar to android in that you only ask for the permission <em>when you need it</em> so there would be a JS method for requesting permission with a pop-up. (though again, still has to be in the manifest.)</p>
+<p>Pop ups should say something like:
+${app name} would like to act as you on the following websites:</p>
+<ul>
+<li>Website Domain
+<ul>
+<li>URL Schema</li>
+<li>URL Schema</li>
+</ul>
+</li>
+<li>Website Domain
+<ul>
+<li>URL Schema</li>
+</ul>
+</li>
+</ul>
+<p>With the URL Schemas in a expandable portion since it’s better for people to freak out over giving a app too much permissions over confusing them about the specific url’s. The website domains should also show the website favicon.</p>
+<p>Other than that you have a much more thought out preposal and I hope it gets pushed forward quickly so people can make community PWA’s for websites that could really use them.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Viewport HTTP header</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Viewport HTTP header</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2151_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">irori</div>
+          <div class="creation_date">2018-12-12</div>
+          <div class="post_content">
+<h2>Problem statement</h2>
+<p>The <a href="https://tools.ietf.org/html/rfc5988" rel="nofollow noopener"><code>Link</code> HTTP header</a> can have a "media" parameter that specifies which media the resource applies to.</p>
+<p>For example, if there’re the following HTTP headers, <code>narrow.css</code> is applied if the viewport width is less than 640px, otherwise <code>wide.css</code> is applied.</p>
+<pre><code class="lang-auto">Link: &lt;narrow.css&gt;; rel="stylesheet"; media="(max-width:639px)"
+Link: &lt;wide.css&gt;; rel="stylesheet"; media="(min-width:640px)"
+</code></pre>
+<p>However, browsers cannot evaluate media queries that depend on viewport dimensions without preprocessing the HTTP response body, because viewport dimensions are determined by the <a href="https://drafts.csswg.org/css-device-adapt/#viewport-meta" rel="nofollow noopener">viewport <code>&lt;meta&gt;</code> element</a> or the <a href="https://drafts.csswg.org/css-device-adapt/#atviewport-rule" rel="nofollow noopener">@viewport rule</a>.</p>
+<p>This is especially problematic with <code>Link rel=preload</code> headers, because its purpose is to initiate a resource load as early as possible, but browsers have to delay them until viewport dimensions are fixed.</p>
+<h2>Proposed solution</h2>
+<p>Today we don’t have an HTTP header-based mechanism to set a viewport. While it is not an http-equiv, couldn’t we just map the <code>&lt;meta name=viewport&gt;</code> into a <code>Viewport</code> header? For example:</p>
+<pre><code class="lang-auto">Viewport: width=device-width, initial-scale=1
+</code></pre>
+<p>The header value would be processed in the same way as the <code>&lt;meta&gt;</code> viewport, as if it came before any <code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code>, or <code>&lt;style&gt;</code> elements. Because of this, the Viewport header may be later overridden by ones set by <code>&lt;meta&gt;</code> viewport tags in the response body, but <code>Viewport</code> header would be a strong hint for browsers to start fetching resources for <code>Link</code> headers with media queries.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2151_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">irori</div>
+          <div class="creation_date">2018-12-13</div>
+          <div class="post_content">
+<p>Just to be clear, this proposal is for a HTTP <strong>response</strong> header which <strong>sets</strong> the viewport dimensions of the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2157_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domfarolino</div>
+          <div class="creation_date">2018-12-13</div>
+          <div class="post_content">
+<p>As you may already know, I think this sounds like a good primitive to include, and when we came across this sort of thing recently with the  impl I was surprised something like it didn’t already exist. Am interested in hearing more feedback from web devs though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/583_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinthomson</div>
+          <div class="creation_date">2018-12-13</div>
+          <div class="post_content">
+<p>YMBII: <a href="https://httpwg.org/http-extensions/client-hints.html" rel="nofollow noopener">https://httpwg.org/http-extensions/client-hints.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-12-13</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="4" data-topic="3233">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/martinthomson/40/583_1.png" width="20"/> martinthomson:</div>
+<blockquote>
+<p>YMBII: <a href="https://httpwg.org/http-extensions/client-hints.html" rel="nofollow noopener">https://httpwg.org/http-extensions/client-hints.html</a></p>
+</blockquote>
+</aside>
+<p>Client Hints are <em>request</em> headers that send the server with (among other hints) the viewport dimensions <em>already set</em>. As <span class="mention">@irori</span> pointed out, this proposal is about a response header that sets the viewport, similarly to <code>&lt;meta&gt;</code> tag based mechanisms we have today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/858_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nhoizey</div>
+          <div class="creation_date">2018-12-13</div>
+          <div class="post_content">
+<p>Anything that can help enhance RWD and WebPerf is welcome! <img alt=":+1:t2:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/+1/2.png?v=6" title=":+1:t2:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-12-18</div>
+          <div class="post_content">
+<p>I believe browsers download all stylesheets, even ones they can’t use, and only decide to not apply them later. This sucks, but they haven’t changed the behavior in decades.</p>
+<p>Firefox is also the only browser that respects a stylesheet Link header, so maybe ask Mozilla what they think about this proposal?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2018-12-19</div>
+          <div class="post_content">
+<p>It’d be easy enough to include this in Client-Hints, with a header that reflects <code>Viewport-Width</code> on the response side (like <code>Content-DPR</code> does for <code>DPR</code>).</p>
+<p>In a perfect world, these would be named something like <code>Accept-Viewport</code> and <code>Viewport</code> or <code>Content-Viewport</code>, but that’s just aesthetics.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2019-02-13</div>
+          <div class="post_content">
+<blockquote>
+<p>It’d be easy enough to include this in Client-Hints, with a header that reflects  <code>Viewport-Width</code>  on the response side (like  <code>Content-DPR</code>  does for  <code>DPR</code> )</p>
+</blockquote>
+<p>Would <code>Content-Viewport</code> be a simple number, like <code>Viewport-Width</code> and <code>Content-DPR</code>, or would it have the <a href="https://drafts.csswg.org/css-device-adapt/#viewport-meta" rel="nofollow noopener">full semantics</a> of <code>&lt;meta name=viewport&gt;</code>, like <span class="mention">@irori</span>’s initial proposal?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

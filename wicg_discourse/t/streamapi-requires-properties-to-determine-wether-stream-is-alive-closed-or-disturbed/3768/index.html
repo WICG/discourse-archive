@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>StreamAPI requires properties to determine wether stream is alive, closed or disturbed</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">StreamAPI requires properties to determine wether stream is alive, closed or disturbed</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2466_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rumkin</div>
+          <div class="creation_date">2019-07-25</div>
+          <div class="post_content">
+<h2>Proposal</h2>
+<ol>
+<li>Add methods or properties to determine wether Stream instance is readable or writable.</li>
+<li>Add method or property to determine what amount of data has already written to/read from the stream.</li>
+<li>Add method or property to determine if Stream is canceled.</li>
+</ol>
+<h2>Explanation</h2>
+<p>Today ReadableStream and WritableStream classes have no properties or methods to determine are they alive, closed or disturbed on JS side.
+I found <a href="https://github.com/yutakahirano/fetch-with-streams/issues/37#issuecomment-103113585" rel="nofollow noopener">some opinions</a> of core members that this behavior is unnecessary. In the same time it is using by browser itself for example in <a href="https://github.com/chromium/chromium/blob/40935da55702f890dc4fa0598db880995e965902/third_party/blink/renderer/core/fetch/response.cc#L301" rel="nofollow noopener">Response constructor</a>. And I don’t see any reasonable explanation for this .</p>
+<p>Such behavior makes impossible to implement some APIs which works with streams. Because a lack of this flags makes code unreliable and unpredictable.</p>
+<p>I’m working on a web server compatible with WebAPI and it’s near to impossible to create Response object which could receive ReadableStream as constructor argument and to throw an exception if it was disturbed.</p>
+<p>There is one hack which can be used to check if stream was disturbed by using Response’s constructor:</p>
+<pre><code class="lang-javascript">var stream = new ReadableStream()
+stream.cancel()
+
+try {
+  new Response(stream);
+} catch (err) {
+ // Is disturbed
+}
+</code></pre>
+<p>But I think it should be fixed in specification.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-07-30</div>
+          <div class="post_content">
+<p>I think it might be best to take this one directly to the WHATWG’s repository. <span class="mention">@domenic</span>, agree? Or do you want to discuss here?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="3768">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rumkin/40/2466_2.png" width="20"/> rumkin:</div>
+<blockquote>
+<p>Today ReadableStream and WritableStream classes have no properties or methods to determine are they alive, closed or disturbed on JS side.</p>
+</blockquote>
+</aside>
+<p>When a <code>ReadableStream</code> is read there are <code>value</code> and <code>done</code>. There is also <code>ReadableStreamDefaultReader.closed</code> property which is a <code>Promise</code>. What methods are you proposing?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2466_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rumkin</div>
+          <div class="creation_date">2019-08-12</div>
+          <div class="post_content">
+<p>There should be boolean flags ‘disturbed’, ‘opened’ (due to ‘closed’ is taken), not a promises. Because you couldn’t use promises in constructors. Requirement of such flags is proven by Response implementation, which relies on them.</p>
+<p>Also, If you rely on <code>value</code> and <code>done</code>, then you should to disturb the stream and thus couldn’t use it in <code>Response</code>. Property <code>closed</code> is blocking execution flow and could create infinite Promise if the stream never closes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2466_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rumkin</div>
+          <div class="creation_date">2019-12-05</div>
+          <div class="post_content">
+<p><span class="mention">@marcosc</span> I saw Domenic asked to resign him from TC39 proposals. Seems like it’s stuck. How could we move this forward?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2581_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ricea</div>
+          <div class="creation_date">2019-12-13</div>
+          <div class="post_content">
+<p>Please file these as separate issues at <a href="https://github.com/whatwg/streams/issues">https://github.com/whatwg/streams/issues</a>. Streams standard contributors are not necessarily going to be looking here.</p>
+<p>Proposal 2. already exists as <a href="https://github.com/whatwg/streams/issues/367">https://github.com/whatwg/streams/issues/367</a>. It’s closed, but you could request a re-examination.</p>
+<p>It’s unfortunate that that there’s no way to implement the Response constructor from JavaScript because the [[disturbed]] slot is not exposed. I have mixed feelings about exposing it because it’s unfortunate that it exists and I don’t want to encourage increased usage. I recommend filing this as a separate issue anyway.</p>
+<p>My personal opinions on each proposal:</p>
+<blockquote>
+<ol>
+<li>Add methods or properties to determine wether Stream instance is readable or writable.</li>
+</ol>
+</blockquote>
+<p>Problematic because there’s no guarantee that the streams will still be readable when all microtasks have run.</p>
+<blockquote>
+<ol start="2">
+<li>Add method or property to determine what amount of data has already written to/read from the stream.</li>
+</ol>
+</blockquote>
+<p>Problematic because it would add extra overhead.</p>
+<blockquote>
+<ol start="3">
+<li>Add method or property to determine if Stream is canceled.</li>
+</ol>
+</blockquote>
+<p>Has similar problems to 1., but is a bit better because “canceled” is a terminal state and so there’s no way it’s going to become uncanceled again.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2466_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rumkin</div>
+          <div class="creation_date">2019-12-15</div>
+          <div class="post_content">
+<p>Thanks for your reply. But I have strong concerns about this. Lack of control leads to uncertain solutions and tricky logic to avoid race conditions. While stream isn’t cancelled or closed, even single byte read could lead us to invalid result on the processing steps. If we want to summarize values from a stream we would get invalid sum if any value already has been taken from it. If we parse HTTP request we would generate Parsing error, even if there is none. And the <code>isDisturbed</code> flag in C++ code is a consequence of this lack of control.</p>
+<p>Stream related race conditions should be solved with exclusive borrowing, that <code>getReader()</code> do and flags. Here it is a logic of such behavior:</p>
+<ol>
+<li>Check stream reading has been initiated or stream is cancelled.</li>
+<li>Check stream has not been borrowed with <code>Stream#locked</code>.</li>
+<li>Borrow stream with <code>Stream#getReader()</code>.</li>
+<li>Initiate reading.</li>
+</ol>
+<p>After this steps possible states are: a) start chunk received b) stream cancelled. In the current form we have three states: a1) start chunk received, a2) intermediate chunk received and b) stream cancelled, and to decide wether it is <code>a1</code> or <code>a2</code> is just impossible, thus we stuck in a superposition.</p>
+<p>The situation when streams become free flowing in the memory without being borrowed by anyone is not a proper case of stream usage. It’s a fault state which should throw an error and shouldn’t be decided as a correct work.</p>
+<p>Thanks, again for response and suggestions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-12-23</div>
+          <div class="post_content">
+<p>Apologies for the delay. Rereading, it still appears that these issues need to be taken up in the Streams repository itself (as <span class="mention">@ricea</span> suggested).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2466_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rumkin</div>
+          <div class="creation_date">2019-12-26</div>
+          <div class="post_content">
+<p>Thanks. I had already opened an issue (<a href="https://github.com/whatwg/streams/issues/1025" rel="nofollow noopener">#1025</a>).</p>
+<p>What should I do to promote it better, maybe notify someone?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-12-27</div>
+          <div class="post_content">
+<p>I don’t think you need to do much. The right people are all notified - just be mindful that it can take a while.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

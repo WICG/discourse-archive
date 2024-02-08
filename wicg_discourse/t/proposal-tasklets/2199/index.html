@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Tasklets</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Tasklets</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-15</div>
+          <div class="post_content">
+<p>We would like to propose <a href="https://github.com/GoogleChrome/tasklets" rel="nofollow noopener">Tasklets</a> – an API to make it easier for developers to move work off the main thread/UI thread.</p>
+<p>Jank remains a problem. While making a lot of APIs asynchronous by default helped, some work is inherently atomic. iOS, Android and other native platforms are very strict about the usage of any APIs not critical to UI manipulation on the main thread. The web seems to be the odd one out. WebWorkers already allow developers to move work to another thread, but are rather expensive and clunky to use with only <code>postMessage()</code> as a means of communication.</p>
+<p>Tasklets would allow developers to move work to another thread in a very ergonomic way. As the name suggests, a Tasklet is a Worklet that runs user code. This means it is more lightweight than a WebWorker. Also, a single OS thread could be shared between multiple tasklets, making it feasible to use on memory-restricted mobile devices as well.</p>
+<p>Please take a look at the <a href="https://github.com/GoogleChrome/tasklets" rel="nofollow noopener">explainer</a> above for usage, syntax and more details.</p>
+<p><span class="mention">@iank</span>, <span class="mention">@dknox</span> and myself will be happy to answer any questions you might have.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>I’m glad to see that threading is being worked on. Can you explain this:</p>
+<blockquote>
+<p>This means it is more lightweight than a WebWorker.</p>
+</blockquote>
+<p>What properties make it more lightweight?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>I guess the best thing I can do is refer you to the official <a href="https://drafts.css-houdini.org/worklets/" rel="nofollow noopener">Worklet spec</a> from Houdini. A tasklet is a special worklet. The gist is that a single OS thread can host multiple worklets (from different origins, too!) and they have different lifetime constraints.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>Since this is a promise based API, it means that the Tasklet’s role is limited to running functions on the main thread’s behalf. Have you considered how a Tasklet might initiate communication? For example, if the Tasklet was performing expensive calculations periodically, how could it send data back to the main thread?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>Yes, we have considered that! That’s why <a href="https://github.com/GoogleChrome/tasklets#events" rel="nofollow noopener">the explainer suggests allowing tasklets to be an <code>EventTarget</code></a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>Ah, ok, I was wondering what the EventTarget stuff was about. Ok, that makes sense then.  Side note, the ability to extend EventTarget would be great to have in the main thread as well.</p>
+<p>Going back to the perf considerations of worklets, the spec says that they have a <a href="https://drafts.css-houdini.org/worklets/#the-global-scope" rel="nofollow noopener">limited global scope</a>. Is the scope defined by each subtype of worklet, meaning will Tasklet define its global scope? If so, what things will be left out?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>Yes, each subtype defines what is exposed in their scope. We haven’t figured it out in detail (there’s only a <a href="https://github.com/GoogleChrome/tasklets#apis-exposed" rel="nofollow noopener">short passage in the explainer</a>), but as a rule thumb for now: “If it’s synchronous, the API is not exposed in Tasklets”.</p>
+<p>Other than that we’d like to make tasklets as divers and generically applicable as possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<blockquote>
+<p>“If it’s synchronous, the API is not exposed in Tasklets”</p>
+</blockquote>
+<p>Isn’t the benefit of multi-threading that you can run synchronous code without blocking? Your example has <code>doSomeExpensiveProcessing</code> which I presume is synchronous.</p>
+<p>It sounds like it aims to have a similar global scope to service workers. If all these APIs are added (fetch, indexeddb, cache api etc etc) will it still be lighter than a worker?</p>
+<p>I guess it boils down to, is this really a worklet with more APIs, or a worker with convenience? If it turns out it’s closer to a worker, the API should reflect this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>(<span class="mention">@iank</span> needs to correct me here if I’m wrong)</p>
+<p>The main reason this is designed as a worklet and not a worker is so that tasklets from different origins can potentially share a single OS thread on mobile devices. To avoid one tasklet starving out others, we still want to strongly encourage mostly asynchronous work.</p>
+<p>Yes, <code>doSomeExpensiveProcessing()</code> was supposed to be a block of synchronous work to show that in a tasklet it is “okay” to have these bigger chunks of synchronous work, as they don’t block rendering, but developers still need to be mindful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>Is a new global created for every call to the tasklet, or is it a shared global (like a cross-origin shared worker)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>If I understand your question correctly: Each call to <code>addModule()</code> will create a new instance of that tasklet. On which thread ends up is an implementation detail and left up the UA.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>What’s important to me is that bad APIs are blacklisted rather than good APIs be whitelisted.  If this API goes through I’m assuming that would essentially deprecate Web Workers, so Tasklets need to be at least as powerful. It’s already a problem that Workers are often forgotten about (ex. FormData not being supported in Safari workers).  But it sounds like you’re taking the right approach here, so I’m happy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="2199">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/matthewp/40/1159_1.png" width="20"/> matthewp:</div>
+<blockquote>
+<p>I’m assuming that would essentially deprecate Web Workers</p>
+</blockquote>
+</aside>
+<p>I’m not sure that is a direct consequence. WebWorkers still have a use-case for extremely heavy synchronous work (re-encoding videos?! idk). But your concern is definitely something to keep in mind <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="10" data-topic="2199">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>Is a new global created for every call to the tasklet, or is it a shared global (like a cross-origin shared worker)?</p>
+</blockquote>
+</aside>
+<p>By default (in my head at least <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/>) here is one TaskletGlobalScope associated with the window.tasklet.</p>
+<p>Calling <code>tasklet.addModule('thing.js');</code> will load the script inside the same global by default.</p>
+<p>The key there here is that by default libraries &amp; user code shares the same global and thread instead of having multiple globals &amp; threads which have higher memory cost.</p>
+<p>Potentially tasklets on different origins could live on the same thread, but this would be up to each user-agent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="2199">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/matthewp/40/1159_1.png" width="20"/> matthewp:</div>
+<blockquote>
+<p>are blacklisted rather than good APIs be whitelisted.  If this API goes through I’m assuming that would essentially deprecate Web Workers, so Tasklets need to be at least as powerful. It’s already a problem that Workers are often forgotten about (ex. FormData not being supported in Safari workers).  But it sounds like you’re taking</p>
+</blockquote>
+</aside>
+<p>That section of the explainer is basically we don’t want sync xhrs and similar things inside the TaskletGlobalScope. Nearly every API available in a worker would be available here. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>Sync APIs inside workers are ok, as a <code>new Worker</code> script assumes a separate thread for processing, e.g. it is fine to have a worker which does:</p>
+<pre><code class="lang-auto">while(true) {
+  self.postMessage({prime: calculateNextPrime()});
+}
+</code></pre>
+<p>… and never yields, we want different pieces of code to share the same thread, for background processing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>It should also be noted that this isn’t a “new” idea.</p>
+<p>There are lots of different libraries on top of workers today which do things in a similar spirit:</p>
+<p>E.g.</p>
+<ul>
+<li><a href="https://github.com/nolanlawson/promise-worker" rel="nofollow noopener">https://github.com/nolanlawson/promise-worker</a></li>
+<li><a href="http://catilinejs.com/" rel="nofollow noopener">http://catilinejs.com/</a></li>
+<li><a href="http://www.hamsters.io/" rel="nofollow noopener">http://www.hamsters.io/</a></li>
+</ul>
+<p>…we think it’d be great if we could get a solution which we can have by default on the platform <img alt=":grinning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/grinning.png?v=5" title=":grinning:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="2199">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/i/ecd19e/40.png" width="20"/> iank:</div>
+<blockquote>
+<p>one TaskletGlobalScope associated with the window.tasklet.</p>
+</blockquote>
+</aside>
+<p>Unless I’m missing something, that doesn’t feel quite right.</p>
+<p>It suggests that…</p>
+<pre><code class="lang-auto">tasklet.addModule('foo.js');
+tasklet.addModule('bar.js');
+tasklet.addModule('//other-origin/script.js');
+</code></pre>
+<p>…would share a global. But then multiple calls to <code>tasklet.addModule('//other-origin/script.js');</code> from other origins couldn’t share the same global.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="2199">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jake_archibald/40/705_1.png" width="20"/> Jake_Archibald:</div>
+<blockquote>
+<p>But then multiple calls […] couldn’t share the same global.</p>
+</blockquote>
+</aside>
+<p>The same tasklet could be instantiated in the same global multiple times, couldn’t it? That’s how I thought about it so far.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>That doesn’t mean “one TaskletGlobalScope associated with the window.tasklet” then</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3505_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">surma</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<p>My bad. I was confusing scope with underlying thread. I think each tasklet would be isolated in terms of scope.</p>
+<p><span class="mention">@iank</span> should confirm/correct me here.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

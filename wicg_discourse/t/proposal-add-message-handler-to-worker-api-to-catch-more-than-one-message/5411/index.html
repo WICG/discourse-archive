@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Add message handler to worker API to catch more than one message</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Add message handler to worker API to catch more than one message</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3580_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nekdolan</div>
+          <div class="creation_date">2021-06-29</div>
+          <div class="post_content">
+<p>The current Worker.onmessage only provides the oldest message to the worker even if there are several on the stack. I propose a function “onAllmessage” that would be called with the same MessageEvent but with an array of events instead of one.</p>
+<p>Reasoning: When a worker receives a message it will immediately call the message handler, however if the worker is busy because of a calculation, then the even handler will be called after the worker is no longer busy. During that time the worker may receive several messages and that means that all of those messages will be called one by one every time the worker is free. Depending on the logic one might need some, all or perhaps only the last message from the stack when the first message arrives.</p>
+<p>In my use case I only needed the last message and every time I got a message I would start an algorithm that would block the worker for a few seconds, which meant that it would take a considerable time to reach the message I actually needed.</p>
+<p>My workaround was to initiate a setTimeout every time the worker received a message and cancel the previous one with the same call. The setTimeout allows the rest of the messages to be handled and only the callback of the last will be called. This works, but if my worker received a lot of messages very fast, it would simply stop doing anything. If I we had an event handler to catch all messages this would not happen and we wouldn’t need a workaround.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3593_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxKuNG_Rungnakorn</div>
+          <div class="creation_date">2021-08-07</div>
+          <div class="post_content">
+<p><a href="mailto:Rungnakorn.kamyan@gmail.com">Rungnakorn.kamyan@gmail.com</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

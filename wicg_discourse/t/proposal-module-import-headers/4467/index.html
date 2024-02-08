@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Module Import Headers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Module Import Headers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Randy-Buchholz</div>
+          <div class="creation_date">2020-05-17</div>
+          <div class="post_content">
+<h2>Introduction</h2>
+<p>In a module, <code>import</code> produces a <code>GET</code> to a server and processes the results in a specific way. While the browser is aware that an <code>import</code> is taking place, the server isn’t. Letting the server know the response will be processed as an <code>import</code> opens up many possibilities.</p>
+<p>Commonly an <code>import</code> request is made for a static file with something like - <code>import { Foo } from "/bar.mjs";</code>. If the response contains something like <code>export class Foo { }</code>, import is happy.</p>
+<p>Because the request is a standard <code>GET</code>, we can include query parameters:<br/>
+<code>import { Class1, Class2 } from "/ModuleService.mjs?one=Class1&amp;two=Class2";</code></p>
+<p>In this case, <code>ModuleService</code> represents an entry point into a process that dynamically builds the response. We can intercept the request in the request pipeline to do this. Again, as long as the response contains something like <code>export Class1 { } export Class2 { }</code>, import is happy.</p>
+<p>This approach allows us to do things like manage small discrete modules in our source, but avoid having to import each required module individually. We can use this for things like implementing primitive forms of (pseudo) dependency injection.</p>
+<pre><code class="lang-auto">import { Dependency1, Dependency2, Dependency3 } 
+from "/diService.mjs?\
+asm1.ns1=Dependency1&amp;\
+asm2.ns2=Dependency2,Dependency3";
+
+export class OperationalClass {
+  #dependency1;
+  #dependency2;
+  #dependency3;
+  constructor() {
+    this.#dependency1 = new Dependency1();
+    this.#dependency2 = new Dependency2();
+    this.#dependency3 = new Dependency3();
+  }
+  doStuff(){
+    const x = this.#dependency1.invokeFunction();
+  }
+}
+</code></pre>
+<p>When an import of <code>OperationalClass</code> is requested, the server can parse the imports, and package all four modules/classes into a single file. This is only one possible use of this approach.</p>
+<h2>Problem</h2>
+<p>A problem with this is that while the browser knows it is expecting a module when it requests an <code>import</code>, the server doesn’t explicitly know it needs to return a response in the form of an import response. We can use tricks like flags in the query string to indicate an import and inspect the query string for these flags in the request processing pipeline, but this is cumbersome and error prone. The imbalance between what the browser knows and what the server knows is limiting and problematic.</p>
+<h2>Solution</h2>
+<p>A better approach is to indicate an <code>import</code> is being requested in the request header. This provides simple and explicit information the request pipeline can use to route the request.</p>
+<h2>Proposal</h2>
+<p>Proposed: When an <code>import</code> produces its <code>GET</code> request, it adds request header information to indicate an “import response” is being requested.</p>
+<h3>Details</h3>
+<p>This proposal does not specify the specific headers, but identifies the need for a “module import” header group, and two header items:</p>
+<ol>
+<li>Import Indicator - this item is used as the primary filter by the request pipeline.<br/>
+If the indicator is not present or “false” the request is not an import request.
+If the indicator is present or “true” the request is an import request.
+Optionally, the indicator can be valued for use as a switching parameter.</li>
+<li>Import Data - this item is a string or set of Key Value Pair that contains information used in processing the request. (e.g., the query string values in the example).</li>
+</ol>
+<h2>Implementation</h2>
+<p>The proposal can be implemented in two stages.</p>
+<p>The first stage simply adds a single header item to the request. This is (essentially) a flag - without value or with a default value. This should be a low impact effort, as it creates no changes visible to the developer, requires little code to implement, and has the only effect of creating a new header entry. Since no data is being managed, the <code>import</code> statement is unchanged - data can still be sent in the query string. This alone provides significant value.</p>
+<p>Stage two would alter the import statement to accept parameters. The details need to be discussed, but a simple version might be:</p>
+<pre><code class="lang-auto">import { Item }
+from "/target"
+with [parameters];
+</code></pre>
+<p>Any information provided in the <code>with</code> parameters would be written to the <code>Import Data</code> header item. The example might look something like:</p>
+<pre><code class="lang-auto">import { Dependency1, Dependency2, Dependency3 } 
+from "/diService.mjs"
+with [
+   ["asm1.ns1", "Dependency1"],
+   ["asm2.ns2", "Dependency2, Dependency3"]
+];
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kaizhu256</div>
+          <div class="creation_date">2020-05-19</div>
+          <div class="post_content">
+<p>i think using url-search queries are perfectly fine.  url-construction requires less tooling and are easier to inspect than http-headers when things inevitably go wrong and you have to troubleshoot why a module you requested is incorrectly configured.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Randy-Buchholz</div>
+          <div class="creation_date">2020-05-23</div>
+          <div class="post_content">
+<p>There are several problems with using a query string, both conceptually and practically. And, I don’t think working with headers is any more difficult here. The “users” of this are primarily those writing request handlers on the server. Application developers wouldn’t really know this existed since <code>import</code> is doing this behind the scenes on the browser. In these cases we are usually already in the headers. Inspecting the query is really more work and requires building more tooling.</p>
+<p>The conceptual problem is that the information here is essentially meta-data about the request, similar to <code>content-type</code>. This information is more “processing directives” than user data. This type of information belongs in the headers. Which leads to the practical problems…</p>
+<p>When you start adding “processing directives” to a query string, and making the user responsible for them you complicate and restrict their work. They need to place boiler-plate parameters in the string which is more work, more error prone, and something that should be automated.</p>
+<p>Worse though, is that you are creating “reserved words”. Assume that your handler is looking for imports to see if it should process some of these differently than “static file” requests or “static import” requests. You might choose to add a parameter <code>dynamic</code> to signify this. Now, you need to parse the query string of <em>every</em> request to look for that parameter. This is happening early in the pipeline (routing phase) when you shouldn’t really need to be looking at query parameters. This level of inspection slows down the entire system.</p>
+<p>This is a “weak filter” too. Without knowing the request context (i.e., import request v “normal” request) <em>any</em> request with a “dynamic” parameter is an import candidate and requires additional processing. In essence, you are “reserving” the parameter “dynamic” in the sense that the developer needs to know to that it will trigger additional overhead in the pipeline.</p>
+<p>Having the request builder add import headers eliminates this problem.</p>
+<h3>Change - Header Types</h3>
+<p>I originally suggested two header items - “Import Indicator” and “Import Data”. I’m having second thoughts on “Import Data”. This really is user data and likely should be in the query string. So in the example using <code>with</code>, that information would end up in the query string. But I see the need for a different header - “Public Interface” (description not title, lol).</p>
+<h4>Reasoning</h4>
+<p>Imported modules have two information sets in the code - public and private. Everything exported is public and everything else is private. An import declaration has two parts - the list of required exports (<code>export { Foo, Bar  }</code>) and the sources that define these (<code>from "FooBar.mjs";</code>). One way to look at these is as Interface/Implementation pairs. The <code>export</code> segment defines the required interface, and  <code>from</code> identifies the implementers.</p>
+<p>A primary use case this proposal supports (for me) is Lean and “Just-In-Time” (JIT) modules. The basic idea is that <code>imports</code> are built dynamically from sets of components to only include the pieces needed by the context (Lean) and assembled on demand (JIT). Both pieces of information (interface &amp; implementer) are useful when building “just-in-time” imports. Implementer less so though… sort of.</p>
+<p>In a static environment, we request (import) a “named static” file that we expect to export the items specified. In a more dynamic environment, we can be more versatile - we can “inject” <em>any</em> file that realizes our interface. This decouples things to a large extent and makes it easier to build libraries of reusable components (for example). We can change our thinking from importing “files” to importing “types”.  In some ways (and contexts), the Web is a giant “type system”. URL’s paths are namespaces and files are (can be seen as in some cases) “types”.  Backing up a little, from one perspective, the “traditional” import and instantiation in ES:</p>
+<pre><code class="lang-auto">import { Foo, Bar } from "/Sources/FooBarSource.mjs";
+const foo = new Foo();
+const bar = new Bar(foo);
+</code></pre>
+<p>appears much like, in some other languages</p>
+<pre><code class="lang-auto">using Sources.FooBarSource;
+var foo = new Foo();
+var bar = new Bar(foo);
+</code></pre>
+<p>A subtle difference is that in one case (second) we are using “types” and in the first we are using “type definitions”. Consider:</p>
+<pre><code class="lang-auto">import { Foo, Bar }
+from "/Namespaces.mjs?qualifiedtypes=Sources.FooBarSource[Foo,Bar]";
+</code></pre>
+<p>This specifies “types” and not their definitions. The request pipeline resolves the “types” and returns the definitions (as required by the interpreted nature of ES). This decoupling provides flexibility that can support JIT or DI scenarios.</p>
+<p>Returning to my case. The current implementation of <code>import</code> would send the “types” in the query string (from which we can get/create the implementer), but we don’t know the “Public Interface” to expose if we are jitting. Adding a header item that contains the interface (i.e., <code>import { … }</code>) gives the server a complete picture of the intent.</p>
+<h3>Proposal</h3>
+<p>Proposed (original):
+When an <code>import</code> produces its <code>GET</code> request, it adds request header information to indicate an “import response” is being requested.</p>
+<p>Proposed (Added):
+One of the header items shall contain the list of items specified in the <code>imports { … }</code> list.</p>
+<p>With “Import Headers” and a “Public Interface” item, developers of request handling pipelines are in a much better position to develop enhanced capabilities and flexibility for ES Modules. Additionally, this would improve performance (over query string approaches) in scenarios where requests need to be routed to “import handlers”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2020-05-24</div>
+          <div class="post_content">
+<p>At the risk of stating something you may be very familiar with, the proposal above seems highly related to the <a href="https://github.com/tc39/proposal-module-attributes" rel="nofollow noopener">proposal-module-attributes</a>, even down to use of “with.”  I could not find any open or closed issues there that suggest sending the “with” object as headers, so maybe worth raising?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Randy-Buchholz</div>
+          <div class="creation_date">2020-05-24</div>
+          <div class="post_content">
+<p>Thanks bahrus, I wasn’t aware. Some similar ideas there and seems like a case that could benefit from having a header group for modules.</p>
+<p>Created and item:
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/tc39/proposal-module-attributes/issues/61" rel="nofollow noopener" target="_blank">github.com/tc39/proposal-module-attributes</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/tc39/proposal-module-attributes/issues/61" rel="nofollow noopener" target="_blank">Module Import Headers</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2020-05-24" data-format="ll" data-time="23:13:50" data-timezone="UTC">11:13PM - 24 May 20 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/Randy-Buchholz" rel="nofollow noopener" target="_blank">
+<img alt="Randy-Buchholz" class="onebox-avatar-inline" height="20" src="https://avatars2.githubusercontent.com/u/30436777?v=4" width="20"/>
+          Randy-Buchholz
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">I have a related item on the WICG Discourse.
+https://discourse.wicg.io/t/proposal-module-import-headers/4467/1
+I'm proposing adding headers to the request when the request is for a...</p>
+</div>
+<div class="labels">
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

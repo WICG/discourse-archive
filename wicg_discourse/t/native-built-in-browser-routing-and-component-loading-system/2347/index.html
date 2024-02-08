@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Native/built-in browser routing and component loading system</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Native/built-in browser routing and component loading system</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2017-09-11</div>
+          <div class="post_content">
+<p>There are sooooo many JS frameworks to do single-page applications (SPAs). And a huge portion of what these frameworks provide is the routing system because developers need a way to load pages and their components without reloading the entire the page and DOM state everytime a user clicks around on the website.</p>
+<p>But if browsers implement native routing support for SPAs, we can at least begin to standardize a large chunk of building SPAs. Here’s a naive featureset of things that I think could be provided with a natively-supported routing and loading system, much of which are already implemented by current frameworks today.</p>
+<ol>
+<li>
+<p>Global Configuration - to specify app-level settings using the manifest.json file for example. Maybe a new <code>display</code> attribute of <code>single-page-application</code> or something similar which would put the application in “spa mode”</p>
+</li>
+<li>
+<p>Route configuration - to specify path references to the components to load when certain URLs are requested and any dependencies. This can be a separate file that sits at the root of the application similar to manifest.json or maybe even inside of the manifest file.</p>
+</li>
+<li>
+<p>Handle in-app page requests - When a user requests a new relative url (by clicking an internal link for example), based on the route config above, the browser would determine whether the url request should be loaded in the current DOM (spa link) or not. And if the former, load the contents in the DOM without a full page reload</p>
+</li>
+<li>
+<p>Dynamically load requested pages along with any nested components specified in the route configuration above. I also think this would eliminate all the chaos and controversy around importing html modules because, with the right configurations used above, it’s likely they could no longer be necessary.</p>
+</li>
+</ol>
+<p>Obviously this is a very small list of things an SPA routing/loading system could provide and the specifics and implementation details can be changed but I’m curious to get your thoughts on the overall idea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-09-17</div>
+          <div class="post_content">
+<p>In the spirit of the extensible web manifesto, it’d probably be best if the standard solution was based on existing libraries for client-side routing that have proven to work well. I personally use the <code>&lt;Router&gt;</code> component in Preact, so I guess a standard <code>&lt;router&gt;</code> element is an option. A “use cases and requirements” spec would help.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2017-09-18</div>
+          <div class="post_content">
+<p>I like that idea. Previous attempts at providing better high-level abstractions to create the “single page app” model failed to get traction (e.g. <a href="https://github.com/jakearchibald/navigation-transitions">Navigation Transitions</a>. Maybe it was because they tried to extend the concept of navigation (so forcing multiple pages to behave like a single page app, which is rather complex) rather than embracing the single page parts, but making them easier (and require less JS).</p>
+<p>I think that before diving into the solution, it’ll be great to state the goals and detailed use cases. (as <span class="mention">@simevidas</span> mentioned)</p>
+<p>/cc <span class="mention">@Jake_Archibald</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1091_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nexii</div>
+          <div class="creation_date">2017-09-19</div>
+          <div class="post_content">
+<p>I have a feeling that Service Workers will be disrupting a lot around what we used to traditionally think around SPAs. As it is a fully client-side JS router that we can use to intercept requests, even creating entirely fabricated responses which can come asynchronously from other sources.</p>
+<p>Perhaps it is also time to disassemble the heart of an SPA, because it might mean that:</p>
+<ul>
+<li>Why can’t all these windows and tabs be part of the very same application, talking via postMessage &amp; Service Worker, unified to the same database?</li>
+<li>Would each window simply be a new perspective and view of the same app?</li>
+<li>Would we be going in the direction to something similar akin to our web version of Electron?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2018-09-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="2347">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>I personally use the <code>&lt;Router&gt;</code> component in Preact, so I guess a standard <code>&lt;router&gt;</code> element is an option</p>
+</blockquote>
+</aside>
+<p><span class="mention">@simevidas</span> I managed to create a <a href="https://github.com/mkay581/router-component" rel="nofollow noopener"><code>&lt;router-component&gt;</code></a> that is a little similar to Preact’s Router. It’s declarative and pretty simple and supports loading webcomponents at specific URLs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2019-04-17</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="2347">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mkay581/40/2211_2.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>developers need a way to load pages and their components without reloading the entire the page and DOM state everytime a user clicks around on the website</p>
+</blockquote>
+</aside>
+<p>If the goal is seamless navigation transitions, I advice you to check out <a href="https://github.com/WICG/portals" rel="nofollow noopener"><code>&lt;portal&gt;</code></a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-08-18</div>
+          <div class="post_content">
+<p><span class="mention">@Malvoz</span> I did check the explainer. Portals sound awesome but they seem a little different from what I was proposing. Portals make it possible for you to have inset pages that can be loaded from different domains, which just seems like iframes–just a little more seamless. What I meant by my original statement was to make it possible to fully replace areas of the document with new HTML that contains parts can be reused throughout each of the pages. Based on what I read on the explainer, portal insets don’t allow you to reuse the HTML from other insets.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-21</div>
+          <div class="post_content">
+<p>What is meant by</p>
+<blockquote>
+<p>reuse the HTML from other insets</p>
+</blockquote>
+<p>?</p>
+<blockquote>
+<p>I also think this would eliminate all the chaos and controversy around importing html modules because</p>
+</blockquote>
+<p>What is the issue with using JavaScript modules to meet the requirement?</p>
+<p>What are the use cases and what are you not able to achieve using existing APIs?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-08-24</div>
+          <div class="post_content">
+<p><span class="mention">@guest271314</span> check out the portals explainer that <span class="mention">@Malvoz</span> posted above. It defines what “insets” are.</p>
+<p>The use cases are evident by the many third party frameworks that we have to use for routing, <a href="https://www.npmjs.com/package/react-router" rel="nofollow noopener">React Router</a>, <a href="https://github.com/vuejs/vue-router" rel="nofollow noopener">vue-router</a>, etc . This proposal is to explore adding routing for SPAs into the browser. I’ve created a <a href="https://github.com/mkay581/router-component" rel="nofollow noopener">router-component</a> library that allows developers to map routes/URLs to web components for SPAs. It would be nice if something like this was baked into the browser.</p>
+<blockquote>
+<p>What is the issue with using JavaScript modules to meet the requirement?</p>
+</blockquote>
+<p>There is no issue with JS modules. Either works. I just used HTML modules as an example.</p>
+<p>Also, <span class="mention">@guest271314</span> I’ve been on the threads you’ve been posting in on the forum and it seems like you’re asking some of the same questions that have already been addressed in threads. Please make sure you’re reading all of the details of a thread and following all of the links before posting. Hopefully I’ve answered your questions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-08-24</div>
+          <div class="post_content">
+<p>FYI for those following this thread, someone suggested that the <code>&lt;portal&gt;</code> proposal may render this proposal unnecessary. I opened <a href="https://github.com/WICG/portals/issues/156" rel="nofollow noopener">an issue on the portals repo</a> and it looks like <code>&lt;portal&gt;</code>s don’t actually map any routes/URLs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="2347">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mkay581/40/2211_2.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>The use cases are evident by the many third party frameworks that we have to use for routing, <a href="https://www.npmjs.com/package/react-router" rel="nofollow noopener">React Router</a>, <a href="https://github.com/vuejs/vue-router" rel="nofollow noopener">vue-router</a>, etc . This proposal is to explore adding routing for SPAs into the browser. I’ve created a <a href="https://github.com/mkay581/router-component" rel="nofollow noopener">router-component</a> library that allows developers to map routes/URLs to web components for SPAs. It would be nice if something like this was baked into the browser.</p>
+</blockquote>
+</aside>
+<p>In general do not use any third party “framework” library code, here. Try to use only code shipped with the browser.</p>
+<p>Therefore since there is no “router” shipped with the browser it would be helpful to clearly define what that term means <em>to you</em>, instead of presuming that all developers use or have used some third-party framework or library to achieve requirements that are possible using the code shipped with the browser. Individuals tend to have very different internal interpretations of words and terms that another individual might not be aware of or reject altogether as a viable meaning of a term. Thus, definitions of the terms relied upon <em>by the author</em> is helpful to determine if there is consensus or contention as to the origin and varied usage of that term, as English is an equivocal language capable of more than one meaning for a single word or phrase.</p>
+<p><code>&lt;link&gt;</code> element and JavaScript modules and CSS and <code>ServiceWorker</code> shipped with the browser should be able to achieve the requirement “load pages and their components without reloading the entire the page and DOM state everytime a user clicks around on the website.”</p>
+<aside class="quote no-group" data-post="9" data-topic="2347">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mkay581/40/2211_2.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>Also, <span class="mention">@guest271314</span> I’ve been on the threads you’ve been posting in on the forum and it seems like you’re asking some of the same questions that have already been addressed in threads. Please make sure you’re reading all of the details of a thread and following all of the links before posting. Hopefully I’ve answered your questions.</p>
+</blockquote>
+</aside>
+<p>Not sure what you mean?  Kindly indicate exactly what threads and questions you are referring to, where your belief is that the question presented here has already been answered.
+Own comprehension is not based on someone else’s interpretation of their question or answer. Will ask as many detailed questions as necessary until own satisfaction with the answer is reached, or determine no answer can sufficiently answer the question at this point in time, or am banned by some organization or individual that censors this user and/or the questions asked and answers provided so that they can remain exempt from such inquiries and control a limited narrative without vetting by an individual not coopted by any organization or individual.</p>
+<p>Another way to ask the question that posed above is what requirement are you <em>not</em> able to achieve right now using the existing APIs and methods shipped with the browser you are testing code at?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-08-25</div>
+          <div class="post_content">
+<p>I have no idea how to respond to most of what you’ve said, sorry. But I’ll try to address what I can.</p>
+<blockquote>
+<p><code>&lt;link&gt;</code> element and JavaScript modules and CSS and <code>ServiceWorker</code> shipped with the browser should be able to achieve the requirement “load pages and their components without reloading the entire the page and DOM state everytime a user clicks around on the website.”</p>
+</blockquote>
+<p>A <code>&lt;link&gt;</code> element or CSS or ServiceWorker have nothing to do with what I’m proposing. Yes loading JS Modules or WebComponents based on specific routes/URLS is possible without having it baked into the browser, but it is difficult to do without using a third-party framework or library like I mentioned above.</p>
+<p>Feel free to comment or ask questions as you wish. It’s a free country and free forum! But going back and forth on the same questions that have already been answered isn’t productive and it just causes unnecessary email spam for all of the other thread watchers who have actually read all of the previous replies. So I’ll limit my responses to what I feel I haven’t actually addressed from now on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-08-25</div>
+          <div class="post_content">
+<p>I never said that I can’t do what I’m proposing using existing browser APIs, so I don’t know where you’re getting that from. Again, <em>please</em> look at router-component library that I posted earlier. It is not using a framework at all. It is using what is natively available in browsers using existing APIs. But it is not easy to do and developers have to reinvent and maintain this same “routing” logic similar to the router-component library everytime a new single page application is created. I’ve said this over three times already.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2019-08-26</div>
+          <div class="post_content">
+<blockquote>
+<p>Here, try to  <em>not</em>  use any framework for any and all projects relating to the browser. Therefore attempt to exhaust all possible approaches using existing methods and APIs shipped with the browser before filing an issue or proposing a feature request… [snip]  What are you  <em>not</em>  able to do with the current APIs and methods shipped with the browser?</p>
+</blockquote>
+<p>I’m not sure what you are trying to say here.  Perhaps just what <span class="mention">@yoavweiss</span>  anId <span class="mention">@simevidas</span> said?  There’s definitely not a problem talking about the fact that client side routing exists, is non-trivial, and is an important part of just about every SPA approach.   If popular client side solutions exist, it would seem that by definition it is possible using what we have today, but I believe that the point is that today this requires quite a bit of complexity.  It <em>could</em> be that some new primitive would help here, but it seems more likely that what is being asked for is simply a higher level way to orchestrate existing things to do what all (or most of) what those libraries and frameworks do.  The question though is definitely ‘which things’ and for which specific use cases, since they really aren’t the exactly all solving exactly the same problems in the same ways.</p>
+<p><span class="mention">@mkay581</span> An explainer which defined specifically the aims and non-aims, with more detailed use cases and so on would be helpful… in that it seems to me appropriate to discuss or link to a kind of survey of existing routers/features/functionality in the ecosystem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-26</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="2347">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mkay581/40/2211_2.png" width="20"/> mkay581:</div>
+<blockquote>
+<p>I never said that I can’t do what I’m proposing using existing browser APIs, so I don’t know where you’re getting that from. Again, <em>please</em> look at router-component library that I posted earlier. It is not using a framework at all.</p>
+</blockquote>
+</aside>
+<p>Did not state you said you cannot do what you are trying to do right now. The question was asked. If you are able to achieve the requirement then why is a request for anything necessary? To formally specify what you have achieved?</p>
+<p>Perhaps do not gather what this site is about. Was under impression that proposals here were for  what is not ccurrently possible. Can relate to attempting to specify code which meets a specific requirement <a href="https://esdiscuss.org/topic/fwd-proposal-1-number-integer-or-decimal-to-array-2-array-to-number-integer-or-decimal" rel="nofollow noopener">https://esdiscuss.org/topic/fwd-proposal-1-number-integer-or-decimal-to-array-2-array-to-number-integer-or-decimal</a>. Neither proposal that have submitted here is currently possible using APIs or methods shipped with the browser.</p>
+<p>Would suggest clearly defining “routing” and creating an example of needing to reload the document to achieve loading a component, as mentioned at this proposal. Good luck.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-26</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="15" data-topic="2347">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/1818_2.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>I’m not sure what you are trying to say here.</p>
+</blockquote>
+</aside>
+<p>Am asking what the problem actually is, to define the terms used, and to clearly articulate what is being asked.</p>
+<p>If the proposal is to formalize what has been achieved in code at linked repository as a specification, then that should be stated at the outset.</p>
+<p>What is the problem: code example.
+What is the solution: code example.
+What is the formal procedure to solve: specification.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2019-08-26</div>
+          <div class="post_content">
+<blockquote>
+<p>Perhaps do not gather what this site is about. Was under impression that proposals here were for what is not ccurrently possible.</p>
+</blockquote>
+<p>Perhaps there is the source of confusion… Not only, no. Many APIs do not grant fundamental new capabilities. Higher level APIs are definitely welcome and important. ‘paving cowpaths’ is definitely ultimately a goal. If lots of the ecosystem is solving and resolving the same problems over and over again, that is definitely a great candidate to think about finding some standards around. The goal here is to be a welcoming place for early discussion and see where we can find agreement/help sketch out ideas with the larger community to see if there is something here which can be incubated in the hopes of possible standardization.</p>
+<p>Several people have suggested that this is a potentially interesting idea (welcoming, I think), and that what would be good now would be an explainer, with use-cases and requirements which survey the existing landscape of solutions (of which there are many). The aim would be to describe how such a thing would change this (ie, does this aim to simply replace all of those? some of them? Does it aim to solve completely only for more trivial uses and does this also make the jobs of existing solutions more trivial by sitting between a bunch of complex stuff somehow?)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

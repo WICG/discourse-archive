@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Finding a better mechanism for detecting loaded status of &lt;link rel=preload&gt;</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Finding a better mechanism for detecting loaded status of &lt;link rel=preload&gt;</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1894_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">getify</div>
+          <div class="creation_date">2017-03-22</div>
+          <div class="post_content">
+<p>This thread is spinning off from <a href="https://github.com/w3c/preload/issues/89" rel="nofollow noopener">https://github.com/w3c/preload/issues/89</a>.</p>
+<h1>In Brief</h1>
+<ul>
+<li>The <code>&lt;link rel=preload&gt;</code> DOM element (either originally in markup, or dynamically injected) exposes a <code>load</code> event that fires once the content finishes (pre)loading.</li>
+<li>Code may want to observe this event (to use for subsequent loading-and-execution logic), but may register a <code>load</code> event handler too late.</li>
+<li>This race condition is particularly acute for a scripted resource loader that, for performance reasons, generates <code>&lt;link rel=preload&gt;</code> markup for the page so the parser can begin fetching the resources earlier than the resource loader code can run, and then listens to those elements at the time the resource loader runs.</li>
+<li>There are various hacks (of varying fidelity) to work around this race condition, but the claim is being made that this is a fundamental use case and should be addressed with an affirmative feature.</li>
+</ul>
+<hr/>
+<h1>Overview</h1>
+<p>A scripted resource loader can dynamically create and inject a <code>&lt;link rel=preload&gt;</code> element to force preload (load but don’t apply) of a resource. The loader can also subscribe to the <code>load</code> event to know when this preloading finishes, so that it can “re-request” the content using the appropriate container (<code>&lt;script&gt;</code>, <code>&lt;img&gt;</code>, etc).</p>
+<p>This system actually works quite well, and is a breath of fresh air for those of us that have wanted resource preloading to be directly supported in the web platform for approximately the last decade.</p>
+<p>There’s a critical missing piece in this design, though.</p>
+<p>Since a resource loader’s logic will necessarily run well after the parser has completed processing the page, it misses the opportunity to start the fetching of resources earlier. So, a smart resource loader would use both markup and code.</p>
+<p>Such a resource loader would provide its host application (on the server) with the <code>&lt;link rel=preload&gt;</code> markup to inject into the page to get parser-initiated preloading started ASAP, and then once the loader code itself runs, pick up and listen for those preload events and proceed as necessary.</p>
+<p>But, now the inherent race condition bites us. What if the resource loader attaches its <code>load</code> event listener too late?</p>
+<p>There’s no property on the <code>&lt;link rel=preload&gt;</code> element that tells us if it has finished loading. An older precedent for such a mechanism would be e.g. <code>readyState</code>.</p>
+<p>Because the <code>&lt;link rel=preload&gt;</code> markup container is somewhat unique in its ability to load content but <strong>not apply it to the page in any observable way</strong>, that leaves loaded content potentially in an otherwise limbo state where it’s available but unobservably so.</p>
+<p>By the way, such a “smart resource” loader is not just a hypothetical. I am actually, for real, presently building such a thing. It’s the 3.0 rewrite of the long-established LABjs loader. 3.0 includes not only the client-side loader logic, but also a server-component for generating the markup.</p>
+<h2>What Should Be</h2>
+<p>What should be possible is either:</p>
+<ul>
+<li>
+<p>A way to inspect a <code>&lt;link rel=preload&gt;</code> element to tell if it’s loaded; OR</p>
+</li>
+<li>
+<p>The <code>load</code> event, or something like it, to always resolve, even if subscribed to after the actual completion of loading</p>
+</li>
+</ul>
+<h3>Some Bikeshedding</h3>
+<ul>
+<li>
+<p><code>readyState</code> property on the element that has <code>"loading"</code> while preloading and <code>"loaded"</code> once loaded. Since the values here are binary, one can safely assume that <code>"loading"</code> means subscribing to the event will reliably yield an event firing at a later time as appropriate, whereas <code>"loaded"</code> means it’s ready to go ahead and “re-request” the content with its appropriate container.</p>
+</li>
+<li>
+<p><code>loaded</code> property on the element that starts out <code>false</code> but is set to <code>true</code> once it finishes loading. Same reasoning as <code>readyState</code> above.</p>
+</li>
+<li>
+<p><code>loaded</code> property on the element that exposes a promise that resolves when the resource finishes loading. Since promises are observable “forever”, that eliminates the race condition.</p>
+</li>
+<li>
+<p><code>load</code> event that always fires once for successfully loaded content, even if attached (<code>addEventListener(..)</code>) after the loading completes. This is similar to <code>Promise#then(..)</code> design, which again eliminates the race condition. It also has precedent with jQuery’s <code>document.ready(..)</code> event handler.</p>
+</li>
+</ul>
+<p>What’s notable about at least some of these strawmen is that they can (and should!) be reusable / precedent for any other parts of the platform that would like to reliably detect content loading status.</p>
+<h2>Possible Hacks</h2>
+<p>Short of an affirmative solution, a variety of hacks have been explored. Each has pros / cons and varying degrees of fitness for the task.</p>
+<h3>Re-Preload</h3>
+<p>The resource preloader can ignore any <code>&lt;link rel=preload&gt;</code> in the markup, and instead just create and inject another <code>&lt;link rel=preload&gt;</code> element. The <code>load</code> event of this second element can be subscribed, and will fire “right away” (actually, asynchronously, on the “next tick”) if indeed the content has already finished preloading.</p>
+<p>The main downside is the performance hit of mutating the DOM – I could argue unnecessarily so – just to figure out if the content is indeed ready to use.</p>
+<h3>Onload</h3>
+<pre><code class="lang-auto">&lt;link rel="preload" onload=" .. " ..&gt;
+</code></pre>
+<p>The onload handler could register this loaded status in some way, either by setting some global variable in the application, or by setting a property onto the element itself for later inspection.</p>
+<p>Other than being ugly and a bit brittle, the main problem with this approach is CSP and inline scripts.</p>
+<h3>Performance</h3>
+<pre><code class="lang-auto">function wasThisLoaded(url) {
+    absoluteURL = new URL( url, document.baseURI ).href;
+    return !!window.performance.getEntriesByName( absoluteURL ).length;
+}
+</code></pre>
+<p>This appears in my initial testing to be the most high fidelity of the hacks thus far explored. It works.</p>
+<p>But it’s still, in principle, a hack; it relies on another part of the platform to serve what I argue is a fundamental part of the main use case.</p>
+<h2>Motivations</h2>
+<p>Markup-based preloading is great. But markup alone will never be able to fully articulate the variety of loading-and-execution scenarios that make resource loaders attractive (to some folks).</p>
+<p>This shouldn’t be an either-or. You shouldn’t have to miss out on the benefits of markup-triggered preloading if you want to then hand off resource loading to a smarter loader utility. You should be able to do both. The best performance overall for an application is when you can do both.</p>
+<p>But doing both shouldn’t have an inherent race condition <strong>built into its design</strong>. The design itself should account for this fundamental use-case.</p>
+<p>And most importantly, since this pain is particularly acute for <code>&lt;link rel=preload&gt;</code>, I argue that it should be the “test case” (in Supreme Court appeals terms) that we use to motivate a design that addresses any other existing (or future) concerns about content load status.</p>
+<p><code>&lt;link rel=preload&gt;</code> is starting to roll out to browsers, but it’s not widespread yet, so we still have time to fix this before it’s too set in stone to adjust. Moreover, none of the existing design suggestions would break backward compatibility anyway.</p>
+<p>We shouldn’t wait for some other part of the platform to invent a solution. We shouldn’t rely solely on hacks. We should take this concrete use case as motivation for a real fix.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2017-03-23</div>
+          <div class="post_content">
+<p>One time events like load and ready seems like the sort of situation promises are perfect for. I would support trying to include <code>waitLoad()</code>, <code>waitReady()</code> and the like. However I suspect this would be a situation where it’s better to make the proposal to apply it generally rather than piecemeal otherwise devs would be in the position of testing the existence of these promises on multiple elements rather than being able to have one test that shows a browser supports “element promises”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-03-27</div>
+          <div class="post_content">
+<p>Could you give an example of how a scripted resource loader would use such a mechanism, so that folks who are not familiar with these type of tools can get a better understanding of the benefit?</p>
+<p>My basic understanding is that <code>preload</code> is a welcome performance feature but doesn’t really need to be acted upon, i.e. the page is going to use the resource anyway, so if and when the preload happens isn’t the page’s concern.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1894_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">getify</div>
+          <div class="creation_date">2017-03-27</div>
+          <div class="post_content">
+<p><span class="mention">@simevidas</span></p>
+<p>Let’s say I need to load “a.js” and “b.js”, but “b.js” depends on “a.js”. That means the loading of them needs to ensure the execution order, even if the load order is different. I call this “async loading with ordered execution.”</p>
+<p>The “old” way of doing that was for a script loader to create both <code>&lt;script&gt;</code> tags dynamically, and set both of them to have <code>.async = false</code>, which is the “ordered async” feature HTML added in about 2010 or so. It loads all scripts “in parallel” but when it goes to execute them, it makes sure to execute them in the order they were requested (order added to DOM).</p>
+<p>Imagine I have “a.js” and “b.js”, and then I also had “c.js” and “d.js”. The two pairs of scripts are independent from each other, but “a.js” needs to run before “b.js” and “c.js” needs to run before “d.js”. The problem with this approach is that it uses a single queue underneath the covers. So, “a.js” and “b.js” loading (and execution!) are blocking “c.js” (and thus “d.js”) from executing. This is just one example of the downside of ordered-async loading.</p>
+<p>Now, fast forward a bunch of years, and we finally get <code>&lt;link rel=preload&gt;</code>. Now, a script loader has a much better way of loading scripts in parallel, but ensuring execution order.</p>
+<p>What the script loader does is first “preload” all scripts, by creating and injecting <code>&lt;link rel=preload&gt;</code> elements for each; it would preload all of “a.js”, “b.js”, “c.js”, and “d.js”. It also monitors the <code>load</code> event for each preload element. When it sees both “a.js” and “b.js” are preloaded (in whichever order), it re-requests them with <code>&lt;script&gt;</code> elements, so they execute in the proper order. When it sees “c.js” and “d.js” are preloaded, it re-requests them too. Each pair of scripts is truly independent from the other, and only internally dependent execution-order wise.</p>
+<p>As mentioned in the OP, even better is if the <code>&lt;link rel=preload&gt;</code> tags could actually have been in the markup when the page was served from the browser. That means the script loader can just inspect/listen to those elements instead of needing to have delayed the creation (and thus request) until the loader runs itself. That means in general the preloading gets a headstart. This is better for performance optimization.</p>
+<p>Of course, now we have the race condition I mentioned in the OP, which is that the script loader logic may run “too late” and try to subscribe the <code>load</code> event on those markup elements when they’re already finished preloading.</p>
+<p>Does that help clarify the usage?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

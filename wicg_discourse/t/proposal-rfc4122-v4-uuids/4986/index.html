@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] RFC4122 v4 UUIDs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] RFC4122 v4 UUIDs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3201_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bcoe</div>
+          <div class="creation_date">2020-10-30</div>
+          <div class="post_content">
+<p>tldr; I would like to revisit, and make a case for, RFC4122 v4 UUIDs. Here’s
+the start of a proposal: <a href="https://bcoe.github.io/uuid/" rel="noopener nofollow ugc">bcoe.github.io/uuid/</a>.</p>
+<h2>v4 UUIDs are ubiquitous</h2>
+<p>As Marcos points out in the post <a href="https://discourse.wicg.io/t/add-uuids-api-to-the-platform/2177">“Add UUIDs API to the platform”</a>, uuid is one
+of the most widely used modules in the JavaScript ecosystem:</p>
+<p>uuid is a dependency of over 30,000 modules on npm, and downloaded
+40,000,000 times a week (<em>In analyis summarized <a href="https://github.com/tc39/proposal-uuid#out-of-scope" rel="noopener nofollow ugc">here</a>, it was found that about 80% of users of the
+library use the v4 algorithm</em>).</p>
+<p>v4 uuid’s have a wide variety of uses, once you start looking for them you see them everywhere:</p>
+<ul>
+<li>identifiers for request tracing (<em>potentially frontend through to server</em>).</li>
+<li>a method for anonymously tracking page views.</li>
+<li>a temporary document name, e.g., a Google sheet generated as the output of a report.</li>
+<li>resource names in unit tests.</li>
+<li>identifiers for inspector sessions.</li>
+<li>identifiers on physical items, such as shipping receipts.</li>
+<li>identifiers for IoT devices.</li>
+<li>…</li>
+</ul>
+<h2>Bad implementations of UUID v4 are a risk to developers</h2>
+<p>Developers who have not been exposed to RFC 4122 might naturally opt to invent their own approaches to UUID generation.</p>
+<p><a href="https://medium.com/@betable/tifu-by-using-math-random-f1c308c4fd9d" rel="noopener nofollow ugc">TIFU by using Math.random()</a> is a good discussion of why it’s
+important that UUIDs are generated using a sound algorithm, with a secure source of randomness.</p>
+<p>When I disussed this with a colleague today, they had a great quote:</p>
+<blockquote>
+<p>well I don’t want to write any kind of hash- or crypto-related code even it’s just 40 lines</p>
+</blockquote>
+<h2>Folks are excited about this idea</h2>
+<p>Christoph Tavan and Robert Kieffer the two main maintainers of <a href="https://www.npmjs.com/package/uuid" rel="noopener nofollow ugc">uuid</a> are excited about the prospect of making RFC4122
+UUID generation available to the web and other JavaScript platforms, and have been helping flesh out the proposal.</p>
+<p>We just shipped WebCrypto on the Node.js project, and we’re likewise excited to add UUID support as a natual extension to this functionality – <em>we’d love to do so in a platform agnostic way.</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3201_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bcoe</div>
+          <div class="creation_date">2020-11-19</div>
+          <div class="post_content">
+<p>Another example of where it would be very nice to have a built in UUID implementation:</p>
+<aside class="onebox githubpullrequest">
+<header class="source">
+<a href="https://github.com/googleapis/nodejs-dialogflow-cx/pull/11#discussion_r480876619" rel="noopener nofollow ugc" target="_blank">github.com/googleapis/nodejs-dialogflow-cx</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Pull Request">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 12 16" width="60"><path d="M11 11.28V5c-.03-.78-.34-1.47-.94-2.06C9.46 2.35 8.78 2.03 8 2H7V0L4 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 10 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zM4 3c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v6.56A1.993 1.993 0 0 0 2 15a1.993 1.993 0 0 0 1-3.72V4.72c.59-.34 1-.98 1-1.72zm-.8 10c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/googleapis/nodejs-dialogflow-cx/pull/11" rel="noopener nofollow ugc" target="_blank">docs: update quickstart to reflect actual use case</a>
+</h4>
+<div class="branches">
+<code>googleapis:master</code> ← <code>googleapis:quickstart-update</code>
+</div>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2020-08-29" data-format="ll" data-time="00:53:39" data-timezone="UTC">12:53AM - 29 Aug 20 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/bcoe" rel="noopener nofollow ugc" target="_blank">
+<img alt="bcoe" class="onebox-avatar-inline" height="20" src="https://avatars3.githubusercontent.com/u/194609?v=4" width="20"/>
+          bcoe
+        </a>
+</div>
+<div class="lines" title="3 commits changed 4 files with 136 additions and 34 deletions">
+<a href="https://github.com/googleapis/nodejs-dialogflow-cx/pull/11/files" rel="noopener nofollow ugc" target="_blank">
+<span class="added">+136</span>
+<span class="removed">-34</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>My team at Google writes samples that are then embedded throughout documentation, we attempt to ensure that these dependencies have no external dependencies.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2020-11-23</div>
+          <div class="post_content">
+<p>I’ve got a PR against that TC39 repo with an updated download count + dependent repo count: <a href="https://github.com/tc39/proposal-uuid/pull/39" rel="noopener nofollow ugc">https://github.com/tc39/proposal-uuid/pull/39</a></p>
+<p>I also compared it to Lodash’s core module in popularity and usage, and found some interesting findings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3254_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ctavan</div>
+          <div class="creation_date">2020-12-10</div>
+          <div class="post_content">
+<p>Hi there! I’m one of the maintainers of the uuid module at <a href="https://github.com/uuidjs/uuid" rel="noopener nofollow ugc">https://github.com/uuidjs/uuid</a></p>
+<p>Historically our uuid implementation was using a Math.random() based fallback RNG for environments where no CSPRNG was available.</p>
+<p>When we dropped that (happened in the v3 -&gt; v7 version bump) it became apparent that react-native was one such environment. Affected developers quickly suggested to fall back to insecure random number generators again for convenience, which I always advocated against! It has ultimately caused quite some effort across a couple of projects (namely uuid, react-native-get-random-values und expo) to fix this situation for react-native users, see e.g. <a href="https://github.com/LinusU/react-native-get-random-values/pull/13" rel="noopener nofollow ugc">https://github.com/LinusU/react-native-get-random-values/pull/13</a></p>
+<p>Another issue that keeps popping up is that we currently ship two variants of the module, one for Node.js which uses the Node.js crypto core module and one for Browsers that uses WebCrypto. This also keeps causing trouble for folks who happen to configure their bundlers (rollup/webpack) in a bad way, leading those bundlers to pick the wrong source files for the respective target environments (<a href="https://github.com/uuidjs/uuid/issues/516" rel="noopener nofollow ugc">https://github.com/uuidjs/uuid/issues/516</a>, <a href="https://github.com/uuidjs/uuid/issues/482" rel="noopener nofollow ugc">https://github.com/uuidjs/uuid/issues/482</a>, <a href="https://github.com/uuidjs/uuid/issues/314" rel="noopener nofollow ugc">https://github.com/uuidjs/uuid/issues/314</a>, <a href="https://github.com/uuidjs/uuid/issues/544" rel="noopener nofollow ugc">https://github.com/uuidjs/uuid/issues/544</a>).</p>
+<p>Given the convergence of Node.js core APIs and Web APIs towards Web APIs (Node.js recently started exposing the WebCrypto API <a href="https://nodejs.org/dist/latest-v15.x/docs/api/webcrypto.html" rel="noopener nofollow ugc">https://nodejs.org/dist/latest-v15.x/docs/api/webcrypto.html</a>) the situation around Crypto APIs may improve for the uuid library.</p>
+<p>However, given this de-facto convergence towards Web APIs in related areas I believe that it makes a lot of sense to consider standardizing UUID as a web API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3283_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">James_Snell</div>
+          <div class="creation_date">2021-01-02</div>
+          <div class="post_content">
+<p>We can absolutely support a standard api for this in node.js. There are some folks who would argue that a userland module would be preferred but having the support of the author of the most popular such module currently goes a long way towards handling that argument. Is version 4 all we need?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3201_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bcoe</div>
+          <div class="creation_date">2021-01-02</div>
+          <div class="post_content">
+<blockquote>
+<p>Is version 4 all we need?</p>
+</blockquote>
+<p>In our research, it jumped out that:</p>
+<ul>
+<li>77% to 90% of applications we found using node-uuid were using version 4.</li>
+<li>some of the outliers using v1 (which requires a node ID) would have been better suited to v4; <em>choosing an appropriate Node identifier is non-trivial (e.g., VMs share MAC addresses), and it’s often better to just populate all the bits with entropy.</em>
+</li>
+<li>v3/v5 are hashing algorithms (MD5 and SHA-1 respectively); they solve a slightly different problem than v1/v3, and are less widely used.</li>
+</ul>
+<p>We landed on the method <em>randomUUID()</em> because:</p>
+<ol>
+<li>a random identifier seems to solve users’ most common need.</li>
+<li>we’re not locked in to v4, if a better algorithm eventually came along (<em>mind you, I don’t see how this would be possible, since v4 fills all its bits with entropy, except reserved bits</em>).</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

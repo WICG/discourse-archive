@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allow non-realtime use of MediaRecorder</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allow non-realtime use of MediaRecorder</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mscales</div>
+          <div class="creation_date">2017-08-26</div>
+          <div class="post_content">
+<p>The MediaRecorder API allows developers to create Blobs of audio and/or video files from a MediaStream. This can be used, for example, to apply a visual filter to a video using a canvas and save the result as a new video.</p>
+<p>However, MediaRecorder does not have any way to specify when a frame is captured, so a 3 minute video will always take 3 minutes to record. For cheap to produce content this means that creating the output is much slower than it needs to be, while for expensive to produce content any dropped frames are recorded verbatim into the output.</p>
+<p>I would like to see an API that allows a developer to control exactly when a frame is captured.</p>
+<p>Something like:</p>
+<pre><code>const stream = canvas.captureStream();
+stream.addTrack(someAudioTrack);
+const recorder = new MediaRecorder(stream);
+recorder.framesPerSecond = 30;
+recorder.addFrame();
+</code></pre>
+<p>This would append a frame to the output data that captured the current state of the canvas, along with 1/30th of a second of audio from the audio track. The output would have a final frame rate of 30fps.</p>
+<p>For further a further example use-case, see <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=569090" rel="nofollow noopener">https://bugs.chromium.org/p/chromium/issues/detail?id=569090</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>I’ve always wanted something like this - fast-as-possible encoding is necessary for audio transcoding. Right now we have to ship asm.js/WebAssembly versions of the same audio encoder the browser has built-in, just to be able to go faster than real-time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1033_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">miguelao</div>
+          <div class="creation_date">2017-09-01</div>
+          <div class="post_content">
+<p>There was a <a href="https://github.com/w3c/mediacapture-record/pull/114" rel="nofollow noopener">discussion on the Spec</a> to introduce a “scaling factor” that would affect all encoded video chunks’ timestamp, allowing for both slo-mo and timelapse cases and the use case here, but IIRC <span class="mention">@jan-ivar</span> and <span class="mention">@pehrsons</span> <a href="https://github.com/w3c/mediacapture-record/pull/114#issuecomment-279436643" rel="nofollow noopener">were not convinced</a>. Perhaps we could restart the conversation now?</p>
+<p>Note that that proposal did not address what to do if there was audio recording involved.</p>
+<p>Also FTR <a href="https://webaudio.github.io/web-audio-api/#AudioWorklet" rel="nofollow noopener">AudioWorklet interface</a> was proposed as an potential example pattern to follow.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-09-01</div>
+          <div class="post_content">
+<p>The scaling factor does not sound directly related to this. You can already change the playbackRate in the Web Audio API, for example, and the video scaling factor sounds analogous to that.</p>
+<p>Instead what I would want is basically a way to pipe an OfflineAudioContext to MediaRecorder, so it runs as fast as possible but encodes a file that plays back at normal speed.</p>
+<p>I’m not sure what the video equivalent is though, since there isn’t such a thing as an OfflineVideoContext.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2532_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joe</div>
+          <div class="creation_date">2019-03-01</div>
+          <div class="post_content">
+<p>This would be extremely useful not just for speeding up encoding beyond real-time, but also for <strong>slowing down</strong> when you’re trying to record a canvas with large dimensions (for example) where the user’s computer can’t keep up with the frame rate, and so you end up skipping frames. You can process each frame one-by-one and add them “in your own time”, so you don’t need to worry about quality loss.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-04-16</div>
+          <div class="post_content">
+<p>See <a class="inline-onebox-loading" href="https://github.com/w3c/mediacapture-main/issues/575" rel="nofollow noopener">https://github.com/w3c/mediacapture-main/issues/575</a>, <a class="inline-onebox-loading" href="https://github.com/w3c/mediacapture-record/issues/166" rel="nofollow noopener">https://github.com/w3c/mediacapture-record/issues/166</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

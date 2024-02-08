@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Fragments</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Fragments</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1394_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">thysultan</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>An implementation of fragments exist as <code>DocumentFragment</code> but these share a weak reference with their children, resulting in the Node loosing its children once you append/insert the Node.</p>
+<p>Is it possible to create a new Node type that would resemble <code>DocumentFragment</code> but maintain a strong reference between it and its children when appending/inserting/removing the Node, for example an API for this might look like <code>document.createFragment()</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>You can use <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/importNode" rel="nofollow noopener"><code>document.importNode(fragment, true)</code></a> to generate new nodes without removing the old ones. This is particularly useful if you’re using <code>&lt;template&gt;</code> to generate new nodes.</p>
+<p>I can’t see a need for a new <code>createFragment</code> API that isn’t already handled by this functionality.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1394_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">thysultan</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>The idea is for a persistent DocumentFragment like Node that acts like a Element Node but has the opaque nature of DocumentFragment.</p>
+<p>I don’t think <code>importNode</code> touches the same function a FragmentNode would cover; A FragmentNode would maintain the state of its children and move/remove its children when it is itself moved/removed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>Can you describe how <code>FragmentNode</code> would handle an individual child being removed from the DOM, while the rest of the fragment’s children somehow remain?</p>
+<p>Also unlike family trees, child nodes in the DOM can only ever have one parent. If a <code>FragmentNode</code> has a bunch of child nodes, those child nodes can’t possibly refer back to the <code>FragmentNode</code> without the introduction of a new property because <code>parentNode</code> and <code>parentElement</code> would have to refer to their parent nodes in the DOM tree once elements were added.</p>
+<p>I’m highly skeptical that any of this is necessary or provides a solution that is otherwise challenging to handle with plain javascript. Can you show an example use case where <code>FragmentNode</code> is a significant improvement over the existing DOM APIs?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1394_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">thysultan</div>
+          <div class="creation_date">2017-08-27</div>
+          <div class="post_content">
+<p>Given a fragment of nodes [3, 4, 5] within a larger list of childNodes [1, 2, [3, 4, 5], 6]; Consider the fragment is within a <code>&lt;div&gt;</code> node, the <code>&lt;div&gt;</code> node would have the childNodes <code>1, 2, 3, 4, 5, 6</code> where between 3-to-5 marked the implied boundary of the fragment.</p>
+<p>Removing a child in the fragment i.e 4 will result in the transitioning the fragments parentNodes(<code>div</code>) childNodes to <code>1, 2, 3, 5, 6</code> and the fragment to <code>3, 5</code>. As far as the fragments children are concerned their parentNode is the fragments parentNode and as far as the parentNode’s childNodes are concerned the fragments childNodes are also it’s childNodes; As such removing the fragment would also result in the parentNode(<code>div</code>) loosing the childNodes marked under the fragments boundary.</p>
+<p>As such the FragmentNode forms a set of childNodes that you can used as a references to insert/remove/append/clone a set/collection of related Nodes represented by a transparent boundary that is the FragmentNode.</p>
+<p>Like DocumentFragment this can be implemented in user-land but there-in comes the guarantee and convenience of a single transparent FragmentNode structure that can manage this for you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2017-08-28</div>
+          <div class="post_content">
+<p>I’m still unclear, what actual problem is this API attempting to solve? The example given sounds like it can be replicated with an object that contains an array of node references.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1394_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">thysultan</div>
+          <div class="creation_date">2017-08-28</div>
+          <div class="post_content">
+<p>Creating a collection of nodes that you can apply Move/Insert/Append operations on as a set. This can be implemented in user-land, the proposal is for an a API that makes this into a native NodeType resembling DocumentFragment.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2017-08-28</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="2312">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/thysultan/40/1394_1.png" width="20"/> thysultan:</div>
+<blockquote>
+<p>Creating a collection of nodes that you can apply Move/Insert/Append operations on as a set.</p>
+</blockquote>
+</aside>
+<p>This is a description of what your proposed API would <em>do</em>, not a description of the problem your API would <strong>solve</strong>.</p>
+<p>This is a big red flag to me. What it tells me is you have a solution looking for a problem. If that’s not the case, please by all means disprove me by providing evidence.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

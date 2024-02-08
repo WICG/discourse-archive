@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] JavaScript agent memory API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] JavaScript agent memory API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ulan</div>
+          <div class="creation_date">2019-05-24</div>
+          <div class="post_content">
+<p>The full explainer is available on <a href="https://github.com/ulan/javascript-agent-memory/blob/master/explainer.md" rel="nofollow noopener">this github page</a>.</p>
+<h1>JavaScript agent memory API</h1>
+<p>We propose adding a <code>measureMemory</code> method to the performance API that estimates the amount of memory used by JavaScript objects of the current <a href="https://html.spec.whatwg.org/multipage/webappapis.html#integration-with-the-javascript-agent-formalism">JavaScript agent</a>.
+The proposed API improves upon the existing non-standard <code>performance.memory</code> API in the following ways:</p>
+<ul>
+<li>
+<strong>better security and privacy</strong>: only objects that the current JavaScript agent can access are accounted. No size information leaks from foreign origin contexts and resources;</li>
+<li>
+<strong>promise-based interface</strong>: it allows the implementation to do more work on demand without janking the web page. No overhead for web pages that do not use the API;</li>
+<li>
+<strong>stable results</strong>: other JavaScript agents that happen to share the same heap due to implementation details of the browser do not affect the results;</li>
+<li>optional support for <strong>per-frame memory</strong> breakdown of the result;</li>
+</ul>
+<p>The proposed API is limited to JavaScript memory, but it can be extended to other memory (DOM, GPU, process) retained by the JavaScript agent in future by adding new fields to the result.</p>
+<h2>Problem</h2>
+<p>As shown in <a href="https://docs.google.com/document/d/1u21oa3-R1FhHgrPsh8-mpb8dIFVj60wcFiM5FFrfIQA/edit#heading=h.6si74uwp7sq8" rel="nofollow noopener">this collection of use cases</a> there is a need for an API that measures memory footprint of web pages in production.
+The use cases include a) analysis of correlation between memory usage and user metrics, b) detection of memory regressions, c) evaluation of feature launches in A/B tests, d) memory optimization.
+Currently web developers resort to the non-standard <code>performance.memory</code> API that <a href="https://www.chromestatus.com/metrics/feature/timeline/popularity/884" rel="nofollow noopener">is used in 20%</a> of page loads in Chrome.</p>
+<h2>Related Work</h2>
+<h3>Process memory API</h3>
+<p>There is a proposal for <a href="https://github.com/WICG/performance-memory/blob/master/explainer.md" rel="nofollow noopener">comprehensive memory measurement API</a> that covers different types of memory: JavaScript, DOM, CSS, Web Workers spawned by the page, etc.
+Effectively the API measures the memory footprint of the whole OS process.
+The wide scope of the API is problematic for security because it is difficult to precisely specify what the API is allowed to measure.
+The proposal <a href="https://github.com/mozilla/standards-positions/issues/85#issuecomment-426382208" rel="nofollow noopener">is currently blocked</a> by information leak of opaque resources.</p>
+<p>In contrast to that our proposal is limited to JavaScript memory of the current <a href="https://html.spec.whatwg.org/multipage/webappapis.html#integration-with-the-javascript-agent-formalism">JavaScript agent</a>.
+Note that the two proposals are complementary and can share the same interface. For example, the interface proposed here can be extended to include a <code>processMemory</code> field once the process memory proposal is unblocked in future.</p>
+<h3>Memory pressure API</h3>
+<p>There is a proposal for <a href="https://github.com/WICG/memory-pressure/blob/master/explainer.md" rel="nofollow noopener">memory pressure API</a> that notifies the application about system memory pressure events.
+This gives the application an opportunity to change its behavior at runtime to reduce its memory usage if possible e.g. by freeing up caches and unused resources.
+Our proposal has different <a href="https://docs.google.com/document/d/1u21oa3-R1FhHgrPsh8-mpb8dIFVj60wcFiM5FFrfIQA/edit#heading=h.6si74uwp7sq8" rel="nofollow noopener">use cases</a> such as collecting telemetry data and detecting regressions.
+Thus the two proposals are orthogonal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ulan</div>
+          <div class="creation_date">2019-06-06</div>
+          <div class="post_content">
+<p>The explainer was updated after security feedback to restrict the scope of the API from the whole JavaScript agent to same-origin realms in the JavaScript agent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ulan</div>
+          <div class="creation_date">2020-02-04</div>
+          <div class="post_content">
+<p>I updated the API to rely on COOP+COEP for security. That greatly simplified the API and allowed to increase its scope from a single JS agent to the whole web page.</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="15" src="https://github.githubassets.com/favicon.ico" width="15"/>
+<a href="https://github.com/ulan/performance-measure-memory" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="60" src="https://avatars3.githubusercontent.com/u/294429?s=400&amp;v=4" width="60"/>
+<h3><a href="https://github.com/ulan/performance-measure-memory" rel="nofollow noopener" target="_blank">ulan/performance-measure-memory</a></h3>
+<p>performance.measureMemory API. Contribute to ulan/performance-measure-memory development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ulan</div>
+          <div class="creation_date">2020-02-04</div>
+          <div class="post_content">
+<p>I’d like to move the new repo <a href="https://github.com/ulan/performance-measure-memory" rel="nofollow noopener">https://github.com/ulan/performance-measure-memory</a> to WICG. Thank you!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vdjeric</div>
+          <div class="creation_date">2020-02-14</div>
+          <div class="post_content">
+<p>This API sounds very useful to us (Facebook), looking forward to seeing it implemented!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-02-17</div>
+          <div class="post_content">
+<p>The repo now lives at <a href="https://github.com/WICG/performance-measure-memory">https://github.com/WICG/performance-measure-memory</a></p>
+<p>Happy incubation!! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

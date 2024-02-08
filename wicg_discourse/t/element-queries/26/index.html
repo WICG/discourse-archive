@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Element Queries</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Element Queries</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2014-05-19</div>
+          <div class="post_content">
+<h1>Element queries</h1>
+<p>We need media queries at the component level in order to target specific element sizes in CSS. Element queries allow us respond to changes in an element’s size even when the viewport size does not change.</p>
+<p>Media queries are not sufficient, and they become frighteningly verbose when we have to style elements that may exist in a range of wide and narrow containers.</p>
+<p>Many of us have pitched our own solutions to query the media features of an element, including new CSS pseudo classes, classless queries, or a new display type that scopes media queries to an element.</p>
+<h2>Pseudo class solution</h2>
+<pre><code class="lang-css">.component .child {
+	padding: 16px;
+}
+
+.component:query(min-width: 960px) &gt; .child {
+	padding: 32px;
+}
+</code></pre>
+<p>In the above solution, a pseudo class like <code>:query</code> is used to query multiple features. This solution conforms with existing CSS features like <code>:not</code> and <code>:contains</code>.</p>
+<h2>Pseudo class-less solution</h2>
+<pre><code class="lang-css">.component .child {
+	padding: 16px;
+}
+
+.component (min-width: 960px) &gt; .child {
+	padding: 32px;
+}
+</code></pre>
+<p>In the above solution, parentheses assume the presence of a media query. This solution is a unique pattern, and requires the least additional markup.</p>
+<h2>Multiple pseudo classes solution</h2>
+<pre><code class="lang-css">.component .child {
+	padding: 16px;
+}
+
+.component:min-width(960px) &gt; .child {
+	padding: 32px;
+}
+</code></pre>
+<p>In the above solution, multiple pseudo classes like <code>min-width</code> and <code>max-width</code> are used to query individual features. Several other pseudo classes are mapped to supported features, like <code>max-aspect-ratio</code>, <code>min-device-width</code> and <code>max-resolution</code>.</p>
+<h2>Viewport display solution</h2>
+<pre><code class="lang-css">.component-frame {
+	display: viewport;
+}
+
+.component .child {
+	padding: 16px;
+}
+
+@media (min-width: 960px) {
+	.component &gt; .child {
+		padding: 32px;
+	}
+}
+</code></pre>
+<pre><code class="lang-auto">&lt;viewport&gt;
+</code></pre>
+<p>In the above solution, elements may assume viewport-like status, much like an <code>&lt;iframe&gt;</code> element, only without being an actual embedded frame. Additionally, a new element might be added that semantically represent <em>uniquely framed</em> sections of content.</p>
+<hr/>
+<p>I wish I could have cited my sources of information, but this service limits new users.</p>
+<p>Anyway, I hope this provokes some thought and consideration. We need element queries because the responsive web is not limited to the width and height of a screen or window.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-05-19</div>
+          <div class="post_content">
+<p>And of course, the canonical rebuttal for <a href="http://www.xanthir.com/b4PR0">why element queries aren’t happening</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>You’ll note that Tab doesn’t close the door entirely though. If there were ways for elements to be declared as viewports in the markup, there could be a way forward.</p>
+<p>There are several viewport elements already (SVG alone has a bunch). It isn’t clear to me that being a viewport is strictly a styling affair, it typically maps to a notion of rooting a subcomponent. With that in mind, I could live with a “viewport” boolean attribute (or anything like that). It doesn’t hurt that it exposes a primitive that iframes have, too (making it possible to build one’s own iframes that only do the necessary subset would be pretty sweet)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2014-05-20</div>
+          <div class="post_content">
+<p>A <a href="http://ircbot.responsiveimages.org/bot/log/respimg/2014-05-20#T71867">relevant discussion with Tab</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/95_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Wilto</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>A bunch of us <a href="http://responsiveimages.org/">RICG</a> folks have been interested in this topic for a while now. A couple of us are thinking about putting together a “use cases” document (a la <a href="http://usecases.responsiveimages.org">usecases.responsiveimages.org</a>), with the expectation that nobody is married to any kind of syntax and this may not prove completely feasible in the end anyway. Couldn’t hurt to get a clear and documented sense of the problems being solved, though, I figure.</p>
+<p>Anyone hugely opposed?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1832_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Shane</div>
+          <div class="creation_date">2014-05-21</div>
+          <div class="post_content">
+<p>A use case document sounds like a good way to go. I think many of the use cases are quite obvious but perhaps by working through them we can find some that we had not previously considered or, better yet, a way to further constrain the problem to make it easier to solve.</p>
+<p>Also, Tab did write a <a href="http://www.xanthir.com/b4VG0" rel="nofollow noopener">second blog post</a> that is slightly more positive than the original.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Since I’ve been involved in the discussion about EMQ in the CSSWG, I thought it may be worth I share my opinion here. From all the options which have been discussed to date, I believe the <code>&lt;viewport&gt;</code> element is still the only viable one which could be added to HTML/CSS and solve the Element Queries problem, at least rather easily (display: viewport is a technically similar solution, but is harder for browsers to implement because the creation of new layout contexts happens after the style resolution phase, which could mean some work may have to be restarted again).</p>
+<p>I believe the question at this time is not anymore whether we can solve the :min-width use-cases or whether a solution can be implemented in browsers but more whether browser vendors are interested in solving this problem, and how much.</p>
+<p>For reference, here is the blog post in which I discuss the EMQ problem from a technical perspective:  <a href="http://fremycompany.com/BG/2013/Element-Media-Queries-min-width-883/" rel="nofollow noopener">http://fremycompany.com/BG/2013/Element-Media-Queries-min-width-883/</a> (it also features a bunch of pointers to relevant CSSWG threads)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Just a quick question: does it have to be an element, or could a viewport boolean attribute suffice?</p>
+<p>Either way, I’m happy to bang out a spec on this; want to get started?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>An attribute would be okay, the point was that it (the fact a new CSS context had to be created) had to be known before the CSS Matching happened, in order to make things simpler.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>I’m fine with starting a spec on this (<a href="http://fremycompany.com/TR/2012/ED-css-viewport/" rel="nofollow noopener">in fact I already did at some point</a>), but I think we may want to wait until <a href="http://dev.w3.org/csswg/css-containment/#containment">this spec</a> reaches some level of maturity. It would be easier to rely on the concepts defined there to get started.</p>
+<p>A good thing to do would be to ping the Tab or the CSSWG about that spec, to be sure it continues to be proactively discussed. What do you think?</p>
+<p>(To contextualize things, the CSS Containment spec resulted from the Viewport discussion; it is roughly based on the subset of a CSS Viewport that could be expressed using CSS only)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/95_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Wilto</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p>The now-somewhat-inappropriately-named Responsive Images Community Group has been thinking this over a bit lately (Tab included). There are a lot of moving parts to keep an eye on before anyone barges ahead with any specific syntax or… plans, or anything, but we did get started on a use cases doc—that way we have a central thing to point to when we’re discussing the problem to be solved. Help on this is welcomed, for sure.</p>
+<p><strong>Repo:</strong> <a href="https://github.com/ResponsiveImagesCG/eq-usecases">https://github.com/ResponsiveImagesCG/eq-usecases</a><br/>
+<strong>Doc:</strong> <a href="http://responsiveimagescg.github.io/eq-usecases/">http://responsiveimagescg.github.io/eq-usecases/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-24</div>
+          <div class="post_content">
+<p>Sorry to dredge this back up; however has there been any further progress with this?</p>
+<p>I know it has been fraught with issues and reasons why it is very hard. However I do think however this comes closer to making completely modular web components. Such that a template author can nest as many grid/cell elements as they see fit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-07-02</div>
+          <div class="post_content">
+<p>This has now moved to a talk about “container queries”:</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://alistapart.com/wp-content/uploads/2019/03/cropped-icon_navigation-laurel-512.jpg?fit=32%2C32" width="32"/>
+<a href="https://alistapart.com/article/container-queries-once-more-unto-the-breach/" rel="nofollow noopener" target="_blank" title="02:00PM - 30 June 2015">A List Apart – 30 Jun 15</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:600/275;"><img class="thumbnail" height="275" src="https://alistapart.com/wp-content/uploads/2015/06/ALA_423_Container-Queries.png?fit=600%2C275" width="600"/></div>
+<h3><a href="https://alistapart.com/article/container-queries-once-more-unto-the-breach/" rel="nofollow noopener" target="_blank">Container Queries: Once More Unto the Breach</a></h3>
+<p>Media queries have been the go-to tool in building responsive sites, allowing us to resize and recombine modules to suit multiple contexts, layouts, and viewports. But relying on fixed viewport siz…</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Syntax discussion here:</p>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/WICG/container-queries/issues/2" rel="nofollow noopener" target="_blank">github.com/WICG/container-queries</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/WICG/container-queries/issues/2" rel="nofollow noopener" target="_blank">A rough proposal for syntax</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2015-06-05" data-format="ll" data-time="15:40:04" data-timezone="UTC">03:40PM - 05 Jun 15 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/Wilto" rel="nofollow noopener" target="_blank">
+<img alt="Wilto" class="onebox-avatar-inline" height="20" src="https://avatars2.githubusercontent.com/u/439942?v=4" width="20"/>
+          Wilto
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">May Tim Berners-Lee have mercy on our souls, because it is time to kick off The Great Bikesheddening.
+I’m a big fan...</p>
+</div>
+<div class="labels">
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Thanks <span class="mention">@Wilto</span> for keeping this going</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/629_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guido</div>
+          <div class="creation_date">2015-09-16</div>
+          <div class="post_content">
+<p>Pulling this up, yet again, but I really think we should still fight for element queries.</p>
+<p>Their approach matches a responsive web a lot better than media queries. Especially if we want web components to grow we should add element queries in the spec. They’re context agnostic which is a must if we want our components to be reusable.</p>
+<p>As a web standards guys I hate specifying style in markup. But a <code>&lt;viewport&gt;</code> element doesn’t sound too bad, or at least an attribute could work as well. It would indicate behaviour, not style. Much like <code>checked</code> does on a checkbox. (<code>&lt;input type="checkbox" checked&gt;</code>)  Both an element and an attribute could work with render engines. Heck even a <a href="https://lists.w3.org/Archives/Public/www-style/2013Mar/0762.html">mozilla engineer</a> thought it would be OK if it could be inferred from HTML, right?</p>
+<p>As I’m late to the party, can someone update me on why this would be particularly bad? Circular reference has been around since <code>:hover</code>, right?</p>
+<p>By the way, element queries, container queries, I’m fine with both. The approach is far better, sure. But it’s just a name for an implementation. As long as we get closer to the actual scope of the component.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2015-10-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="14" data-topic="26">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/guido/40/629_1.png" width="20"/> guido:</div>
+<blockquote>
+<p>As I’m late to the party, can someone update me on why this would be particularly bad? Circular reference has been around since :hover, right?</p>
+</blockquote>
+</aside>
+<p>Circular references with <code>:hover</code> are not great, but they generally happen on user interaction and can be stopped by the user (by moving the pointer away). Circular references with “element queries” would happen without user interaction, as soon as the styles are first applied, and would only stop with the browser or tab crashing or maybe some kind of browser mechanism that kills styles partly or completely.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2015-10-07</div>
+          <div class="post_content">
+<p>I proposed a slightly different syntax and function in <a href="https://github.com/ResponsiveImagesCG/container-queries/issues/3" rel="nofollow noopener">ResponsiveImagesCG/container-queries#3</a> which would eventually solve the circular reference issue.</p>
+<p>The idea behind it is to let the browser (instead of the stylesheet author) select the “right” container for the query.</p>
+<p>There is also a prolyfill which implements this idea: <a href="https://github.com/ausi/cq-prolyfill" rel="nofollow noopener">https://github.com/ausi/cq-prolyfill</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/629_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guido</div>
+          <div class="creation_date">2015-10-09</div>
+          <div class="post_content">
+<p>Well, actually, the browser stops rendering a circular reference after the first loop. When you move your mouse it re-renders one loop each time. Something similar could be done.</p>
+<p>But I understand we’ve moved to container queries. Which is a good thing as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>I’ve got an element query plugin that uses the ‘container query’ syntax, and works in all browsers including IE8 and up.</p>
+<p>We also have scoped CSS with <code>$this</code> which can let you quarantine styles, as well as a working <code>$parent</code> selector for CSS and much more.</p>
+<p>Check out the website <a href="http://elementqueries.com" rel="nofollow noopener">elementqueries.com</a></p>
+<p>Or grab the plugin from Github and start using it today: <a href="http://github.com/eqcss/eqcss" rel="nofollow noopener">github.com/eqcss/eqcss</a></p>
+<p>You can do some pretty crazy stuff:</p>
+<ul>
+<li><a href="http://codepen.io/tomhodgins/pen/mJrZxP" rel="nofollow noopener">Calendar widget with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/xGEojN" rel="nofollow noopener">Pricing Chart with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/Lpmmzy" rel="nofollow noopener">Responsive Content with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/vOEGWp" rel="nofollow noopener">Responsive Mobile nav with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/vOqaVa" rel="nofollow noopener">Responsive Testimonials with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/xwGdGd" rel="nofollow noopener">Responsive &lt;table&gt; with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/JdzLex" rel="nofollow noopener">Responsive headlines with Element Queries</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<p>(Element Query demos continued…)</p>
+<ul>
+<li><a href="http://codepen.io/tomhodgins/pen/vOEGWp" rel="nofollow noopener">Responsive Mobile nav with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/vOqaVa" rel="nofollow noopener">Responsive Testimonials with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/xwGdGd" rel="nofollow noopener">Responsive &lt;table&gt; with Element Queries</a></li>
+<li><a href="http://codepen.io/tomhodgins/pen/JdzLex" rel="nofollow noopener">Responsive headlines with Element Queries</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="19" data-topic="26">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tomhodgins/40/840_1.png" width="20"/> tomhodgins:</div>
+<blockquote>
+<p>(Element Query demos continued…)</p>
+</blockquote>
+</aside>
+<p>The Discourse engine allows editing existing comments.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

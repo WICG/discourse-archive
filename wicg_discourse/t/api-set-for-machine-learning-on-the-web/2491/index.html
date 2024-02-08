@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>API Set for Machine Learning on the Web</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">API Set for Machine Learning on the Web</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1527_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AngeloKai</div>
+          <div class="creation_date">2017-12-24</div>
+          <div class="post_content">
+<p>With the recent breakthroughs in deep learning and related technologies, Machine Learning (ML)
+algorithms have drastically improved in terms of accuracy, application, performance etc. While typically thought of as a technology only applicable to server technologies, the inferencing process of machine learning models can run on device as well. Development of a
+machine learning application usually involves two stages:</p>
+<ul>
+<li>The developer first <em>train</em> the model by first creating a
+skeleton framework and then
+iterating the model with large dataset</li>
+<li>The developer then port the model to production environment so that
+it can <em>infer</em> insight from user input</li>
+</ul>
+<p>Though training typically takes place in the cloud because it requires a significant
+amount of data and
+computing power, inference can take place in the cloud or on the device. Running inference on the
+device has a number of appealing properties, such as performance boost
+due to <a href="https://en.wikipedia.org/wiki/Edge_computing" rel="nofollow noopener">edge computing</a>, resistance toward poor or
+no network, and security/privacy protection, etc.</p>
+<p>Although platforms for native applications have all shipped APIs to support machine learning
+inference on device, similar functionality has been missing on the web platform. To fill the gap, we could provide an API set including:</p>
+<ol>
+<li>WebAssembly with GPU and multi-thread support</li>
+<li>A WebML (Web Machine Learning) API with a pre-defined set of mathematical functions that the platform can optimize for</li>
+<li>A WebNN (Web Neural Network) API that provides a high-level abstraction to run neural networks efficiently.</li>
+</ol>
+<p>Please take a look at the <a href="https://github.com/AngeloKai/ml-for-web" rel="nofollow noopener">explainer</a> for more detailed info, such as use case, problem statement, proposal, related research, etc. Feedbacks are welcomed! I would love to hear more about what you think <img alt=":grinning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/grinning.png?v=5" title=":grinning:"/> !</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1817_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">root</div>
+          <div class="creation_date">2017-12-26</div>
+          <div class="post_content">
+<p>GPGPU computing on WebASM would suggest that the native side has been standardized - which it is not, I believe the “de-facto” standard is CUDA, but since that is far from a open standard I’m not sure how that would work. AMD has been working on ROCm and HPC, which somewhat define a open implementation of CUDA - but it is very specific to their hardware and binding nvcc into the browser doesn’t seem like a viable way forward for implementations.</p>
+<p>On the other hand, there has been a community group around this: <a href="https://www.w3.org/community/gpu/">https://www.w3.org/community/gpu/</a> Safari is the only (and highly experimental) implentation shipping it - I remember seeing someone using this to implement a neural network library.</p>
+<p>I would very much like to see some work in this general direction - (2) (linear algebra subroutines) is something that would be nice to have as a first class citizen, possibly with a slightly more usable matrix/vector type. (3) is a bit iffy, as most common libraries used nowadays has a dependency against yet another closed-source library. (cuDNN - although it is possible to live without it, at a cost of slower performance)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1527_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AngeloKai</div>
+          <div class="creation_date">2017-12-26</div>
+          <div class="post_content">
+<p>webdnn was implemented with webgpu, webgl, and webassembly. The explainer had a link to a list of JS libraries written for this: <a href="https://github.com/AngeloKai/js-ml-libraries" rel="nofollow noopener">https://github.com/AngeloKai/js-ml-libraries</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-02-27</div>
+          <div class="post_content">
+<p>IMHO, both (2) and (3) look good to me. Several neural network frameworks like Core ML, WebDNN, etc. are offering their own model data converter for well-known libraries such as Keras, Caffe, TensorFlow, etc. So we could assume neural network model compatibility to some extent. Of course, (2) looks better for extensibility.</p>
+<p>FYI: Neural network acceleration is now not limited to GPGPU. There are some examples on native APIs:</p>
+<ul>
+<li>Android 8.1 NDK provides <a href="https://developer.android.com/ndk/guides/neuralnetworks/index.html" rel="nofollow noopener">Neural Network API</a> used by TensorFlow Lite, Caffe2, etc., that could be integrated with a dedicated neural network processor in the device.</li>
+<li>iOS 11 provides <a href="https://developer.apple.com/documentation/coreml" rel="nofollow noopener">Core ML</a> framework that would make use of neural engine in A11 chip if available.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2018-02-28</div>
+          <div class="post_content">
+<p>Thanks for initiating the discussion! I am excited about the idea to bring the hardware accelerated machine learning API to the web platform and would like to contribute.</p>
+<p>I’d like to echo the problem statement from hardware optimization angle:</p>
+<ol>
+<li>Today’s web platform is disconnected from the most efficient neural network implementation for CPU and GPU.</li>
+<li>And it is disconnected from the emerging neural network accelerators.</li>
+</ol>
+<p>For <span class="hashtag">#1</span>, using WebAssembly optimziation as example, it is possible to optimize the neural network inference by <a href="https://github.com/WebAssembly/simd/blob/master/proposals/simd/SIMD.md" rel="nofollow noopener">128-bit SIMD of WebAssembly</a>. However, a native implementation, like <a href="https://github.com/intel/mkl-dnn" rel="nofollow noopener">MKL-DNN</a>, is able to leverage wider SIMD instructions, e.g. AVX-512, if it is available on device’s CPU. Optimization by WebGL/WebGPU has similar situation comparing to GPU optimization in native DNN libs.</p>
+<p>For <span class="hashtag">#2</span>, the hardware industry moves fast to innovate <a href="https://en.wikipedia.org/wiki/AI_accelerator" rel="nofollow noopener">AI accelerators</a>. Those AI accelerators, from DSP, FPGA to dedicated ASIC, accelerate the performance as well as reduce the power consumption. Especially, that makes efficient neural network inference on edge devices possible.</p>
+<p>I agree that a dedicated accelerated machine learning API will fill the gap and enable innovative AI-based web applications on edge devices.</p>
+<p>Regarding to the API scope, Angelo proposed three aspects: 1) WebAssembly with GPU and multi-thread 2) WebML and 3) WebNN. It is a complete set. Among them, I’ve happened to look into the Web API for neural network inference. I think it corresponds to 2) or 3)? I’d like to share my thoughts and welcome feedbacks.</p>
+<p>The Web API for accelerated neural network inference should:</p>
+<ol>
+<li>allow to build neural network by common building blocks, for example convolution, pooling, softmax, normalization and activation.</li>
+<li>allow to compile the neural network to native optimized format for hardware execution.</li>
+<li>allow to setup input from various sources on web, e.g. media stream, schedule the asynchronous hardware execution and retrieve the output when hardware execution completes.</li>
+<li>allow to extend with new building blocks if they are widely supported by native.</li>
+</ol>
+<p>With such Web API, the web apps and libs:</p>
+<ol>
+<li>can enable various use cases by connecting text, image, video, audio, video, sensor data to neural network as inputs.</li>
+<li>can get the best power and performance for neural network inference by offloading to native implementations and exploiting the hardware capabilities.</li>
+<li>have the flexibility to integrate different neural network architectures, e.g. MobileNet, SqueezeNet, DenseNet, just name a few, and various model formats, e.g. format of ONNX, Caffe, TensorFlow etc.,</li>
+<li>can still innovate new building blocks with WebAssembly and WebGL/WebGPU, thinking as a polyfill, and get acceleration once the API extension is available.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-03-02</div>
+          <div class="post_content">
+<p>LGTM, <span class="mention">@Ningxin_Hu</span>.</p>
+<p>Regarding input interfaces, I’d like to clarify our current situation:</p>
+<ul>
+<li>We can obtain decoded image data as <code>ImageData</code> via <code>CanvasRenderingContext2D.getImageData()</code>.</li>
+<li>We can process audio data via <code>AudioWorklet</code> or <code>ScriptProcessorNode</code> (to be deprecated) in Web Audio API.</li>
+<li>We can obtain a frame from a <code>&lt;video&gt;</code> element by drawing the frame on a <code>&lt;canvas&gt;</code> element.</li>
+<li>We can obtain a frame from a <code>MediaStream</code> by attaching the stream to <code>srcObject</code> in a <code>&lt;video&gt;</code> element. Note that there is no equivalent spec to Web Audio API for video streams yet.</li>
+</ul>
+<p>Generally, one of the possibly minimum requirements is that ArrayBuffer, TypedArray, or string could be an input. Also, it might be desirable that real-time input like <code>MediaStream</code> or <code>MediaStreamTrack</code> could be an input.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2018-03-04</div>
+          <div class="post_content">
+<p>Thanks for the clarification, <span class="mention">@tomoyukilabs</span>.</p>
+<p>IMO, the TypedArray input is a MVP feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-03-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="2491">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ningxin_hu/40/513_1.png" width="20"/> Ningxin_Hu:</div>
+<blockquote>
+<p>have the flexibility to integrate different neural network architectures, e.g. MobileNet, SqueezeNet, DenseNet, just name a few, and various model formats, e.g. format of ONNX, Caffe, TensorFlow etc.,</p>
+</blockquote>
+</aside>
+<p>There is one concern that loading/parsing model data format in hundreds of MBs might be too heavy for JavaScript runtime. Can we consider another approach to load/parse model data without storing it as a JavaScript variable?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2018-03-29</div>
+          <div class="post_content">
+<p>This is a valid concern. In my mind, we may start with some net architectures optimized for size, say MobileNet (~16MB) and SqueezeNet (~5MB). We may also consider API enhancement that allows to load data from URL.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2018-03-29</div>
+          <div class="post_content">
+<p>As a proof of concept (POC), we put together the Web ML API polyfill and browser prototype.</p>
+<p>You may have interests to check out the examples:</p>
+<p><a class="onebox" href="https://huningxin.github.io/webml-examples/" rel="nofollow noopener" target="_blank">https://huningxin.github.io/webml-examples/</a></p>
+<p>The examples started with MobileNet. The model is current in TensorFlow-Lite file format (FlatBuffers). Testing other architectures (e.g. SqueezeNet) and formats (e.g. ONNX and coreml) is in the plan.</p>
+<p>The <a href="https://github.com/intel/webml-polyfill/blob/master/docs/api.md" rel="nofollow noopener">JavaScript API</a> of POC focuses on neural network inference. The current API is modeled from <a href="https://developer.android.com/ndk/guides/neuralnetworks/index.html" rel="nofollow noopener">NN API</a>. It is just served as a starting point for iterations with other APIs, e.g. <a href="https://developer.apple.com/documentation/metalperformanceshaders" rel="nofollow noopener">MPS</a>/<a href="https://developer.apple.com/documentation/accelerate/bnns" rel="nofollow noopener">BNNS</a> and DirectML.</p>
+<p>The <a href="https://github.com/intel/webml-polyfill" rel="nofollow noopener">polyfill</a> implements two backends: WebAssembly (WASM) for CPU and WebGL2 for GPU.</p>
+<p>The <a href="https://github.com/otcshare/chromium-src" rel="nofollow noopener">browser prototype</a> is based on Chromium M65 and supports Android and MacOS. On Android, it implements Web ML API with NN API. On MacOS, it implements with MPS API.</p>
+<p>The examples allow to choose and compare different inference backends, including WASM, WebGL2 and WebML (only available in browser prototype). In our evaluation, the WebML prototype can get 6-7X speedup comparing to existing Web APIs (WASM/WebGL2 polyfill) and deliver close-to-native performance.</p>
+<p>For example, the screenshot shows the Chromium Web ML POC is doing image classification at real-time on a MacBook Pro 13":
+<div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/a8acde3daf904bbed85e9342acf6eb893137bb69" href="//discourse.wicg.io/uploads/default/original/2X/a/a8acde3daf904bbed85e9342acf6eb893137bb69.png" title="webml_mps.png"><img alt="webml_mps" data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/a/a8acde3daf904bbed85e9342acf6eb893137bb69_2_10x10.png" height="500" src="//discourse.wicg.io/uploads/default/optimized/2X/a/a8acde3daf904bbed85e9342acf6eb893137bb69_2_596x500.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/a/a8acde3daf904bbed85e9342acf6eb893137bb69_2_596x500.png, //discourse.wicg.io/uploads/default/original/2X/a/a8acde3daf904bbed85e9342acf6eb893137bb69.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/a/a8acde3daf904bbed85e9342acf6eb893137bb69.png 2x" width="596"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">webml_mps.png</span><span class="informations">835×700 271 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+<p>You may check out the slides for more info about the POC:</p>
+<p><iframe frameborder="0" height="291" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://www.slideshare.net/slideshow/embed_code/key/9zA2a3vksngyPZ" width="342"></iframe>
+</p>
+<p>Feedbacks and comments are welcome. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-04-02</div>
+          <div class="post_content">
+<p>FYI: as you may already know, <a href="https://js.tensorflow.org" rel="nofollow noopener">TensorFlow.js</a> has been released.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-04-02</div>
+          <div class="post_content">
+<p>Sounds great! I’m so excited to see that.</p>
+<blockquote>
+<p>Testing other architectures (e.g. SqueezeNet) and formats (e.g. ONNX and coreml) is in the plan.</p>
+</blockquote>
+<p>I’m looking forward to these features. Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2018-04-24</div>
+          <div class="post_content">
+<p>The SqueezeNet/ONNX examples were added into Web ML API Examples: <a href="https://huningxin.github.io/webml-examples/" rel="nofollow noopener">https://huningxin.github.io/webml-examples/</a></p>
+<p>Feel free to check it out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1817_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">root</div>
+          <div class="creation_date">2018-05-14</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="10" data-topic="2491">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ningxin_hu/40/513_1.png" width="20"/> Ningxin_Hu:</div>
+<blockquote>
+<p>webml</p>
+</blockquote>
+</aside>
+<p>Great to see this work happening. One point of feedback - it would make a lot of sense to design the API in a way this can be pulled out of the main thread, since these are computationally heavy operations. (Also, it states WebML - but it is more or less a neural network API. Might be worth addressing that when officially proposing it.)</p>
+<p>API surface wise (especially the operations), I can see why certain limitations were put in place (e.g. missing common parts while having some extremely specific parts) - since it inherits those limitations from the Android NNAPI) - but might not be the best subset when actually trying to move this forward.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/513_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ningxin_Hu</div>
+          <div class="creation_date">2018-05-15</div>
+          <div class="post_content">
+<p>Great feedback!</p>
+<aside class="quote no-group" data-post="14" data-topic="2491">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/root/40/68_1.png" width="20"/> root:</div>
+<blockquote>
+<p>main thread</p>
+</blockquote>
+</aside>
+<p>Agree. Besides computation offloading from main thread, I can also see interesting usage if the API can be used in Service Worker, e.g. to serve the image classification request on device if network is not available.</p>
+<aside class="quote no-group" data-post="14" data-topic="2491">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/root/40/68_1.png" width="20"/> root:</div>
+<blockquote>
+<p>neural network API</p>
+</blockquote>
+</aside>
+<p>You are right. The WebML is a boarder topic. Our current focus is neural network API. So WebNN is more accurate.</p>
+<aside class="quote no-group" data-post="14" data-topic="2491">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/root/40/68_1.png" width="20"/> root:</div>
+<blockquote>
+<p>API surface</p>
+</blockquote>
+</aside>
+<p>Inheriting from NNAPI has historic reason when we started the investigation. As we mentioned, it is just a starting point to prove the concept with real data. Moving forward, I believe the proposal will be a cross-platform NN API backed by multiple native APIs , e.g. Windows/DirectML, iOS/MacOS/BNNS/MPS and Android/NNAPI.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-05-15</div>
+          <div class="post_content">
+<p>I strongly agree with multi-threaded WebNN, i.e. exposing WebNN API to Workers. However, I slightly have an concern about exposing it to Service Workers, because this might allow Service Workers to cause unexpected power consumption when receiving a push notification or performing background sync, for example. Thus, I feel we might need to consider security and privacy concerns carefully.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1598_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomoyukilabs</div>
+          <div class="creation_date">2018-05-15</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="13" data-topic="2491">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ningxin_hu/40/513_1.png" width="20"/> Ningxin_Hu:</div>
+<blockquote>
+<p>The SqueezeNet/ONNX examples were added into Web ML API Examples: <a href="https://huningxin.github.io/webml-examples/" rel="nofollow noopener">https://huningxin.github.io/webml-examples/</a></p>
+</blockquote>
+</aside>
+<p>Great works! Also, I’ve been excited about SSD MobileNet demo.</p>
+<p>A couple of comments about API design:</p>
+<ul>
+<li>It would be desirable that we could check availability of each operation, e.g. checking whether ELU is implemented in the browser or not. (in this case, should I check <code>'ELU' in nn</code>?)</li>
+<li>IMHO, too much use of constant values (enums) does not seem to fit JavaScript style. However, this would be good if we could not find any better idea.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3385_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">anssik</div>
+          <div class="creation_date">2018-09-26</div>
+          <div class="post_content">
+<p>After fruitful discussions with various people interested in Web &amp; Machine Learning, including browser vendors, I’m happy to share there’s now emerging consensus to incubate “Machine Learning for the Web” topic further in a more structured manner. To that end, a group of interested people have drafted a Machine Learning for the Web Community Group Charter (<a href="https://webmachinelearning.github.io/charter/">https://webmachinelearning.github.io/charter/</a>) and we expect to create a dedicated Community Group soon to kick off this work and bring the broader community together.</p>
+<p>We welcome feedback and comments from everyone, preferably via GitHub issues (<a href="https://github.com/webmachinelearning/charter/issues/new">https://github.com/webmachinelearning/charter/issues/new</a>) or alternatively in this thread.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3385_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">anssik</div>
+          <div class="creation_date">2018-11-01</div>
+          <div class="post_content">
+<p>The W3C Machine Learning for the Web Community Group (WebML CG) launched early October and had its first F2F meeting at TPAC on 26 Oct 2018.</p>
+<p>If you’re interested in this topic, please join now to influence the direction of the work: <a href="https://www.w3.org/community/webmachinelearning/">https://www.w3.org/community/webmachinelearning/</a></p>
+<p>The WebML CG is in process of soliciting use cases that will be used to inform the specification work that is expected to commence later this year.</p>
+<p>For more useful resources, please see the landing page:
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<a href="https://webmachinelearning.github.io/" target="_blank">Machine Learning for the Web</a>
+</header>
+<article class="onebox-body">
+<h3><a href="https://webmachinelearning.github.io/" target="_blank">Machine Learning for the Web</a></h3>
+<p>Making Machine Learning a first-class web citizen</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2835_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jbingham</div>
+          <div class="creation_date">2020-09-25</div>
+          <div class="post_content">
+<p>Just wanted to update this thread with some progress in the Web ML Community Group:</p>
+<p>We have 2 proposals that are currently incubating:</p>
+<ol>
+<li>Web NN API, as Ningxin has mentioned earlier in this thread, and is now under active development in the community group. <a href="https://webmachinelearning.github.io/webnn/" rel="nofollow noopener">https://webmachinelearning.github.io/webnn/</a>
+</li>
+<li>Model Loader API, for running a pre-trained model: <a href="https://webmachinelearning.github.io/model-loader/" rel="nofollow noopener">https://webmachinelearning.github.io/model-loader/</a>
+</li>
+</ol>
+<p>Please join the group and the discussion if you’re interested!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] navigator.cpu</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] navigator.cpu</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>navigator.cpu returns the processor name, speed of the processor in MHz, floating point performance and the number of logical cores of the processor. This property allows for auto optimization of simulator graphics, calculation precision and recommending the best settings to the user based on his hardware.</p>
+<p>Currently we have to make hacky workarounds to determine the speed of the processor on the device to optimize web apps. They are not accurate because it is dependent on javascript engine optimization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>This API addition would add a good amount of data that could be used to track users across the web even more specifically. <code>navigator.hardwareConcurrency</code> provides the logical core count if needed. That’s very useful for perhaps getting an idea of your visitors in general and knowing what you can expect.</p>
+<p>What exactly is your use-case for needing more CPU information? How do you expect to write JavaScript to take advantage of this information? Wouldn’t simply writing towards the lowest common denominator be enough since if it runs fine there on something faster with more resources it would simply run even better if all other aspects are equal?</p>
+<p>Also, recommending settings based on this static info isn’t a good idea. A 1.5GHz ARM processor runs very differently than a 1.5GHz AMD64 based machine. Even then, a 1.5GHz ARM in one device may run differently than the exact same chip in another device. Since heat dissipation is an issue. You’d be far better off for the use-case of “recommending settings” by running quick benchmarks of code an analyzing the results. That way you see how the device itself is actually operating, not just what it is capable of providing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>Concerns about privacy are no excuse not to move the web forward. I’m not even sure what are the concerns.</p>
+<p>Edit: Understood a bit of your privacy concerns. TBH, even without this ad networks can track you with just your ip address and behavior analysis. This is nothing too concerning. Instead of giving people the illusion of “privacy”, we should focus on improving the web experience. There is no privacy when your ip address is exposed. Its an illusion, there is no use in ruining experience for a general person.</p>
+<p>Here is a use case for us:
+We have a flight simulator app, currently only available in the app store and play store. We optimize it for flagship smartphone devices and common devices (ie Google Pixel, Samsung and Apple devices and some Chinese brands) by testing out their performance in our labs manually we dynamically change the settings for levels. We have a database for quality settings that change when you go from one area to another. This works properly because we know the specs when we have tested the devices, which results in a very predictable experience. The problem with bench-marking is that we cannot benchmark the entire game on a single device, while on the start menu. It takes days to benchmark properly every single area with automated testing. When we can identify the device specs properly, the experience becomes much more predictable.</p>
+<p>We have plans to port the game to the web, because the web now supports wasm and WebGl. However due to this, we cannot risk backlash and people telling us that our product is non-optimized, just like the people that complain about some other game developers. Web has to support more features like native apps before we can start porting our product.</p>
+<p>There are many more examples, but I think this should be enough.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/f/3d9bf3/40.png" width="20"/> Freddy:</div>
+<blockquote>
+<p>Concerns about privacy are no excuse not to move the web forward. I’m not even sure what are the concerns.</p>
+</blockquote>
+</aside>
+<p>This is exactly why the <a href="https://www.w3.org/TR/battery-status/">battery status</a> API was removed from browsers (and Chrome is addressing whether or not to remove it.) So yes, it’s a <em>MAJOR</em> reason to have caution over new APIs that allow more invasive tracking of users.</p>
+<aside class="quote no-group" data-post="3" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/f/3d9bf3/40.png" width="20"/> Freddy:</div>
+<blockquote>
+<p>Edit: Understood a bit of your privacy concerns. TBH, even without this ad networks can track you with just your ip address and behavior analysis. This is nothing too concerning.</p>
+</blockquote>
+</aside>
+<p>You don’t understand it from what I can tell. You’re saying you need this API so let’s ignore how it may allow user’s privacy to be invaded further. Meanwhile, you feel since “tracking is possible” already in some form, this API should not consider that at all. Well, IP address is one thing, but 5 users, or a few thousand, can all be behind one IP. Well, having CPU information like this then allows a tracker to more specifically track a single device type or even a single device itself within the network. That’s <em>FAR</em> more powerful than you realize beyond just IP and behavior tracking.</p>
+<aside class="quote no-group" data-post="3" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/f/3d9bf3/40.png" width="20"/> Freddy:</div>
+<blockquote>
+<p>This works properly because we know the specs when we have tested the devices, which results in a very predictable experience.</p>
+</blockquote>
+</aside>
+<p>Has your company also tested them in multiple temperature scenarios? And can you take that into account when recommending settings? A Pixel in a 65 degree room operates differently from one that has been in an 80 degree area for a while. Thermals affect the performance (quite dramatically at times) on these devices. A simple “hardware says it has X” benchmark doesn’t tell the whole story for what to recommend.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>You don’t understand it from what I can tell. You’re saying you need this API so let’s ignore how it may allow user’s privacy to be invaded further. Meanwhile, you feel since “tracking is possible” already in some form, this API should not consider that at all. Well, IP address is one thing, but 5 users, or a few thousand, can all be behind one IP. Well, having CPU information like this then allows a tracker to more specifically track a single device type or even a single device itself within the network. That’s FAR more powerful than you realize beyond just IP and behavior tracking.</p>
+</blockquote>
+</aside>
+<p>Listen man. The people who want your details can easily bypass these trivial things you talk about. The only result of the pseudo privacy measures that you want to take is a bit limited tracking for ad networks. There are already enough other ways to track you WITHOUT Javascript and cookies.</p>
+<p>The only thing you provide because of this is that the web always remains sub par to native apps. Any measures like this are an illusion of privacy, nothing more.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>Web standards don’t work as someone comes up with an idea, they request, so browser vendors just do it without question. It is a discussion. One which involves looking at multiple aspects of additions to see if they are acceptable to the web platform as a whole.</p>
+<p>I understand you vehemently object to anyone considering your company has bad intent therefore everyone else must have the same good intent. However, the world doesn’t function that way. User privacy and security needs to be considered. The Battery API for one was implemented live in browsers, then after it was out people realized it added to the tracking capability of possibly malicious actors. So, it was <em>REMOVED</em>. Something that is quite unprecedented in the speed with which it was done.</p>
+<p>You’re asking for a new API which comparably provides a great bundle of new device-specific information which when <em>combined</em> with other resources allows for far more targeted user tracking. You seem to be shutting your mind down to any possible notion of the API having issues. Instead, try to work <em>with</em> the community to find a way to protect the API access or ask for only the information you <em>truly</em> need to achieve the task required. That provides a productive conversation around API constrains and access permissions can be had.</p>
+<p>Further, you’re still not addressing the thermal issue I brought up at all. Simply because a device’s hardware says it is something doesn’t mean you necessarily have it. Even in the same device at two different points in time. So how would your API handle this? If your app is configured at a Pixel in 68 degrees F while the user when running the app is in a room with a temperature of 78 degrees F; that’s a pretty big difference in thermals that can affect the device performance. So even if you get this API, how can you be sure your users are getting what you expect <em>consistently</em>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="6" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>The Battery API for one was implemented live in browsers, then after it was out people realized it added to the tracking capability of possibly malicious actors. So, it was REMOVED. Something that is quite unprecedented in the speed with which it was done.</p>
+</blockquote>
+</aside>
+<p>The battery status API is supported in more than 70% of users, which is all that matters (Chrome, Opera, UC Browser, Samsung Internet: source: <a href="https://caniuse.com/#feat=battery-status" rel="nofollow noopener">https://caniuse.com/#feat=battery-status</a>). The rest of the browsers get a downgraded experience and than other vendors wonder why Chrome is growing and why they are losing. Even Edge is now considering adding it. Only Firefox and Safari removed it. You need to realize that not everyone is as concerned about privacy as you are. The battery status API was removed because the people who make many of that standards are too privacy conscious and fail to see what the general user wants. If people cared about privacy as much as you say, they would not be using Facebook or other products as the Cambridge Analytics fiasco happened.</p>
+<p>The thing Chrome does right is that they ship what the general public wants, and not what the too privacy conscious board thinks. Than every other browser wonders why are they losing market share. It is because they FAIL to provide the features to the web platform. Chrome has always been the most ahead to support the web.</p>
+<p>What most of the end user wants is user experience not “privacy”. This is why we are asking for it. For those who are too concerned about privacy, put the feature enabled by default but a browser flag (chrome://flags or about:config) to disable it if user wants. Don’t make the experience of the web sub par because you are too privacy conscious.</p>
+<aside class="quote no-group" data-post="6" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>Even in the same device at two different points in time. So how would your API handle this? If your app is configured at a Pixel in 68 degrees F while the user when running the app is in a room with a temperature of 78 degrees F; that’s a pretty big difference in thermals that can affect the device performance. So even if you get this API, how can you be sure your users are getting what you expect consistently?</p>
+</blockquote>
+</aside>
+<p>We already have a solution for that. There are mathematical models and graphs designed for this. When we test the products, the temperature reading at standard room temperature (24C) and metrics like these are recorded. The temperature of mobile device is than estimated, and than either algorithm decides to dynamically downscale the resolution or decrease LOD or visibility distance to reduce too much render overhead, depending on screen size and other factors. For an optimal 60fps experience, we have to do this. There is a lot that happens behind the scenes in game industry for client side optimization.</p>
+<p>Since there is a push for WebVR and other things, vendors are currently forgetting the essential things required to achieve a predictable experience.</p>
+<hr/>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>So, assuming you have thought up the perfect API for browsers to implement. How would a developer go about utilizing it? What is some example code to illustrate how you’d use multi-core detection and even the exact frequency of the cores to optimize your JavaScript? You even say yourself:</p>
+<blockquote>
+<p>They are not accurate because it is dependent on javascript engine optimization.</p>
+</blockquote>
+<p>So how would you code handle the various engines? 2 cores operating at 2.5GHz can have a different impact across Chakra, V8, Spidermonkey, and JavaScriptCore. So how will your programming work to take each engine’s differences into account?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="8" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>So, assuming you have thought up the perfect API for browsers to implement. How would a developer go about utilizing it? What is some example code to illustrate how you’d use multi-core detection and even the exact frequency of the cores to optimize your JavaScript? You even say yourself:</p>
+<p>They are not accurate because it is dependent on javascript engine optimization.</p>
+<p>So how would you code handle the various engines? 2 cores operating at 2.5GHz can have a different impact across Chakra, V8, Spidermonkey, and JavaScriptCore. So how will your programming work to take each engine’s differences into account?</p>
+</blockquote>
+</aside>
+<p>This is why WASM is there. That will provide a more consistent experience. Without WASM or Chrome’s NaCl we would have not even thought about porting.</p>
+<p>here is the example:</p>
+<p>navigator.cpu
+It returns an object with all available properties. in the form:</p>
+<p>CPU NAME</p>
+<p>SPEED in MHz</p>
+<p>No of logical cores</p>
+<p>FP1 Performance (Single precision)</p>
+<p>FP2 Performance (Double precision)</p>
+<p>The browser gets the CPU name, speed of processor in MHz, number of logical cores from OS. For the floating point performance a double precision and single precision can be calculated by the general formula.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>I understand what is expected to get returned from the API. I’m asking for what a developer’s <em>JavaScript</em> code will look like to take advantage of this API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<p>Oh that. Okay here is how we do it:</p>
+<ol>
+<li>Get the specs of user and the game level he is on and upload to our server.</li>
+<li>The server has a database record that matches the query.</li>
+<li>The optimization map is downloaded.</li>
+</ol>
+<p>The JS way:
+Get the specs, and make a get request using xhr or whatever.
+Download the optimization map file.</p>
+<p>What the optimization map is that it contains a mathematical cube in the game world that defines where specific settings should apply. It is designed according to processor and GPU.</p>
+<p>Code (pardon me, just for rough POC):</p>
+<p><code>let query = navigator.cpu</code></p>
+<p>Than post the query and download the map file. What ever else to do is dependent on the approach the app or game decides to take.</p>
+<p>There is nothing too complicated to take advantage of the API. The developer can decide on how he will compute the information to get better performance.</p>
+<p>The common logic is that he gives the specs of pc or mobile device to server. The server queries the database to see what matches the criteria and what is the proper optimization map file for it. The map file is downloaded. Than game could make what ever use it can out of the downloaded file.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<blockquote></blockquote>
+<p>[…]</p>
+<blockquote>
+<p>navigator.cpu
+It returns an object with all available properties. in the form:
+CPU NAME</p>
+</blockquote>
+<p>I’d rather not share that information. It’d make me want to fork the
+browser and have a version that returns a random string there. Having
+said that, it’s already there and people are already using JavaScript
+facial recognition to track people…</p>
+<blockquote>
+<p>SPEED in MHz
+Rated speed, current speed, maximum speed? On a laptop or smaller
+mobile device, for example, the CPUs are typically throttled down to
+run very slowly when not needed.</p>
+</blockquote>
+<blockquote>
+<p>No of logical cores
+So hyperthreading counts as separate cores?</p>
+</blockquote>
+<p>navigator.hardwareConcurrency works in Chrome.</p>
+<p><aside class="onebox stackexchange">
+<header class="source">
+<a href="https://stackoverflow.com/questions/15464896/get-cpu-gpu-memory-information" rel="nofollow noopener" target="_blank">stackoverflow.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://stackoverflow.com/users/2180034/alex-nester" rel="nofollow noopener" target="_blank">
+<img alt="Alex Nester" class="thumbnail onebox-avatar" height="128" src="https://www.gravatar.com/avatar/42a5b022042cd431041b284c621cb636?s=128&amp;d=identicon&amp;r=PG" width="128"/>
+</a>
+<h4>
+<a href="https://stackoverflow.com/questions/15464896/get-cpu-gpu-memory-information" rel="nofollow noopener" target="_blank">Get CPU/GPU/memory information</a>
+</h4>
+<div class="tags">
+<strong>javascript, memory, webgl, cpu</strong>
+</div>
+<div class="date">
+  asked by
+  
+  <a href="https://stackoverflow.com/users/2180034/alex-nester" rel="nofollow noopener" target="_blank">
+    Alex Nester
+  </a>
+  on <a href="https://stackoverflow.com/questions/15464896/get-cpu-gpu-memory-information" rel="nofollow noopener" target="_blank">07:00PM - 17 Mar 13</a>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+tion
+has some ways to get more info.</p>
+<blockquote>
+<p>FP1 Performance (Single precision)
+FP2 Performance (Double precision)</p>
+</blockquote>
+<p>And not the speed of individual cores? What about amount of physical
+RAM and available RAM?</p>
+<p>Performance is usually a RAM/CPU trade-off so it’s not clear to me why
+you need one and not the other. This all used to be available and was
+partly removed to protect people’s privacy. But not entirely.</p>
+<blockquote>
+<p>Nothing too complicated.</p>
+</blockquote>
+<p>But, why is it useful? Why not start a second thread and see if the
+first one slows down? That way if the user is browsing your map of
+local houses without intruder alarms and also playing grand theft auto,
+their game doesn’t grind to a halt.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="12" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/ee59a6/40.png" width="20"/> liamquin:</div>
+<blockquote>
+<p>But, why is it useful? Why not start a second thread and see if the
+first one slows down? That way if the user is browsing your map of
+local houses without intruder alarms and also playing grand theft auto,
+their game doesn’t grind to a halt.</p>
+</blockquote>
+</aside>
+<p>Because this is not how dynamic settings work. Models are made for this and they are cpu/gpu dependent. They are not made according to benchmarks, because the uncertainty is too high.</p>
+<aside class="quote no-group" data-post="12" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/ee59a6/40.png" width="20"/> liamquin:</div>
+<blockquote>
+<p>I’d rather not share that information. It’d make me want to fork the
+browser and have a version that returns a random string there.</p>
+</blockquote>
+</aside>
+<p>You dont have to. You will have the option to disable it in the flags.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="13" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/f/3d9bf3/40.png" width="20"/> Freddy:</div>
+<blockquote>
+<p>You dont have to. You will have the option to disable it in the flags.</p>
+</blockquote>
+</aside>
+<p>Why isn’t it instead <em>off</em> by default since there are privacy concerns over just allowing this information out to anyone? Then if users wish to use apps that take advantage of this API they’d need to opt-in by turning the API access on. Or, it could be put behind a permission request (ugh, another one) which explicitly requires a user interaction at the browser level to turn it on per-origin as they each request it. This way, users have complete control and can decide not to share the information with a given origin if that is their wish.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oazv</div>
+          <div class="creation_date">2018-05-09</div>
+          <div class="post_content">
+<p>this post is exactly why we shouldn’t allow people with no technical knowledge (or limited technical knowledge, as 80% of web developers) to have any opinion about what APIs should and shouldn’t be allowed in a browser.</p>
+<p>Getting your processor name and speed is not a privacy concern in any way shape or form. Getting you CPU name, amount of cores and speed is one of the things that a real software developer, especially a game developer does ALL THE TIME.</p>
+<p>On windows getting your CPU is as easy as GetSystemInfo() (pass a reference to a variable with the SYSTEM_INFO type as the first parameter) and on linux it’s as easy as system(“cat /proc/cpuinfo”);</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-09</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="16" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/o/34f0e0/40.png" width="20"/> oazv:</div>
+<blockquote>
+<p>this post is exactly why we shouldn’t allow people with no technical knowledge (or limited technical knowledge, as 80% of web developers) to have any opinion about what APIs should and shouldn’t be allowed in a browser.</p>
+</blockquote>
+</aside>
+<p>Is that meant for me? Pardon me, but I don’t understand why. Please enlighten me, if it refers to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oazv</div>
+          <div class="creation_date">2018-05-09</div>
+          <div class="post_content">
+<p>no, haha, it was meant for everyone else <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Freddy</div>
+          <div class="creation_date">2018-05-09</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="2741">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/garbee/40/1137_1.png" width="20"/> Garbee:</div>
+<blockquote>
+<p>Why isn’t it instead off by default since there are privacy concerns over just allowing this information out to anyone? Then if users wish to use apps that take advantage of this API they’d need to opt-in by turning the API access on. Or, it could be put behind a permission request (ugh, another one) which explicitly requires a user interaction at the browser level to turn it on per-origin as they each request it. This way, users have complete control and can decide not to share the information with a given origin if that is their wish.</p>
+</blockquote>
+</aside>
+<p>… Okay. Where should we move this now to get the opinion of vendors?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-05-09</div>
+          <div class="post_content">
+<p>It becomes a client fingerprinting issue in Web browsers, as others
+have already explained here and elswhere. JavaScript in a Web browser
+in an http/https context also can’t access /proc (or other local files)
+or call Windows APIs.</p>
+<p>Also, please remain civil - you don’t know my background, but in any
+case consensus is required from all parties, and excluding groups of
+users because you dont’ agree with them is not acceptable. Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AlexG</div>
+          <div class="creation_date">2018-05-10</div>
+          <div class="post_content">
+<p>Okay, I signed up to make my opinion. This use case is valid, as we also adjust things according to the processor and the graphics chip.</p>
+<p>I’m however concerned that why is everyone straight away against this? Is his point that this could be easily disable by turning off via flags enough?</p>
+<p>I support this because I also need it for my app.</p>
+<p>Move this forward</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

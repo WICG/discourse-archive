@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Raw Clipboard Access</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Raw Clipboard Access</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2606_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dway123</div>
+          <div class="creation_date">2019-10-15</div>
+          <div class="post_content">
+<p>Explainer: <a href="https://github.com/dway123/raw-clipboard-access/blob/master/explainer.md" rel="nofollow noopener">https://github.com/dway123/raw-clipboard-access/blob/master/explainer.md</a></p>
+<p>Summary:</p>
+<p>Powerful web applications would like to exchange data with native applications via the OS clipboard (copy-paste). The existing Web Platform has a high-level API that supports the most popular standardized data types (text, image, rich text) across all platforms. However, this API does not scale to the long tail of specialized formats. In particular, non-web-standard formats like TIFF (a large image format), and proprietary formats like .docx (a document format), are not supported by the current Web Platform.</p>
+<p>Raw Clipboard Access aims to provide a low-level API solution to this problem, by implementing copying and pasting of data with any arbitrary Clipboard type, without encoding and decoding.</p>
+<p>This could be used by:</p>
+<ul>
+<li>Online editors like Google Docs or Microsoft Office 365, copy/paste OpenOffice or Microsoft Word documents/spreadsheets/presentations (proprietary formats).</li>
+<li>
+<a href="https://crbug.com/150835#c73" rel="nofollow noopener">Figma</a> or Photopea, to copy/paste PhotoShop/GIMP, GIFs, or RAW images, or already-supported formats with not-supported metadata (long tail of metadata).</li>
+<li>Web Apps supporting “niche” types, like LaTeX, .ogg, etc (long tail of formats).</li>
+</ul>
+<p>The existing Async Clipboard API’s re-encoding is still encouraged for use cases requiring only generic types, and easier to use as custom encoders/decoders would not be necessary, but raw clipboard access allows web applications with more specific or sophisticated clipboard support needs to meet those needs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-16</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="3979">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dway123/40/2606_2.png" width="20"/> dway123:</div>
+<blockquote>
+<p>However, this API does not scale to the long tail of specialized formats. In particular, non-web-standard formats like TIFF (a large image format), and proprietary formats like .docx (a document format), are not supported by the current Web Platform.</p>
+</blockquote>
+</aside>
+<p>It is currently possible to set clipboard data to a <code>base64</code> representation of a TIFF image or arbitrary data format</p>
+<p><code>event.clipboardData.setData("text/plain", dataURL.split(",").pop())</code></p>
+<p>The application can then convert the <code>base64</code> representation of the file</p>
+<p><code>$ xsel -o | base64 -w 0 -d &gt; image.tiff</code></p>
+<p>Alternatively the copied or pasted data can be converted to a <code>File</code> then written to a filesystem or piped to the application.</p>
+<p>What are the use cases for a TIFF image in a Web application?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2606_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dway123</div>
+          <div class="creation_date">2019-10-16</div>
+          <div class="post_content">
+<p>This API is proposed to improve interoperability between web and native applications. Native applications can essentially use any string to represent  any format. Therefore, in the <code>image/tiff</code> example, a native application like Photoshop or GIMP may choose to paste an image to the clipboard as <code>image/tiff</code>, which is not included in the <a href="https://www.w3.org/TR/clipboard-apis/">Clipboard API spec</a>. Existing APIs like <code>setData</code> would then not be capable of interacting with <code>image/tiff</code>, so this can limit in this example image editing applications (like <a href="http://photopea.com" rel="nofollow noopener">photopea.com</a> or <a href="http://figma.com" rel="nofollow noopener">figma.com</a>, who have asked for this sort of capability), as users would not be able to copy and paste this image format between these web and native applications.</p>
+<p>If a native application were to only provide web-incompatible formats, this would mean that no web application could interoperate with it. Similarly, if a native application were to provide both web compatible and incompatible formats, it’s possible that the web application can only access a subset of information (ex. lossy-compressed web-compatible format and uncompressed web-incompatible format).</p>
+<p>While an obvious solution for the specific case of <code>image/tiff</code> may be to simply add it to the Clipboard Spec, the long tail of formats is not feasible to add to the web platform, and proprietary formats are by definition impossible to add (without relinquishing intellectual property)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2643_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Sketchmark</div>
+          <div class="creation_date">2019-10-29</div>
+          <div class="post_content">
+<p>Just chiming in here in support. Working on the web version of SketchUp, we definitely run into user workflows that require copy and pasting 3D modeling geometry from one tab to another tab. This would certainly be useful when users are reviewing older revisions of files or working between two files.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2606_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dway123</div>
+          <div class="creation_date">2019-10-30</div>
+          <div class="post_content">
+<p>Thank you for the support, Sketchmark! We’re certainly interested in creating a standardized way to allow clipboard interoperabilty with custom formats.</p>
+<p>gked@microsoft also mentioned <a href="https://github.com/w3c/clipboard-apis/issues/104#issuecomment-542337212" rel="nofollow noopener">here</a> that it may be helpful to move this to a WICG repository, so I’ll try to get that process started.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-10-31</div>
+          <div class="post_content">
+<p>Sounds like there’s enough support for the use case to justify an incubation so moving the repo to WICG SGTM! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-10-31</div>
+          <div class="post_content">
+<p>The repo now lives in <a href="https://github.com/WICG/raw-clipboard-access" rel="nofollow noopener">https://github.com/WICG/raw-clipboard-access</a></p>
+<p>Happy incubating!!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2651_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bugra</div>
+          <div class="creation_date">2019-10-31</div>
+          <div class="post_content">
+<p>This sounds very useful! We’d love to be able to support copy-paste between our native and web-based apps without resorting to base64 workarounds.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

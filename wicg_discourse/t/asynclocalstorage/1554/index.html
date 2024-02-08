@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>AsyncLocalStorage</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">AsyncLocalStorage</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2016-06-08</div>
+          <div class="post_content">
+<p>(moving from <a href="https://github.com/slightlyoff/ServiceWorker/issues/906" rel="nofollow noopener">https://github.com/slightlyoff/ServiceWorker/issues/906</a>)</p>
+<p>localStorage is handy for much use cases, but unfortunately it’s api based on Sync.
+so in service worker we need to use Indexed DB for every kind of data, only if you need to store 1byte flag.</p>
+<p>I think if we don’t need index for large data search, and don’t wanna preparing ceremony for storing data,
+it’s better to have a localStorage which has Async API.</p>
+<p>or other sight of view, Cache API is more handy than IDB, but it’s specialised for Request/Response class.
+AsyncLocalStorage will looks something like CacheAPI which is generalised for Plain Old JavaScript Object.
+(we may see it as parent class of Cache API)</p>
+<p>this will solve may use case I think, for example…</p>
+<ul>
+<li>every use case for localStorage at window context</li>
+<li>saving request data for sync event</li>
+<li>saving simple/single/small data like flag, counter etc</li>
+<li>no need to prepare scheme before using (at install/activate)</li>
+</ul>
+<p>will seems…</p>
+<pre><code class="lang-auto">// class AsyncStorage
+asyncStorage.open('v1').then((store) =&gt; {
+  store.put('key', {data:'value'}).then();
+  store.match('key').then(console.log.bind(cosnole)); // { data: 'value' }
+  // etc but, no add/addAll
+});
+
+// class Caches extends AsyncStorage
+// with adding method like add/addAll
+// and optimised for Request/Response
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-06-09</div>
+          <div class="post_content">
+<p>Take a look at the localForage library, which implements an async but localStorage-like API that uses IndexedDB (amongst others) behind the scenes: <a href="https://github.com/mozilla/localForage" rel="nofollow noopener">https://github.com/mozilla/localForage</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-06-14</div>
+          <div class="post_content">
+<p>I agree that it might be best to just keep building on IDB for now. The community is also looking at making IDB less crap to use (via promises), which I think will really help.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/630_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nolanlawson</div>
+          <div class="creation_date">2016-06-26</div>
+          <div class="post_content">
+<p>I agree that LocalForage and similar libraries are the solution to this. Extensible web and all that. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/630_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nolanlawson</div>
+          <div class="creation_date">2016-09-21</div>
+          <div class="post_content">
+<p>Hm actually, is it possible that AsyncLocalStorage would have performance benefits over IDB because of a lack of transaction overhead? Important question if most folks are using IDB as a glorified key-value store (which I think they are).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-09-21</div>
+          <div class="post_content">
+<p>Wouldn’t an AsyncLocalStorage just do the same thing internally?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1067_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bsittler</div>
+          <div class="creation_date">2016-09-21</div>
+          <div class="post_content">
+<p>If AsyncLocalStorage shared storage with (non-async) localStorage for the same origin this could allow ServiceWorker to be added to existing web apps already using localStorage without forcing the rest of the app to be rewritten or the data to be migrated</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2016-09-22</div>
+          <div class="post_content">
+<p>AsyncLocalStorage is not only for ServiceWorker.
+this will help Window Context without blocking main thread, and handling friendly with other new Promise based DOM API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/630_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nolanlawson</div>
+          <div class="creation_date">2016-09-22</div>
+          <div class="post_content">
+<p>AsyncLocalStorage cannot share with non-async localStorage; it would negate the benefits because browsers have already made tradeoffs for the synchronous case (e.g. Firefox loads all data in-memory on page navigation). It would have to share with IDB or (more likely) be its own store.</p>
+<p>The question is whether there actually is a potential perf benefit. According to my colleague Ali Alabbas, there isn’t any benefit for Edge.</p>
+<p>I note this has been a request I’ve often heard from the Node community. (“Just give me LevelDB in the browser.”) I admit it is more extensible web-y.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>I was asked to submit my proposal here.</p>
+<p>I have 3 ideas for lower-level APIs for persistence.</p>
+<h2>Level DB Style</h2>
+<p>This is highly influenced by <a href="https://github.com/google/leveldb#features" rel="nofollow noopener">https://github.com/google/leveldb#features</a></p>
+<ul>
+<li>Keys and values are arbitrary byte arrays.</li>
+<li>Data is stored sorted by key.</li>
+<li>Callers can provide a custom comparison function to override the sort order.</li>
+<li>The basic operations are Put(key,value), Get(key), Delete(key).</li>
+<li>Multiple changes can be made in one atomic batch.</li>
+<li>Users can create a transient snapshot to get a consistent view of data.</li>
+<li>Forward and backward iteration is supported over the data.</li>
+</ul>
+<pre><code class="lang-auto">// Basic operations
+db.put(key, value) -&gt; Promise
+db.get(key) -&gt; Promise&lt;value&gt;
+db.delete(key) -&gt; Promise
+
+// Atomic Batch Writes
+db.batch() -&gt; Batch
+batch.put(key, value) -&gt; Batch
+batch.delete(key) -&gt; Batch
+batch.write() -&gt; Promise
+
+// Snapshot reads
+db.snapshot() -&gt; Promise&lt;Snapshot&gt;
+snapshot.get(key) -&gt; Promise&lt;value&gt;
+snapshot.iterate() -&gt; Iterator
+
+// Iterator
+db.iterate() -&gt; Iterator
+it.seekToFirst() -&gt; Promise
+it.seekToEnd() -&gt; Promise
+it.valid() -&gt; Promise&lt;isValid&gt;
+it.prev() -&gt; Promise
+it.next() -&gt; Promise
+it.key() -&gt; key
+it.value() -&gt; Promise&lt;value&gt;
+</code></pre>
+<p>This is less well designed, but we’ll need some globals for bootstrapping this process:</p>
+<pre><code class="lang-auto">window.openStorage(name, options) -&gt; Promise&lt;DB&gt; // create if not found
+// options.compare(a, b) -&gt; Number - custom comparator 
+window.delStorage(name) -&gt; Promise
+window.listStorage() -&gt; Promise&lt;names&gt;
+</code></pre>
+<h2>MMAP Style</h2>
+<p>Some applications may prefer a different approach to storage.  Consider if we wanted to compile sqlite3 using emscripten and wanted to persist the data somehow.</p>
+<pre><code class="lang-auto">window.mmap(name) -&gt; Promise&lt;MMap&gt;
+
+mm.lock(start, end) -&gt; Promise&lt;ByteArray&gt; // Ensure a range of bytes is in ram and get access as byte array
+mm.unlock(start, end) // Free a range to be cleared from ram cache.
+mm.msync() -&gt; Promise // Flush all changes in memory to disk.
+// If you try to access a bytearray that's not in ram cache, an exception will be thrown.
+</code></pre>
+<h2>Append-only Store</h2>
+<p>Many databases can be implemented with simply an append-only stream.</p>
+<pre><code class="lang-auto">window.logStore(name) -&gt; Promise&lt;LogStore&gt;
+log.write(value) -&gt; Promise // Write to file, promise resolves when data in kernel space
+log.fsync() -&gt; Promise // Do a full sync (flush kernel buffers)
+log.close() -&gt; Promise // sync and close.
+</code></pre>
+<p>This would need more APIs for reading the logs for later playback obviously.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>I may be off on some places which functions need to be async (return a promise), but this is the general idea of the core interfaces.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>Iterators are synchronous, it should probably use AsyncIterators.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1834_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">creationix</div>
+          <div class="creation_date">2017-02-21</div>
+          <div class="post_content">
+<p>Sounds great.  I’m not super up to date on the latest iterator specs.  Also I’m not sure which calls in levelDB would need to be async because they depend on I/O that may miss caches.</p>
+<p>But the basic idea is this interface with async where you might need to wait for I/O.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-02-22</div>
+          <div class="post_content">
+<p>I’m still not sure what the benefit of any of this over using a library backed by IndexedDB is?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2018-04-11</div>
+          <div class="post_content">
+<p>I’ve written up a spec for async local storage at <a href="https://domenic.github.io/async-local-storage/;">https://domenic.github.io/async-local-storage/;</a> we’re working on prototyping it Chrome.</p>
+<p>Interestingly, it’s actually specified directly on top of IndexedDB, almost like a library. This is part of a larger project for allowing shipping high-level features (like async local storage) on top of lower-level things primitives already in the browser (like IndexedDB), called <a href="https://github.com/drufball/layered-apis">layered APIs</a>.</p>
+<p>You can learn more about the motivations behind layered APIs at that link (e.g., why we think they’re a better choice than having every web developer that wants to use a feature pull in a library). My one-sentence summary is that they’re fulfilling the second half of the extensible web manifesto, where once web developers have taken the lead on showing how a high-level feature should work, it’s time to bring that in from the cold and into the platform so everyone can benefit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2019-01-10</div>
+          <div class="post_content">
+<p>Hey folks! The new “async local storage” API is fairly far along. The spec lives at <a href="https://wicg.github.io/kv-storage/" rel="nofollow noopener">https://wicg.github.io/kv-storage/</a> (transferred from domenic/async-local-storage), with the explainer at <a href="https://github.com/WICG/kv-storage/blob/master/README.md" rel="nofollow noopener">https://github.com/WICG/kv-storage/blob/master/README.md</a>.</p>
+<p>Why the name change, you might ask? Well, some fine folks at Mozilla <a href="https://github.com/WICG/kv-storage/issues/38" rel="nofollow noopener">pointed out</a> that “async local storage” implies something that would access the local storage database, not a separate IndexedDB-backed storage area. (And, as <span class="mention">@nolanlawson</span> <a href="https://discourse.wicg.io/t/asynclocalstorage/1554/9?u=domenic">pointed out upthread</a>, this separation is crucial.)</p>
+<p>Things are starting to look pretty settled for the API, with the biggest remaining piece of work on the issue tracker being the conversion of <code>keys()</code>/<code>values()</code>/<code>entries()</code> to return async iterators. Feel free to take a look!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

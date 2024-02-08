@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>User interaction with web apps</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">User interaction with web apps</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2015-11-03</div>
+          <div class="post_content">
+<p>The current HTML5 definition of the accesskey attribute is an improvement over the HTML4 definition. There is still room for improvement, and ways accesskey could be extended to be a more useful feature.</p>
+<p>Chaals has been giving it some thought, and has put together a proposed replacement for the accesskey definition:
+<a class="onebox" href="http://chaals.github.io/accesskey/index.src.html" rel="nofollow noopener" target="_blank">http://chaals.github.io/accesskey/index.src.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-03</div>
+          <div class="post_content">
+<p>I changed the title (from “improving accesskey”), because improving accesskey is the little bit (although it turns out to be a pretty useful little bit to do).</p>
+<p>The big problem is that right now the model for users interacting with applications is pretty backward. Web developers, with very little idea what the user can do or the system they can do it on, are expected to know what is a usable interface.</p>
+<p>The real result is that we get piles of javascript interfering with the default behaviour of our browsers, or being blocked from interfering - thus leaving applications unworkable.</p>
+<p>We need to reconsider who in the ecosystem is best placed to negotiate physical interactions with the user (hint: the term “user agent” does have a meaning), and how to make it easier for</p>
+<ul>
+<li>Developers to add interactivity to their apps</li>
+<li>Users to understand what controls are in an app and what they do</li>
+<li>Browsers (user agents, if you will) to offer users consistent and useful interaction</li>
+<li>“shortcuts” to be <em>shorter</em>, and not break things a particular user relies on working</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cyns</div>
+          <div class="creation_date">2015-11-05</div>
+          <div class="post_content">
+<p>One of the problems I’ve noticed is that accesskey is a markup definition of keyboard shortcuts, where most other interactivity is done in javascript.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-05</div>
+          <div class="post_content">
+<p>Yes. But “interactivity is done in javascript” is part of the problem statement… although I realise that while I have a proposed strawman solution here, the problem statement is somewhat scattered.</p>
+<p>Interactivity done in Javascript currently provides no clear way for two libraries, two components, an extension (which are important parts of most non-MS browser ecosystems), or even the browser itself, to find out what interactions have been “claimed” - nor what they actually do.</p>
+<p>It is based on the premise that the author can choose sensible interactions, which is true in the sense that they know their app and can make <em>a</em> comfortable consistent interface, but probably unchangeably false in the sense that they have very little idea about the user environment, and giving them enough information to do a good job requires a very serious reduction in privacy, to an extent that gets security people concerned.</p>
+<p>A major reason for doing interactivity in javascript “today” is that there is no markup method for it - partly based on the observation that early <code>accesskey</code> implementations in browsers <em>were</em> bad enough to be as harmful as using javascript for interactivity.</p>
+<p>That situation has changed - <code>accesskey</code> <em>conflicts</em> in browsers are mostly resolved sensibly, whereas javascript interaction conflicts are not. More and more big-name web apps have “untrustworthy” interaction - interaction that hijacks the user’s expectations of how their own user agent works without providing clear notification nor a way to stop it.</p>
+<p>It is important that there is a unification between the markup world - which is particularly important to environments where independently built components need to be composed - and the javascript world, which offers programmers a set of advantages.</p>
+<p>The javascript side of the equation is to have a standard API for registering interactions, which is powerful enough to allow sensible composition and conflict resolution. We don’t have that yet. It would be possible to build it, for example extending <code>addEventListener</code>, making it possible to get a sense of <em>why</em> those events get caught.</p>
+<p>The <code>accesskey</code> attribute value is already reflected in the DOM and therefore easily available for scripting. It also provides 'accessKeyLabel` (albeit implementation is once again hopeless in most browsers) which is a step toward finer-grained javascript control.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-05</div>
+          <div class="post_content">
+<p>I did file an issue on whether to <a href="https://github.com/chaals/accesskey/issues/7">make accessKeyLabel or an equivalent parseable</a>. I will also write a test case or two.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<p>I started writing up <a href="http://chaals.github.io/accesskey/tests/index.html">some tests</a> to find out what browsers do now.</p>
+<p>It’s depressing. Basically, the ones I tested (a bunch of stuff on Mac) gets the DOM <code>accessKey</code> attribute right, although I haven’t tested proper reflection except in Opera 11-12 (which got it right).</p>
+<p>Otherwise the browsers implement like it’s 1999 <img alt=":cry:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/cry.png?v=5" title=":cry:"/></p>
+<p>They do manage to work with the HTML 4 version of <code>accesskey</code>. Other testing I already did suggests that at least in the case where accesskey-derived shortcuts conflict with screenreaders, the browser lets the screenreader win. Screenreaders are the best at letting users discover there is an accesskey available, although being the best doesn’t imply being actually <em>good</em>. But they are not able to make that shortcut easily <em>useful</em>, which sort of defeats the point.</p>
+<p>I still need tests to determine what happens when a webpage tries to hijack an <code>accesskey</code></p>
+<p>No browser I found passed even basic tests to see if they <em>could</em> support the HTML5 processing model, let alone the basic test of whether they did. Firefox implemented something for the DOM <code>accessKeyLabel</code> attribute, but it’s a fragile, non-conforming and not very useful implementation.</p>
+<p>On the one hand, this means there are a lot of browser bugs to be filed, and that meanwhile the HTML spec should change to match reality. On the other hand, this means there is plenty of potential for doing something useful still.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<p>The github repo with the spec draft, issues, tests, etc is at <a href="http://github.com/chaals/accesskey">http://github.com/chaals/accesskey</a></p>
+<p>I welcome test results, issues or comments on existing ones, spec proposals, etc.</p>
+<p>There are some pretty big holes in the proposal at the moment <img alt=":frowning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/frowning.png?v=5" title=":frowning:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2015-11-13</div>
+          <div class="post_content">
+<p>Hey Chaals,</p>
+<p>thanks you for the work you put into this!</p>
+<blockquote>
+<p>Interactivity done in Javascript currently provides no clear way for two libraries, two components, an extension (which are important parts of most non-MS browser ecosystems), or even the browser itself, to find out what interactions have been “claimed” - nor what they actually do.</p>
+</blockquote>
+<p>Sounds like we’re (still) waiting for <a href="https://w3c.github.io/indie-ui/indie-ui-events.html">IndieUI</a> to become a thing. This is the only (proposed) infrastructure I know of, that could have the power to cater to all of the above (libraries, components, browser extensions). It would also allow us to (finally) “freely” map keyboard/touch/mouse input to actual application interactions, instead of hotwiring an interaction to a specific input.</p>
+<hr/>
+<p>Regarding the <a href="http://chaals.github.io/accesskey/index.src.html">proposal</a>:</p>
+<blockquote>
+<p>The current HTML specification assumes all shortcuts assigned will be key combinations. This does not meet the reality of deployed platforms, many of which either do not have a keyboard or also permit other activations more appropriate for a shortcut.</p>
+</blockquote>
+<p>The <code>accesskey</code> attribute contains it’s context in the name: <code>key</code>. While your observation is correct, I don’t think <code>accesskey</code> should be the entity to address all of that. Maybe <a href="https://w3c.github.io/indie-ui/indie-ui-events.html">IndieUI</a> is a way to go?</p>
+<blockquote>
+<p>A browser might apply this by adding a voice command “Написать” to a grammar of expected commands for which an event can be fired, by listening for keypresses of the Cyrillic letters “Н” (equivalent to the latin “n”) or “П” (equivalent to latin “P”) or one of the letters proposed by the author, perhaps with a standard modifier.</p>
+</blockquote>
+<p>I’m not a big fan of complex attribute values, I don’t think it’s very intuitive to couple <em>voice</em> input with <em>keyboard</em> input. Also wouldn’t voice input have the same requirement regarding list of words to allow conflict resolution? Also why not simply use the element’s label (text content)?</p>
+<blockquote>
+<p>For gestures, it is useful to present an animation of the gesture. Can we enable this?</p>
+</blockquote>
+<p>I have my problems thinking up a scenario where I’d want global gestures to do something like press a button. And even then, I’d likely go with a custom implementation for nicer visual appearance. Except for maybe “swipe from right edge of screen” to open the off-screen menu, or something like that. I haven’t put much thought into this yet, but it <em>feels</em> weird.</p>
+<blockquote>
+<p>To tell the user what the shortcut key is, this script explicitly adds the browser-described shortcut activation to the button’s label:</p>
+</blockquote>
+<p>Wouldn’t it be simpler if we could do that from CSS? I know <code>accessKeyLabel</code> is a property, not an attribute, but this looks more appealing than mutating the DOM:</p>
+<pre><code class="lang-css">button[accesskeylabel]:after {
+  content: "(" attr(accesskeylabel) ")";
+}
+</code></pre>
+<blockquote>
+<p>The accesskey attribute’s value is used by the user agent as a guide for creating a shortcut that activates or focuses the element.</p>
+</blockquote>
+<p>Why activate <em>or</em> focus? Who decides which action to take?</p>
+<blockquote>
+<p>If the user agent has a stored user preference for activation of the element, then skip to the fallback step below.</p>
+</blockquote>
+<p>How would that work?</p>
+<blockquote>
+<p>(This is a fingerprinting vector.)</p>
+</blockquote>
+<p>links to <code>http://chaals.github.io/accesskey/introduction.html#fingerprinting-vector</code>, which does not exist</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-14</div>
+          <div class="post_content">
+<p>Hi Rodney,</p>
+<aside class="quote" data-post="8" data-topic="1177">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<p>Sounds like we’re (still) waiting for IndieUI to become a thing. This is the only (proposed) infrastructure I know of, that could have the power to cater to all of the above (libraries, components, browser extensions). It would also allow us to (finally) “freely” map keyboard/touch/mouse input to actual application interactions, instead of hotwiring an interaction to a specific input.</p>
+</blockquote>
+</aside>
+<p>We are waiting for IndieUI or something of that nature to happen. For example it makes sense to treat links with known <code>rel</code> values the same way, by giving them default browser activation - and indeed some browsers did so 15 years ago, but now it’s only available in extensions as far as I know <img alt=":angry:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/angry.png?v=5" title=":angry:"/></p>
+<p>The point of using <code>accesskey</code> - by which I mean <em>any</em> author-initiated shortcut scheme - is for things which are important to a given page/app, but for which there isn’t, and probably won’t be, a standard identification. So I hope that e.g. datepickers become something standard - at the moment they are a horrible unpredictable mess that causes massive accessibility problems everywhere, given how often people need to provide a date.</p>
+<p>But the ‘add this selection to my multi-paste clipboard’ function probably won’t be standardised any time soon, even if it is really valuable in a small handful of apps. So that’s a case where the authors of those apps are more likely to request a shortcut of some kind. My goal is that they can do that without trampling on other parts of the User Agent’s interface by accident.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-17</div>
+          <div class="post_content">
+<p>[quote=“rodneyrehm, post:8, topic:1177”]</p>
+<aside class="quote">
+<blockquote>
+<p>A browser might apply this by adding a voice command “Написать” to a grammar of expected commands for which an event can be fired, by listening for keypresses of the Cyrillic letters “Н” (equivalent to the latin “n”) or “П” (equivalent to latin “P”) or one of the letters proposed by the author, perhaps with a standard modifier.[/quote]</p>
+<p>I’m not a big fan of complex attribute values, I don’t think it’s very intuitive to couple voice input with keyboard input. Also wouldn’t voice input have the same requirement regarding list of words to allow conflict resolution? Also why not simply use the element’s label (text content)?</p>
+</blockquote>
+</aside>
+<p>The idea is to stop the endless procession of attributes or scripts every time someone invents a new interface technology. Instead, the author <strong>requests</strong> a shortcut, and <em>suggests</em> something that makes sense.</p>
+<p>Sadly, existing browser implementations <a href="http://chaals.github.io/accesskey/tests/">don’t seem</a> to do anything useful if the author tried to use the HTML feature of allowing more than a single suggestion. And in any event, it seems unlikely browsers can actually know what input the user has available.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-17</div>
+          <div class="post_content">
+<p>I just updated <a href="http://chaals.github.io/accesskey/index.src.html">the proposal</a> - new algorithm that tries to match both current reality and the fact that browsers don’t, <em>a priori</em> have a way to determine e.g. what keys the user’s keyboard has…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2015-11-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="1177">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<aside class="quote">
+<div class="title">
+<div class="quote-controls"></div>
+ The Processing algorithm:</div>
+<blockquote>
+<p>If the user agent has a stored user preference for activation of the element, then skip to the fallback step below.</p>
+</blockquote>
+</aside>
+<p>How would that work?</p>
+</blockquote>
+</aside>
+<p>A browser might store a preference for activating a particular type of element, such as <code>&lt;a rel="contents"…</code> (this sort of thing was possible with Opera Presto, and pretty easy with extensions).</p>
+<aside class="quote" data-post="8" data-topic="1177">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<aside class="quote">
+<blockquote>
+<p>(This is a fingerprinting vector.)</p>
+</blockquote>
+</aside>
+<p>links to <a href="http://chaals.github.io/accesskey/introduction.html#fingerprinting-vector">http://chaals.github.io/accesskey/introduction.html#fingerprinting-vector</a>, which does not exist</p>
+</blockquote>
+</aside>
+<p>Yeah. Since I changed that part of the algorithm - in part because it was unimplemented, in part probably unimplementable - I think the fingerprinting vector has gone away. Although I’m not certain, and it needs some checking.</p>
+<aside class="quote" data-post="8" data-topic="1177">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<aside class="quote">
+<blockquote>
+<p>To tell the user what the shortcut key is, this script explicitly adds the browser-described shortcut activation to the button’s label:</p>
+</blockquote>
+</aside>
+<p>Wouldn’t it be simpler if we could do that from CSS? I know accessKeyLabel is a property, not an attribute, but this looks more appealing than mutating the DOM:</p>
+<p>button[accesskeylabel]:after {
+content: “(” attr(accesskeylabel) “)”;
+}</p>
+</blockquote>
+</aside>
+<p>Yes. But as far as I know we can’t. I am not sure how easy it is to reflect DOM values into CSS, but given the limited use cases for this and the almost total lack of implementation so far, I’m not sure it is a high priority - unlike <strong>browser</strong> notification of shortcuts which has similarly rubbish implementation today.</p>
+<aside class="quote" data-post="8" data-topic="1177">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<aside class="quote">
+<blockquote>
+<p>The current HTML specification assumes all shortcuts assigned will be key combinations. This does not meet the reality of deployed platforms, many of which either do not have a keyboard or also permit other activations more appropriate for a shortcut.</p>
+</blockquote>
+</aside>
+<p>The accesskey attribute contains it’s context in the name: key. While your observation is correct, I don’t think accesskey should be the entity to address all of that. Maybe IndieUI is a way to go?</p>
+</blockquote>
+</aside>
+<p>The reason for preserving the name is that it gets used in existing content. It turns out to be a silly name, but that’s hardly the first time we have faced this issue in HTML…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-02-23</div>
+          <div class="post_content">
+<p>There is an old <a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=23613">HTML Bug</a> that carries a bunch of thinking about how this should worl</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

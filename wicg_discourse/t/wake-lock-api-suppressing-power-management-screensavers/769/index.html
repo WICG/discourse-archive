@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Wake Lock API (suppressing power management/screensavers)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Wake Lock API (suppressing power management/screensavers)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-02-25</div>
+          <div class="post_content">
+<p>HTML5 pages that expect to remain visible, or to otherwise prevent the system from entering a low-power mode after a long period of no user interaction (eg. YouTube or SoundCloud), are currently not able to distinguish themselves from pages that just use media elements for minor flair.</p>
+<p>Chrome has an extension/app API for this in <a href="https://developer.chrome.com/apps/power" rel="nofollow noopener"><code>chrome.power</code></a>. I think this might be a solid base for a new specification (putting <code>requestKeepAwake</code> and <code>releaseKeepAwake</code> on <code>window</code> or <code>navigator</code>), with a proposed UX for pages that works like the “this tab is playing sound” icon (with icons for “this tab is keeping the [system/display] awake”). Navigating away from a page would automatically release that page’s keep-awake handle.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/546_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tagawa</div>
+          <div class="creation_date">2015-02-27</div>
+          <div class="post_content">
+<p>There’s a Chromium issue related to this:
+<a class="onebox" href="https://code.google.com/p/chromium/issues/detail?id=111043" rel="nofollow noopener" target="_blank">https://code.google.com/p/chromium/issues/detail?id=111043</a></p>
+<p>One suggestion there was that web pages in fullscreen mode could block the device from sleeping.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2015-03-02</div>
+          <div class="post_content">
+<p>There is a spec for that: <a href="http://w3c.github.io/wake-lock/">Wake Lock API</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-03-23</div>
+          <div class="post_content">
+<p>Cool, I’ve edited the thread title accordingly.</p>
+<blockquote>
+<p>6. Additional lock types</p>
+<p>The lock request and management mechanism presented in this document can be extended to support additional types of locks by adding new lock request flags to Document interface. E.g. a “system” wake lock could be introduced which would prevent the device’s cpu, radio(s), and other system services from entering a power-saving state while allowing the screen to switch off.</p>
+</blockquote>
+<p>This should actually be specified as part of the draft, since Chrome already has support for it, and pages like music sites have a need for it. (If you need an example for something that’s not ready yet, you could use “lid”, for keeping the screen awake even when the lid is closed, as is being discussed at <a href="https://code.google.com/p/chromium/issues/detail?id=287071.)" rel="nofollow noopener">https://code.google.com/p/chromium/issues/detail?id=287071.)</a></p>
+<p>What about recommendations for the UX for tabs that implement this? Can that be a non-normative section of the spec?</p>
+<p>Also, how should a polyfill extend an evented property-getting-and-setting API like this? Should it call <code>Object.observe</code> on <code>document</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2015-03-23</div>
+          <div class="post_content">
+<p>can you raise these as issues on the github repo? <a href="https://github.com/w3c/wake-lock/issues">https://github.com/w3c/wake-lock/issues</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-04-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="769">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>Also, how should a polyfill extend an evented property-getting-and-setting API like this? Should it call Object.observe on document?</p>
+</blockquote>
+</aside>
+<p>Answering my own question here: since these use fixed properties, they can be handled with ordinary getters and setters.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<p>I don’t know if this has been considered yet (and I’ll probably have to post this as a GitHub issue if that’s what the Wake Lock spec team is following more than WICG), but inhibiting the screensaver can be a security concern. If I’m a penetration tester, and I can coerce an employee to place their computer in a state where the screensaver or power management (which they are accommodated to relying on for locking their workstation) doesn’t trigger, I’ve opened a window I can sneak into that would have otherwise been shut (schedule an interview 30 minutes into their lunch hour, when they expect I wouldn’t be able to do anything in their office until they get back).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

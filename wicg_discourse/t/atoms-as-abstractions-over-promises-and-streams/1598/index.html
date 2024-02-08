@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Atoms as abstractions over Promises and Streams</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Atoms as abstractions over Promises and Streams</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nin-jin</div>
+          <div class="creation_date">2016-07-19</div>
+          <div class="post_content">
+<p>Atoms is abstration over Promises and Streams.</p>
+<p>Atoms support:</p>
+<ol>
+<li>automatic dependency tracking</li>
+<li>automatic lifecycle management</li>
+</ol>
+<p>Every atom known:</p>
+<ol>
+<li>His value or error</li>
+<li>Set of master atoms</li>
+<li>Set of slave atoms</li>
+</ol>
+<p>Atom destroys when losing last slave atom. If master change state - slaves invalidates. Atoms need not GC.</p>
+<p>Proposal API:</p>
+<pre><code class="lang-auto">interface Atom&lt;T&gt; {
+
+    constructor( config : {
+
+        // callback that uses to pull value by formula (called from get() or update())
+        pull : ( prev : T ) =&gt; T
+
+        // callback that uses to put value to another state (called from set())
+        put : ( next : T , prev : T )=&gt; T
+
+        // callback that called when atom want to destroy
+        reap : ()=&gt; void
+
+    } )
+
+    /// get stored value, or pull value and store; trows error if stored error
+    get : ()=&gt; T
+
+    /// push new value to atom
+    push : ( next : T )=&gt; T
+
+    /// try to set value (controlled by put())
+    set : ( next : T )=&gt; T
+
+    /// save error
+    fail : ( error : Error )=&gt; this
+
+    /// invalidate and deferred update if atom has slaves
+    update : ()=&gt; void
+
+    /// Thenable API
+    then&lt;P&gt; : ( done : ( next : T )=&gt; P , fail : Error =&gt; P  )=&gt; Promise&lt;P&gt;
+    catch&lt;P&gt; : ( fail : Error =&gt; P  )=&gt; Promise&lt;P&gt;
+
+    /// Event Emitter API; call handler deffered after atom state changed
+    on : ( handle : ( next : T , prev : T )=&gt; void )=&gt; this
+}
+
+
+interface AtomStatic {
+
+    /// constructor
+    new&lt;T&gt;() : Atom&lt;T&gt;
+    
+    /// force to cascade atoms synchronizing
+    sync() : void
+
+    /// atoms that have not slaves, but automatic evaluated
+    targets : Set&lt;Atom&lt;any&gt;&gt;
+}
+</code></pre>
+<p>Usage:</p>
+<pre><code class="lang-auto">var a = new Atom({ pull : prev =&gt; 1 }) // define a = 1
+var b = new Atom({ pull : prev =&gt; a.get() + 1 }) // define a = b + 1
+var c = new Atom({ pull : prev =&gt; a.get() + b.get() }) define c = a + b
+
+Atom.targets.add( c ) // start auto evaluating c. c=3 now.
+a.push( 2 ) // a = 2: b planned to defer update
+
+Atom.sync() // cascade updating atoms: b = 3; c = 5
+alert( c.get() ) // 5
+
+var config = new Atom({ pull : prev =&gt; {
+    setTimeout( ()=&gt; config.push({ name : 'Jin' }) , 1000 )
+} })
+
+var greeting = new Atom({ pull : prev =&gt; 'Hello, ' + config.get().name }) // waits until config defined
+
+var alerter = new Atom( prev =&gt; alert( greeting.get() ) )
+Atom.targtes.add( aleter )  // alerts "Hello, Jin" after 1 second
+</code></pre>
+<p>You can see some prototype here: <a href="https://github.com/nin-jin/pms-jin/tree/master/atom/prop" rel="nofollow noopener">https://github.com/nin-jin/pms-jin/tree/master/atom/prop</a></p>
+<p>More examples here (russian): <a href="https://habrahabr.ru/post/240773/" rel="nofollow noopener">https://habrahabr.ru/post/240773/</a></p>
+<p>Some theory here (russian): <a href="https://habrahabr.ru/post/235121/" rel="nofollow noopener">https://habrahabr.ru/post/235121/</a></p>
+<p>Let us discuss about detailed api.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/241_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JonathanSampson</div>
+          <div class="creation_date">2016-08-02</div>
+          <div class="post_content">
+<p>This post may be more appropriate for <a href="https://esdiscuss.org/" rel="nofollow noopener">ES Discuss</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

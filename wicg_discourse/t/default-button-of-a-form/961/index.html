@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Default button of a &lt;form&gt;</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Default button of a &lt;form&gt;</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/656_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pontus</div>
+          <div class="creation_date">2015-07-22</div>
+          <div class="post_content">
+<p>Currently a form’s default button is defined as follows:</p>
+<blockquote>
+<p>A form element’s default button is the first submit button in tree order whose form owner is that form element.</p>
+</blockquote>
+<p>This is not always practical. For example, consider something like a wizard (ie. a sequence of pages with a form on each) having “Previous” and “Next” buttons. The “Previous” button submits the form in order to temporarily store the values on the current page before returning to the previous page. In order to have the “Next” button be the form’s default button, the “Previous” button must come after it in tree order.</p>
+<p>In this rather simple case, maybe the author could get away with putting the “Next” button before the “Previous” button in the source, and then modifying the visual order with CSS and whatever other adaptations are needed/possible (e.g. tabindex), but this can quickly get unwieldy. It also seems wrong to have to base your source order on this criteria in the first place.</p>
+<p>One way to address this is to add a boolean attribute “default” to the input element:</p>
+<pre><code class="lang-auto">&lt;form&gt;
+	&lt;!-- ... --&gt;
+	&lt;input type="submit" name="previous" value="Previous" /&gt;
+	&lt;input type="submit" name="next" value="Next" default /&gt;
+&lt;/form&gt;
+</code></pre>
+<p>The definition of the default button for a form would not need to change much, but simply allow inputs of type “submit” with the “default” attribute present to supercede other submit buttons for default status. In the case that several elements have the attribute, the first in tree order of those elements should be used.</p>
+<p>Thoughts on that? Other ways to address the problem?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>I think <code>default</code> is a pretty loaded name for an attribute (there are <em>lots</em> of "default"s in HTML - <code>autofocus</code> could be considered a kind of default). What about <code>submitter</code> or something like that?</p>
+<p>Not to mention <code>default</code> is a keyword in JS, so this would be liable to need another <code>htmlFor</code>-like hack to expose its attribute in the DOM (even though keyword attributes have been fine since ES5).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/656_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pontus</div>
+          <div class="creation_date">2015-07-25</div>
+          <div class="post_content">
+<p>Sure, I have no strong opinion on the name as long as the capability exists. Something like <code>defaultbutton</code> or <code>defaultsubmit</code> might be alternatives. The meaning of <code>submitter</code> might be a bit hard to tell apart from the type declaration; <code>&lt;input type="submit" submitter /&gt;</code> seems somewhat tautological.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

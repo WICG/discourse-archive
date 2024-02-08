@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Can we detect an element&rsquo;s computed CSS values at any point of a CSS animation?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Can we detect an element&rsquo;s computed CSS values at any point of a CSS animation?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-05-01</div>
+          <div class="post_content">
+<p>Suppose I toggle a class on an element, and this triggers a CSS <code>transition</code> that lasts <code>2s</code>.</p>
+<p>Is there a way to get the computed value of the animated property (or properties) at any point during the animation? If there is more than one way, what is the best way?</p>
+<hr/>
+<p>I am guessing that I can make a loop with <code>requestAnimationFrame</code> and continually <em>poll</em> for the computed properties, but I haven’t tested this yet, and plus it feels really hacky in general to be polling for things.</p>
+<p>Also, and unfortunately, <code>MutationObserver</code> doesn’t have a way to observe an element’s computed styling. That may be a nice feature! The MO callback for such a feature would ideally fire right before the following animation loop. I suppose this isn’t any worse than polling, technically, but it may seem less hacky (though, in practice, maybe both are effectively the same, but one is explicit and fires only if a change actually happened, while the other needs to poll in order to determine if a change happened).</p>
+<hr/>
+<p>EDIT: <s>I forgot that CSS transitions don’t work with <code>--custom</code> properties.  That puts a huge damper on things.</s> Oh wait, the new <a href="https://drafts.css-houdini.org/css-properties-values-api/" rel="nofollow noopener">CSS Properties and Values API Level 1</a> allows custom properties to be transitionable!</p>
+<p>EDIT: I made a feature request for Houdini on GitHub: <a href="https://github.com/w3c/css-houdini-drafts/issues/987" rel="nofollow noopener">https://github.com/w3c/css-houdini-drafts/issues/987</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2020-05-03</div>
+          <div class="post_content">
+<p>Are you able to provide the usecase for why you want to do this? Doing this can potentially have negative implications on your sites performance and the animation itself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-05-04</div>
+          <div class="post_content">
+<p>Hello Greg, I wrote about some use cases in <a href="https://github.com/w3c/css-houdini-drafts/issues/987" rel="nofollow noopener">this Houdini GitHub issue</a>, in the “Why” section.</p>
+<p>Basically it’s a need that arrises with custom rendering systems that want to provide users access to capabilities via standard web APIs the same way as with built-in features.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2020-05-05</div>
+          <div class="post_content">
+<p>Sure you can use <code>getComputedStyle()</code> to read the animated style. Reading it in a <code>requestAnimationFrame</code> callback will mean you get the values for that frame. (<code>requestPostAnimationFrame</code> would allow you to avoid forcing a synchronous style flush but it probably won’t make much difference in most cases.)</p>
+<p>If you want to seek the animation to a particular point you can use <code>getAnimations()</code> to get the transition and then set its <code>currentTime</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-05-07</div>
+          <div class="post_content">
+<p>Oops! I noticed I posted the wrong link in my previous comment! That was a minecraft video for my nephew. <img alt=":laughing:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/laughing.png?v=9" title=":laughing:"/>  Fixed it.</p>
+<p><span class="mention">@birtles</span>  I want to avoid polling though. With rAF we will be requesting computed style even if nothing changed.</p>
+<p>I think something like the idea in the GitHub issue ^ would be nice, so that there is a notification/push based API available.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2020-05-07</div>
+          <div class="post_content">
+<p>Ok, you said “Is there a way to get the computed value of the animated property (or properties) at any point during the animation” which I assumes means you already know an animation is running?</p>
+<p>Most animations change their target properties on each frame in their active interval (step timing functions and repeated keyframes being a few of the rare exceptions) so there is little additional overhead from using <code>requestAnimationFrame</code>, assuming the animation is running on the main thread.</p>
+<p>If you want to avoid polling when no animation is running you could listen for <code>animationstart</code>/<code>animationend</code> and <code>transitionstart</code>/<code>transitionend</code> events. This would also have the advantage of skipping the delay phase. Unfortunately there is no such event for animations generated using the Web Animations API.</p>
+<p>I believe at least Firefox and Chrome internally have an animation mutation observer mechanism that reports when new animations are generated/updated/deleted. This is used for DevTools but, at least in Firefox, it does not notify for changes to animated style.</p>
+<p>For the Houdini issue, might I suggest you move the use cases to the top of the issue. Requesting a non-polling API begs the question of why the use cases require that. In fact, you will likely receive more constructive feedback if you focus on the concrete problem rather than the proposed solution.</p>
+<p>Regarding a general style change observer API, note that it would still introduce performance penalties if it requires only queuing events when a value changes. For animations that run on another thread, browsers can avoid performing the animation-related style calculations on the main thread unless requested to by Javascript. Such an API would force the style calculation for off main thread animations to also be performed on the main thread in order to detect if it the style has changed or not.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="6" data-topic="4439" data-username="birtles">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/b/e99b99/40.png" width="20"/> birtles:</div>
+<blockquote>
+<p>Regarding a general style change observer API, note that it would still introduce performance penalties if it requires only queuing events when a value changes. For animations that run on another thread, browsers can avoid performing the animation-related style calculations on the main thread unless requested to by Javascript. Such an API would force the style calculation for off main thread animations to also be performed on the main thread in order to detect if it the style has changed or not.</p>
+</blockquote>
+</aside>
+<p>That’s true! I had figured along those lines, so I suggested in that Houdini issue that the observer can observe only certain specified properties, and that unlike with DOM mutations, it would only observe the final state of animation once the handler is fired (so there would be only one item in the mutation list), which would prevent the engine from having to calculate styles potentially many times before finally triggering the observer callback.</p>
+<p>If the only observed property is a <code>--custom</code> property, then in that case the engine can entirely skip reflow/relayout, and just supply the inherited value to the observer callback, because <code>--custom</code> properties, as far as I know, are values only, not computed values (unless they have <code>calc()</code>, but the <code>calc()</code>ed value does not involve a reflow/relayout).</p>
+<p>In some cases, we may only want to observe a non-custom CSS property’s pre-computed value (not the computed values). <code>getComputedStyle</code> doesn’t provide this for us. If there was a way to specify that we want pre-coputed values with the MutationObserverInit object (or a <code>CSSPropertyObserverInit</code> for <code>CSSPropetyObserver</code>, or similar (and adding a <code>getPreComputedStyle</code> function too)) then we could have the engine tell us what the pre-computed values are (f.e. <code>height: 100%</code> is always going to give us back <code>100%</code> for the value, regardless what the actual size is), and therefore we can also avoid reflow/relayout when we know we don’t need it.</p>
+<p>As an example, a custom rendering engine could take values from <code>0%</code> to <code>100%</code> to determine how to draw WebGL objects, without needing the computed values of the DOM counterparts. The graphics could still be in sync (a DOM element with 100% size as well as a WebGL object with the same size on the screen, but via its own calculations based on percentages and not actual size values).</p>
+<p>EDIT: What about ResizeObserver? I imagine, that it must have the same considerations, because in order to tell you the size of an element, it would need to use computed values from reflow/relayout. It seems a <code>CSSPropertyObserver</code> would be similar, when wanting to observe computed values.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2020-05-11</div>
+          <div class="post_content">
+<p>Yes, IntersectionObserver, at least, has similar issues. See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1636416" rel="nofollow noopener">Mozilla Bug 1636416</a> for an example of a recent bug because of that.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Re-usable queries</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Re-usable queries</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-01-02</div>
+          <div class="post_content">
+<p>How do we reuse queries?</p>
+<p>For example, we might want to style individual components, in separate files, and we want to use the same queries inside the components. That’s why in theory I like CSS in JS because it’s super easy to reuse functions.</p>
+<p>For example, suppose we have a media query:</p>
+<pre><code class="lang-css">@media (max-width: 12450px) { ... }
+</code></pre>
+<p>then in five other components I want to style things based on the same (possibly long query):</p>
+<pre><code class="lang-css">@media (max-width: 12450px) { ... }
+</code></pre>
+<pre><code class="lang-css">@media (max-width: 12450px) { ... }
+</code></pre>
+<pre><code class="lang-css">@media (max-width: 12450px) { ... }
+</code></pre>
+<pre><code class="lang-css">@media (max-width: 12450px) { ... }
+</code></pre>
+<pre><code class="lang-css">@media (max-width: 12450px) { ... }
+</code></pre>
+<p>If we want to update the query, we have to do it in all places, which means more maintenance and chance of error. Sass/Stylus/etc solve this for us.</p>
+<p>It’d be great to somehow be able to reuse a query (and same with <span class="mention">@tomhodgins</span>’ <code>@element</code> queries). F.e.:</p>
+<pre><code class="lang-css">@media:name(max) (max-width: 12450px) {  /* some styles here */ }
+</code></pre>
+<p>Then in other places</p>
+<pre><code class="lang-css">@media:use(max)  {
+  /* styles for a component, perhaps an element query for scoping. Or add more globals styles, etc. */
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-01-02</div>
+          <div class="post_content">
+<p><a href="https://drafts.csswg.org/mediaqueries-5/#custom-mq" rel="nofollow noopener">Custom media queries</a> are already in the spec.</p>
+<p>They can be used as in the example on that page:</p>
+<pre><code class="lang-auto">@custom-media --narrow-window (max-width: 30em);
+
+@media (--narrow-window) {
+  /* narrow window styles */
+}
+@media (--narrow-window) and (script) {
+  /* special styles for when script is allowed */
+}
+/* etc */
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-01-11</div>
+          <div class="post_content">
+<p>Ah, cool. I can’t find any information on browser support. I’m guessing this means zero support?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-01-11</div>
+          <div class="post_content">
+<p>That’s correct AFAIK. I use PostCSS regularly, which (unsurprisingly) has a plugin for it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-01-11</div>
+          <div class="post_content">
+<p>Browsers have supported XPath since Internet Explorer 3.5 in 1997/8.</p>
+<p>XPath 1 is supported natively in all major browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2018-01-14</div>
+          <div class="post_content">
+<p><span class="mention">@liamquin</span> I was referring to Custom Media about the browser support in my last comment, but that’s nice to know. Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2018-01-14</div>
+          <div class="post_content">
+<p>Ah, sorry for my confusion.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

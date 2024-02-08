@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>::initial (Set your own initial styles for CSS properties)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">::initial (Set your own initial styles for CSS properties)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/132_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">devatrox</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>It has become quite common to define <code>box-sizing: border-box</code> to the * selector and also to include reset styles to all or many elements. This not only has slight performance issues but is also a bit limited (I’ll explain).</p>
+<p>So I’m proposing an <code>::inital</code> selector.</p>
+<p>On it’s own, it would affect all elements.</p>
+<p>Let’s do some examples.</p>
+<pre><code>::initial {
+  box-sizing: border-box;
+}
+</code></pre>
+<p>would do basically the same as</p>
+<pre><code>* {
+  box-sizing: border-box;
+}
+
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+</code></pre>
+<p>But it doesn’t need to parse through each and every element first, overwriting the browsers default behaviour. Instead the browser simply overwrites it’s own default styles for all elements and be done with it.</p>
+<p>This one is nice:</p>
+<pre><code>::initial {
+    transition-timing-function: ease-in-out;
+}
+</code></pre>
+<p>If you like all your transitions to use this timing function, you don’t have to set it every time or go with the * selector again. The problem with * would be that you can’t use <code>transition: name;</code> because it would then go back to the default behaviour of “ease”.</p>
+<p>For Sass-users, this would be similar:</p>
+<pre><code>$base-timing-function: "ease" !default; // overwrite this to your needs
+
+@mixin transition($property, $timing-function: $base-timing-function) {
+  transition: $property, $timing-function;
+}
+
+element {
+  @include transition(property);
+}
+</code></pre>
+<p>Let’s use the :matches() aka :any() selector to be more specific (in a modern way)</p>
+<pre><code>:matches(article, aside, header, footer, [...])::inital {
+  display: block;
+}
+</code></pre>
+<p>There are many usecases for this and it would be a good performance bump. What do you say?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">H0shi</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>I think this is a nice idea!
++1</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>The idea is wonderful. Especially useful for CSS Custom Properties if you want to specify they should not inherit. Currently, this is a major pain point. Thanks for coming up with this!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/86_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">csuwildcat</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>Makes sense, but as far as priority, I’m not sure how significant it is. There are many more high-value features I’d place ahead of this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="198">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/devatrox/40/132_1.png" width="20"/> devatrox:</div>
+<blockquote>
+<p>would do basically the same as [a <code>*</code> selector]</p>
+<p>But it doesn’t need to parse through each and every element first, overwriting the browsers default behaviour. Instead the browser simply overwrites it’s own default styles for all elements and be done with it.</p>
+</blockquote>
+</aside>
+<p>If I understand correctly, the only difference between <code>::initial</code> and <code>*, ::before, ::after</code> would be performance? If so, I don’t think this should be a author-visible feature. We can just teach browsers to recognize the universal selector and optimize it as appropriate, if they don’t already.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p>I don’t think this is true, Simon. <span class="mention">@initial</span> would modify the “initial” value of the property browser-wise. This is quite different from overriding the property at the lowest declaration-wise level.</p>
+<p>Example:</p>
+<pre><code>* { --fc-grid-template-columns: none; }
+body &gt; main { --fc-grid-template-columns: 1fr auto 300px 1fr; }
+
+@media(...) { body &gt; main { --fc-grid-template-columns: initial; } }
+</code></pre>
+<p>would make --fc-grid-template-columns invalid, whereas</p>
+<pre><code>@initial { --fc-grid-template-columns: none; }
+body &gt; main { --fc-grid-template-columns: 1fr auto 300px 1fr; }
+
+@media(...) { body &gt; main { --fc-grid-template-columns: initial; } }
+</code></pre>
+<p>would make it return to none.</p>
+<p>Also, as new pseudo-elements get added (eg: ::before(2)), you don’t have to add continuously more code to support them. This avoids code duplication and, ultimately, prevent it from becoming quickly obsolete.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/132_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">devatrox</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p>In case of the box-sizing example, yes, we should not create a new selector for *. It would only be performance (though important) and less code. The real point of ::inital is explained after that. Especially when working with shorthands it can become quite useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>You seem to have a good handle on how this could work — want to team up with <span class="mention">@devatrox</span> to put a proposal together for the CSS WG?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/132_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">devatrox</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>This sounds great! I have no experience in writing proper proposals. Could probably use some help on this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<ol>
+<li>Don’t be scared, just write up what you think is useful. Most people are nice, even in disagreement. When they’re not I and others will be happy to bash their skulls in (but nicely).</li>
+<li>Think of use cases over technical solution, they’re far more important. Notably be sure to explain well how this enables things that would fail with <code>*</code> (and not just performance-wise).</li>
+<li>I get the impression that <span class="mention">@FremyCompany</span> is thinking more of an at-rule than a pseudo. That makes sense to me too (but I’ll let you folks sort that out).</li>
+<li>Ask for review, share it, etc.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/84_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FremyCompany</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>I would be happy to work on that with you.</p>
+<p>As a starting point, I think we would need use cases. We already have two, given this thread: setting an initial value for custom properties that isn’t “invalid” and changing the default “box-sizing” mode (this is a really good one, because it is mentioned as one of the big css mistakes in <a href="http://wiki.csswg.org/ideas/mistakes" rel="nofollow noopener">http://wiki.csswg.org/ideas/mistakes</a>). Can you think about anything else?</p>
+<p>If you want to send me a mail, please feel free to do so btw (<a href="mailto:francois.remy.dev@outlook.com">francois.remy.dev@outlook.com</a>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>I’m not convinced these use cases justify a new feature.</p>
+<blockquote>
+<p>setting an initial value for custom properties that isn’t “invalid”</p>
+</blockquote>
+<p>What it the use case for that? In your earlier example with <code>--fc-grid-template-columns: initial</code>, it looks like you want to use <code>initial</code> as a variable that you can redefine… But we already have a mechanism for variables you can re-define: custom properties.</p>
+<blockquote>
+<p>changing the default “box-sizing” mode</p>
+</blockquote>
+<p>What’s wrong with <code>* { box-sizing: border-box }</code> ? Performance doesn’t count: browsers can optimize <code>*</code> just as well as <code>@initial</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>The setting of partial properties (e.g. the <code>transition-timing-function</code> from the OP) is a definite use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>Again, I don’t see the difference with a <code>*</code> selector. <a href="http://dev.w3.org/csswg/css-transitions/#transition-timing-function-property"><code>transition-timing-function</code></a> is totally a property of its own, in addition to being one of the subproperties of the <code>transition</code> shorthand.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>Quoting from the OP:</p>
+<aside class="quote" data-post="1" data-topic="198">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/devatrox/40/132_1.png" width="20"/> devatrox:</div>
+<blockquote>
+<p>The problem with * would be that you can’t use transition: name; because it would then go back to the default behaviour of “ease”.</p>
+</blockquote>
+</aside>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>Oh, right. This has deeper implications on implementations than I first realized. At the moment, shorthand property declarations can be expanded into the equivalent multiple longhand declarations as soon as they’re parsed. (Including defaulting to the initial value for components that were omitted.) If the initial value can be change later (including by a different stylesheet), it means we have to keep around at most an half-parsed/expanded representation of shorthands. This could have a significant complexity and performance cost.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>No you don’t.  You can still expand the shorthand, you’d just need to fill in the unspecified longhands with “initial” rather than the literal initial value.  That’s completely compatible with the spec and doesn’t require any additional processing (you’d just resolve it into the actual initial value at specified-time).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/132_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">devatrox</div>
+          <div class="creation_date">2014-06-14</div>
+          <div class="post_content">
+<p>Thank you! I will contact you soon on that. I am on vacation right now so don’t expect anything in the next few days.</p>
+<p>We’ll see if the use cases can really justify this new selector/at-rule and adress the points against it by <span class="mention">@SimonSapin</span> . Performance might not be as major as I had in mind at first? But it wasn’t why I came up with it in the first place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2014-06-21</div>
+          <div class="post_content">
+<p>Setting “better” initial values so that shorthand properties don’t change some properties to initial values you don’t want: that’s a use case I have.</p>
+<p>In cases where there is no specific difference from <code>*, *::before, *::after {…}</code> except performance, I still find that a purposeful <code>@initial</code> rule would make the code more explicit. It might also be picked up by CSS preprocessors in some ways?</p>
+<p>Another use case I have, from the top of my mind:</p>
+<pre><code class="lang-css">@initial {
+  background-repeat: no-repeat;
+}
+</code></pre>
+<p>One possible big user error:</p>
+<pre><code class="lang-css">@initial {
+  /* Text would get exponentially big: */
+  font-size: 125%;
+  /* Text would get exponentially small, and quickly invisible: */
+  font-size: 62.5%;
+}
+</code></pre>
+<p>There might be other properties that would wreak similar havoc if used in <code>@initial</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2014-06-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="19" data-topic="198">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/fvsch/40/130_1.png" width="20"/> fvsch:</div>
+<blockquote>
+<p>One possible big user error:</p>
+<p><span class="mention">@initial</span> {
+/* Text would get exponentially big: <em>/
+font-size: 125%;
+/</em> Text would get exponentially small, and quickly invisible: */
+font-size: 62.5%;
+}</p>
+</blockquote>
+</aside>
+<p>This would not give exponentially big/small text (unlike <code>* { font-size: … }</code>). The <code>font-size</code> property is inherited, so when nothing is specified for a given element, the inherited value (typically the computed value of the parent, which for <code>font-size</code> is after resolving percentages) is used, not the initial. The initial value is only used as “inherited value” for the root element.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

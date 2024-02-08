@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Support Cloudflare&rsquo;s HTMLRewriter api in Workers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Support Cloudflare&rsquo;s HTMLRewriter api in Workers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>Cloudflare Workers based their API on the Service Worker API.</p>
+<p>But Cloudflare found it quite useful to enhance that API with an <a href="https://developers.cloudflare.com/workers/runtime-apis/html-rewriter" rel="noopener nofollow ugc">HTMLRewriter api</a>.</p>
+<p>It is possible to implement the API in a <a href="https://github.com/worker-tools/parsed-html-rewriter" rel="noopener nofollow ugc">service worker</a> but it is quite costly and limited in scope (no streaming support, for example).</p>
+<p>This is a proposal to incorporate that API (more or less) into the platform so it can be used from workers (as well as from outside workers, I guess), including streaming support.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>/cc <span class="mention">@Jake_Archibald</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2022-01-03</div>
+          <div class="post_content">
+<p>Just to add a little more justification:</p>
+<p>The need has been stated eloquently by others.  For example:  <a href="https://paul.kinlan.me/we-need-dom-apis-in-workers/" rel="noopener nofollow ugc">We need DOM APIs in Workers - Modern Web Development with Chrome by Paul Kinlan</a>.</p>
+<p>Cloudflare has a strong interest in supporting the most helpful api it can provide within the tight constraints it needs to impose as far as memory usage / cpu utlization.  This is what they came up with.  I think the same findings would likely hold in a browser setting, especially on a resource-limited mobile phone.</p>
+<p>I’ve faced scenarios where I wanted to implement functionality (such as providing link preview functionality) in workers, but abandoned it due to the lack of a parser.</p>
+<p>Another use case – integrating data that is in indexedDB or other worker accessible locations into a server-rendered stream.</p>
+<p>Being that we are encouraged to take processing off the main thread, lack of some way of parsing HTML has been a significant barrier for me.</p>
+<p>From my explorations of the HTMLRewriter api, I believe it does provide sufficient hooks to implement a  DOM Parser of sorts (maybe without css query capabilities) in a fairly straightforward way, with a fairly small download footprint (at the expense of the performance toll on memory this would entail, which Cloudflare steers clear from).  Perhaps if the need for such a DOM Parser is really required, it could build on the HTMLRewriter down the road, once a good implementation is proven out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2023-04-11</div>
+          <div class="post_content">
+<p>Update.  There is now a <a href="https://github.com/worker-tools/html-rewriter" rel="noopener nofollow ugc">wasm-based custom solution, that supports streaming</a>.  Haven’t tried it yet.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

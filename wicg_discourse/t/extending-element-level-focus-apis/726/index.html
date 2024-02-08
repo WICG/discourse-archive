@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Extending Element-level focus APIs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Extending Element-level focus APIs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2015-01-06</div>
+          <div class="post_content">
+<p>For the last couple of months (yes, sorry…) I’ve investigated the domain of “sequential navigation” (what you do, when you hit <kbd>Tab</kbd>). What follows are a couple of ideas regarding the <a href="http://www.w3.org/TR/html5/editing.html#element-level-focus-apis">Element-level focus APIs</a> from an author’s (“web developer”) perspective.</p>
+<ol>
+<li>There is no simple way to find out if an element is focusable or tabbable (i.e. accessible through sequential navigation). Since user agents already maintain internal focusable flags per element and the sequential navigation list, exposing the readonly boolean properties <code>focusable</code> and <code>tabbable</code> looks like a small feat.</li>
+<li>Additionally to (1) the flags could be made accessible via CSS pseudo-classes <code>:focusable</code> and <code>:tabbable</code>.</li>
+<li>Alternatively or additionally to (1) the ElementCollections of focusable and tabbable child elements should be made available per element. This is useful to do things like (4) manually. user agents <a href="http://medialize.github.io/ally.js/tests/focusable/table.html#browser-support-tabbable">vary on what is focusable/tabbable</a> and figuring this out accurately is cumbersome.</li>
+<li>WAI ARIA Authoring Practices for <a href="http://www.w3.org/TR/wai-aria-practices/#dialog_modal">Modal Dialogs</a> says “Tab Focus must be held within the dialog until it is cancelled or submitted”. This is true for Chrome’s implementation of the <a href="http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#the-dialog-element"><code>&lt;dialog&gt;</code> element</a>. While it is possible for JavaScript to keep focus within a given element, that interception will always prevent the user from reaching the user agent’s UI (like address bar) via <kbd>Tab</kbd>. For author’s the best solution would be to add the “trap-focus” attribute to the element in which focus must be held (container). That way the user agent can limit the sequential navigation list to the tabbable elements of the container element and allow normal passing of focus to user agent UI upon <kbd>Tab</kbd>. As a bonus authors don’t have to employ loads of JavaScript to achieve the same thing.</li>
+<li>The document-wide nature of positive tabindex attributes (e.g. [tabindex=“3”]) make localized re-ordering of the navigation sequence painfully hard. The <a href="http://w3c.github.io/webcomponents/spec/shadow/#focus-navigation">ShadowDOM</a> can be used to localize the effects of positive <code>tabindex</code> attributes, and the CSS property <code>order</code> is being petitioned to <a href="http://lists.w3.org/Archives/Public/www-style/2014Dec/0235.html">affect navigation order</a>. Both approaches come with restrictions and side-effects. It might help thinking of the author’s need more along the lines of how the <a href="http://www.w3.org/html/wg/drafts/html/master/forms.html#radio-button-state-%28type=radio%29">radio button</a> works. Specifically the grouping mechanism. Along this line of thinking, the element <code>&lt;input … tabindex="3" tabgroup="gustav"&gt;</code> would still be taken out of the dom-orderd document’s navigation sequence, but not sorted to the beginning of the navigation sequence like now. Instead, the new (inert) element <code>&lt;tabgroup name="gustav"&gt;</code> would be replaced with the captured taborder sequence, in dom order of its occurrence.</li>
+</ol>
+<p>I consider 1-3 easy requests and 4 a simple enough request. 5 is an idea I’ve been toying with and wanted to get some feedback on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1047_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robdodson</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<p>I’m not sure I 100% understand option 5, the <code>&lt;tabgroup&gt;</code>, whatever it is, is confusing me <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>Are you saying that it would be useful to give elements a grouping mechanism and if a group of elements use that, then their tabindex becomes scoped to the group?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="726">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/robdodson/40/1047_1.png" width="20"/> robdodson:</div>
+<blockquote>
+<p>give elements a grouping mechanism and if a group of elements use that, then their tabindex becomes scoped to the group?</p>
+</blockquote>
+</aside>
+<p>That’s how I read it, and that would be an improvement in that authors could specify a more useful tab order more reliably.</p>
+<p>But I think a more useful approach would be allowing for non-linear navigation - Hyojin’s <a href="https://github.com/WICG/spatial-navigation/">spatial navigation proposal</a> (<a href="https://discourse.wicg.io/t/proposal-spatial-navigation-for-the-web/2402">discussed earlier in this discourse</a>) was discussed at TPAC - <a href="https://www.w3.org/2017/11/08-spatnav-minutes.html">rough notes from breakout</a>, <a href="https://github.com/WICG/spatial-navigation/tree/master/docs">slides</a>.</p>
+<p>There are interesting combinations beyond horizontal/vertical. In effect we already have this in some cases like menus, <code>aria-flowto</code>, screenreader special navigation modes, etc., and making it work consistently would be helpful. This is especially useful for graphics - flowcharts, circuit diagrams and so on often need it to make sense.</p>
+<p>Current approaches are pretty clumsy for both authors and users. In particular they lack predictability for users, and authors are stuck trying to pick an existing paradigm where there isn’t an obvious match or doing stuff that is extra baroque…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2017-11-20</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="726">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/robdodson/40/1047_1.png" width="20"/> robdodson:</div>
+<blockquote>
+<p>Are you saying that it would be useful to give elements a grouping mechanism and if a group of elements use that, then their tabindex becomes scoped to the group?</p>
+</blockquote>
+</aside>
+<p>That’s what I meant when I wrote this 3 years ago.</p>
+<p>These days I don’t think it would solve problems like countering out-of-visual-sequence orders potentially caused by flexbox and grid in any useful way. I.e. I think the taborder should be controllable by CSS to align with the visual order (also controlled by CSS).</p>
+<p>I’d like to see spatnav become a thing, but I it’s not clear to me how it will aid linear navigation.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

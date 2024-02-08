@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: New events for overscroll and scrollend</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: New events for overscroll and scrollend</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-08</div>
+          <div class="post_content">
+<p><strong>Problem</strong></p>
+<p>With <a href="https://drafts.csswg.org/css-overscroll-behavior/" rel="nofollow noopener">CSS overscroll behavior property</a> developers can prevent user-agent defined <a href="https://drafts.csswg.org/css-overscroll-behavior/#boundary-default-action" rel="nofollow noopener">default boundary actions</a>. Overscroll affordance (e.g. rubber-banding or glow effect), pull to refresh, and history swipe navigation are examples of default boundary actions.</p>
+<p>Overscroll behavior property lets developers to prevent default aformentioned boundary actions. However in order to implement customized behaviors, they still need to register a combination of scroll, touch, wheel event listeners to find out when overscrolling has started and trigger their customized scroll boundary behavior. This approach has the following disadvantages/limitations:</p>
+<ul>
+<li>Needs to be implemented for different methods of scrolling separately (touchscreen, wheel, keyboard, etc.)</li>
+<li>If the developer wants to trigger overscroll animation at the end of the scroll gesture, touchend event listener can be used for touchscreen scrolling. However for other methods of scrolling (e.g. touchpad scrolling) this won’t be possible using the currently existing events.</li>
+<li>In presence of a cross origin iframe the embedder that might get scrolled might not get the touchmove/wheel events at all.</li>
+</ul>
+<p><strong>Proposal</strong></p>
+<p>Dispatch the overscroll and scrollend events in addition to the scroll event to provide more states to the javascript code. Note that overscroll event needs a delta as while the user is overscrolling nothing changes (in terms of offsetX/Y) and hence the script will need the delta in the event to get more information.</p>
+<p><a href="https://navidz.github.io/overscroll-scrollend-events/" rel="nofollow noopener">Here</a> is the full proposed API and specification.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-08</div>
+          <div class="post_content">
+<p><span class="mention">@smaug</span> <span class="mention">@BoCupp-Microsoft</span> <span class="mention">@travisleithead</span></p>
+<p>Could you add other folks if you know they might be interested in this feature?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-08</div>
+          <div class="post_content">
+<p><span class="mention">@sahel-sh</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smaug</div>
+          <div class="creation_date">2019-04-09</div>
+          <div class="post_content">
+<p>Do all the platforms give enough information to implement scrollend? Gecko has internally
+WheelOperationEnd event, but because of OS limitations (at the time it was added, which was quite long ago), it isn’t supported everywhere.
+And what does scrollend means in case of keyboard scrolling?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-10</div>
+          <div class="post_content">
+<p>I agree that this will be implementation dependent in some input modalities. For example in Chrome we used to have one begin, update, and end for every single wheel scrolling tick. But we added the scroll latching and now batch them with some timeout. But it is much more clear for something like a touch scrolling.
+We wanted to leave that detail up to the implementation for the time being. WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-04-10</div>
+          <div class="post_content">
+<p><span class="mention">@ChumpChief</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2291_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChumpChief</div>
+          <div class="creation_date">2019-04-10</div>
+          <div class="post_content">
+<p>Couple questions to start, though I’ll need some time to digest further:</p>
+<ul>
+<li>Are you generally envisioning that this is designed to be used with overscroll-behavior: none or contain?  E.g. is the developer removing and taking over the responsibility for a reasonable overscroll-behavior, or are they augmenting the scrolling behavior (e.g. observing the distance overscrolled to decide whether to refresh content, but not altering the visual effect).</li>
+<li>Is deltaX/Y the right values to provide?  Most of the scenarios I’m thinking of want the total overscrolled distance I think (e.g. watch for when it passes 50px to pull-to-refresh, or stretch the rubber band by a function of the total distance overscrolled) rather than deltas.</li>
+<li>Today in Chromium, reversing direction from an overscroll immediately starts panning the opposite direction.  However, most pull-to-refresh style UI that I’ve seen instead wants to “relax” the spring first before starting into normal panning.  Is this “relaxing” behavior intended to be a supported scenario, and if so how would a developer implement it (does it require a change in the default overscroll behavior first)?</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sahel-sh</div>
+          <div class="creation_date">2019-04-16</div>
+          <div class="post_content">
+<p>I agree with Navid that knowing when wheel scrolling has finished will be generally implementation dependent. However during touchpad scrolling on Mac, ChromeOS, and Windows (with precision touchpad) we can get this additional information from wheel events received from OS. Thus similar to touchscrolling scrolling, touchpad scrolling on these platforms will have a clear end as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-04-16</div>
+          <div class="post_content">
+<p>Navid asked me if it’d be fine to move this repo to the WICG org.</p>
+<p>Do folks on this thread agree that the use-cases this tackles are interesting ones, and it’s worthwhile to further explore them?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sahel-sh</div>
+          <div class="creation_date">2019-04-17</div>
+          <div class="post_content">
+<p>1-scrollend event is likely to get used independent from overscroll-behavior in addition to cases that the developer wants to wait for the scroll gesture to finish before completing actions like history navigation or pull to refresh. Overscroll is more likely to get used with overscroll-behavior:none or contain unless for some reason a developer is interested in double handling.
+2-I don’t have any preference between deltaX/Y or accumulatedDeltaX/Y. Developers can calculate either pair using the other pair. If you think that most use cases would be based on accumulated values we can send those instead of raw deltas.
+3- Chromium handles local and non-local boundary actions separately: i.e. for pull to refresh and history swipe navigation which are non-local if the user triggers them, for the rest of the scroll sequence the events are not sent to the renderer and the overscroll controller “relaxes” the pull to refresh or history swipe navigation, thus no scrolling would happen during the rest of the current scroll sequence. and the action will be triggered at the end of the gesture sequence. You are right about the glow effect though. The animation is timer-based and changing scroll direction within the same scroll sequence might cause scrolling in the opposite direction instead of relaxing. Making the two cases consistent might improve the user experience. nzolghadr@ WDYT? If we want to support the relaxing behavior sending the accumulative delta makes more sense.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2291_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ChumpChief</div>
+          <div class="creation_date">2019-04-22</div>
+          <div class="post_content">
+<p>It might be easier to land on API shape with some concrete shipping UIs that we are looking to enable on the web.  For example, I’m wondering if the point we’re discussing about reversal (<span class="hashtag">#3</span>) can/should be implemented by the UA to track the total overscrolled delta and return to normal scrolling, or if the app should be driving the handoff between the customized overscroll behavior and native scrolling (which would require some new/different API shape).</p>
+<p>I’m looking at the iOS Mail app and the iOS Outlook app as examples that I think do a good job of reversing the action and allowing entry into normal panning.  By contrast, <a href="http://mobile.twitter.com" rel="nofollow noopener">mobile.twitter.com</a> does not allow reversal into normal panning if an overscroll is started.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-05-13</div>
+          <div class="post_content">
+<p><span class="mention">@ChumpChief</span> Right now the plan was for the event to be very passive not something along the line of full scroll customization. Regarding reversal of the scroll we intentionally left it up to UA to decide whether it wants to gradually reduce the overscroll delta or immediately send a delta=0 and start scrolling. I feel like either way the app should behave reasonably if they react to the given delta on the overscroll events. Either way they should never rely on how much a delta is different from the last delta they got. WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2332_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">appsforartists</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>I proposed a similar API in <a href="https://github.com/w3c/pointerevents/issues/211" rel="nofollow noopener">pointerevents#211</a>, which would provide a <code>touch-action</code> value that preferred browser scrolling, but dispatched PointerEvents if scrolling was not happening.</p>
+<p>I prefer that model over this one for 2 reasons:</p>
+<ol>
+<li>
+<p>More event types make the web platform more complex.  Getting touch right is already really hard.  You have to remember to:</p>
+<ul>
+<li>set <code>touch-action: none</code>,</li>
+<li>handle each of {Pointer,Mouse,Touch}Events, and</li>
+<li>call <code>preventDefault()</code> on <code>dragstart</code> events that happen during the capture phase.</li>
+</ul>
+<p><code>touch-action</code> is in CSS while event listening is in JavaScript, so you have to touch two separate stacks to handle touch.  Getting <code>touch-action</code> wrong breaks browser scrolling, so it’s not a good candidate for a library to handle for you (leaves more complexity for the developer).</p>
+<p>Making the PointerEvent API work in more places seems like a better approach than making developers learn to handle yet another edge case with yet another API.</p>
+</li>
+<li>
+<p>The down:move*:up|cancel state machine is relatively easy to reason about, compared to a stateless API like <code>scroll</code>.  Developers end up relying on timers to infer state from stateless APIs.  It’s unclear to me when <code>scrollend</code> is expected to be dispatched.  It’s probably either at the start or end of an overscroll, which means the other state (start|end) is missing.</p>
+</li>
+</ol>
+<p>Overloading scrolling as a proxy for touch is a hack that native developers use because scroll easing is a black box in native UI APIs, and they often want flinging their UI to feel consistent with flinging a scroll pane.  A common overscroll interaction is pull-to-reload.  Do mice/trackpad users expect to be able to overscroll to reload?  I’m skeptical that they do.</p>
+<p>Given the choice between minting a bespoke API for overscroll versus extending the current PointerEvent API to include overscroll, I’m inclined to extend PointerEvents.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2332_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">appsforartists</div>
+          <div class="creation_date">2019-05-15</div>
+          <div class="post_content">
+<p>For those of you who don’t know me, I build prototypes for the Material Design team at Google.</p>
+<p>I’ve been building gestural prototypes on the Web for years, and I’m the author of the Material Motion library.</p>
+<p>One of those prototypes is one of the <a href="https://material.io/design/components/backdrop.html" rel="nofollow noopener">backdrop pattern</a> that allows the front layer to contain a scroll pane.  The user can always drag the front layer by grabbing the subheader.  If the backdrop is open, there’s a scrim over the scroll pane that disables scrolling, and makes the whole front layer draggable.  When the backdrop is closed, the scroll pane prefers scrolling.  If its scroll position is at 0 and the user overscrolls, the front layer drags instead.  I’ve accomplished this with some hacky TouchEvent code.  I’d have preferred to use PointerEvents for consistency and cross-device portability.</p>
+<p>That prototype currently relies on an internal API, so it isn’t publicly accessible.  If it would benefit this discussion, I could make a new version with hardcoded data to give you a feel for one interaction that an overscroll solution would enable.</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="16" src="https://github.githubassets.com/favicon.ico" width="16"/>
+<a href="https://github.com/material-motion/material-motion-js/" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="60" src="https://avatars1.githubusercontent.com/u/11580480?s=400&amp;amp;v=4" width="60"/>
+<h3><a href="https://github.com/material-motion/material-motion-js/" rel="nofollow noopener" target="_blank">material-motion/material-motion-js</a></h3>
+<p>Reusable gestural interactions in JavaScript. In development. - material-motion/material-motion-js</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-05-28</div>
+          <div class="post_content">
+<p><span class="mention">@appsforartists</span></p>
+<p>The <em>overscroll</em>/<em>scrollend</em> handles something that <em>pointerevents</em> fundamentally cannot handle. The scrolling in the UAs today will pass through all boundaries including iframe boundaries and catch the first scroller. Hence that scroller (that might not be even in the iframe user first touched) will get scrolled and currently will get the <em>scroll</em> events. The input events such as <em>pointerevents</em> don’t do that. The embedder of an iframe will never* (with some asterisk here) get any input events if the user starts the finger on an embedded cross domain iframe. So it will never know whether the scroll has ended or not. It is just getting a few scroll events (as the result of being scrolled) and left in the blank whether scroll has ended or not.</p>
+<p>Regarding the state of the end and start we believe the combination of scroll, <em>scrollend</em>, and <em>overscroll</em> should draw a good picture at this point. Both <em>overscroll</em> and scroll would indicate a scroll has started. Note that there cannot be a <em>scrollbegin</em> at the beginning of the interaction as UA decides a gesture is scroll later when some moves happen and by that time it already decided to apply the first change to the scroll offset and hence there will be a scroll or <em>overscroll</em> event. <em>scrollend</em> event is supposed to be sent when user is done interacting with the page. So it doesn’t get dispatched when <em>overscroll</em> started or anything. For example for the touch case it gets dispatched when user lifts the finger. It has similar meanings for other means of input but I guess you care about touch at this point.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-05-29</div>
+          <div class="post_content">
+<p><span class="mention">@yoavweiss</span> Do we need further comments from anyone to move to under WICG? I assume we can iterate on the form on the API and what exactly the event does and does not as part of WICG flow.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p><span class="mention">@ChumpChief</span> <span class="mention">@smaug</span> <span class="mention">@appsforartists</span>
+I wonder if everyone thinks that usecase is interesting enough to move the discussion about the details of the events and how UA should behave in each case to a github repo under WICG? Could everyone file issues against the spec in <a href="https://github.com/NavidZ/overscroll-scrollend-events/" rel="nofollow noopener">Github</a> so we can follow each through and make appropriate changes?</p>
+<p><span class="mention">@yoavweiss</span> could you move the repo under WICG now?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2376_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smfr</div>
+          <div class="creation_date">2019-06-06</div>
+          <div class="post_content">
+<p>We (Apple) are supportive of this proposal, and suggest that the repo be moved to WICG. Here’s a CSS issue I raised on the topic: <a href="https://github.com/w3c/csswg-drafts/issues/4011" rel="nofollow noopener">https://github.com/w3c/csswg-drafts/issues/4011</a></p>
+<p>Some feedback from a brief discussion at the CSS F2F in Toronto:</p>
+<ul>
+<li>overscroll event needs some state to indicate whether the user’s finger is down (page needs to be able to distinguish between a rubber-band bounce at the end of a momentum scroll, the user actively pulling down, and the “settle” animation running after user lifts their finger</li>
+<li>scrollend need to clarify if it fires after the user lifts the finger, or whether it fires after the “settle” animation</li>
+<li>are scrollTop/scrollLeft ever negative or do authors have to use overscroll events to detect rubberbanding</li>
+<li>if scrollTop/scrollLeft are clamped, what about getBoundingClientRect for things inside the scroller</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-06-11</div>
+          <div class="post_content">
+<p>Given the wide support for further explore this use case, the repo was adopted into the WICG org and now lives in <a href="https://github.com/WICG/overscroll-scrollend-events" rel="nofollow noopener">https://github.com/WICG/overscroll-scrollend-events</a></p>
+<p>Happy incubating! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

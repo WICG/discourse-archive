@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Modal Window</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Modal Window</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2019-10-16</div>
+          <div class="post_content">
+<p>This proposal came out of discussions with the Web Payments WG at TPAC that also included input from members of the WebAuthn WG.</p>
+<p>The explainer is at <a href="https://github.com/adrianhopebailie/modal-window/blob/master/explainer.md" rel="nofollow noopener">https://github.com/adrianhopebailie/modal-window/blob/master/explainer.md</a></p>
+<h3>Problem</h3>
+<p>There is a need to showing UI from another origin, in a top-level context, without a complete redirect and loss of user context. However the solution must avoid the various issues with pop-ups and click-jacking that have plagued the use of <code>window.open()</code> and <code>&lt;iframe&gt;</code> in the past.</p>
+<h3>Background</h3>
+<p>The Payment Handler specification <a href="https://www.w3.org/TR/payment-handler/#openwindow-method">proposes an API</a> to render a URL inside a modal window in order to provide a mechanism for a Payment Handler to show UI.</p>
+<p><a href="https://rsolomakhin.github.io/pr/apps/password/" rel="nofollow noopener">Clever use</a> of this API demonstrated the general usefulness of this feature for other use cases such as Single-Sign-On and Web Share.</p>
+<h3>Solution</h3>
+<p>The proposal is a new API that allows a website to request a modal pop-up window. Only a single modal can be open at a time and communication between the windows will be via PostMessage.</p>
+<h4>Opener Context (Window or Worker)</h4>
+<pre><code class="lang-javascript">const modalWindow = await window.openModal(
+    'https://authorization-server.com/auth?response_type=code&amp;scope=photos&amp;state=1234zyx');
+// modalWindow is an instance of Window (https://developer.mozilla.org/en-US/docs/Web/API/Window)
+window.addEventListener('message', (e) =&gt; {
+  // Check origin
+  if ( e.origin === 'https://authorization-server.com' ) {
+      // Retrieve data sent in postMessage
+      const data = e.data;
+      // Send reply to source of message
+      e.source.postMessage('some reply', e.origin);
+  }
+}, false);
+modalWindow.postMessage('some message', 'https://authorization-server.com');
+</code></pre>
+<h4>Modal Window Context</h4>
+<pre><code class="lang-javascript">window.addEventListener('message', (e) =&gt; {
+  // Check parent origin is for a valid client
+  const client = getClientFromOrigin(e.origin)
+  if ( client ) {
+      // Retrieve data sent in postMessage
+      const data = e.data;
+      // Send reply to source of message
+      e.source.postMessage('some reply', e.origin);
+  }
+}, false);
+
+window.modalParent.postMessage('some message', '*');
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-10-16</div>
+          <div class="post_content">
+<p>Interesting. Reading the linked issues and specifications to open a modal requires user activation</p>
+<ul>
+<li>
+<ol start="11">
+<li>only triggered by user activation.</li>
+</ol>
+</li>
+<li>Website triggers event E.</li>
+<li>If event’s <a href="https://dom.spec.whatwg.org/#dom-event-istrusted"> <code>isTrusted</code> </a> attribute is false, return a <a href="https://tc39.github.io/ecma262/#sec-promise-objects" rel="nofollow noopener">Promise</a> rejected with a "<a href="https://heycam.github.io/webidl/#invalidstateerror" rel="nofollow noopener"> <code>InvalidStateError</code> </a>" <a href="https://heycam.github.io/webidl/#dfn-DOMException" rel="nofollow noopener">DOMException</a>.</li>
+<li>If this algorithm is not <a href="https://html.spec.whatwg.org/multipage/interaction.html#triggered-by-user-activation">triggered by user activation</a>, return a <a href="http://tc39.github.io/ecma262/#sec-promise-objects" rel="nofollow noopener">promise</a> rejected with an " <code>InvalidAccessError</code> "  <code>DOMException</code> .</li>
+<li>Unfortunately this is towards impossible. In an asynchronous execution environment like JavaScript you can’t really link a call to  <code>openWindow</code>  with a “payment” event unless it’s done synchronously.</li>
+</ul>
+<p>Also this proposal and the explainer use the term “Worker” not exclusively “ServiceWorker”.</p>
+<p>Questions:</p>
+<ol>
+<li>
+<p>Given than <code>window</code> is <code>undefined</code> at a <code>DedicatedWorkerGlobalScope</code> does this proposal define <code>window</code> at a <code>Worker</code> re “<strong>Opener Context (Window or Worker)</strong>”
+and the code <code>const modalWindow = await window.openModal</code>?</p>
+</li>
+<li>
+<p>Is this proposal exclusive to Payment Handler API and <code>ServiceWorker</code> or can any API utilize a <code>Worker</code> or <code>SharedWorker</code> to open a window?</p>
+</li>
+<li>
+<p>Precisely how does a user activation get transferred to a <code>Worker</code>?</p>
+</li>
+<li>
+<p>At Chrome, Chromium user activation is currently bounded within a strict 5 seconds (see <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1008065" rel="nofollow noopener">Issue 1008065: Consider different criterion as user activation</a>); given the asynchronous code involved how does this proposal intend to guarantee the “transfer” of a user activation to a <code>ServiceWorker</code> (or <code>Worker</code>) and open a window within 5 seconds?</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

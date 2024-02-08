@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Customizing styles of a SVG document from the outside</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Customizing styles of a SVG document from the outside</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<h2>Use case</h2>
+<p>A little while ago I started using SVG for icons and needed to customize the style of specific SVG elements in a referenced SVG document depending on:</p>
+<ol>
+<li>Context. Where the icon is used and what the surrounding styles are.</li>
+<li>User interaction. Especially hover, focus and active states.</li>
+</ol>
+<p>I also needed something that can work for both icons referenced from HTML (e.g. with an <code>&lt;img&gt;</code> element) and from CSS (mostly as a <code>background-image</code>). Currently there are some solutions for HTML, which require inlining the SVG glyphs and using <code>&lt;svg&gt;&lt;use xlink:href="…" /&gt;&lt;/svg&gt;</code>, and nothing for CSS (except SVG stacks which requires carefully planning the different styles in the original SVG file, duplicating elements, etc.).</p>
+<p>It would be great to be able to use the power of SVG-with-CSS for referenced SVG documents as well.</p>
+<p>Perhaps a solution should be added to the SVG Integration spec effort?</p>
+<h2>Idea: with CSS vars?</h2>
+<p>A little while ago I wrote <a href="http://fvsch.com/code/svg-css-variables/" rel="nofollow noopener">Let’s dream: customizing SVG images with CSS Variables</a>. The idea is that CSS variables defined or inherited on an element would be passed to any SVG document referenced by that element, be it as a <code>src</code> or <code>background-image</code>.</p>
+<p>I meant to update that post for the past few weeks but I thought I’d rather present the idea here and ask for your feedback, and see if you might think up alternative solutions.</p>
+<h2>Why not icon fonts?</h2>
+<p>A common solution for the use-cases described above and in the above link is icon fonts. Sadly icon fonts are a hack, and have the same kind of accessibility issues as using CSS backgrounds to represent <em>content</em> (especially icon-only buttons or links). There are efforts right now to make icon fonts more usable for designers and developers, but not particularly more accessible (or less hackish).</p>
+<p>The total lack of a simple accessibility mechanism such as <code>&lt;img alt="…"&gt;</code> makes icon fonts fundamentally inaccessible (and mapping to vaguely relevant unicode characters is a laughable “solution”… try it with a screen reader).</p>
+<h2>Example from this very site</h2>
+<p>If I disable author <code>font-family</code> declarations in my browser (“Allow pages to choose their own fonts, instead of my selection above”), this is what the main menu for this website looks like:</p>
+<p><a href="http://fvsch.com/temp/icon-fonts.png" rel="nofollow noopener">http://fvsch.com/temp/icon-fonts.png</a> [can’t inline the image as a new user]</p>
+<p>Icons are implemented with the FontAwesome icon font. This implementation breaks with no sensible fallback if users don’t allow fonts, or if the font file was not loaded for any reason (unreliable and/or slow network anyone?).</p>
+<p>With <code>&lt;img src="the_svg_file" alt="…"&gt;</code> instead, we’d still have the icons. And with images turned off, we could have text alternatives reading, e.g.:</p>
+<blockquote>
+<p>[Name] | Notifications | Search | Go To | Account</p>
+</blockquote>
+<p>The main issues with using <code>&lt;img&gt;</code> here with SVG are:</p>
+<ol>
+<li>HTTP optimization. For raster images, commonly fixed with image sprites (introducing accessibility issues). For SVG, probably fixed by either HTTP2 or SVG stacks.</li>
+<li>Style customizations, which awaits a sensible solution (as far as I know).</li>
+</ol>
+<p>Any ideas?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>SVG Integration spec: <a href="http://www.w3.org/TR/svg-integration/">http://www.w3.org/TR/svg-integration/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>There’s an old draft that might point towards a (partial) solution: <a href="http://www.w3.org/TR/SVGParam/">http://www.w3.org/TR/SVGParam/</a>. I have no idea where it is now, but it might be salvageable.</p>
+<p>Another option that could be interesting would be to surface the <code>apply-author-styles</code> from the Shadow DOM (<a href="http://www.w3.org/TR/shadow-dom/#dfn-apply-author-styles">http://www.w3.org/TR/shadow-dom/#dfn-apply-author-styles</a>) for instance on <code>img</code> so that you could have styles on the image cascade down into the SVG.</p>
+<p>(Just a couple thoughts.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">krit</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>CSS Variable was indeed seen as possibility to be able to set values from out site of the document. It was seen as a counter proposal for SVG parameters for some time.</p>
+<p>It would be interesting for styling SVG Filters for instance:</p>
+<p>CSS:</p>
+<p>filter: url(<span class="hashtag">#filter</span>)</p>
+<p>SVG:</p>
+<p>&lt;filter&gt;
+&lt;feFlood flood-color=“var(–flood)”/&gt;&lt;/filter&gt;</p>
+<p>Other resources like gradients, masks or patterns could be styled as well. However, possible security issues must be checked first.</p>
+<p>For your special use case there are new color keywords in SVG that you can use in combination with SVG OpenType fonts. Called context-fill and context-stroke <a href="http://www.w3.org/TR/SVG2/painting.html#SpecifyingPaint">http://www.w3.org/TR/SVG2/painting.html#SpecifyingPaint</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>Thanks for your input. I haven’t looked at SVG Params in depth yet.</p>
+<p>For the sake of dreaming up CSS-centric solutions, I suspect using CSS vars might be abusing the responsibility of CSS variables. Maybe a selector solution could be used instead. For instance if we have a series of <code>&lt;img class="icon" src="some_svg_file" alt="…"&gt;</code> elements, we could pass some styles to the SVG documents like this:</p>
+<pre><code>.icon::image-document(.someSelector) {
+  fill: red;
+  stroke: black;
+  stroke-width: 10;
+}
+</code></pre>
+<p>And similarly (or with a different pseudo-element/pseudo-class name) for CSS images.</p>
+<p>This would work like having a new <code>&lt;style&gt;</code> element in the SVG document with the following styles:</p>
+<pre><code>.someSelector {
+  fill: red;
+  stroke: black;
+  stroke-width: 10;
+}
+</code></pre>
+<p>To limit complexity, the selector argument could be limited, like with the <code>:not()</code> pseudo-class, and the admitted CSS properties could be limited an explicitly defined subset (all other properties being ignored then).</p>
+<p>Just an idea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>The Params spec needs to be rebased over CSS Variables, where the params set custom properties on the root implicitly.  Then everything would Just Work©.  I’ve discussed this with Shepers already, but he hasn’t gotten around to making any edits.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-06-24</div>
+          <div class="post_content">
+<p>I wanted to raise a very similar idea indepndently, but then I noticed this post.<br/>
+My idea was to use a pseudo-element as a root:</p>
+<pre><code>.icon::background-image .someSelector {
+    fill: red;
+    stroke: black;
+    stroke-width: 10;
+}
+</code></pre>
+<p>which would have a potential benefit of allowing some styles to apply to the <code>background-image</code> itself as well (even if its a non-SVG).</p>
+<p>E.g. later on you could allow <code>filter</code> on <code>::background-image</code> instead of introducing <code>background-filter</code>, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-24</div>
+          <div class="post_content">
+<p>Styling cross-document is a difficult, probably security-conscious thing.  Also, that doesn’t address multiple background layers, and doesn’t allow you to do any manipulation of the image (wrap it in a filter() or cross-fade() function, for example), as that would hide it from the selector.</p>
+<p>Best is to just get SVG Params to be a real thing, and pass in info that way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-06-25</div>
+          <div class="post_content">
+<p>I thought about it a bit more, and I agree that params (especially if integrated with CSS vars) is the best idea, if just for the encapsulation reasons.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2014-06-25</div>
+          <div class="post_content">
+<p>SVG Params w/ CSS variables seem to be the way to go indeed.
+I have two questions:</p>
+<p>Is there a way to show interest (especially from web developers) in seeing this spec pushed forward?</p>
+<p>Would it be useful to document use cases for styling referenced SVG graphics (which may or — more importantly may <em>not</em> — match SVG Params’ intended feature set)? The RICG folks recently published a document with use cases for Element Queries. Perhaps a similar approach would be helpful here?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-25</div>
+          <div class="post_content">
+<p>It’s not being stopped by lack of interest, just a lack of time on the part of either me (the Variables editor) or Doug Shepers (the guy who wrote the original SVG Parameters spec, pre-Variables).  We’ll get to it in time.</p>
+<p>Note that only FF has support for Variables right now anyway, so getting Params out sooner won’t actually have much effect.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pat92</div>
+          <div class="creation_date">2023-01-05</div>
+          <div class="post_content">
+<p>Using SVG parameters with HTML object tag is not a problem…</p>
+<p>HTML…
+</p>
+<p>SVG…
+&lt;![CDATA[
+var refs = [];
+var href = document.defaultView.location.href;
+try {
+var paramList = href.split("?")[1].split(/&amp;|;/);
+… and so on</p>
+<p>But in CSS:
+background-image: url(‘cl_UI_Arrow03.svg?S=100&amp;B=ff000055&amp;C=ff000088&amp;D=255&amp;F=255&amp;G=255&amp;H=255&amp;L=2&amp;M=255&amp;J=0&amp;R=30&amp;V=1&amp;Y=10&amp;X=10’);
+background-repeat:no-repeat;
+background-size:contain;</p>
+<p>Query string is not passed to SVG (SVG/CSS specification would be upgraded ?)</p>
+<p>I try …
+.html-class::image-document(.svg-class)
+.html-class::background-image .svg-class</p>
+<p>without success!</p>
+<p>Is it possible to use an SVG URL with parameter as background image in CSS declaration?</p>
+<p>Many thanks to all for a complete HTML/SVG/CSS example (without backend PHP or Python)</p>
+<p>Patrick</p>
+<pre><code class="lang-auto"></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pat92</div>
+          <div class="creation_date">2023-01-05</div>
+          <div class="post_content">
+<p>Appologize, I’ve forget direct object solution (without CSS)…
+</p>
+<p>AND html using CSS</p>
+<div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pat92</div>
+          <div class="creation_date">2023-01-05</div>
+          <div class="post_content">
+<p><code>::image-document</code> is not ported to last/nightly browser as well as ‘::background-image’</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

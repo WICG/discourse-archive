@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Advertising to Interest Groups without tracking</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Advertising to Interest Groups without tracking</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2920_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">michaelkleber</div>
+          <div class="creation_date">2020-06-22</div>
+          <div class="post_content">
+<h1>Overview</h1>
+<p>I’m working to design browser infrastructure that makes it possible for an advertiser to show ads to a selected group of people (a) without the advertiser learning what sites any individual person visits, and (b) without site owners learning what advertisers are using this technique to show ads to any particular person on their site.  This capability would bridge a gap between many sites’ source of revenue and the web’s privacy needs in a post-3p-cookies world.</p>
+<p>I sketched one solution in the <a href="https://github.com/michaelkleber/turtledove" rel="nofollow noopener">TURTLEDOVE explainer</a> earlier this year.  We’ve discussed this proposal in the W3C’s Improving Web Advertising Business Group, where it has elicited an array of suggestions, extensions, and proposed alternate approaches.  We’d like to bring it to WICG as a venue to include a broader range of participants and reach consensus on a range of fundamental design choices.</p>
+<h1>Problem</h1>
+<p>A large fraction of the web is supported by revenue from advertising.  Some online advertising is based on showing someone an ad while they are visiting one site, but based on information about the person’s interests gathered while they were visiting other sites.  Historically this has worked by the advertiser or their agent recognizing a specific person as they browse across web sites, a core privacy concern with today’s web.</p>
+<p>The privacy concern has led to browsers dropping or planning to drop support for 3rd-party cookies and attempting to block other means of cross-site tracking.  This substantially hurts websites’ revenue (per a <a href="https://services.google.com/fh/files/misc/disabling_third-party_cookies_publisher_revenue.pdf" rel="nofollow noopener">Google study</a> and <a href="https://twitter.com/garjoh_canuck/status/1166037247386370048" rel="nofollow noopener">other academic and industry analyses</a>) and decreases people’s satisfaction with the ads they see (per the Google study’s “Additional Reflections” section).</p>
+<p>By offering a new way to compose web pages that prevents information sharing, we should be able to offer the privacy, economic, and user experience wins all at the same time.</p>
+<p>Note that ads may also be selected based on the content of the surrounding page and site, or on prior “first-party” activity of the person while visiting the same site where they see the ad.  This incubation is not concerned with those types of ad selection.</p>
+<h1>Solution space</h1>
+<p>At a high level, the envisioned novel flow for showing an ad to a group of people involves a series of steps: creating an audience, bidding to show that audience some ad, running an auction among ads (including ones from other sources), rendering the winning ad, and after-the-fact reporting and accounting.</p>
+<p>To show the ad without leaking information, each of these steps will require some new browser mechanism with privacy guarantees.  There are substantial open questions about possible design choices for each step.</p>
+<h2>Creating an Audience</h2>
+<p>An “audience” or “interest group” is the group of people to whom an advertiser will want to show some type of ad, and in this proposal the advertiser (or their agent) still makes the decisions on putting people into groups.  In this proposal, though, the browser is responsible for keeping track of a list of which interest groups it has joined, rather than the advertiser maintaining a list of the people in each group.  To prevent leaking information, there is no web-visible way to query a browser’s group memberships or to join memberships with other user information — the only thing you can do with a group is target ads at it.</p>
+<p>Major open questions include:</p>
+<ul>
+<li>What techniques can be used to add people to interest groups.  Since the results are not web-visible, it should be feasible to allow some cross-site influence here without enabling cross-site tracking.
+<ul>
+<li>In <a href="https://github.com/michaelkleber/turtledove#browsers-joining-interest-groups" rel="nofollow noopener">TURTLEDOVE I started with a simple API</a> with no special cross-site capability.</li>
+<li>There is an <a href="https://github.com/michaelkleber/turtledove/issues/26" rel="nofollow noopener">issue</a> discussing many viable ways to expand this.</li>
+<li>There is a specific proposal by <a href="https://github.com/w3c/web-advertising/blob/master/privacy_preserving_lookalike_audience_targeting.md" rel="nofollow noopener">Ben Savage (Facebook)</a>.</li>
+<li>There is a specific proposal by <a href="https://github.com/BasileLeparmentier/SPARROW/blob/master/Interest_groups_audiences_new_building_blocks.md" rel="nofollow noopener">Basile Leparmentier and colleagues (Criteo)</a>.</li>
+</ul>
+</li>
+<li>What minimum size an interest group ought to have.  We might want to require a minimum size threshold to help address two different threats (<a href="https://github.com/michaelkleber/turtledove/issues/31" rel="nofollow noopener">issue</a>): a server learning too much information about a targeted individual, and a person seeing an ad that knows too much about them.</li>
+</ul>
+<h2>Targeting and Bidding</h2>
+<p>When a person in some interest group visits some web page, we want to offer a way for an ad targeting that interest group to participate in the ensuing ad selection process.  This process can include applying filtering rules set by the web site owner (who cares what ads appear on their pages) and by the advertiser (who cares what pages their ads appear on).  Then each candidate ad needs to produce a bid, which will compete against other ads’ bids for the same opportunity to appear.</p>
+<p>Both filtering and bidding are inherently difficult because they require combining information about the interest group with information about the web page it will appear on — two pieces of information which we need to keep any party from combining, to meet our privacy goals.</p>
+<p>The key open question here is how to safely sandbox this targeting and bidding process so that no information leaks out of it.  We’d like to reach consensus on one of several possible approaches:</p>
+<ul>
+<li>TURTLEDOVE proposed <a href="https://github.com/michaelkleber/turtledove#two-uncorrelated-requests" rel="nofollow noopener">fetching the interest-group-targeted ad in advance</a> of the actual visit to the page, and <a href="https://github.com/michaelkleber/turtledove#on-device-auction" rel="nofollow noopener">bidding via pre-fetched in-browser javascript</a> which receives secure signals from its server but is not allowed to store any data or talk to the network.  This avoids leaking the sensitive combination of information to any server, but we’ve heard that the pre-fetched in-browser bidding presents many challenges (e.g. ML model size, real-time adjustment of bidding, <a href="https://github.com/michaelkleber/turtledove/issues/32#issuecomment-641316218" rel="nofollow noopener">control of proprietary logic</a>).</li>
+<li>Criteo’s SPARROW proposal approaches the problem by <a href="https://github.com/BasileLeparmentier/SPARROW#proposal" rel="nofollow noopener">introducing an independently-run server</a> that is trusted by browsers to process but not log or leak any privacy-sensitive information, and trusted by ad tech companies to execute their proprietary filtering and bidding logic.  This would <a href="https://github.com/BasileLeparmentier/SPARROW#enhancements-wrt-turtledove-proposal" rel="nofollow noopener">solve many of the challenges</a> of in-browser bidding.  We would need to explore whether or not it is possible to meet the trust requirements and provide sufficient privacy guarantees.</li>
+<li>Perhaps there is an intermediate approach that allows the advantages of servers but doesn’t require as much trust in a single entity.  The <a href="https://github.com/WICG/conversion-measurement-api/blob/master/SERVICE.md" rel="nofollow noopener">Secure Multi-Party Computation infrastructure proposed for the Aggregation Service</a> may provide inspiration here.</li>
+</ul>
+<h2>Running an Ad Auction</h2>
+<p>The decision of which ad should appear in some location on some web page generally involves one or more ad networks running an auction or a sequence of auctions.  We need to figure out how to let them do so in a way that can involve consideration of both ads targeted through the new interest-group mechanism being developed here and ads coming from other sources.</p>
+<p>The key question remains where the auctions take place.  Auctions could run in the same place as the bidding described above — with the ad network’s business logic running either in the browser or on a mutually-trusted server.  Alternatively, auctions could run across platforms, for example with the winning bid from a browser-side auction feeding into a subsequent server-side auction.  (This would surely require some additional privacy gymnastics).</p>
+<p>The output of an auction includes both the winning ad and its price.  These must both be handled carefully since they could be vectors for leaking interest group membership information.  This probably involves some opaque object — either something like an <a href="https://fetch.spec.whatwg.org/#concept-filtered-response-opaque">opaque fetch response</a> or a novel on-device opaque computation result — which can enter later auctions and can be used for rendering and reporting (see below), but cannot be inspected directly.</p>
+<h2>Rendering an Ad</h2>
+<p>Once the winning ad has been selected, it must be rendered in the browser.  Per our privacy goals, we don’t want the surrounding web site to be able to learn what interest groups its visitors are in, even when one of those interest groups leads to the ad on the page.</p>
+<p>This calls for a new type of web page composition, in which content from different sources can appear on the same page but be unable to leak information to each other even if both sources would be willing to do so.  Both direct communication (like postMessage) and side-channels (like correlated network activity) are privacy risks.</p>
+<p>This new composition model is a separable problem, with multiple plausible solutions for our needs and with potential applications other than ads.  We will publish an independent explainer on this topic.</p>
+<h2>Reporting and Accounting</h2>
+<p>In addition to a winning ad appearing on the screen, the other outcome of this process is a bunch of logging.  This is crucial for at least three reasons: (1) winning bids cause money to change hands, (2) the results of auctions are part of a feedback loop that can affect the bidding in future auctions, and (3) logs are part of after-the-fact compliance auditing and fraud prevention.</p>
+<p><a href="https://github.com/michaelkleber/turtledove#frequency-capping-budgets-metrics-and-reporting" rel="nofollow noopener">In TURTLEDOVE</a> I assumed availability of an Aggregated Reporting API; the current design state is in the <a href="https://github.com/WICG/conversion-measurement-api/blob/master/SERVICE.md" rel="nofollow noopener">Multi-Browser Aggregation Service Explainer</a> (in WICG now).  The on-device bidding code, the auction code, and the rendered ad could all use this API to get aggregate statistics on outcomes.</p>
+<p>If bidding and auctions run instead on a trusted server, then the details of how that server shares outcome information with the auction participants are important: event-level information would still compromise our privacy goals if it becomes possible for ad networks to associate specific web page visits with specific interest groups after the fact (<a href="https://github.com/BasileLeparmentier/SPARROW/issues/5" rel="nofollow noopener">issue</a>).  So some appropriately private aggregated reporting is still needed, even if a trusted server makes its implementation easier.</p>
+<p>Key open questions here include:</p>
+<ul>
+<li>What design, implementation, and testing decisions lead to a system robust enough that the <a href="https://github.com/michaelkleber/turtledove/issues/30" rel="nofollow noopener">various parties in the ads ecosystem trust it</a> to handle data that directly affects revenue.</li>
+<li>How close to real time we can provide privacy-preserving insight into <a href="https://github.com/michaelkleber/turtledove/issues/25" rel="nofollow noopener">time-sensitive aggregate questions like win rate and remaining budget</a>.</li>
+<li>What provisions we can make to support <a href="https://github.com/michaelkleber/turtledove/issues/25" rel="nofollow noopener">auditing use cases</a>, which today might include tracking down discrepancies in individual events.</li>
+</ul>
+<h1>Whew</h1>
+<p>Thank you for reading, and sorry that even this high-level overview is so long.</p>
+<p>We would welcome opinions on how to move this work forward.  At this point, the work spans documents in two personal Github repos and several WICG and Web Advertising BG repos.  I think the best path would be to move TURTLEDOVE into WICG, encourage the SPARROW authors to move it to WICG also, and work together to combine the two into a consensus design.  But I’m open to other modes of work as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2768_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Kris_Chapman</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>My 0.02 is that audience targeting is about more than just showing an ad to people who all share the same characteristic in the hope that they’ll be interested in the ad.  It’s often used as a mechanism for user preferences, frequency capping across browsers/devices, managing messaging across marketing channels, etc.  I’d argue that these types of activities are directly beneficial for users, not just advertisers &amp; publishers - and it’s where my concern about having limits for the number of users in a segment stems from.  If a user indicates an advertising preference, I don’t think they should have to wait until X number of people share the same preference before their preference can go into effect.</p>
+<p>That said, I do appreciate that the smaller the segment size, the bigger the data privacy concern is.  That’s why I like the idea of a trusted third-party who doesn’t have a stake in the outcome.  I think of this third-party as a sort of bank or credit card company: an entity set up to protect a consumer’s interests while also facilitating transactions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>What are the criteria we are going to use to assess these proposals against one another and confirm that what we end up with is indeed “improved”?</p>
+<p>To attempt to answer my own question there is now a draft set of success criteria for improved web advertising available on the W3C Improved Web Advertising Business Group.</p>
+<p><a href="https://github.com/w3c/web-advertising/blob/master/success-criteria.md" rel="nofollow noopener">https://github.com/w3c/web-advertising/blob/master/success-criteria.md</a></p>
+<p>Understanding where the document falls short of various stakeholder groups interests would be very useful feedback. Perhaps <span class="mention">@michaelkleber</span> could comment.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Christopher_Cornett</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>100% agree.  I am also concerned that the current designs are going to be very restrictive on web analytics leveraged to provide personalized experiences to users. I imagine everyone remembers the days when you called a bank for one product and then had to be transferred / re-authenticated to discuss another product.  It seems like we are heading back to the digital equivalent of this disassociated experience.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>It does appear as if we’re taking a step backwards by removing trust choices for people. In no other industry do we require someone to understand the entire supply chain of a vendor. Imagine purchasing a car and having to receive a full list of all the suppliers to the automobile manufacturer. People trust the vendor AND their supply chain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2920_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">michaelkleber</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>Hi Kris: Note that the major open questions in the “Creating an Audience” section included both “What techniques can be used to add people to interest groups” and “What minimum size an interest group ought to have”.</p>
+<p>I think these cover what you said you want to weigh in on, right?  Of course the questions listed here aren’t the <em>only</em> things we need to resolve during incubation, but it’s a good sign that we’re on the right track.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2920_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">michaelkleber</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>Hi James: I’m not sure what you mean by <em>confirm that what we end up with is indeed “improved”</em>.  This is about adding a new capability (“Advertising to interest groups without tracking”), and the question here is whether we should incubate a design — whether it is a valuable thing which browsers should implement and the web ecosystem will use.</p>
+<p>Regarding “taking a step backwards by removing trust choices for people” and “full list of all the suppliers”, I’m not sure how it relates to this proposal.  I also dislike the UX of consent boxes with large lists of vendors, but I don’t think anything in this proposal is related to that problem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2768_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Kris_Chapman</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>Yup, sorry Michael. I wasn’t saying it was missed.  I was just weighing in on why I think it’s important.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p><span class="mention">@michaelkleber</span> The justification for this proposal is to address privacy concerns and increase people’s satisfaction with the ads they see. Correct?</p>
+<p>If so how do we know if these outcomes are achieved by these proposals? Are there any drawbacks or problems generated by the proposal not directly related to the justifications? How do the proposals compare to one another when measured against these outcomes?</p>
+<p>If we don’t know how we’ll address these questions incubation is premature.</p>
+<p>Does this make sense now?</p>
+<p>My second comment related to a “step backwards” is a general observation about the current situation of consent, trust and verification.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2920_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">michaelkleber</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>Hi James: The justification for this proposal is to (1) enable a bunch of ad ecosystem use cases (2) in a way that browsers will be happy to ship.</p>
+<p>Many use cases described in the <a href="https://github.com/w3c/web-advertising/blob/master/support_for_advertising_use_cases.md" rel="nofollow noopener">Web Adv BG’s " Advertising Use Cases" doc</a> include notes on how they can be accomplished with TURTLEDOVE, SPARROW, or other variants in this idea space like <a href="https://github.com/w3c/web-advertising/blob/master/PETREL.md" rel="nofollow noopener">Facebook’s PETREL</a>.</p>
+<p>Browsers have already published privacy and anti-tracking stances, which is why we think it’s valuable to design a way to meet those use cases but which doesn’t enable tracking.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p><span class="mention">@michaelkleber</span> - I’m struggling to understand how the “way that browsers will be happy to ship” is a justification. It is a constraint.</p>
+<p>As I understand this proposal it is part of an initiative called Privacy Sandbox. Correct?</p>
+<p>The <a href="https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html" rel="nofollow noopener">blog describing the objectives of Privacy Sandbox</a> states “We are looking to build a more trustworthy and sustainable web together, and to do that we need your continued engagement. We encourage you to give feedback…”</p>
+<p>I have responded. I’ve joined the W3C and I’m leaning in, taking an active role. If we’re to build a more trustworthy and sustainable web, which meets all the values and goals of the W3C, we need to define what success looks like. That includes questioning and validating the anti-tracking stances of browsers which might work against the goals of an open web for all.</p>
+<p>So the justification of this proposal is singularly “enabling a bunch of ad ecosystem use cases”. We need a method of establishing how proposals are measured against one another and the impacts they have on all the stakeholders. How do you propose this pre-requisite is achieved?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="11" data-topic="4565" data-username="jwrosewell">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jwrosewell/40/2930_2.png" width="20"/> jwrosewell:</div>
+<blockquote>
+<p>We need a method of establishing how proposals are measured against one another and the impacts they have on all the stakeholders. How do you propose this pre-requisite is achieved?</p>
+</blockquote>
+</aside>
+<p>That is strictly <em>not</em> a pre-requisite to incubation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jyasskin</div>
+          <div class="creation_date">2020-06-23</div>
+          <div class="post_content">
+<p>FWIW, we’re trying to nail down the browser-side constraints on solutions in this space in the <a href="https://w3cping.github.io/privacy-threat-model/">PING Target Privacy Threat Model</a>. That threat model isn’t final, so if you find things you don’t like, please file issues and PRs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<p><span class="mention">@yoavweis</span> - as a new participant I’m in no position to dispute your knowledge of the bureaucracy.</p>
+<p>Like many other new participants, I’ve joined because the W3C and Google sought wider stakeholder engagement and dialogue. As an engaged new participant, I can observe the merits of this proposal are widely disputed, particular when considering the needs of publishers and marketers. See following evidence:</p>
+<ul>
+<li>
+<a href="https://docs.google.com/presentation/d/1juu6UBguR7ru1Rhfyor9knFBFsyLNP6FmIiXcJKyJZM/edit#slide=id.g604c6519b1_0_1" rel="nofollow noopener">Boston University</a> (see <a href="https://www.adexchanger.com/the-sell-sider/does-behavioral-targeting-make-publishers-more-money/" rel="nofollow noopener">CafeMedia</a> analysis of 4%)</li>
+<li><a href="https://developers.facebook.com/blog/post/2020/06/18/value-of-personalized-ads-thriving-app-ecosystem/" rel="nofollow noopener">Facebook</a></li>
+<li><a href="https://services.google.com/fh/files/misc/disabling_third-party_cookies_publisher_revenue.pdf" rel="nofollow noopener">Google</a></li>
+</ul>
+<p>There are wider ramifications for societies and people. I hope the UK’s <a href="https://www.gov.uk/cma-cases/online-platforms-and-digital-advertising-market-study" rel="nofollow noopener">CMA report into digital advertising</a> due to be published on the 3rd July will provide some insight into these matters.</p>
+<p>I also observe many new participants and organisations do not have the time or numbers of people to follow all the different groups, documents and dependencies between them. Only the very largest participants who have the budgets to dedicate many of the brightest and the best people are able to do so. As a consequence the bureaucracy favours the largest participants.</p>
+<p>Until these “<a href="http://groups.csail.mit.edu/ana/Publications/PubPDFs/Tussle2002.pdf" rel="nofollow noopener">tussles</a>” are resolved there is no justification to progress this proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="4565" data-username="jwrosewell">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jwrosewell/40/2930_2.png" width="20"/> jwrosewell:</div>
+<blockquote>
+<p>Like many other new participants, I’ve joined because the W3C and Google sought wider stakeholder engagement and dialogue. As an engaged new participant, I can observe the merits of this proposal are widely disputed, particular when considering the needs of publishers and marketers. See following evidence:</p>
+<ul>
+<li>
+<a href="https://docs.google.com/presentation/d/1juu6UBguR7ru1Rhfyor9knFBFsyLNP6FmIiXcJKyJZM/edit#slide=id.g604c6519b1_0_1">Boston University </a> (see <a href="https://www.adexchanger.com/the-sell-sider/does-behavioral-targeting-make-publishers-more-money/">CafeMedia</a> analysis of 4%)</li>
+<li><a href="https://developers.facebook.com/blog/post/2020/06/18/value-of-personalized-ads-thriving-app-ecosystem/">Facebook</a></li>
+<li><a href="https://services.google.com/fh/files/misc/disabling_third-party_cookies_publisher_revenue.pdf">Google</a></li>
+</ul>
+</blockquote>
+</aside>
+<p>I don’t understand if this is evidence that personalized ads are unimportant or super important, as the different links point to studies with extremely different conclusions.</p>
+<aside class="quote no-group" data-post="14" data-topic="4565" data-username="jwrosewell">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jwrosewell/40/2930_2.png" width="20"/> jwrosewell:</div>
+<blockquote>
+<p>Until these “<a href="http://groups.csail.mit.edu/ana/Publications/PubPDFs/Tussle2002.pdf">tussles</a>” are resolved there is no justification to progress this proposal.</p>
+</blockquote>
+</aside>
+<p>Since you’re a new participant, let me try to explain how this Community Group works. This CG’s role is not to block new proposals or require them to somehow justify their existence to all participants.</p>
+<p>The CG’s role is to help participants incubate new proposals, help them establish the use-cases they are trying to solve, find other interested parties, and then design a solution that can solve those use cases. As long as there are multiple parties that are interested in solving a use-case, that’s enough “justification” to create a repo and allow people to work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<blockquote>
+<p>People trust the vendor AND their supply chain.</p>
+</blockquote>
+<p>Um, I’m pretty sure don’t. That’s why we have complete end-to-end check to see if the whole supply chain is ethical, and companies built around that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<p>This seems like a reasonable proposal, <span class="mention">@michaelkleber</span>. I’d be supportive of seeing you explore it further and to see what would need to change/added to browsers to help something like this happen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="16" data-topic="4565" data-username="marcosc">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/marcosc/40/2421_2.png" width="20"/> marcosc:</div>
+<blockquote>
+<p>Um, I’m pretty sure don’t.</p>
+</blockquote>
+</aside>
+<p>People who trust a publisher to provide them free content in return for viewing advertising do. That is the value exchange.</p>
+<p>There are laws created to sanction bad actors who perform bad acts.</p>
+<aside class="quote no-group" data-post="16" data-topic="4565" data-username="marcosc">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/marcosc/40/2421_2.png" width="20"/> marcosc:</div>
+<blockquote>
+<p>we have complete end-to-end check to see if the whole supply chain is ethical</p>
+</blockquote>
+</aside>
+<p>Is there a specification or implementation that provides this level of verification across the supply chain?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2930_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jwrosewell</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="15" data-topic="4565" data-username="yoavweiss">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/1710_2.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>I don’t understand if this is evidence that personalized ads are unimportant or super important, as the different links point to studies with extremely different conclusions.</p>
+</blockquote>
+</aside>
+<p>Precisely. There is a debate to be had and it is happening at the <a href="https://www.w3.org/community/web-adv/">W3C Improving Web Advertising Business Group</a> already.</p>
+<p>Creating new groups which duplicate existing work and groups is a classic case of “the bureaucracy is expanding to meet the needs of the expanding bureaucracy”. Only people from organisations with the resources and time, such as browser vendors, are realistically able to participate. This then skews the outcome towards those narrow set of stakeholders to the detriment of all others.</p>
+<p>Resolving the existing known issues associated with the proposal must precede any further work which will skew the outcome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-06-24</div>
+          <div class="post_content">
+<blockquote>
+<p>People who trust a publisher to provide them free content in return for viewing advertising do. That is the value exchange.</p>
+</blockquote>
+<p>Users who learn that their private information is being sold and that they are being tracked are horrified by this. This is not a value exchange: It’s an abuse of people’s trust and consent without their knowledge - why browsers are cracking down on these practices.</p>
+<blockquote>
+<p>There are laws created to sanction bad actors who perform bad acts.</p>
+</blockquote>
+<p>The laws are insufficient due to corruption of the political process by special interests (see the US, for instance). This is why browsers and other folks are having to intervene.</p>
+<blockquote>
+<p>Is there a specification or implementation that provides this level of verification across the supply chain?</p>
+</blockquote>
+<p>Yes. Why most browsers are open source and allow users to modify preferences to protect themselves. See also Mozilla’s missions statement, and the track protection work done by browser vendors.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

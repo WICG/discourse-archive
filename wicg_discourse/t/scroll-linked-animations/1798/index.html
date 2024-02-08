@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Scroll-linked animations</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Scroll-linked animations</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">theres-waldo</div>
+          <div class="creation_date">2016-11-02</div>
+          <div class="post_content">
+<p>We’d like to propose a mechanism for web animations to be driven by scrolling instead of by time.</p>
+<p>We have a <a href="https://wicg.github.io/scroll-animations/" rel="nofollow noopener">draft proposal</a> which provides two ways to accomplish this: via script (the <code>ScrollTimeline</code> interface), and via CSS (the <code>animation-timeline</code> property).</p>
+<p>This proposal was inspired by <a href="https://lists.w3.org/Archives/Public/www-style/2014Sep/0135.html">Dean Jackson’s earlier proposal on www-style</a>, and is substantially similar to the “timelines” portion of Google’s <a href="https://github.com/drufball/generalized-animations/blob/master/EXPLAINER.md" rel="nofollow noopener">Generalized Animations</a> proposal. We’d like to use this as a starting point for further work.</p>
+<h3>Triggering animations</h3>
+<p>An <a href="https://birtles.github.io/scroll-animations-triggers/" rel="nofollow noopener">earlier version</a> of our proposal also provided a mechanism for a regular time-driven animation to be triggered by scrolling past a certain scroll position (inspired by the <code>animation-trigger</code> property from Dean’s proposal, and similar to the “triggers” portion of Generalized Animations).</p>
+<p>However, this part was dropped, because we realized that the types of web animations that web authors are most likely to want to trigger based on scrolling, are CSS transitions (as opposed to CSS animations), and we can’t trigger CSS transitions from the compositor (thus negating the main advantage of the proposal over triggering in an <code>onscroll</code> handler or <code>requestAnimationFrame</code> callback).</p>
+<p>We’re still interested in doing something for triggers, but are not sure exactly what. Ideas are welcome!</p>
+<h3>Relationship with AnimationWorklet</h3>
+<p>This proposal has some overlap with <a href="https://discourse.wicg.io/t/proposal-animationworklet-a-primitive-for-scroll-linked-and-high-performance-procedural-animated-effects/1710">AnimationWorklet</a>.</p>
+<p>Some use cases of AnimationWorklet, such as parallax and “hidey-bars”, can be expressed using a scroll-linked animation. For these cases, we believe it to be an advantage to express these declaratively, and using a mechanism that’s in some ways easier to implement.</p>
+<p>Other use cases of AnimationWorklet, such as custom timing functions and animating scroll offsets, cannot be expressed using a scroll-linked animation, making AnimationWorklet still useful as an independent proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2016-11-07</div>
+          <div class="post_content">
+<p>In the <a href="https://birtles.github.io/scroll-animations/#navigation-highlight-effect" rel="nofollow noopener">2.1.2. Navigation highlight effect</a> use case, would the highlight change based on fixed scroll offsets in pixels (or percentages maybe)? If yes:</p>
+<ul>
+<li>What happens if you don’t know beforehand at which point each section happens? Do you need to measure the position of each heading and use those as “stops” in the animation?</li>
+<li>What happens if you measure the position of each heading and the layout changes after that, because a web font loaded or an image loaded or the user changed the font-size or some scripted elements toggled content visibility on/off?</li>
+</ul>
+<p>A common use case we had (in my web agency) for scroll-based animations was not so much “animate relative to the scroll offset in this container”. This can happen sometimes, but not often. More common is: “update an animation and/or start another animation when this element appears in the viewport”. Currently, we use GSAP and ScrollMagic for that. This proposal seems to hint at this use case, but relying on fixed scroll values, which are brittle.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">theres-waldo</div>
+          <div class="creation_date">2016-11-15</div>
+          <div class="post_content">
+<p><span class="mention">@fvsch</span>, currently the spec only supports specifying scroll offsets as pixels or percentages. You are right to point out that this is inconvenient for some use cases.</p>
+<p>We’re definitely open to adding support for element-relative offsets. (Dean’s <a href="https://lists.w3.org/Archives/Public/www-style/2014Sep/0135.html">original proposal</a> contained an example that used a <code>scroll(elements)</code> syntax that seemed like it was intended to be element-relative, but I didn’t quite understand the intended semantics of that syntax. There was also an allusion to scroll snapping, which I also didn’t understand, possibly because the scroll snapping proposal has changed significantly since Dean’s post.)</p>
+<p>Ideas about what element-relative offsets might look like are welcome!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Shane_Stephens</div>
+          <div class="creation_date">2016-11-15</div>
+          <div class="post_content">
+<p>Google is also interested in collaborating on a scroll linked animations proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2016-11-17</div>
+          <div class="post_content">
+<p>Great to hear that Google supports this moving forward.</p>
+<p>I’m in contact with the folks proposing this spec. We will begin the process of transferring the existing repository to the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

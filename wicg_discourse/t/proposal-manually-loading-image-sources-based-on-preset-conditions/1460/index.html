@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Manually loading image sources based on preset conditions</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Manually loading image sources based on preset conditions</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<p>There have been a <a href="https://discourse.wicg.io/t/a-standard-way-to-lazy-load-images/1153">number of topics</a> pointed out that do a good job of identifying that there is currently no way to easily lazy load images (i.e. when user is scrolling down a page for instance).</p>
+<p>Many valid points have been brought up but I think the issue of lazy-loading images has become way too large to solve in one single solution. As I’ve stated in <a href="https://discourse.wicg.io/t/a-standard-way-to-lazy-load-images/1153/34?u=mkay581">one of my comments</a> on that topic, the two biggest issues, that seem to come up often, that the solution could address are 1) being able to manually load the image source at any given time or 2) letting the browser automatically trigger loading at some pre-determined time the browser thinks is “most optimal”.</p>
+<p>I do not think <span class="hashtag">#2</span> can be solved now since it involves too many assumptions for my liking, but I do believe that solving <span class="hashtag">#1</span> is a reasonable first step to at least gain a little more traction on the issue.</p>
+<p>I am proposing that we implement a <code>load()</code> method to the HTMLImageElement api that will load the resource based on an array of possible images to load per device, set via the <code>srcset</code> attribute or similar). I’ve already began the proposal on a Github repo <a href="https://github.com/mkay581/image-element" rel="nofollow noopener">here</a>.</p>
+<p>Calling <code>load()</code> on an element with the following markup will manually load the appropriate image just like the existing srcset spec explains:</p>
+<p><code>&lt;img srcset="medium.jpg 1000w, large.jpg 2000w" autoload="false" /&gt;</code></p>
+<p>It may be interesting to even determine latency to load lower resolution images on slower connections vs higher-res on faster ones (using the Navigation Timing API or similar). Array like string on srcset could use milliseconds that represent latency measures:</p>
+<p><code>&lt;img srcset="small.jpg 10000, large.jpg 500" autoload="false" /&gt;</code></p>
+<p>This <code>load()</code> call could return a promise that is resolved or rejected when completed. And to make it even more flexible from a JS standpoint, it can be improved to accept an optional argument that could alternatively represent the HTML attributes in the examples above or to just add more custom functionality.</p>
+<p>Interested in hearing your thoughts.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

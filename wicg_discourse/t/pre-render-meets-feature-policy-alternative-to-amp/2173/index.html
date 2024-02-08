@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Pre-render meets feature policy - alternative to AMP?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Pre-render meets feature policy - alternative to AMP?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-05-28</div>
+          <div class="post_content">
+<p>The W3C TAG, on which I serve, recently published a (draft at time of this writing) <a href="https://w3ctag.github.io/distributed-content/" rel="nofollow noopener">finding about the issue of distributed content</a>, calling out systems like AMP, Facebook instant articles, and Apple News as potentially problematic.  It includes a suggestion to allow documents to be hosted and served on their original origin, but still be rendered as fast as AMP:</p>
+<blockquote>Where the motivation for embedding is to improve performance, an alternative is to support the limited pre-rendering of a document prior to navigation. Past efforts at this have included `` but this proved difficult to do without side effects. A more modest approach, supported by constraints that could be enforced by Feature Policy, may be a practical option.</blockquote>
+<p>I’d like to set out an idea for how this could work and get feedback.</p>
+<p>Currently, one can do <code>&lt;link rel='prerender' ... /&gt;</code> and prompt the browser to preload and render a page prior to the user declaring an intent to visit it.  However, this <a href="http://caniuse.com/#feat=link-rel-prerender" rel="nofollow noopener">already has poor browser support and Chrome is dropping support in v58</a>.  The challenges associated with prerender turn out to be significant: a page fully loaded in a background tab might trigger an interactive permission prompt, start playing audio, use significant CPU or memory, etc.</p>
+<p>Google’s <a href="https://ampproject.org" rel="nofollow noopener">AMP</a> project was designed to solve some of these problems by creating a content format that guaranteed certain things about the performance of the content.  However, in order to pre-render AMP content, the AMP viewer uses IFRAMEs and therefore hijacks the origin of the URL. The viewer is also constrained to only work with AMP, rather than equally fast or even faster performing content that is not AMP compliant, and of course leaves content creators with severe restrictions on what they can feasibly offer readers.</p>
+<p>The new <a href="https://wicg.github.io/feature-policy/" rel="nofollow noopener">proposed Feature Policy</a> introduces the ability for content creators to opt into constraints on the behaviour of their page in an HTTP header.  I propose that we add more feature names to this, to cover all the items that generate perf or pre-rendering concerns, and reintroduce <code>&lt;link rel='prerender'&gt;</code> on the basis that the UA can now enforce feature-policy-driven minimum criteria to qualify for prerendering.  This could include feature directives like:</p>
+<ul>
+<li>
+<strong>Enhanced user interaction required</strong>: Playing media, triggering permission prompts, interacting with client side storage APIs, sending HTTP requests from script, and updating DOM from script require user interaction (same as we do already for opening popup windows).  Browser can deny attempts to do this stuff without user interaction</li>
+<li>
+<strong>Static layout</strong>: The layout of the page can be calculated in a single pass.  If objects change size (eg images without width and height load in) the browser may stop rendering and throw an error.</li>
+<li>
+<strong>Load on demand</strong>: The page does not need to load subresources until they are needed, so the browser can choose to trigger media downloading only when the images are in view.</li>
+</ul>
+<p>These might end up being a larger number of more granular feature names, but you get the idea.  Those wanting to create an AMP-like solution could invite content creators to publish pages conforming to the required feature policy, and if they complied, those pages could be prerendered and navigation could be instant.</p>
+<p>What do you think?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2752_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ojanvafai</div>
+          <div class="creation_date">2017-05-30</div>
+          <div class="post_content">
+<p>FeaturePolicy is for setting policies on pages/frames. So, I think such things are in scope for it, but each individual policy would need discussing.</p>
+<p>Aside from dealing with the long tail of side effect causing APIs, there’s a few difficulties with prerender:</p>
+<ol>
+<li>Prerender only works on one URL. It only gives you the guarantees that AMP does if you know the next page the user is going to with high confidence. So it only papers over page load problems.</li>
+<li>Prerendering is a cpu intensive solution given the heavy CPU work modern pages do on load. We could theoretically mitigate the CPU concerns by pausing the page after it’s done loading and making JS tasks in the prerendered page interruptible so we can interrupt long tasks (a <em>large</em> amount of work for all browsers, so might never happen). If we don’t do that, it would be battery intensive and cause jank on the page the user is viewing.</li>
+<li>Prerendering is also a memory intensive solution. I suppose we could take a greyscale screenshot of the page at load time and kill the prerendered page. Then load it ignoring cache headers when the user views it. It should load quickly (modulo the page’s loading JS) since most everything should be cached.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2752_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ojanvafai</div>
+          <div class="creation_date">2017-05-30</div>
+          <div class="post_content">
+<p>I think a more promising approach for fast page loading of a particular page is something that’s guaranteed to be low CPU/memory intensive. Something like prefetch (just loads the main HTML resource and runs preload scanning over it) + then loading the page ignoring cache headers when the user goes to it. If we tell the page it’s a prefetch, they can also do things to optimize for it, e.g. replace the page contents with just a page that lists  lines so that all the subresources load, or cache the page contents using ServiceWorker.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-06-03</div>
+          <div class="post_content">
+<p>Since AMP is pre rendering multiple pages it seems not unreasonable to expand the prerender tag spec to allow more than one. All concerns expressed here seem related to resource use, and again id point to feature policy as a way to mitigate those concerns and declare a page suitable for prerendering.</p>
+<p><a href="https://docs.google.com/document/d/16VCYGGWau483IMSxODpg5faZny1FJ6vNK2v-BuM5EhU/edit#heading=h.uajrcfabdbg5" rel="nofollow noopener">Nostate prefetch</a> is a thing too, but if that were sufficient to offer the “instant” load that people want, then presumably the “instant news” type solutions would use a mechanism like that, rather than going to the lengths of defining a content format that they are able to prerender?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1342_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pbakaus</div>
+          <div class="creation_date">2017-07-17</div>
+          <div class="post_content">
+<p>I’ve been thinking about how to do this new version of a ‘light’ or selective prerender quite a bit, thanks for starting the discussion and sharing your thoughts. Any such proposal needs needs to fulfill the following requirements to best AMP:</p>
+<ol>
+<li>Needs to significantly improve perceived load</li>
+<li>Needs to be light enough (in terms of bandwidth and CPU utilization) to be able to preload 3+ pages at the same time, on low-end mobile devices</li>
+<li>Needs to respect the users privacy</li>
+</ol>
+<p>To improve the perceived load, tests we did within the AMP team suggest that prefetch is not enough of a mechanism. We do need pre-render, but we also need to do it in an incredibly limited way:</p>
+<ul>
+<li>Should only prescan/load resources in the first viewport</li>
+<li>Should not preload expensive embeds (e.g. YT videos)</li>
+<li>Should not parse/execute hefty amounts of JS (maybe none at all?)</li>
+</ul>
+<p>To fulfill these requirements, we need at the very least <strong>static rendering</strong> as part of the feature policy.</p>
+<p>Now, regarding <strong>privacy</strong>: I’ve <a href="https://medium.com/@pbakaus/why-amp-caches-exist-cd7938da2456" rel="nofollow noopener">written extensively</a> about what the AMP caches actually do, and for one, they protect the user’s privacy more than a prerender can. Due to the nature of the AMP Cache, it’s a given that sites don’t know that their site is loaded until the user interacts with it – after all, they aren’t served from the origin’s domain. From a privacy perspective, a standards based limited pre-render model will almost definitely be worse, but there are some ways to mitigate, the most obvious one not allowing writing any cookies whatsoever.</p>
+<p>I think it’s definitely worthwhile to prototype a version of this and test it against the performance of the AMP pre-rendering model (and I’m sure we, AMP, would be willing to help facilitate tests). Any takers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-07-18</div>
+          <div class="post_content">
+<p>This sounds very promising!  I’ve shared it with TAG ahead of our F2F next week.</p>
+<p>Regarding privacy, I would assume that a pre-render would not send any cookies and would not accept any.  For paywalled content, the pre-render would therefore presumably only do the shell (which I believe is already the case with AMP)</p>
+<p>The browser could choose to route the request through a transparent trusted proxy a la Google Data saver (I know this is currently limited to non-TLS URLs, but doesn’t need to be if the proxy operator also controls the browser), which does not interfere with or require changes to the URL, to further obscure the source (and to add edge caching).  This would put the solution on a par with AMP for privacy while allowing navigations to happen in a conventional way, but much faster.</p>
+<p>I think web push demonstrates a precedent for implementors to operate such a service that pairs with the browser as part of a standards-based solution.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2017-09-29</div>
+          <div class="post_content">
+<p>Possible better idea: promotable iframes:
+<aside class="quote quote-modified" data-post="1" data-topic="2375">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="/user_avatar/discourse.wicg.io/triblondon/40/1297_2.png" width="20"/>
+<a href="https://discourse.wicg.io/t/proposal-for-promotable-iframe/2375">Proposal for promotable IFRAME</a>
+</div>
+<blockquote>
+    TL:DR: I propose myIframeElement.promote() to navigate a browser from page A to page B, where page B is already loaded and rendered as an iframe on page A, by “promoting” the IFRAME to be the top level browsing context.  Read on! 
+Recently, the W3C TAG <a href="https://www.w3.org/2001/tag/doc/distributed-content/">has been concerned</a> about the increase in ‘walled garden’ content ecosystems, notably Google’s AMP cache and carousel, but also Facebook instant articles, Apple News and other similar products.  Where these systems are implemented on the web they m…
+  </blockquote>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

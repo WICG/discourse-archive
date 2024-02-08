@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Containing floated children with `clear-after` (modern clearfix)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Containing floated children with `clear-after` (modern clearfix)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1145_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adamschwartz</div>
+          <div class="creation_date">2016-11-20</div>
+          <div class="post_content">
+<p>I’d like to propose a new property to cause an element to contain all of its floated children—what is commonly referred to as a “clearfix”.</p>
+<p>Given that <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/clear" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/CSS/clear</a> and many other sources recommend accomplishing this with:</p>
+<pre><code class="lang-auto">selector::after { 
+   content: "";
+   display: block; 
+   clear: both;
+}
+</code></pre>
+<p>I though that perhaps this would be an appropriate name:</p>
+<pre><code class="lang-auto">clear-after: both;
+</code></pre>
+<p>One advantage of this over the current recommended approach is that it preserves <code>::after</code> to be usable by <code>selector</code>, say to render a <code>position: absolute</code> child, which wouldn’t simultaneously be able to accomplish the float containment.</p>
+<p>Options could simply be:</p>
+<pre><code class="lang-auto">clear-after: none; /* Default */
+clear-after: both;
+
+clear-after: inherit;
+</code></pre>
+<p>Forgive me if there is active discussion around this elsewhere but I couldn’t find anything after a few searches.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-20</div>
+          <div class="post_content">
+<p>I’ll second this proposal. It would simplify syntax, free up <code>::after</code>, and make the implementation more obvious.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-21</div>
+          <div class="post_content">
+<p><abbr title="As far as I know">AFAIK</abbr>, <a href="https://drafts.csswg.org/css-display-3/#valdef-display-flow-root" rel="nofollow noopener"><code>display: flow-root</code></a> (previously <a href="https://www.w3.org/TR/2012/WD-css3-sizing-20120927/#contain-floats"><code>min-height: contain-floats</code></a>) is intended for this purpose. (Not implemented yet.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-11-21</div>
+          <div class="post_content">
+<p>Yup, the <code>::after { clear: both; }</code>  thing was always a hack. The right solution is to make the container a formatting context; unfortunately, the only way to do that currently is with <em>other</em> hacks (like making it <code>overflow: hidden</code>).  <code>display: flow-root</code> is the correct way to force a block element to be a formatting context; please bug browser vendors to implement it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1835">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p><code>display: flow-root</code> is the correct way to force a block element to be a formatting context; please bug browser vendors to implement it.</p>
+</blockquote>
+</aside>
+<p>Tab, could you confirm the corresponding part of the CSS Display spec is stable enough and the <code>flow-root</code> keyword is unlikely to change?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-12-05</div>
+          <div class="post_content">
+<p>fantasai and I consider it finished and stable design-wise, but no promises can be made until at least one implementation has been done and gotten reasonable adoption.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>Thanks, I’ve posted corresponding feature requests for <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1322191" rel="nofollow noopener">Firefox</a>, <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=672508" rel="nofollow noopener">Chromium</a>, <a href="https://bugs.webkit.org/show_bug.cgi?id=165603" rel="nofollow noopener">WebKit</a>, and <a href="https://wpdev.uservoice.com/forums/257854/suggestions/17420707" rel="nofollow noopener">Edge</a>.</p>
+<p>For those read the previous version of this comment: the feature <a href="https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10152756/" rel="nofollow noopener">request</a> for Edge has originally been posted in the Edge’s bug tracker, but has been closed on the ground that their bug tracker is for bug reports and not feature requests.</p>
+<p><strong>Update (2017-01-02):</strong> The feature is already implemented in Firefox Nightly and is going to be available in stable Firefox <strong>53</strong> planned to be released on 2017-04-18.</p>
+<p><strong>Update (2017-01-27):</strong> The feature is available in Chrome 58 (Canary build) planned to be released as a stable version in early March.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<p>Hey everyone. I was just going to add this to <a href="http://caniuse.com" rel="nofollow noopener">caniuse.com</a>, are there any browsers that support <code>dispoay: flow-root</code>? I’m not aware of any.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<p>Firefox just sent an intent-to-ship email this week, so they should support it in the next few months.  Nobody else does yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2017-01-08</div>
+          <div class="post_content">
+<p>Intent to implement and ship from the Chrome team -
+<a class="onebox" href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/k9WOAVA5Ewc" rel="nofollow noopener" target="_blank">https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/k9WOAVA5Ewc</a></p>
+<p><img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p><a href="http://caniuse.com/#feat=flow-root" rel="nofollow noopener">caniuse.com</a> now displays vendor support. I originally put in a pull request with just the two mentioned here, and Alexis found future support for Opera as well.</p>
+<p>First version shown with support (as of 2017-03-09):</p>
+<ul>
+<li>Firefox <strong>53</strong>
+</li>
+<li>Chrome(ium) <strong>58</strong>
+</li>
+<li>Opera <strong>45</strong>
+</li>
+<li>IE/Edge <strong>None</strong>
+</li>
+<li>Safari <strong>None</strong>
+</li>
+</ul>
+<p>I look forward to the clearfix hack finally being resolved.</p>
+<p><a href="https://codepen.io/anon/pen/LxzpOa?editors=1100#0" rel="nofollow noopener">Modified a codepen</a> I found to demonstrate the result once it’s happened.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<blockquote>
+<p>Alexis found future support for Opera as well.</p>
+</blockquote>
+<p>Fwiw, Opera 15+ and other Chromium-based browsers like Vivaldi and Yandex browser get Blink-engine features automatically.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>Did not know that. Not sure how many people still use Opera, but it’s still good to have.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-02-14</div>
+          <div class="post_content">
+<p><code>display: flow-root</code> confirmed working in Firefox Nightly. I run Linux, so I can’t test it in Chrome Canary.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-02-18</div>
+          <div class="post_content">
+<p>Fwiw, the feature request for Chromium is now marked as fixed, so the feature will likely be really available in Chrome 58 and Opera 45.</p>
+<p>The feature request for Edge currently has 1,174 votes.</p>
+<p>WebKit’s progress is unknown.</p>
+<p><strong>Update (2017-03-07):</strong> Opera 45 (currently available as an <a href="https://www.opera.com/ru/computer/beta" rel="nofollow noopener">Opera Developer</a> prerelease) is based on Chromium 58 and supports <code>display: flow-root</code> as expected.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-04-20</div>
+          <div class="post_content">
+<p>Confirmed working in Firefox 53 release. Chrome(ium) 58 is expected to release later this month or early May (no clear date has been set).</p>
+<p>Edit: Apparently Chrome 58 is now stable, so it should be supported there as well. I haven’t got the rollout yet, but will update when I do.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-04-20</div>
+          <div class="post_content">
+<p>I confirm, <code>display: flow-root</code> works in stable versions of both Firefox 53 and Chrome 58.</p>
+<p><strong>Update (2017-05-11):</strong> Opera 45 based on Chromium 58 is released and supports <code>display: flow-root</code> as expected.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Subresource Integrity Security (SRIS)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Subresource Integrity Security (SRIS)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2022-12-27</div>
+          <div class="post_content">
+<p>Hey there!</p>
+<h3>
+<a class="anchor" href="#intro-problem-1" name="intro-problem-1"></a>Intro &amp; problem</h3>
+<p>Subresource Integrity (SRI) is a W3C specification that allows web developers to ensure that resources hosted on third-party servers have not been altered. When using Subresource Integrity (SRI), the webpage holds the hash and the server holds the file (the .js file in this case). The browser downloads the file, then checks it, to make sure that it is a match with the hash in the “integrity” attribute. If it matches, the file is used, and if not, the file is blocked.</p>
+<p>The problem I see with Subresource Integrity (SRI) is that this process is added in an html string by “integrity” atrribute with value “SHA-384-hashValue”. Also, this process is done without the user’s consent. In addition to these two central problems, there are other problems such as:</p>
+<ul>
+<li>Hash collision attacks: Digests are only as strong as the hash function used to generate them. It is recommended that user agents refuse to support known-weak hashing functions and limit supported algorithms to those known to be collision resistant. Examples of hashing functions that are not recommended include MD5 and SHA-1. At the time of writing, SHA-384 is a good baseline.</li>
+<li>Non-secure contexts remain non-secure: Integrity metadata delivered by a context that is not a Secure Context, such as an HTTP page, only protects an origin against a compromise of the server where an external resources is hosted. Network attackers can alter the digest in-flight (or remove it entirely, or do absolutely anything else to the document), just as they could alter the response the hash is meant to validate.</li>
+</ul>
+<h3>
+<a class="anchor" href="#partial-or-final-solution-2" name="partial-or-final-solution-2"></a>Partial or final solution</h3>
+<p>The proposal written here solves the problem of the topic above: user consent and greater security and automation to Subresource Integrity (SRI). Furthermore, it provides a special case of using the open protocol oauth for SRI automatically,  without the need for integrity attribute with the hash value in html.</p>
+<p>Oauth is a good security consideration as the hashes would be unique. Thus avoiding Hash collision attacks - because with oauth you to share or download libraries between websites without exposing your hash. Also, It’s a widely-adopted standard that’s used by developers of websites and apps, and you probably use services every day that utilize OAuth.</p>
+<h3>
+<a class="anchor" href="#design-3" name="design-3"></a>Design</h3>
+<p>I would like to point out that this proposal is an early draft and is not a complete replacement for the integrity attribute in html.  In other words, it doesn’t cancel the previous proposal, but it adds more features. This proposal I believe it is interesting for some reasons:</p>
+<p>the initial advantage is that each cdn can be an authentication provider for certain libraries, css and static files - this allows users and developers to get closer.</p>
+<p>is it possible that the user has the possibility to authenticate js libraries, css etc - directly on a public or private cdn network on any website, web-app etc. Which guarantees greater consent, security of the site for the user and from the user to the site. The previous proposal, the Subresource Integrity (SRI) proposal does not have this feature or this idea. Although there is no such idea or resource, this proposal - it is still an alternative, complement or solution to SRI with Oauth or I call this “Subresource Integrity Security (SRIS)”. For example:</p>
+<p>a cdn type public or private network validates access to html metadata and other static data for users, developers or anyone . This allows for greater control and licensing as well from users to developers and from developers to users etc.</p>
+<p>the advantage of using a cdn-oauth network is security, consent and content licensing for developers, users, home users, end users etc. Oauth is an open protocol to enable secure authorization in a simple and standard method for web, mobile and desktop applications - in my view this should happen for static libraries on a public or private cdn network as well.</p>
+<h3>
+<a class="anchor" href="#use-case-4" name="use-case-4"></a>use case</h3>
+<p>before - without oauth in integrity attribute:</p>
+<p>The “integrity” attribute allows a browser to check the fetched script to ensure that the code is never loaded if the source has been manipulated. The problem here is that it is not possible to authenticate js libraries, css etc.</p>
+<pre><code class="lang-auto">&lt;!--- css ---&gt;
+&lt;link href="https://cdn.helloworld-libs.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous"&gt;
+
+&lt;!--- web-component ---&gt;
+&lt;link rel="import" href="https://cdn.helloworld-libs.com/ajax/libs/webcomponents/demo.html"&gt;
+
+&lt;!--- javascript ---&gt;
+&lt;script src="https://cdn.helloworld-libs.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"&gt;&lt;/script&gt;
+</code></pre>
+<p>after - with oauth in integrity attribute (now, we have):</p>
+<p>Every time someone accesses a site or logs into a site, they need to authenticate the libraries and other html metadata.</p>
+<pre><code class="lang-auto">&lt;!--- css ---&gt;
+&lt;link href="https://cdn.oauth-helloworld-libs.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"&gt;
+
+&lt;!--- web-component ---&gt;
+&lt;link rel="import" href="https://cdn.oauth-helloworld-libs.com/ajax/libs/webcomponents/demo.html" crossorigin="anonymous"&gt;&lt;/script&gt;
+
+&lt;!--- javascript ---&gt;
+&lt;script src="https://cdn.oauth-helloworld-libs.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" crossorigin="anonymous"&gt;&lt;/script&gt;
+</code></pre>
+<p>The proposal here is Subresource Integrity Security (SRIS) or Subresource Integrity  (SRI) with Oauth. The “integrity”  is  <code>oauth</code> for authentication method in an url for cdn, instead of <code>sha384-</code> value by default.</p>
+<h3>
+<a class="anchor" href="#issues-5" name="issues-5"></a>Issues</h3>
+<p>The identification would be valid for any website in a unique way. One perceived problem is that people may not want to authenticate to each site.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2023-01-01</div>
+          <div class="post_content">
+<p>Could you describe the proposal in more layman’s terms? What do you mean by user consent?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2023-01-03</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="2" data-topic="6094" data-username="simevidas">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/3804_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Could you describe the proposal in more layman’s terms?</p>
+</blockquote>
+</aside>
+<p>Yes. In this proposal I am demonstrating a way to generate the hash value in the integrity attribute automatically without having a specific hash value. Instead of generating a hash for each separate file, we could use authentication protocol like oauth to authenticate multiple files with a user-customizable hash. This prevents someone from changing the hash value if they have access to the file on the cdn network or access to the user’s machine.</p>
+<p>For example, let’s say you go to a about cat food site and then to a sports site. It may be that when accessing these two sites there is the same javascript library. With oauth-cdn or SRIS(Subresource Integrity Security), you are guaranteed to have a single library when accessing any website. If both sites use the same version of the library or not - because websites can be the providers of access to the library.</p>
+<aside class="quote no-group" data-full="true" data-post="2" data-topic="6094" data-username="simevidas">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/3804_2.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>What do you mean by user consent?</p>
+</blockquote>
+</aside>
+<p>What I call user consent is the process of trust that the user has when accessing any site or logging in. Also, this user consent process is done with a cdn network and a library access provider with the protocol: oauth. For example, the public or private sites say which libraries you have access to or when you will have access. It’s similar to a cookie popup, only instead of cookies there are static files like css, js.</p>
+<p>This means, in general terms, that you only access the site that you trust. Knowing that there will be a process in which the libraries or statistical files were verified by the administrator, team, company of the site.  The cdn network is only safe if the public or private sites are library access providers.</p>
+<p>This can only be done if the cdn network implements the oauth protocol, and the site is also a client-cdn-oauthn.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

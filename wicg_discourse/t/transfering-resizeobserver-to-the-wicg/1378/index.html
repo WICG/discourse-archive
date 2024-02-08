@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Transfering ResizeObserver to the WICG</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Transfering ResizeObserver to the WICG</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/899_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">atotic</div>
+          <div class="creation_date">2016-02-24</div>
+          <div class="post_content">
+<p>ResizeObserver is an API for observing changes to elements size.</p>
+<p>Here is an explaner: <a href="https://github.com/atotic/ResizeObserver/blob/master/explainer.md" rel="nofollow noopener">https://github.com/atotic/ResizeObserver/blob/master/explainer.md</a></p>
+<p>Most of the discussions of the API have happened inside Google. We’d like to open the discussion to the outside.
+To facilitate that, we would like to transfer <a href="https://github.com/atotic/ResizeObserver" rel="nofollow noopener">ResizeObserver repo</a>  to the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-02-24</div>
+          <div class="post_content">
+<p>Exciting stuff! I’d be happy to help to bring the repo into the WICG. Let’s discuss the gory details by mail.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-02-24</div>
+          <div class="post_content">
+<p>And now the repo is on the WICG org: <a href="https://github.com/WICG/ResizeObserver">https://github.com/WICG/ResizeObserver</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-02-25</div>
+          <div class="post_content">
+<p><span class="mention">@atotic</span> Could you clarify example 1? I don’t understand the <code>&lt;div id="content"&gt;</code> inside the iframe. Iframes load documents via the <code>src</code> attribute, and their contents are empty. From my understanding, placing text or elements inside an iframe serves as a fallback for browsers that don’t support iframes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/899_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">atotic</div>
+          <div class="creation_date">2016-02-25</div>
+          <div class="post_content">
+<p>You are right, that example is invalid use of HTML. Just imagine that the &lt;iframe&gt; had a src attribute whose body was the content div. I’ll fix it. Ideally, I’d love to have a cleaner use case instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jokeyrhyme</div>
+          <div class="creation_date">2016-03-01</div>
+          <div class="post_content">
+<p>I wonder if this sort of layout-triggered feature might be solved by Houdini?
+It’s a proposal / prototype for the “ServiceWorker for CSS”:
+<a class="onebox" href="https://groups.google.com/a/chromium.org/forum/#!topic/input-dev/l0F4JfDospw" rel="nofollow noopener" target="_blank">https://groups.google.com/a/chromium.org/forum/#!topic/input-dev/l0F4JfDospw</a></p>
+<p>With hooks in the layout process, it’ll be possible to interrogate and manipulate layouts as they occur.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2016-03-01</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@jokeyrhyme</span>, it is a subtly different problem space than what the <a href="https://drafts.css-houdini.org/css-layout-api/" rel="nofollow noopener">css-layout-api</a> is trying to solve.</p>
+<p>Most use-cases for ResizeObserver are to create/remove DOM based on you current size. A lot the use-cases for “element queries” are satisfied by this. For example when a menu-bar in an app is too small, display a drop-down-menu with the items instead.</p>
+<p>The css-layout-api is explicitly trying to write css layouts in author code performantly, at this stage of the pipeline you don’t have elements to refer to and manipulate.</p>
+<p>^-^ Ian</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/899_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">atotic</div>
+          <div class="creation_date">2016-04-12</div>
+          <div class="post_content">
+<p>ResizeObserver explainer has been updated: new rationale, simplified API, more details on error handling.</p>
+<aside class="onebox githubblob">
+<header class="source">
+<a href="https://github.com/WICG/ResizeObserver/blob/master/explainer.md" rel="nofollow noopener" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/WICG/ResizeObserver/blob/master/explainer.md" rel="nofollow noopener" target="_blank">WICG/ResizeObserver/blob/master/explainer.md</a></h4>
+<pre><code class="lang-md">#### Terminology
+Component: a self-contained bundle of HTML, CSS, and JS.
+
+## Why is ResizeObserver needed?
+
+Responsive Web Apps adjust their content to viewport size.
+This is often accomplished with CSS and media queries.
+Javascript is used when CSS is not expressive enough.
+Javascript DOM manipulation stays in sync with viewport size by listening to `window.resize` event.
+
+Responsive Web Apps can be built with components.
+These components need to be responsive too.
+Unfortunatelly, Web Platform currently does not provide a way for components to keep track of their size.
+
+There is no component counterpart to CSS media queries.
+Attempts to design such were unsucessful due to their [inability to deal](http://www.xanthir.com/b4PR0) with circular references.
+
+There is no component counterpart to `window.resize` event either.
+ResizeObserver wants to be that counterpart.
+
+</code></pre>
+
+  This file has been truncated. <a href="https://github.com/WICG/ResizeObserver/blob/master/explainer.md" rel="nofollow noopener" target="_blank">show original</a>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Comments welcome…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-09-03</div>
+          <div class="post_content">
+<p>Another use case is observing CSS Resize: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/resize" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/CSS/resize</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

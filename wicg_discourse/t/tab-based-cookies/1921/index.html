@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Tab Based Cookies</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Tab Based Cookies</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Eynon</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>Hey all. First post on here. I also don’t know if this is appropriate for this place or not, but according to <a href="https://discourse.wicg.io/t/welcome-to-wicg-discourse/6">Welcome to WICG Discourse</a> I should just post it and hope for the best!</p>
+<p>As we turned to tab / window based browsing a while ago, I’m somewhat surprised to see a lack of the ability to set a tab based cookie.</p>
+<p>I think it might make sense to have some standard in place for sending tab based cookies. This would allow a more seamless user experience for users when properly implemented. This could be kind of implemented by developers with url based trackers, but that method is not really an ideal solution in all situations and doesn’t work if a user manipulates URL’s, leaves the site or gets redirected.</p>
+<p>Open to thoughts on this and directions on where this should go if it’s worth anyone’s time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>Hey Thomas! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>Cookies are normally under the scope of the HTTPWG, but I think it’s appropriate to discuss new ideas related to cookies here. I trust <span class="mention">@mnot</span> to correct me if he feels that’s not the case.</p>
+<p>Regarding new ideas, it’s often best to start by describing the problem that they’re destined to solve.
+In the current case, can you describe what problem you are trying to solve with current cookie implementations and are unable to? A detailed account of how current solutions fail to address your needs (as well as those of your users) would go a long way to convince people this is an issue worth tackling.</p>
+<p>Cheers,
+Yoav</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Eynon</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>Some discussions about this previously:
+<a class="onebox" href="https://groups.google.com/a/chromium.org/forum/#!topic/security-dev/DVQwoA0vpm4" rel="nofollow noopener" target="_blank">https://groups.google.com/a/chromium.org/forum/#!topic/security-dev/DVQwoA0vpm4</a>
+<a class="onebox" href="https://bytes.com/topic/javascript/answers/878108-creating-browser-tab-specific-cookie" rel="nofollow noopener" target="_blank">https://bytes.com/topic/javascript/answers/878108-creating-browser-tab-specific-cookie</a></p>
+<p>My thoughts on this are below. Although they are just initial thoughts:</p>
+<ol>
+<li>Browser wide cookies should remain the default (always).</li>
+<li>Tab based cookies would work just like current cookies, except they scope to the tab.</li>
+<li>Child windows should not persist it’s parent cookie; at least by default. I think this could possibly be an option that is set when opening a new window via a link or javascript.</li>
+</ol>
+<p>Use Cases:</p>
+<ol>
+<li>
+<p>Simple form tracking. There is a long-running problem we have on the web where form data has to be typed again and again because implementing a solution for repopulating that data is not exactly easy for developers. When a form is refreshed or arrived via a back button, form data is lost because it doesn’t make sense to persist that form data in a browser wide session; i.e. it would completely mess up someone doing two forms in multiple tabs. A tab based cookie could track form data for that specific tab. Allowing persistent form input data regardless of how many refreshes or forward / back navigations are used. It would also allow form data to persist after navigating away from a site to do something like third party sign-in.</p>
+</li>
+<li>
+<p>Web Applications. A web application that wants to be flexible and capable of separating sessions per window must do so for the most part by persisting a GET parameter. Aside from being ugly in the browser, it adds additional overhead and a possibility of errors when certain parts of the application don’t persist that parameter. A common application issue is related to viewing multiple reports concurrently. Usually some form of report token is generated in order to separate report parameters. A tab based cookie would greatly simplify this.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Eynon</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>Use Case 3:
+Consider a support application where a technician is diagnosing multiple users on an existing web application. In order to implement an “impersonation” feature, the user can really only do it one at a time or make the application persist a GET parameter. If a tab based cookie were available, the user could do an impersonation per tab, enabling them to impersonate / persist multiple users at a time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>CC: <span class="mention">@mikewest</span></p>
+<p>WFM. Be aware that the Cookie spec is currently being revised, and the bar for adding new features is pretty high (there was a previous phase where we solicited proposals, but that’s over now). It’s not impossible, mind you.</p>
+<p>WRT tab-based cookies: One of the biggest challenges is going to be making it usable even when some browsers do implement it, and some that don’t. If it’s built on the current <code>Cookie</code> mechanism, that means that existing browsers will treat it as a “normal” cookie and share it between tabs. If it’s a new non-<code>Cookie</code> mechanism, existing browsers won’t do anything with it, and sites will likely have to figure out a fallback mechanism.</p>
+<p>So, a discussion of how sites will deploy them with this in mind would be helpful. See also the approach to reflecting the attributes of a cookie described by <a href="http://httpwg.org/http-extensions/draft-ietf-httpbis-cookie-prefixes.html">Cookie Prefixes</a>, which might be a helpful technique in this sort of thing.</p>
+<p>Finally – at first blush, I’m a bit wary of defining a protocol mechanism for tab-based cookies; the current behaviour of cookies is not only embedded firmly in the Web stack, but also in users’ perceptions of how the Web works, and if behaviours start (seemingly) magically changing, the resulting user confusion could be detrimental to the Web platform itself.</p>
+<p>Also, from a privacy perspective, we’d need to evaluate whether this exposes finer-grained information to trackers, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Eynon</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>I’m pondering this a little bit, and thinking maybe a cookie is overkill here. In all of the scenarios, the tab based cookie is really about one thing and that’s distinguishing tabs.</p>
+<p>Perhaps an additional header attribute or html attribute that requests browsers include a unique tab identifier. Then the browser would send an additional header like ‘view-identifier: XX123’.</p>
+<p>In the privacy perspective, this would definitely reveal a little bit more fine grained information in that we can now learn how the user is using each tab. A greedy developer could try limiting tabs per website somehow as well. I’m not sure how much more data can be derived from that, though. I’ll have to ponder that for a bit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>Wouldn’t storage in IndexedDB cover your use cases?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Eynon</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>How exactly does it cover the use cases? I haven’t played with IndexedDB much, but my understanding is that it is a front-end database. If a page load occurs, the backend still can’t separate which tab is what. Unless IndexedDB can distinguish between tabs, and even then, a front-end tool doesn’t help the backend separation in between page loads and comes back to fundamentally the GET parameter.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dveditz</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>This is not quite what you’re asking for but maybe there’s some overlap. In Firefox we’re implementing user-selected “Containers” that isolate tabs from each other. This fails your “keep site-wide cookies” part of the request because the containers act like separate users. Sometimes useful–you could log into a site as two separate users at the same time if they’re in different containers.</p>
+<p>Building on that idea, in the Web Application Security WG there’s been at least one conversation about letting a site self-select into something like the “containers” we’re building for Firefox. For example, your bank could say “Isolate me!” through whatever mechanism we invent and then no malicious site outside that isolation container could access or try to take advantage of any data (like cookies) of the site in the container.</p>
+<p>If it’s site-wide isolation (useful for a bank) and especially if it’s persistent in the future that might not match what you want at all. If the isolation is per-document and persists in that window/tab maybe it could be made to work for you.</p>
+<p><a href="https://lists.w3.org/Archives/Public/public-webappsec/2016Sep/0052.html">https://lists.w3.org/Archives/Public/public-webappsec/2016Sep/0052.html</a></p>
+<p>The proposal link in that mail suggests there may have been conversation about it here, too
+<a href="https://wicg.github.io/isolation/explainer.html" rel="nofollow noopener">https://wicg.github.io/isolation/explainer.html</a></p>
+<p>-Dan Veditz</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Eynon</div>
+          <div class="creation_date">2016-12-29</div>
+          <div class="post_content">
+<p>While Isolate-Me sounds like a great thing to look forward to, it sounds like overkill for these use cases. The explainer link suggests that it should be used appropriately to avoid excessive processing for the browser. Separating forms as in use case 1 would mean a separate isolation for each tab.</p>
+<blockquote>
+<p>However, we should take care not to make Isolate-Me too attractive, for fear that all sites will turn it on whether or not they need it.</p>
+</blockquote>
+<p>It sounds great for a couple of other scenarios and especially for use case 3.</p>
+<p>I don’t know if anyone viewed my other comment, but I’m thinking instead of using cookies for this, the browser could include a header field containing a unique view identifier.</p>
+<p>So, consider this play by play:</p>
+<ul>
+<li>User opens browser <code>Tab 1</code> and navigates to <code>lots-of-forms.com</code>.</li>
+<li>Browser sends header field <code>view-identifier: randomid1</code>
+</li>
+<li>User clicks a link to fill out a form in a new window. <code>Tab 2</code>
+</li>
+<li>Browser sends header field <code>view-identifier: randomid2</code>
+</li>
+<li>
+<code>lots-of-forms.com</code> tracks each view-identifier in its session and distinguishes form data per view-identifier.</li>
+<li>
+<code>Tab 1</code> loads a form with a frame. Browser sends with the main page request <code>view-identifier: randomid1</code> and with the frame request <code>view-identifier: randomid3</code>
+</li>
+</ul>
+<p>This would have the same potential privacy issue that <span class="mention">@mnot</span> mentioned as it allows a website to observe more about a users habits than a simple web request.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

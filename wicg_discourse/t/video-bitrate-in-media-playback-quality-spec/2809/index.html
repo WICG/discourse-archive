@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Video bitrate in Media Playback Quality spec</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Video bitrate in Media Playback Quality spec</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1708_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">slhck</div>
+          <div class="creation_date">2018-05-28</div>
+          <div class="post_content">
+<p>This concerns the current draft on the Media Playback Quality interface as published <a href="https://wicg.github.io/media-playback-quality/" rel="nofollow noopener">here</a> – we as a research group are very interested in this topic in general, and have specific comments as to how the interface could be enhanced to support further metrics and ultimately better fit the concept of “playback quality”. As of now, the interface specifies metrics that basically relate to player performance in the sense of decoding performance (i.e., whether the player is able to decode and display all frames coming in), but not so much “quality” in the sense of what a user really perceives (e.g., a video that is blurry due to being low-resolution or heavily compressed).</p>
+<p>It is my understanding that the Media Playback Quality interface replaces what has been suggested years ago by the WhatWG in the <a href="https://wiki.whatwg.org/wiki/Video_Metrics">“Video Metrics” project</a>. However, these metrics have either not been fully implemented by all browser vendors (e.g. Firefox has not implemented <code>videoDecodedBytesCount</code>, and development on it has stalled years ago), or are even considered for deprecation (e.g. WebKit deprecating the same attribute <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=632380" rel="nofollow noopener">here</a>).</p>
+<p>The WhatWG at the time stated:</p>
+<blockquote>
+<p>Service providers, especially commercial service providers, need to manage and monitor the performance of their service, for example to detect problems before they cause a deluge of Customer Service calls or identify whether, where and when the service is providing the quality of experience expected by customers.</p>
+</blockquote>
+<p>Knowing the actual bitrate of a decoded video is very important in order to get an accurate estimate of the visual quality of the video being played back, when no actual bitstream is available to the client. Without means to estimate how much a video has been compressed, any diagnosis of video playback quality will have to fall back to looking at how long the video has stalled during playback, which is not giving the full picture. A relevant scenario in which this metric would be useful is monitoring video streaming quality using instrumented clients that play HTML5 video. Here, one would like to know the actual bitrate at which a given stream is coded.</p>
+<p>Of course, a video service provider itself knows how they coded their video segments, and may characterize the video quality easily already before transmission. For a third party wanting to characterize the performance of a video service though, it is impractical or even infeasible (be it legally or technically) to download the corresponding video bitstream for further analysis. Hence, a simple method to expose the video’s bitrate (e.g., by offering the bytes decoded) would be preferable.</p>
+<p>Exposing the current bitrate to the player would also simplify calculations for adaptive streaming implementations.</p>
+<p>The WhatWG <a href="https://wiki.whatwg.org/wiki/Adaptive_Streaming#QOS_Metrics">have proposed</a> two specific attributes that exactly fit this use case: <code>downloadRate</code> and <code>videoBitrate</code> – the latter being of particular interest, and very close to what we are trying to achieve.</p>
+<p>Would it be possible for us to contribute to a specification that allows calculating video bitrate (and similarly, of course, audio bitrate) based on the Media Playback Quality interface?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

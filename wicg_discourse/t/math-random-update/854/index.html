@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Math.random Update</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Math.random Update</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-18</div>
+          <div class="post_content">
+<p>Does it hurt for this to be possible:</p>
+<pre><code>Math.random(1, 5); // returns a float 1-5 inclusive
+</code></pre>
+<p>Perhaps a third <code>Boolean</code> argument for whether it returns integer eliminating the use of <code>Math.floor();</code></p>
+<p>As of right now <code>Math.random()</code> called with arguments ignores the arguments and does nothing.</p>
+<p>We are trying to improve javascript, this should be an easy fix right? It’s just a function so?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">BrendanEich</div>
+          <div class="creation_date">2015-05-23</div>
+          <div class="post_content">
+<p>This is not a good idea, for a general and more specific reason:</p>
+<ol>
+<li>
+<p>General for all programming languages: <a href="http://ariya.ofilabs.com/2011/08/hall-of-api-shame-boolean-trap.html">http://ariya.ofilabs.com/2011/08/hall-of-api-shame-boolean-trap.html</a>.</p>
+</li>
+<li>
+<p>JS-specific: JS does not enforce arity so it’s possible (you’d be surprised what happens that is allowed – almost everything) that code on the Web already calls Math.random with extra actual arguments (perhaps via .apply or .call). In general ECMA-262 reserves extra parameters to future specs, but in reality it’s very hard to extend extant methods this way.</p>
+</li>
+</ol>
+<p>/be</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-23</div>
+          <div class="post_content">
+<p>I’ve remember learning about why Boolean parameters are bad, and thanks for the article. The only question I have about that is:</p>
+<p>Take <code>Element.cloneNode()</code> without passing the Boolean argument is that one a bad design?</p>
+<p>I’m trying to understand why <code>Element.cloneNode(false)</code> would mean not to clone it? What else would it mean, what’s the point of calling it? Or is this a good example of using a Boolean for a parameter.</p>
+<p>So should <code>Element.cloneNode(true)</code> be changed to <code>Element.cloneNode({deep: true})</code>. or something similar.</p>
+<p>Ok now on <code>Math.random()</code> really?!?! it’s called with arguments, yet the arguments are ignored?</p>
+<p>You said with <code>call</code> or <code>apply</code> so:</p>
+<pre><code>Math.random.call(Math, 1, 2, 'whateverBecauseThisIsIgnored');
+Math.random.apply(Math, [1, 2, 'whateverBecauseThisIsIgnored');
+</code></pre>
+<p>Or how else would it be?</p>
+<p>So what if it were like this: <code>Math.random({min: 1, max: 2, intergersOnly: true});</code></p>
+<p><em>I apologize if I sound angry Brendan, I’m not, I’m just trying to understand more just in case I encounter something else like this?</em></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-05-26</div>
+          <div class="post_content">
+<p>It would likely be safer to add properties to the method itself:</p>
+<pre><code class="lang-auto">  Math.random.bounded(1, 5, otherThing)
+</code></pre>
+<p>Or follow the other native paradigm of making a constructor:</p>
+<pre><code class="lang-auto">  var randomInstance = new Math.Random();
+  randomInstance.bounded(1, 2, etc);
+</code></pre>
+<p>Various libraries use call and apply internally for reasons such as passing arguments through, it can be the case that these mistakenly pass through the arity wrong mistakenly to functions that don’t need it as part of a factory method etc.</p>
+<p>However Chrome seem to be pushing ‘strong mode’ to solve arity abuse in the long term which is a nice benefit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>Is there a function that already does that, I can’t think of anything that is a native function which has a method on it. I’m talking about:</p>
+<blockquote>
+<p><code>Math.random.bounded(1, 5, otherThing)</code></p>
+</blockquote>
+<p><code>Math.random</code> is a native function. Is there native method that has a method on it?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>Most natives objects for a start:</p>
+<pre><code class="lang-auto">Array()
+new Array()
+Array.isArray()
+Array.prototype.isArray
+Date.now()
+Date()
+new Date()
+</code></pre>
+<p>I feel there are lots of older ones that do the same (I wasn’t advocating it really, merely suggesting a similar API out of scope would be better than changing arity)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>Ok that are technically not constructors because those are technically constructors.</p>
+<p>And by the way:</p>
+<pre><code class="lang-auto">var randomInstance = Math.Random();
+randomInstance.bounded(1, 2, etc);
+</code></pre>
+<p>Wouldn’t work because <code>Math.random()</code> returns an immutable number.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>They can behave slightly differently is my point, that and JavaScript doesn’t really care much:</p>
+<pre><code class="lang-auto">new Boolean(0)
+//Boolean {[[PrimitiveValue]]: false}
+Boolean(0)
+//false
+</code></pre>
+<p>Note the case on <code>Random</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>Also I meant to put <code>new Math.Random()</code> edited. <img alt=":sleepy:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/sleepy.png?v=5" title=":sleepy:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>Do you really think the committee would let that happen? because I don’t see any pattern in JS like that as of right now.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-06-03</div>
+          <div class="post_content">
+<p>No probably not as it has been a use case for so long, mostly the answer has been… deal with it.</p>
+<p><code>history</code>, <code>History</code>, and <code>location</code>, <code>Location</code> are both examples of property access and their classes.</p>
+<p><code>Intl</code> and <code>Intl.Collator</code> is a better example though.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

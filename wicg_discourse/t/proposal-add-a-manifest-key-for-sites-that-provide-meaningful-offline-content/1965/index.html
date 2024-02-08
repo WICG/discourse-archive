@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Add a manifest key for sites that &lsquo;provide meaningful offline content&rsquo;</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Add a manifest key for sites that &lsquo;provide meaningful offline content&rsquo;</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">owencmoore</div>
+          <div class="creation_date">2017-01-20</div>
+          <div class="post_content">
+<p>When the user is offline the browser may want to show icons for sites that work offline thanks to Service Worker. Additionally, the browser may want to visually distinguish sites that work offline, for example via an offline badge.</p>
+<p>I propose we add a key to the Manifest spec named something like <code>providesMeaningfulOfflineContent</code>, where <code>true</code> indicates that if the user opens the PWA while offline, it will provide access to some content, or other useful functionality, as opposed to simply opening and showing no content as the user is offline.</p>
+<p>The best way for browsers to build such a feature goal today is with heuristics like:</p>
+<ul>
+<li>Does the site have a service worker installed?</li>
+<li>Does the service worker have a fetch handler?</li>
+<li>Does the service worker respond to requests to the startURL with a 200 response?</li>
+</ul>
+<p>But this is insufficient as many Progressive Web Apps cache the “shell” offline but no content and although the PWA can be opened when offline, there is nothing for the user to do. In these cases, telling the user “You’re offline! Why not try one of these?” with a list of options that only open and say “Not connected” is a poor experience.</p>
+<p>Note that incentives are also aligned for developers to set <code>providesMeaningfulOfflineContent</code> correctly, as they don’t stand to gain anything by being launched offline unless they provide some meaningful experience.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenchris</div>
+          <div class="creation_date">2017-01-20</div>
+          <div class="post_content">
+<p>I think you should add to the heuristics that there should be a serviceworker in the manifest itself, especially as Microsoft will use this for brings PWAs to their store, so further encouragement for that would be good in the long run, ie. only actually show offline badge for sites with providesMeaningfulOfflineContent in case that the manifest additionally has a serviceworker in it.</p>
+<p>I like the idea, but hope we can find a shorter name <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> Also manifest uses underscores, like <code>"provides_meaningful_offline_content"</code>.</p>
+<p>It could possible be a sub entry of the <code>"serviceworker"</code> like</p>
+<pre><code>"serviceworker": {
+  "src": "sw.js",
+  "scope": "/foo",
+  "use_cache": false,
+  "provides_meaningful_offline_content": true
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-01-20</div>
+          <div class="post_content">
+<p><code>works_offline</code> is a better name.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">owencmoore</div>
+          <div class="creation_date">2017-01-21</div>
+          <div class="post_content">
+<p>Good point about underscores <span class="mention">@kenchris</span>! Your suggested about nesting it under the sw section makes sense to me.</p>
+<p><span class="mention">@DanielHerr</span> - I’d like us to find something self documenting so developers will only set it to true if it provides some <em>content</em> offline, not just the shell. I can imagine a developer going "Yeah I have a SW, <code>works_offline: true</code>", even if when the user opens it, the PWA just says “No connection”.</p>
+<p><code>useful_offline</code> is shorter and may get us a little closer to that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-01-21</div>
+          <div class="post_content">
+<p><code>useful_offline</code> is basically equivalent to <code>works_offline</code>. I also doubt anyone would interpret <code>works/useful_offline</code> as including showing a no internet connection screen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kenchris</div>
+          <div class="creation_date">2017-01-21</div>
+          <div class="post_content">
+<p>You could do something like <code>"usefulness_offline": "fully"</code> (say for a calculator), | <code>"basic"</code> | …</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2017-01-26</div>
+          <div class="post_content">
+<p>How would one combat sites that dishonestly include it to look better? I fear this is a social problem, not a technical one. Safari added <code>shrink-to-fit</code> because many websites with <code>&lt;meta name="viewport" content="width=device-width"&gt;</code> were doing so to appear mobile-friendly to Google. This could end similarly.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

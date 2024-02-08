@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>JS API to trigger the platform native emoji picker</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">JS API to trigger the platform native emoji picker</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2203_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xPaw</div>
+          <div class="creation_date">2019-02-07</div>
+          <div class="post_content">
+<p>There was a previous discussion here: <a class="inline-onebox" href="https://discourse.wicg.io/t/invoke-emoji-input/1030/11">Invoke emoji input</a> but it focused on changing the input elements.</p>
+<p>What I’m thinking of is, have a simple API call that would open the native emoji picker, in response to a click event.</p>
+<p>Chrome already exposes a way of opening the emoji picker by having an emoji option in the context menu on inputs. <a href="https://9to5google.com/2018/04/05/google-chrome-emoji-shortcut-mac-windows/" rel="nofollow noopener">https://9to5google.com/2018/04/05/google-chrome-emoji-shortcut-mac-windows/</a></p>
+<p>With how complicated the emoji/unicode has gotten, especially in last couple of years, it seems like a great idea to delegate this job to the operating system, rather than having to implement it in javascript yourself, which requires a big amount of data with the emoji data/information.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2019-02-13</div>
+          <div class="post_content">
+<p>I would suggest to add a simple <code>emoji</code> attribute on <code>input</code> and <code>textarea</code> instead of providing a complex API.</p>
+<p>For example:</p>
+<pre><code class="lang-auto">&lt;input type="text" required emoji&gt;&lt;/input&gt;
+</code></pre>
+<p>When the attribute is present, then there is a small icon to select emoji… like Emojionearea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2203_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xPaw</div>
+          <div class="creation_date">2019-02-13</div>
+          <div class="post_content">
+<p>With an attribute I’m worried it will hard to style whatever button the browser ends up adding. And it will be even harder to move outside the input if needed (for example the smiley/emoji button on discourse here).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-02-18</div>
+          <div class="post_content">
+<p>I don’t know about other OSs, but on MacOS at least, it’s a simple keyboard combination to bring up the emoji selector… I guess if you wanted to show a restricted set, you could still just make a custom UI using the array of emojis to display. This really seems like a job for Web Components, to be honest.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2203_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xPaw</div>
+          <div class="creation_date">2019-02-18</div>
+          <div class="post_content">
+<p>Not everyone is aware of the keyboard combination (especially on Windows when it was just added recently), it’s also helpful on mobile where it would open the emoji panel directly.</p>
+<p>Making a custom UI is specifically what I mentioned in the initial post already. There’s many emojis, and to make an effective searchable emoji panel, you need to have a lot of metadata about emojis, which gets even bigger when you consider modifiers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2019-02-22</div>
+          <div class="post_content">
+<p>That won’t work for applications like Twitter and Facebook, who already have a button for explicit emoji input. A lot of places do just that on desktop where there’s no obvious “input emoji” key/button, so they can still easily add one in if they don’t know the keyboard shortcut.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3314_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">madebyfabian</div>
+          <div class="creation_date">2021-01-27</div>
+          <div class="post_content">
+<p>Hey there,</p>
+<p>I came through a same issue and as far as I can see there is no JS API for this so far, even though chrome seems is able to “open” this native emoji picker.</p>
+<p>I do not think we need a <code>&lt;input emoji /&gt;</code> attribute, but what would be great is to have a simple API like</p>
+<pre><code>navigator.EmojiPicker.open()
+</code></pre>
+<p>or something like this. Is anyone still interested in this topic? Maybe suggesting it to the ECMAScript Team or something.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-02-15</div>
+          <div class="post_content">
+<blockquote>
+<p>That won’t work for applications like Twitter and Facebook, who already have a button for explicit emoji input.</p>
+</blockquote>
+<p>My solution would work in that case… If they really want to use their custom input for emoji, they can simply avoid to add the <code>emoji</code> attribute to the input.</p>
+<blockquote>
+<p>I do not think we need a <code>&lt;input emoji /&gt;</code> attribute</p>
+</blockquote>
+<p>I think that the HTML attribute would be straightforward and would cover 99% of use cases. Usually you need to add an emoji to an input field, not somewhere else.
+In any case also a JS method would help.</p>
+<p>I hope that Chrome and others will consider this feature, because it would be easy to implement (i.e. it’s simple for them to open the native OS picker) and it would save a lot of a headaches to developers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-02-15</div>
+          <div class="post_content">
+<p>I also have another concern with the JS API solution: what about the position of the cursor in the textarea? When you click on the <img alt=":grinning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/grinning.png?v=9" title=":grinning:"/> button to open the emoji selection you lose the focus / position of the input in the textarea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-02-15</div>
+          <div class="post_content">
+<p>There are OS pickers on all major platforms:</p>
+<ul>
+<li>
+<strong>MacOs</strong>: Cmd+Ctrl+space</li>
+<li>
+<strong>Windows</strong>: Windows+.</li>
+<li>
+<strong>Ubuntu</strong>: Ctrl+.</li>
+<li>etc.</li>
+</ul>
+<p>The problem is that most users don’t know about those strange key combinations… It should be simple to open that native picker for the browser.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-09-19</div>
+          <div class="post_content">
+<p>I still believe that this feature would be extremely useful and it would improve the UX.</p>
+<p>Most JS emoji pickers are complex, not accessible and not well maintained.</p>
+<p>All major browsers and OS already have this feature (emoji picker), they just need to expose it to the developers.</p>
+<p>It’s meaningless to keep this powerful feature hidden behind keyboard shortcuts that users don’t even know.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3615_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Fatos_Bediu</div>
+          <div class="creation_date">2021-10-07</div>
+          <div class="post_content">
+<p>I think attribute isn’t the right way but instead as <span class="mention">@madebyfabian</span> suggested a JS API. I’m thinking this mainly because what about textareas and contenteditable divs? That’s where most of the emoji needs to be inserted anyways, in big areas of text input and not just basic input fields which are mainly used for short data such as e-mail and usernames.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2021-10-07</div>
+          <div class="post_content">
+<p>Another vote of support for an <code>&lt;input type="emoji"&gt;</code>. The benefits over ad hoc ones are consistency, accessibility, even i18n.
+For use cases where an emoji needs to be appended to another form element’s input, the input can just be overlaid and/or its <code>input</code> event listened to with JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-10-10</div>
+          <div class="post_content">
+<p>When I suggest to add an attribute to input fields, I mean to <strong>add it to <code>input</code> and <code>textarea</code></strong>, just like other attributes that are common to all form elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3615_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Fatos_Bediu</div>
+          <div class="creation_date">2021-10-10</div>
+          <div class="post_content">
+<p>I understand that, but an attribute showing a visual icon to open the emoji picker box is not the best solution.</p>
+<p>I’m mainly saying that given browser vendor history - fancy input fields are very inconsistent. See color picker, date picker, and number picker.</p>
+<p>For example, there are some things to take into account here. What about the icon position - should it be fixed, or should you be able to set it manually with a CSS property?</p>
+<p>Suppose you’re allowed to set a position manually; what about the padding then? Should text go over the icon, or should text areas automatically get padding once in the emoji state?</p>
+<p>On top of everything, how are you supposed to add the icon for Bold, Italic, and Underline in rich-text editors? Should you force people to put their icons close to the immovable emoji icon?</p>
+<p>That’s just for position. What about the icon itself? Can you replace it with a different one? Can you change the size? Anyways, this is all that I can think of in a short amount of time. I’m sure there are lots of edge cases where browsers might not deliver consistently.</p>
+<p>I love the request, and it’s very nice as I’ve built a WYSIWYG editor myself, and I’ve manually created an emoji solution.</p>
+<p>But it seems an attribute points to an overly complicated solution. DIYing the icon and hooking it up with a javascript API seems perfect.</p>
+<p>Just my opinion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2022-10-12</div>
+          <div class="post_content">
+<p>Let’s keep this discussion open. It’s 2022 and I still think that browsers should provide a simple way to have an emoji picker associated to an input field.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

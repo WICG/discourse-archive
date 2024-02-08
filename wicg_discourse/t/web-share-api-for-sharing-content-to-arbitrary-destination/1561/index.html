@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Web Share API for sharing content to arbitrary destination</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Web Share API for sharing content to arbitrary destination</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-06-14</div>
+          <div class="post_content">
+<p>We’d like to discuss an API for triggering a “share” action, to send content (e.g., text, URLs, images) to a destination of the user’s choice (e.g., social networking, messaging, note taking apps). I’ve put together an explainer here:</p>
+<p><a href="https://github.com/mgiuca/web-share/blob/master/docs/explainer.md" rel="nofollow noopener">Web Share API Explainer</a></p>
+<p>Initially this would just be useful for sending content to <a href="https://github.com/mgiuca/web-share/blob/master/docs/native.md" rel="nofollow noopener">native apps</a> that can handle sharing (e.g., Android intents, iOS shares, Windows share contracts). I hope that eventually <a href="https://github.com/mgiuca/web-share-target" rel="nofollow noopener">websites will also be able to handle sharing</a> but I’m keeping that separate for now.</p>
+<p>I’d like to incubate this proposal in the WICG and soon will start experimenting with this in Chrome.</p>
+<p>Thanks<br/>
+Matt Giuca<br/>
+The <a href="https://github.com/chromium/ballista" rel="nofollow noopener">Chrome Ballista Team</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-06-14</div>
+          <div class="post_content">
+<p>I think jointly to the JS API it would be good to also specify <code>&lt;button type="share"&gt;Share this&lt;/button&gt;</code> with title, text and url as attributes (possibly also have url default to window.location.href). It would of course be an easy polyfill to add but would add a nice bit of semantics especially considering the point is to be able to implement a share button. This would also be a good hook for accessibility purposes where screenreaders etc would easily be able to call out this specific CTA.</p>
+<p>Also wondering if at least initially URL should be limited in scope to one of the following options:</p>
+<ol>
+<li>HTTPS only</li>
+<li>Same origin</li>
+<li>Origin + pathname (still allow for querystring and hash differences)</li>
+</ol>
+<p>As a user I’d expect that if I’m sharing something I’m sharing the page that I’m on, but as things stand I could be on a page with a cute cat video, share to my friends and they instead open a link to a malicious site. It’d be easier at least while experimenting to keep this more restricted and open it out as some of these issues are worked through than to pull it back once in the wild.</p>
+<p>Consideration also needs to go into what is allowed to trigger a share action so that you can’t navigate to a page that spams shares like when pages used to spam pop-ups or alerts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-06-15</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1561">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/ce7236/40.png" width="20"/> chaoaretasty:</div>
+<blockquote>
+<p>I think jointly to the JS API it would be good to also specify &lt;button type=“share”&gt;Share this&lt;/button&gt; with title, text and url as attributes (possibly also have url default to window.location.href). It would of course be an easy polyfill to add but would add a nice bit of semantics especially considering the point is to be able to implement a share button.</p>
+</blockquote>
+</aside>
+<p>That might be nice to have. I’m not sure it’s worth tacking that on to the same proposal, though (I wouldn’t want the basic API feature to be derailed by the HTML part, especially since it is easy to polyfill). I’m new to this, but my understanding is that we should be adding low-level capabilities to the web and letting library authors provide nice abstractions on top of them (<a href="https://github.com/extensibleweb/manifesto" rel="nofollow noopener">The Extensible Web Manifesto</a>).</p>
+<aside class="quote">
+<blockquote>
+<p>Also wondering if at least initially URL should be limited in scope to one of the following options:</p>
+</blockquote>
+</aside>
+<p>Yeah, I think you’re right; allowing sites to share a link to a different origin might give them too much power for not a lot of benefit. I’d be happy to just limit it to same origin for simplicity. (HTTPS doesn’t guarantee it isn’t a malicious site.)</p>
+<aside class="quote">
+<blockquote>
+<p>Consideration also needs to go into what is allowed to trigger a share action so that you can’t navigate to a page that spams shares like when pages used to spam pop-ups or alerts.</p>
+</blockquote>
+</aside>
+<p>Yeah, I imagine <code>share</code> would only be callable from an “allowed to show a popup” context (which seems to have recently been renamed to “<a href="https://html.spec.whatwg.org/multipage/interaction.html#triggered-by-user-activation">triggered by user activation</a>”).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-06-15</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1561">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mgiuca/40/1022_1.png" width="20"/> mgiuca:</div>
+<blockquote>
+<p>That might be nice to have. I’m not sure it’s worth tacking that on to the same proposal, though (I wouldn’t want the basic API feature to be derailed by the HTML part, especially since it is easy to polyfill). I’m new to this, but my understanding is that we should be adding low-level capabilities to the web and letting library authors provide nice abstractions on top of them (The Extensible Web Manifesto).</p>
+</blockquote>
+</aside>
+<p>I’m also quite new to this as well, you do make a good point about not bogging it down with the HTML part. I think it would still be good to nudge developers in that direction somewhat though. Perhaps by expanding the example code slightly to include selecting elements on type=“share” would be a good balance. This keeps the HTML proposal completely out of the spec but would encourage semantic usage.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">owencmoore</div>
+          <div class="creation_date">2016-08-05</div>
+          <div class="post_content">
+<p>I’m super excited about the potential for this API.</p>
+<p>I work closely with lots of 3rd party developers and have heard many request this capability, in particular for publishers and photo sharing.</p>
+<p>I’ve also heard requests to ensure it is possible to trigger sharing from an action button on a notification, which I <em>suspect</em> will just work by default but is worth bearing in mind!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">IchordeDionysos</div>
+          <div class="creation_date">2016-10-25</div>
+          <div class="post_content">
+<p>Wondering I’ve I as a developer of a web app could develop sth like a receiver for the <code>navigator.share()</code> action, e.g.:</p>
+<p>On some random Website <code>https://share-some.info</code> the Share API is called:</p>
+<pre><code class="lang-javascript">navigator.share({
+    title: document.title,
+    text: "Hello World",
+    url: window.location.href
+}).then(() =&gt; console.log('Successful share'))
+.catch(() =&gt; console.log('Error sharing:', error));
+</code></pre>
+<p>Then the browser handles the request as described but, additionally shows web apps between the native apps installed on the users device:</p>
+<p>Share using: <strong>Whatsapp</strong>, <strong>Save to Google Keep</strong>, <strong>ShareRecieverWA</strong>, <strong>Inbox</strong>, …</p>
+<p>And in the Share receiver web app <code>https://share-using-wa.new</code>:
+sw.js</p>
+<pre><code class="lang-javascript">self.addEventListener('share', function(evt) {
+    // TODO: add share logic here
+});
+</code></pre>
+<p>I think this would be awesome as we currently have this new Share API and more and more sites register a service worker on their sites and this would improve the experiences for web apps.</p>
+<p>What do you think about such a feature?</p>
+<div class="poll" data-poll-max="10" data-poll-min="1" data-poll-name="poll" data-poll-public="true" data-poll-status="open" data-poll-step="1" data-poll-type="number">
+<div>
+<div class="poll-container"><ul>
+<li data-poll-option-id="4d8a15e3cc35750f016ce15a43937620">1</li>
+<li data-poll-option-id="cd314db7dfbac2b10687b6f39abfdf41">2</li>
+<li data-poll-option-id="68b434ff88aeae7054e42cd05a4d9056">3</li>
+<li data-poll-option-id="aa2393b424f2f395abb63bf785760a3b">4</li>
+<li data-poll-option-id="8b2f2930cac0574c3450f5db9a6fb7f9">5</li>
+<li data-poll-option-id="60cad69e0cfcb3fa77a68d11d3758002">6</li>
+<li data-poll-option-id="9ab1070dec27185440cdabb4948a5e9a">7</li>
+<li data-poll-option-id="99944bf07088f815a966d585daed6a7e">8</li>
+<li data-poll-option-id="345a83050400d78f5fac98d381b45e23">9</li>
+<li data-poll-option-id="46c01f638a50d86e020f47469733b8be">10</li>
+</ul></div>
+<div class="poll-info">
+<p>
+<span class="info-number">0</span>
+<span class="info-text">voters</span>
+</p>
+</div>
+</div>
+<div class="poll-buttons">
+<a title="Display the poll results">Show results</a>
+</div>
+</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-10-26</div>
+          <div class="post_content">
+<p>We are proposing exactly that feature for an upcoming web standard: <a href="https://github.com/WICG/web-share-target/blob/master/docs/explainer.md" rel="nofollow noopener">Web Share Target</a>. (We always planned to do this, but we separated it out into two proposals so we could focus on getting the basic sharing working first.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2016-10-26</div>
+          <div class="post_content">
+<p>We’re working on a similar pattern for “payments” as opposed to “shares” in the Web Payments WG.</p>
+<p>It would be useful to compare notes and try to settle on a common pattern for this as originally envisioned by Web Intents.</p>
+<p>Latest Payment Apps spec is here: <a href="https://w3c.github.io/webpayments-payment-apps-api/" rel="nofollow noopener">https://w3c.github.io/webpayments-payment-apps-api/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-10-27</div>
+          <div class="post_content">
+<p>Hi Adrian,</p>
+<p>Yeah that might be good but it looks like yours is based on a dynamic registration (including sites generating new registrations for each credit card). I was hoping to do a declarative one which is why I target the web app manifest.</p>
+<p>Can you contact me via email to discuss? mgiuca at <a href="http://chromium.org" rel="nofollow noopener">chromium.org</a></p>
+<p>Matt</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1153_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mobtec</div>
+          <div class="creation_date">2016-12-02</div>
+          <div class="post_content">
+<p>I don’t know if it is possible, but a important thing is the possibility to add custom metrics in the canonical URL for some apps.
+i.e: utm_source=whatsapp, utm_source=messenger</p>
+<p>What do you think?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-12-02</div>
+          <div class="post_content">
+<p>The spec allows you to set the URL being shared so you can add any related query string parts there</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-12-04</div>
+          <div class="post_content">
+<p>I agree this is important but I’m not clear on the details. Do you mean the <em>share sender</em> can add metric parameters to the URL being shared, so when the user shares the URL to social media it has a parameter in it?</p>
+<p>You can do that as chaoaretasty@ mentioned, but you won’t be able to customize it for the target app (because by design, you won’t know what the target app is). So you could set <code>url: 'https://example.com?utm_source=webshare'</code>, but you wouldn’t be able to set <code>utm_source=whatsapp</code> or similar, because you won’t actually know what app it is being shared to.</p>
+<p>Does that satisfy your question?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1153_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mobtec</div>
+          <div class="creation_date">2016-12-05</div>
+          <div class="post_content">
+<p>That’s exactly what I was trying to say.</p>
+<p>It’s awesome to know who is coming from whatsapp or messenger. That’s the only penalty I’ve noted for this API.</p>
+<p>Thanks</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>Interesting, so you basically want to customize the shared URL based on the target, so that when users share to social media then their friends click it, the incoming requests tell you which social media site it was posted to… correct?</p>
+<p>The problem is there’s likely a privacy issue with letting the sharing site know what the target is that the user chose (we want to not leak the apps the user has installed). Can you use the Referer of the incoming requests instead of a URL parameter? Maybe doesn’t work when incoming from a mobile app?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1153_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mobtec</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>Correct.
+There are no referrer. It will be the first visit. It will be count as direct access.</p>
+<p>If we could add like this… ?utm_source=[APP_NAME] it would be great…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>I think you’re suggesting that the API injects “<code>?utm_source=[APP_NAME]</code>” into the URL in-flight (so the sending app wouldn’t see it, but once it arrives on the receiving app side, it is visible). We could do a thing like that, but I’m worried it might still be a privacy issue because as soon as someone clicks the link the sender will see the app name. (But it’s less of a concern, because it’s separated from the user of the sending site.) Will consider this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>I’ve filed an issue on the Web Share GitHub. Please continue discussion there:
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/web-share/issues/13" rel="nofollow noopener" target="_blank">github.com/w3c/web-share</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/w3c/web-share/issues/13" rel="nofollow noopener" target="_blank">Add a way to inject metrics into the shared URL</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2016-12-06" data-format="ll" data-time="23:04:34" data-timezone="UTC">11:04PM - 06 Dec 16 UTC</span>
+</div>
+<div class="date">
+          closed <span class="discourse-local-date" data-date="2018-02-20" data-format="ll" data-time="06:00:51" data-timezone="UTC">06:00AM - 20 Feb 18 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/mgiuca" rel="nofollow noopener" target="_blank">
+<img alt="mgiuca" class="onebox-avatar-inline" height="20" src="https://avatars0.githubusercontent.com/u/228433?v=4" width="20"/>
+          mgiuca
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">FR from Discourse: https://discourse.wicg.io/t/web-share-api-for-sharing-content-to-arbitrary-destination/1561/10
+The developer wants a way to automatically insert a query parameter onto the shared URL like "utm_source=$TARGET_APP", which...</p>
+</div>
+<div class="labels">
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1182_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nanabite</div>
+          <div class="creation_date">2017-01-05</div>
+          <div class="post_content">
+<p>Have been playing around with this - seems to work quite well.</p>
+<p>One thing I’m not sure if is possible (but would be interesting to me) would be to be able to specify the package name of a destination app (similar to how the setPackage() method on Intent in Android) that could be used as an override. This way, I could implement a button on a page for a specific app (e.g. Facebook) and then fall-back to a URL (e.g. the mobile website or marketplace) should that app not be available.</p>
+<p>The only other feedback I have at this time is it would be nice if the Origin Trials were available in WebView. One of the scenarios that this particular feature would be useful for is to allow more native integration in a Cordova hosted web app without having to implement a plugin.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2017-01-05</div>
+          <div class="post_content">
+<blockquote>
+<p>One thing I’m not sure if is possible (but would be interesting to me) would be to be able to specify the package name of a destination app (similar to how the setPackage() method on Intent in Android) that could be used as an override. This way, I could implement a button on a page for a specific app (e.g. Facebook) and then fall-back to a URL (e.g. the mobile website or marketplace) should that app not be available.</p>
+</blockquote>
+<p>Interesting suggestion. You can sort of do this now using the intent: URL syntax <a href="https://paul.kinlan.me/sharing-natively-on-android-from-the-web/" rel="nofollow noopener">as documented here</a>. The problem is you can’t combine the two (open the Facebook app with a fallback to web share) because you can’t tell whether opening Facebook app failed or not.</p>
+<p>I don’t really want to put a feature into Web Share for specifying an Android app. That would go against both the open standard (that it is a web standard, it should not include Android-specific features) and the federated nature of Web Share. Our philosophy is that the user should be able to choose where to share to, not the site doing the share. If the site were to target the Facebook app, only falling back to user choice when it doesn’t exist, that would be diverting away from user choice. It would also make for a confusing user experience (would the button be a Facebook button that sometimes shows an app picker? Or a Share button that sometimes directly opens Facebook? Neither is a very good experience.)</p>
+<p>I’d prefer to leave this be and just tell developers to make two buttons: a facebook share button and a generic share button that triggers web share.</p>
+<blockquote>
+<p>The only other feedback I have at this time is it would be nice if the Origin Trials were available in WebView. One of the scenarios that this particular feature would be useful for is to allow more native integration in a Cordova hosted web app without having to implement a plugin.</p>
+</blockquote>
+<p>I think we don’t put Origin Trials in WebView because we don’t want developers to rely on it (to have it spread to other applications). This is supposed to be a public trial, not something you should be depending upon. I will raise it with the Origin Trials team to see if they have this in mind or whether it’s just an oversight.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">owencmoore</div>
+          <div class="creation_date">2017-01-05</div>
+          <div class="post_content">
+<p>Thanks for the feedback <span class="mention">@nanabite</span>! It’s super helpful to hear what people think <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+<p>If you want to share with a specific package that’s probably best done with  the proprietary Android Intent syntax that Paul documented on his blog: <a href="https://paul.kinlan.me/launch-app-from-web-with-fallback/" rel="nofollow noopener">https://paul.kinlan.me/launch-app-from-web-with-fallback/</a>. As Matt says we’d like to avoiding building Android-specific concepts into this API.</p>
+<p>The question of Origin Trials in a WebView is interesting. I’ve started a thread in the official Origin Trials mailing list to continue the discussion: <a href="https://groups.google.com/a/chromium.org/forum/#!topic/experimentation-dev/H2mycA91IXk" rel="nofollow noopener">https://groups.google.com/a/chromium.org/forum/#!topic/experimentation-dev/H2mycA91IXk</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Optional Descendant Selector</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Optional Descendant Selector</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2018-09-10</div>
+          <div class="post_content">
+<p>Sometimes i need to target descendant elements but also the element itself.<br/>
+Would be great if i had a single selector for this</p>
+<pre><code>button.inverted,
+.inverted button {
+    color:white;
+    background:black;
+}
+</code></pre>
+<p>Maybe something like this?</p>
+<pre><code>.inverted | button {
+    color:white;
+    background:black;
+}
+</code></pre>
+<hr/>
+<p>other situations:</p>
+<pre><code>#component .item | .highlight
+</code></pre>
+<p>is equivalent to</p>
+<pre><code>#component .item .hightlight, #component .item.hightlight  
+</code></pre>
+<hr/>
+<pre><code>.inverted | button span
+</code></pre>
+<p>is equivalent to</p>
+<pre><code>.inverted button span, button.inverted span  
+</code></pre>
+<hr/>
+<p>In short: the “optional descendant selector” combines the “descendant selector” and the combination of the surounding compound selectors.</p>
+<p>Maybe its to complicated mixing “compound Selectors” and “complex selector”…?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-09-13</div>
+          <div class="post_content">
+<p>I do believe this would introduce the concept of one selector expanding to multiple selections. Is there any current selectors that do something similar?</p>
+<p>Personally I’d be very worried introducing something like this. It feels to me it should be in a preprocessor setup. Since the expanded rules could have different specificities it also makes the raw stylesheet more difficult for a developer to debug.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-09-13</div>
+          <div class="post_content">
+<p>Would <code>:matches()</code> not work for this purpose when combined with nesting?</p>
+<p><code>button.inverted, .inverted button</code> could be written as <code>@nest button:matches(&amp;.inverted, .inverted &amp;)</code></p>
+<p>NB: I’m not 100% clear on how <code>@nest</code> works together with <code>:matches()</code>. What I wrote is how I presume it would work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2018-09-13</div>
+          <div class="post_content">
+<p>Sorry, I do not understand the ask here. Is this like a limited form of :has ?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2018-09-14</div>
+          <div class="post_content">
+<p><span class="mention">@Garbee</span>
+I am absolutely your opinion</p>
+<p><span class="mention">@jhpratt</span>
+i don’t know “matches” well, but yes maybe it could help!<br/>
+Maybe :matches sould introduce :scope ?</p>
+<pre><code>button:matches(.inverted, .inverted :scope)
+</code></pre>
+<p>I filled a issue:<br/>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/csswg-drafts/issues/3108" rel="nofollow noopener" target="_blank">github.com/w3c/csswg-drafts</a>
+</header>
+<article class="onebox-body">
+<a href="https://github.com/nuxodin" rel="nofollow noopener">
+<img class="thumbnail onebox-avatar" height="96" src="https://avatars1.githubusercontent.com/u/16326?v=2&amp;s=96" width="96"/>
+</a>
+<h4><a href="https://github.com/w3c/csswg-drafts/issues/3108" rel="nofollow noopener" target="_blank">Issue: [selectors4] ":scope" inside ":matches"-like funktions?</a></h4>
+<div class="date" style="margin-top:10px;">
+<div class="user" style="margin-top:10px;">
+	opened by <a href="https://github.com/nuxodin" rel="nofollow noopener" target="_blank">nuxodin</a>
+	on <a href="https://github.com/w3c/csswg-drafts/issues/3108" rel="nofollow noopener" target="_blank">2018-09-14</a>
+</div>
+<div class="user">
+</div>
+</div>
+<pre class="content" style="white-space: pre-wrap;">Wouldn't it be useful in ":maches"-like functions to have a reference to the current scope?
+:matches https://www.w3.org/TR/selectors-4/#matches-pseudo
+:scope https://www.w3.org/TR/selectors-4/#scope-pseudo
+Instead of this:
+button.superTheme,
+.superTheme button {
+...</pre>
+<div class="labels">
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2018-09-14</div>
+          <div class="post_content">
+<p>Perhaps you should take a look at <code>:matches</code>. I believe it solves your issue. That’s aside from the fact that <code>:scope</code> already exists.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

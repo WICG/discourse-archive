@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>:target CSS does not work because shadowRoot does not set a target element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">:target CSS does not work because shadowRoot does not set a target element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-15</div>
+          <div class="post_content">
+<p>When you click on anchor element like this <code>&lt;a href="#location"&gt;</code> document set a target element internally, activating <code>:target</code> pseudo selector.</p>
+<p>This does not happen when your <code>:target</code> element is inside a shadowRoot <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=701591&amp;can=2&amp;start=0&amp;num=100&amp;q=&amp;colspec=ID%20Pri%20M%20Stars%20ReleaseBlock%20Component%20Status%20Owner%20Summary%20OS%20Modified&amp;groupby=&amp;sort=" rel="nofollow noopener">link to bug</a>.</p>
+<p>It turns out that is not a bug and they are following the spec.</p>
+<p>In my opinion this is a limitation and ultimately css should work everywhere independently where are used.</p>
+<p>At least we should allow shadowRoot to define a target element like document does.</p>
+<pre><code class="lang-auto">let template = `
+	&lt;div&gt;
+		&lt;a href="#location"&gt;location-1&lt;/a&gt;
+		
+		&lt;h2 id="location"&gt;title-1&lt;/h2&gt;
+	&lt;/div&gt;
+
+	&lt;style&gt;
+		#location:target {
+			background-color: yellow;
+		}
+	&lt;/style&gt;
+`;
+
+customElements.define('my-component', class myElement extends HTMLElement {
+	constructor() {
+		super();
+		let shadowRoot = this.attachShadow({ mode: 'open' });
+		shadowRoot.innerHTML = template;
+		
+		window.addEventListener('popstate', function () {
+			shadowRoot.targetElement = document.targetElement;
+		});
+	}
+});
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-03-18</div>
+          <div class="post_content">
+<p>Note that this is a temporary WontFix until Tab, Domenic, etc. chime in. The CSS <code>:target</code> selector was defined before web components were a thing, so now the CSS WG has to decide how existing CSS features fit into this.</p>
+<p>On the surface, <code>:target</code> should work inside shadow DOM, unless there’s a good reason not to, of course.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-18</div>
+          <div class="post_content">
+<p>Aaah I thought they were not going to fix it. Good to know :).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

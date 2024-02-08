@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Expand inline style=&rdquo; attributes to allow pseudo-class/element styling</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Expand inline style=&rdquo; attributes to allow pseudo-class/element styling</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<p>In <a href="https://lists.w3.org/Archives/Public/www-style/2016Nov/0035.html">a recent email to www-style</a>, James Kyle asks for the ability to use inline styles (the <code>style</code> attribute) to style an element based on pseudo-classes.  That is, specify inline how an element should look when it’s hovered/etc, just like you can do today for the general case.</p>
+<p>This was proposed over a decade ago in <a href="https://www.w3.org/TR/2002/WD-css-style-attr-20020515">the 2002 Style Attr draft</a>, but it didn’t gain traction at the time and was dropped when the next draft was published in 2010.  I’d like to revive this. As James points out in his email, Web Components and new DOM-handling techniques like React have made inline styles more useful than they were in the past, but it still requires going back to a stylesheet to apply hover/focus/etc styling to an element, which is frustrating.</p>
+<p>The proposal is simple:</p>
+<ol>
+<li>Define a new grammar production for selectors composed solely of pseudo-classes and pseudo-elements. (There’s no need for any feature selectors in inline style; you already know what attributes/etc the element you’re modifying has.)</li>
+<li>Modify the grammar of the style attribute, to allow style rules containing the pseudo-only selectors to be placed after any inline style declarations.  These rules are all scoped to the element they’re written on.</li>
+<li>Lightly modify <a href="https://drafts.csswg.org/css-cascade/#cascade-specificity">the Cascade spec</a> to allow for declarations that both come from inline style <em>and</em> have specificity, to get the obvious result - “plain” inline styles lose to selector’d inline styles, and selector’d inline styles use specificity like normal amongst themselves (so <code>:hover {...}</code> loses to <code>:first-child:hover {...}</code>).</li>
+</ol>
+<p>This would look like:</p>
+<pre><code class="lang-auto">&lt;a href="http://www.w3.org/"
+          style="color: #900;
+          :link {background: #ff0}
+          :visited {background: #fff}
+          :hover {outline: thin red solid}
+          :active {background: #00f}"&gt;...&lt;/a&gt;
+</code></pre>
+<p>Note: In the past I’ve argued that intermixing style rules and declarations is grammatically ambiguous, and that’s still true <em>in general</em>. (The issue is that selectors like <code>a:hover</code> look like declarations.)  In this case, tho, we’re limited to just pseudo-selectors, which all start with a <code>:</code>, which lets us distinguish them from declarations. This is identical to how at-rules <em>are</em> safe to intermix with declarations, because they start with <code>@</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<p>Talking this over with Elliot Sprehn reminded that I’d forgotten some bits.  In particular, this requires some <em>non</em>-trivial additions to the CSSOM, to expose the sub-rules.</p>
+<p>Implementation-wise, this also becomes very difficult. In Chrome and WebKit, at least, style attrs don’t currently create “rules” internally; instead, the declarations in them are just spammed onto the list of declarations collected for the element from the cascade.  This means we don’t currently need the concept of “a rule that applies only to a particular element”; this change would require us to add that concept.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<p>For what it’s worth, we could consider placing styles for pseudos in a separate attribute like <code>stylepseudo</code> if that simplified speccing and/or implementing:</p>
+<pre><code>&lt;a href="http://www.w3.org/"
+   style="color: #900"
+   stylepseudo=":hover {color: red}"&gt;...&lt;/a&gt;
+</code></pre>
+<p>In JS, this could be accessible, for example, this way (if the HTML part does not make difference, then just consider the JS part alone):</p>
+<pre><code>a.stylePseudo.classes.hover.color = 'red';
+
+a.stylePseudo.elements.before.content = 'Some generated content';</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<p>Nah, that doesn’t make a big difference.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-09</div>
+          <div class="post_content">
+<p>Regardless of what is done in HTML, having that functionality in JS would be incredibly useful. I have run into many instances where I have had to settle for more difficult solutions to problems solely because pseudo-elements aren’t part of the DOM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2016-11-10</div>
+          <div class="post_content">
+<p>I definitely agree, having a method would be really useful to manipulate styles for pseudo-elements and pseudo-classes in an inline way, instead of inserting rules into a stylesheet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-11-10</div>
+          <div class="post_content">
+<p>Syntaxwise I prefer the single attribute version than the multiple attribute version but looks like it’s a no go anyway. I would love JS access in but we run into issues here too even before hitting internal browser issues.</p>
+<p>For a bit of a sanity check I tried to compare several rules cases and how they might look. Also because if you started with a cut down version anyway you’d want to avoid problems further down the line.</p>
+<p><strong>Pseudo class</strong></p>
+<p>CSS: <code>a:hover{}</code>
+Attribute: <code>stylepseudo="hover:"</code>
+JS: <code>element.stylePseudo.hover.</code> <em>dropped the second level on stylePseudo, not sure it adds anything</em></p>
+<p><strong>Pseudo element</strong></p>
+<p>CSS: <code>a::before{}</code>
+Attribute: <code>stylebefore=""</code>
+JS: <code>element.stylePseudo.before</code></p>
+<p><strong>Pseudo element with pseudo style</strong>
+CSS: <code>a:hover::before{}</code>
+Attribute: <code>stylebeforepseudo="hover:{}"</code>
+JS: <code>element.stylePseudo.before.hover</code> <em>having the style on the element seems the more logical choice but if before is another CSSStyleDeclaration would we need to have another stylePseudo before hover?</em></p>
+<p><strong>Multiple pseudo classes</strong>
+CSS: <code>a:hover:target{}</code>
+Attribute: <code>stylepseudo="hover:target:{}"</code>
+JS: <code>element.stylePseudo(":hover:target").</code> <em>chaining fails for this instance so here’s an idea for how you might try and approach it, though it definitely feels wrong</em></p>
+<p><strong>Multiple pseudo classes and pseudo element</strong>
+CSS: <code>a:hover:target::before{}</code>
+Attribute: <code>stylebeforepseudo="hover:target:{}"</code>
+JS: <code>element.stylePseudo(":hover:target").before.</code> <em>even this approach starts looking awkward here</em></p>
+<p>With all that a JS method of getting to pseudo elements without also trying to deal with classes is cleaner, and potentially might be more doable (<span class="mention">@tabatkins</span> do Blink/Webkit have the same problems with pseudo elements as they do pseudoclasses?). Also it might be possible to extend it to be able to programatically read the content of these elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-10</div>
+          <div class="post_content">
+<p>I agree that the single attribute is preferable, but I’m not entirely sure how easily this could be implemented vs. the two attributes.</p>
+<p>Regarding the JS attributes, I’m not entirely sure what would be the best approach for the implementation and for the user. I’m relatively new to the W3C’s CGs, so I don’t have a full understanding of how exactly everything is implemented on the backend.</p>
+<p>What I would personally prefer is to have everything chained, like <code>element.stylePseudo.hover.target.before</code>, but this could cause issues with the <code>hover</code> and <code>target</code>, as they are commutable (unless we enforce a strict order, which would be different from what JS typically enforces).</p>
+<p>I’ll be able to take a better look at the different variations later today, but at first glance I would prefer just chaining everything.</p>
+<p>Edit: Looking back at the proposals, I would prefer to take a jQuery style approach that could also mimic the potential HTML implementation. Like this: <code>element.stylePseudo(":hover:target:before")</code> or <code>element.stylePseudo("hover target before")</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>One thing that would help is splitting pseudo classes from pseudo elements. The monolithic stylePseudo handling both directly makes it much harder and conceptually they are quite different.</p>
+<p>Obviously bikeshedding names can come later but something like this approach could work (again not all of this may be doable in browsers but better to plan for this case and then see what could be implementable).</p>
+<p>The <code>stylePseudo</code> on <code>element</code> should be the hook for accessing styles based on pseudo classes. These are difficult because as mentioned you can’t directly chain them. I like chaining but it just does not work here from a conceptual point of view, each object off of a state would have to have properties of both <code>style</code> (access to the styles) and <code>stylePseudo</code> (access to the available states). Worse than that I don’t think it’s even possible to write valid JS that works this way, presents the appropriate properties, has the effect intended and avoids being an unholy nightmare of an implementation so it’s really a no-go.</p>
+<p>The <code>element</code> could then have a <code>pseudoElements</code> property which lets you walk to the desired pseudo element. These pseudoElements can then expose various properties and methods as needed eg:</p>
+<ul>
+<li>
+<code>style</code> for the actual style properties</li>
+<li>'stylePseudo<code>works like the one on the class. Conceptually this is a bit weird as pseudoClasses apply to the element not the pseudoElement but it gives the cleanest API and reflects the</code>style<code>/</code>stylePseudo<code>of</code>element`</li>
+<li>treating it as a <code>pseudoElement</code> properties allows you to add further functionality as needed or in the future such as a <code>readContent</code> method which could return the generated content string for the element</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>Hi all, I’m curious about the usefulness of this - is it an attempt to render a page faster by compiling CSS and HTML together? Surely this wouldn’t be a joy to write, edit, or work around manually!</p>
+<p>I have played around with this idea a but in the past - to fake this sort of thing is totally doable right now with a couple extra attributes and &lt;20 lines of JS: <a href="http://codepen.io/tomhodgins/pen/ZQPRNE" rel="nofollow noopener">http://codepen.io/tomhodgins/pen/ZQPRNE</a></p>
+<p>After building that and playing with it, I am less convinced than when I set out that this would/could be useful. What is the imagined use-case?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>This is for programmatic access to styles on individual elements for JS powered modular frameworks such as React and definitely not aimed at manually writing.</p>
+<p>These sort of frameworks drive style by state and to manage this will often directly manipulate styles on elements as needed but can’t access pseudo classes or states via JS at the moment.</p>
+<p>To use a workaround involving dyamically amending stylesheets would be a huge overhead and ripe for nasty bugs and performance hits.</p>
+<p>The reason both CSS and JS are being discussed is two-fold. Firstly using server-side rendering for first render is common so you’d need to be able to apply these styles in HTML on the given element if possible. Secondly you would want parity between an object’s style in JS and on the attribute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1812">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tomhodgins/40/840_1.png" width="20"/> tomhodgins:</div>
+<blockquote>
+<p>What is the imagined use-case?</p>
+</blockquote>
+</aside>
+<p>For example, yesterday I’ve written a user script that needs to apply hover styles to injected HTML. Having a separate accompanying user stylesheet <em>just</em> for setting hover style in addition to a small user script is not quite convenient in terms of management and maintenance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>This seems like a perfect situation for something like:</p>
+<pre><code>&lt;style&gt;#thing:hover {color: red}&lt;/style&gt;
+</code></pre>
+<p>Is there a reason an inline style tag in HTML wouldn’t work here?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>Just because something can be done doesn’t mean it can’t be done a better way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>Using a <code>STYLE</code> element with CSS rules inside forces us to generate a unique nonconflicting <code>id</code> or <code>class</code> for element to be styled, while writing something like this right in JS:</p>
+<pre><code>  applyStyles(elem, {
+      'background' : '#fff',
+      'border'     : '1px solid #ccc',
+      'box-shadow' : '0 0 10px rgba(0, 0, 0, .5)'
+  });
+</code></pre>
+<p>is just simpler.</p>
+<p>After all, we already <em>do</em> have ability to write inline styles, so we should just have the <em>same</em> ability as for pseudoclasses and pseudoelements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>I like the syntax, but with one detail. I’m not sure having it as a function would be appropriate, but rather as a prototype.</p>
+<pre><code class="lang-javascript">elem.styles = {
+    'background' : '#fff',
+    'border'     : '1px solid #ccc',
+    'box-shadow' : '0 0 10px rgba(0, 0, 0, .5)'
+};
+</code></pre>
+<p>Passing an object like this would have the additional benefit of setting multiple styles at once, something that currently can’t be done without a library.</p>
+<p>How does everyone else feel about this sort of syntax for JS? It could obviously be used for regular styles and pseudo-styles with no conflicts I can think of.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>I didn’t actually propose the function (that’d be offtopic), that was just an <em>example</em> of how I prefer to deal with styles in user scripts using a custom utility function instead of injecting a <code>STYLE</code> element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>Gotcha. Regardless, I would love to see that in vanilla JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-11-11</div>
+          <div class="post_content">
+<p>Consider posting a <em>separate</em> proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-11-12</div>
+          <div class="post_content">
+<p>“Fix” in HTML:</p>
+<pre><code>&lt;a href="http://www.w3.org/"
+   style="color: #900"
+   style:link="background: #FF0"
+   style:visited="background: #FFF"
+   style:hover="outline: thin red solid"
+   style:active="background: #00F"&gt;…&lt;/a&gt;
+
+&lt;a href="http://www.w3.org/"
+   style="color: #900"
+   style-link="background: #FF0"
+   style-visited="background: #FFF"
+   style-hover="outline: thin red solid"
+   style-active="background: #00F"&gt;…&lt;/a&gt;
+</code></pre>
+<p>Probably fails for sub-element selectors like <code>:nth-child(an+b)</code>, though.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

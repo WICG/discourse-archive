@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] (Another) Alternative to HTML</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] (Another) Alternative to HTML</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2306_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">EveryOS</div>
+          <div class="creation_date">2020-09-08</div>
+          <div class="post_content">
+<p>I’ll probably just end up sounding like a madman, but I wanted to propose an alternative to HTML. Also, I am rather queasy about posting this…</p>
+<p>I know people have proposed things like this before and failed, I had actually forgotten about WICG until, while browsing yesterday, I found a 2015 thread that is similar to this. However, I’ve been thinking about this for a while, and I figured I would take a shot.</p>
+<p>Also, I am proposing an <em>alternative</em> to HTML, NOT a replacement.</p>
+<p>In this proposal, I do sometimes give syntax examples, but I try to avoid actually defining the syntax of the proposed language, preferring to list concepts, instead</p>
+<p>With this, I have some goals in mind:</p>
+<ul>
+<li>
+<strong>Provide alternatives to the HTML+CSS+JS+WASM suite</strong>.
+Note that simply adding a second language will not fix much, because now you only have two options.
+I will discuss my solution later.</li>
+<li>
+<strong>Provide more developer expression</strong>. Enough said.</li>
+<li>
+<strong>Reduce what the browser engine is in control of</strong>.
+I think we should make the web <em>slightly</em> lower level.
+Firstly, this will reduce the amount of work browser vendors must do, instead delegating work to third-party API writers.
+Additionally, you can simply include the correct implementation as a resource/API, rather than having to target a separate implementation for each and every browser.
+You can also define your own implementations, or modify an existing implementation, if existing implementations do not suit your need.
+As an effect, implementations will also provide more scriptable behavior. We might get the concept of being able to write your own look-and-feel with one implementation, and the concept of feeding automatic styling scripts to another.
+Now, the main problem is see with this is users who disable scripting, or users on devices the webpage writer did not include implementations for. I discuss my solution later.</li>
+<li>
+<strong>Syntax and DOM Changes</strong>.
+Given the abundance of frameworks that compile to HTML, I think it’s plain that the syntax and DOM aren’t perfect.
+First off, I think templates could work better. Right now, templates are defined in HTML and copied to the DOM in Javascript. I think that we should be able to use templates from directly within our markup language. Templates could have some syntax that allows passing paramaters, either via attributes or child nodes. Addtionally, it would be nice to see the ability to link external templates, e.g. <code>&lt;link rel="template" href="..."/&gt;</code>
+Secondly, I was thinking that, even though HTML is media independent, certain things seem to imply that a certain media is used.
+For example, does a screen reader or Braille device actually care about the difference between a <code>&lt;span&gt;</code> and <code>&lt;div&gt;</code>? To fix this, my idea is requiring a namespace prefix for various medias. For example, <code>&lt;span&gt;</code> becomes <code>&lt;gui:span&gt;</code>.
+The last thing I’m thinking of is embracing custom tags. Instead of having to register a tag via JS, we should have a syntactical way to indicate that our tag is a custom tag and not an invalid tag.</li>
+</ul>
+<p>Here are also some more questionable goals I’m not sure about:</p>
+<ul>
+<li>
+<strong>Stricten semantics</strong>.
+A lot of HTML’s complexity comes from it’s graceful fall when presented with errors.
+This also doesn’t service web developers much when their page behaves strangely.
+The problem with this is forwards-compatibility, so I will not be addressing this concern.</li>
+</ul>
+<p>Ok, here are some more specific implementation details I have:</p>
+<p><strong>Implemention details</strong>:</p>
+<p>I mentioned that simply adding a language isn’t going to fix anything. I had an interesting idea of registering custom mime types.
+We can then use Javascript/Ecmascript to compile any script tags with custom mime types to something similar to WASM, but without the required JS bindings that boggle down the speed.
+This means that we can use any scripting language, styling language, or markup language that we want, as long as we include an API to parse it, solving the “well now we only have 2 languages” problem. (There is another problem that arises, which I discuss later)</p>
+<p>Even though the Ecma262 standard exists, not every JS implementation is equal. One idea is to technically only support our WASM-like language, and standardize a specific script that is used to run Ecmascript. Browser vendors <em>should</em> use this script, as it will increase platform uniformity. Browsers <em>can</em> use their own scripting engines, like V8, but this might increase the amount of cross-browser testing that developers must use, as well as the complexity of the browser itself. In order to ensure that all browsers can use the standardized script, it should be implemented in our WASM-like language, as browsers will already need to support this. It is still advised that users who want to use Javascript specifically include an API to run it, as this will cover the times when browsers may have differing implementations from what is standard. <em>This solution requires the previous point about custom mime types</em>.</p>
+<p>I mentioned about trying to be lower-level. One big problem with developing sites is cross-browser inconsistencies in UI. I believe that we push users to define their own UIs, or choose a third-party API which does it for them. For example, if I wanted to have my page work on GUI, I could load an external API that manages rendering via something like WebGL. And I can choose which API I will be using, rather than the end-user. I can support a single implementation, and know that it should work regardless of what browser the client uses. I can choose which implementation I want to use, or even craft my own, rather than relying on some browser implementation which may or may not suit my needs. Additionally, the developer can define their own tag namespaces, so that they can optimize their content for certain media.
+Now, there are two edge behaviors to note about this: When the user has scripting disabled, and when the developer does not expect a certain media to be used, and therefore does not account for it. In these cases, we can have the browser deploy standardized script that will do the work for the user. However, these scripts should get out of the way the moment the developer says otherwise. If both the developer and the browser have ideas on how to support a Braille device, the developer wins.
+Additionally, for the sake of consistency, browser vendors should not write their own implementations in these cases, but rather use a standardized one. If such a script does not exist, they should go through the work of making a standard script, rather than proprietary code.</p>
+<p><strong>Potential Problems</strong>:</p>
+<p>Under implementation details, I mentioned the possibility of things like custom mime types. There is one huge hole here: if people rely on this feature being available. This feature entirely falls apart if people use this feature to implement an alternate markup language. In that case, the DOM is never configured. This means that, if the site doesn’t support a specific UI mode, or if scripting is disabled altogether, the browser attempts to use it’s default facilities to render the DOM. However, if there is nothing in the dom - because we relied on custom mime types for a secondary markup language - nothing is rendered. The best way, I think, to get around this is to <em>force</em> developers to use at least 1 <code>noscript</code> tag. Since there is the possibility of having scripting enabled, but the media device not being supported, I think there should also be a <code>nosupport</code> tag, too.</p>
+<p><strong>Encouraging usage</strong>:</p>
+<p>There’s not much we can do here. People will be worried that their products will not work on older browsers. There are still people using IE. I do have two basic ideas, however:</p>
+<p>My first idea is along the lines of <code>&lt;iframe type="not-html" src="someurl"&gt;...Transpiled version...&lt;/iframe&gt;</code>. Transpilation is inefficient, as there are many things we cannot easily represent in HTML, or that may be slow.</p>
+<p>My second idea is that we force users to upgrade their browsers, which does not sound good for businesses. Users who are lucky enough to have ancient versions of browsers could potentially use NPAPI or PPAPI plugins, but this does not work for most modern users, whose browsers have removed plugins due to security concerns.</p>
+<p><strong>–</strong></p>
+<p>If I missed anything, worded anything confusingly, or if the comments have any criticism, I will edit this post to include anything new.</p>
+<p>EDIT: Btw, if needed, I can create a mockup spec or a mockup browser or something</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2306_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">EveryOS</div>
+          <div class="creation_date">2020-09-09</div>
+          <div class="post_content">
+<p>Hello again
+I was thinking, even if we didn’t create an alternative to HTML, some ideas could be integrated?
+I tried to make this as an edit to my post, but Discourse is no longer allowing me to edit my post.</p>
+<p>Yesterday I had proposed an alternate language. Some of the features I suggest, would, however, be able to be squeezed into “vanilla” HTML, maybe.</p>
+<p>Here are the pros and cons of making this a separate language, as opposed to integrating this into HTML:</p>
+<p>Pros (of <em>NOT</em> sticking to HTML):</p>
+<ul>
+<li>
+<strong>Simplification of the parser</strong>. I imagine a “strictened” variant of HTML, with mixed-in XML features such as namespaces, as well as a custom syntax for tags outside of a namespace. Something along the lines of <code>&lt;namespace:tag value="attribute"/&gt;</code>. Parser will not handle issues such as <em>adjusted insertion location</em>, <em>accepting erroneous input</em>, and the like.</li>
+<li>
+<strong>Reset switch</strong>. A lot of Javascript APIs and quirk-mode behavior and the like can be dropped.</li>
+<li>
+<strong>Architecture redesign</strong>. This is not something in my realm. I am not very experienced in this. This would be up to the standard enthusiasts.</li>
+</ul>
+<p>Cons (of <em>NOT</em> sticking to HTML):</p>
+<ul>
+<li>More technologies for browser vendors to maintain.</li>
+<li>Users who wish to use any new features must learn a new language.</li>
+<li>Existing frameworks, editors, and servers will not support a new language.</li>
+<li>Harder to polyfill</li>
+</ul>
+<p>If we <em>did</em> use some of the concepts described in my topic post within HTML, as opposed to a new language, here is what I think it would look like:</p>
+<ul>
+<li>Assuming no script has been run, the browser renders with whatever it usually uses to render HTML. With the exception of template extensions mentioned in my topic post, it acts as though this extension failed to exist. Note that we loose the benefit of a “standardized rendering script”, which would have helped reduce cross-browser testing.</li>
+<li>Once scripting has started, developers register callbacks for which media they intend to support. This looks something along the lines of <code>document.registerMediaRenderer("braile", (mediaHandle)=&gt;{someImportedApi.begin(mediaHandle);});</code>. <code>mediaHandle</code> is a library for controlling a device. For example, if we are using X11, the handle could be something like a WebGL handle, some API for setting an event listener, and some API for detecting DOM mutations. Once we call this, we check if the string passed matches the display type. If it does, we stop rendering the page and pass a handle to the callback, letting the callback handle rendering the page/</li>
+<li>Additionally, another API exists to register custom mime types. For example, <code>document.registerMimeType("text/mylang", (content)=&gt;{return someImportedApi.aotCompileToWasm(content);});</code>. Any external resources loaded with a custom-handled mime type must follow CORS policy. The callback is called when a resource of the desired mime type is loaded. If further processing is required (in the case of a custom scripting language), the code for a web assembly script is returned by the callback. If not (in the case of a markdown or styling language), <code>undefined</code> is returned by the callback. Note that this would require modifying WASM to be able to make function calls without calling to JS.</li>
+</ul>
+<p>This does not fulfill all of my goals. Syntactic and DOM goals are not achieved, nor is simplification of the browser. However, it does fulfill many of the other goals I mentioned.</p>
+<p>This approach is also successful in reducing cross-browser testing, <em>IF</em> scripting is enabled and the newly proposed APIs are used.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2020-09-09</div>
+          <div class="post_content">
+<p>Why not just use XML (or microxml) in tht case? XML is already in the
+browser.</p>
+<p>You even get templating support with XSLT, although check out XSLT 3 to
+see how it evolved into a much more comfortable language over the past
+20 or so years since XSLT 1 was adopted by browsers.</p>
+<p>One of the drawbacks of XML in the browser was that search engines
+didn’t know what to do with it; you get the same problem with any form
+of custom elements.</p>
+<p>The other was that we didn’t have a good data binding story, but JSON
+has made that a non-problem.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2306_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">EveryOS</div>
+          <div class="creation_date">2020-09-10</div>
+          <div class="post_content">
+<p>I think XML does a really good job at separating data from styling. HTML tends to have a lot of pre-styled elements.</p>
+<p>XSLT then converts the XML data to an HTML page (I know the browser can render XML with styling, but HTML has additional features such as scripting, and even XHTML lacks some things like noscript). To be honest, I think the complexity of HTML5 is much higher than that of XML. If you compare <a href="https://ygg01.github.io/xml5_draft/#parsing" rel="nofollow noopener">https://ygg01.github.io/xml5_draft/#parsing</a> to <a href="https://html.spec.whatwg.org/multipage/parsing.html#parsing">https://html.spec.whatwg.org/multipage/parsing.html#parsing</a>, you can see how much simpler XML is, but we kind of need some HTML features.</p>
+<p>We’ve now converted raw data to a usable HTML page.
+Now we have 2 more things to worry about: styling and scripting.</p>
+<p>CSS is great, as long as you remember that the <code>@media</code> query exists. However, CSS is also where a lot of frustration in cross-browser testing and styling takes place. This is where the ability to script rendering comes into play. By using a <code>&lt;script href="url"&gt;&lt;/script&gt;</code>, you know that (unless it is updated) it will consistently produce the same result. You can also copy and fine-tune the script if needed. This is opposed to, I dunno, Chrome uses one rendering engine, Firefox another, so you gotta try to design for both of them. The browser can use it’s own rendering engine if you don’t specifically specify a script to render your page for a certain media. This also presents the ability to use alternate layout engines, and variety is usually good. The only problem I see with this is clipboard, since doing the rendering from JS means you will have to ask for the clipboard permission when the user presses CTRL+C. Probably just have a copy event, though.</p>
+<p>The other thing that I would still like to see is custom mime types. People constantly complain about JS, but compiling scripts to WASM ahead of time is a bit overkill. The ability to use JS to AOT compile script tags with other mime types to WASM at run time would, despite slightly increasing load-time, make things much easier. All you would need to do to run, say, typescript is <code>&lt;script type="text/ecmascript" src="https://typescriptlang.org/tsaot.js"&gt;&lt;script type="text/typescript"&gt;...your script...&lt;/script&gt;</code>. Plenty of programming languages are available for native architectures, we could add some variety to the web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2459_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PaulmWatson</div>
+          <div class="creation_date">2020-09-11</div>
+          <div class="post_content">
+<p>This is a big topic but I only wanted to ask if you’d seen CSS Houdini.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2306_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">EveryOS</div>
+          <div class="creation_date">2020-09-11</div>
+          <div class="post_content">
+<p>I had not been aware of Houdini. It looks amazing, my only concerns are that it uses Canvas2D instead of the much faster WebGL, and also it doesn’t seem to solve any problems on devices that do not support X11 or Desktop capabilities.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1746_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">developit</div>
+          <div class="creation_date">2020-09-20</div>
+          <div class="post_content">
+<p>Houdini uses the 2D canvas API, but it is not a canvas2d instance. It is rendered on the GPU as you would expect.</p>
+<p>Regarding the idea of compiling things to WASM via mimetypes, this would actually be possible today using a Service Worker. More directly though, the nascent <a href="https://github.com/whatwg/loader" rel="nofollow noopener">Loader API</a> was supposed to provide exactly this functionality - though not compiling to WASM, since there is limited provisions for interface specifications in WASM, instead compiling to JS. JS can contain (inlined/externalized) WASM though, which makes it a relatively good slip layer for an abstraction like this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3929_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">naturalmechanics</div>
+          <div class="creation_date">2022-07-19</div>
+          <div class="post_content">
+<p>This is an old thread.</p>
+<p>But I am going to do this. This will be an alternative to HTML and LATEX and offer active document, with various embedded formats.</p>
+<p>This will separate safety requirements from the document markup and document interaction.</p>
+<p>I will write the interpreter/parser in NIM and the rendering engine in SFML. So it will be a document focused system.</p>
+<p>If you want you can build a web focused system around it, and add web/socket/network stacks around it as you define it and as you see fit.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

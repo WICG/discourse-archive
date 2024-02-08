@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>FormData and URLSearchParams on form-urlencoded in XHR</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">FormData and URLSearchParams on form-urlencoded in XHR</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2015-01-26</div>
+          <div class="post_content">
+<h2>explain my motivation</h2>
+<p>I think FormData API is very useful when I send File via XHR in <code>multipart/form-data</code>.
+but in case of sending text key-value to server,
+it’s better to send with them in <code>x-www-form-urlencoded</code> body.</p>
+<p>for example from <a href="http://www.html5rocks.com/ja/tutorials/file/xhr2/" rel="nofollow noopener">http://www.html5rocks.com/ja/tutorials/file/xhr2/</a></p>
+<pre><code class="lang-auto">function sendForm() {
+  var formData = new FormData();
+  formData.append('username', 'johndoe');
+  formData.append('id', 123456);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/server', true);
+  xhr.onload = function(e) { ... };
+
+  xhr.send(formData);
+}
+</code></pre>
+<p>in this case, payload became a <code>multipart/form-data</code>.
+and I think a lot of server receiving like these data,
+expects <code>x-www-form-urlencoded</code>. (ex. many of oauth server)</p>
+<p>of course we can do that via URLSearchParams.
+but how about this case ?</p>
+<p>from <a href="http://www.html5rocks.com/ja/tutorials/file/xhr2/" rel="nofollow noopener">http://www.html5rocks.com/ja/tutorials/file/xhr2/</a></p>
+<pre><code class="lang-auto">&lt;form id="myform" name="myform" action="/server"&gt;
+  &lt;input type="text" name="username" value="johndoe"&gt;
+  &lt;input type="number" name="id" value="123456"&gt;
+  &lt;input type="submit" onclick="return sendForm(this.form);"&gt;
+&lt;/form&gt;
+</code></pre>
+<pre><code class="lang-auto">function sendForm(form) {
+  var formData = new FormData(form);
+
+  formData.append('secret_token', '1234567890'); // Append extra data before send.
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', form.action, true);
+  xhr.onload = function(e) { ... };
+
+  xhr.send(formData);
+
+  return false; // Prevent page from submitting.
+}
+</code></pre>
+<p>this is very convenient, but we can’t do that with URLSearchParams(means <code>x-www-form-urlencoded</code>).</p>
+<h2>opinion</h2>
+<p>I guess this design based on "blob can’t send via <code>x-www-form-urlencoded</code>
+so how about think about way to send Form which only includs “form-urlencodable texts” via <code>x-www-form-urlencoded</code> ?</p>
+<h3>idea1: URLSearchParams construct with Form</h3>
+<pre><code class="lang-auto">var params = new URLSearchParams(document.getElementById("text-only-form"));
+xhr.send(params.toString());
+</code></pre>
+<h3>idea2: get URLSearchParams from FormData.</h3>
+<pre><code class="lang-auto">var params = new FormData(form).params; // get from FormData
+var params = new URLSearchParams(formData); // construct with FormData
+</code></pre>
+<h3>idea3: send FormData with form-urlencodable text only falls back to <code>x-www-form-urlencoded</code> no <code>multipar/form-data</code>
+</h3>
+<pre><code class="lang-auto">var formData = new FormData();
+formData.append('username', 'johndoe');
+formData.append('id', 123456);
+xhr.send(formData); // x-www-formurlencoded
+</code></pre>
+<h3>idea4: xhr2 respects <code>Content-Type</code> header</h3>
+<p>I think sending XHR ignores content-type header when sending FormData. so respect it.</p>
+<pre><code class="lang-auto">xhr.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
+var formData = new FormData();
+formData.append('username', 'johndoe');
+formData.append('id', 123456);
+xhr.send(formData); // x-www-formurlencoded
+</code></pre>
+<p>if FormData includes Blob props, one of fallback way is encode in BASE64 for example.</p>
+<h2>wrapup</h2>
+<p>I wanna send form-urlencoded using URLSearchParams or FormData construct from plain text only .</p>
+<p>thanks and sorry for my poor english ;p</p>
+<p>Jxck</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-01-26</div>
+          <div class="post_content">
+<p>Sounds like a good library to write! I hope you write it and share it here!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2015-01-30</div>
+          <div class="post_content">
+<p>Yes, please!</p>
+<p>So tired of having to half ass implement form serialization in various libraries. This would really help obsolete the need for <code>$.serializeArray</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2015-01-30</div>
+          <div class="post_content">
+<p>The extended FormData APIs now being implemented might help here.</p>
+<p><a class="onebox" href="https://chromium.googlesource.com/chromium/blink/+/0f4632bca55675b72e3e03a8d231c2e879276a02" rel="nofollow noopener" target="_blank">https://chromium.googlesource.com/chromium/blink/+/0f4632bca55675b72e3e03a8d231c2e879276a02</a></p>
+<p>I’m really hoping this is eventually covered by browser api. Defining helps explain how the existing form serialization process already works. <span class="mention">@domenic</span> hoping you get around to "<code>&lt;form&gt;</code> as a custom element" soon to hit all these pain points <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1789_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">annevk</div>
+          <div class="creation_date">2015-02-05</div>
+          <div class="post_content">
+<p>So this is basically asking for <code>new URLSearchParams(HTMLFormElement)</code> correct? I filed <a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=27941">https://www.w3.org/Bugs/Public/show_bug.cgi?id=27941</a> to get this in the specification. Makes sense to me to get parity with <code>FormData</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2015-02-06</div>
+          <div class="post_content">
+<p><img alt=":heart_eyes:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/heart_eyes.png?v=5" title=":heart_eyes:"/> I would love that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jxck</div>
+          <div class="creation_date">2015-02-07</div>
+          <div class="post_content">
+<p>Yes that seems cool <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Byron_Adams</div>
+          <div class="creation_date">2018-08-15</div>
+          <div class="post_content">
+<p>Has a solution ever been made to the above?  I tried do a for(var name in formData) and all I get is the members of the FormData class: append, etc.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

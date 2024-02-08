@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Reviving Get Installed Related Apps</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Reviving Get Installed Related Apps</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rayankans</div>
+          <div class="creation_date">2019-10-29</div>
+          <div class="post_content">
+<p>The original thread was created a few years ago <a href="https://discourse.wicg.io/t/proposal-get-installed-related-apps-api/1602">here</a>.</p>
+<p>The API ran as an experiment in Chrome, and now the spec is being finalized and reviewed.</p>
+<p>Useful links:</p>
+<ul>
+<li>Github repo: <a href="https://github.com/WICG/get-installed-related-apps" rel="nofollow noopener">https://github.com/WICG/get-installed-related-apps</a>
+</li>
+<li>Spec: <a href="https://wicg.github.io/get-installed-related-apps/spec/" rel="nofollow noopener">https://wicg.github.io/get-installed-related-apps/spec/</a>
+</li>
+</ul>
+<p>Inline Explainer:</p>
+<h1>Get Installed Related Apps API</h1>
+<h1>Abstract</h1>
+<p>As the capabilities of the web grow, the functionality of web apps begins to
+match that of corresponding native apps. The situation of users having a web
+app and the corresponding native app both installed on the same device will
+become more common, and the feature sets of these apps will converge.</p>
+<p>It is important to allow apps to detect this situation to allow them to disable
+functionality that should be provided by the other app.</p>
+<p>The GetInstalledRelatedApps API allows web apps to detect if related native apps
+are installed on the current device.</p>
+<h1>Querying the installed local apps that specify the website.</h1>
+<p>From an <code>async</code> function:</p>
+<pre><code class="lang-auto">const listOfInstalledApps = await navigator.getInstalledRelatedApps();
+for (const app of listOfInstalledApps) {
+  // These fields are specified by the Web App Manifest spec.
+  console.log('platform:', app.platform);
+  console.log('url:', app.url);
+  console.log('id:', app.id);
+
+  // This field is provided by the UA.
+  console.log('version:', app.version);
+}
+</code></pre>
+<h1>Describing a relationship from native application to website (and vice versa)</h1>
+<p>This API is being developed with the assumption that a system exists to create
+associations from applications to web applications.</p>
+<p>We can define relationships between a web application and other applications by
+using the “related_applications” member of the web application manifest.</p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.example.app1",
+      "id": "com.example.app1",
+      "min_version": "2",
+      "fingerprints": [
+        {
+          "type": "sha256_cert",
+          "value": "92:5A:39:05:C5:B9:EA:BC:71:48:5F:F2"
+        }
+      ]
+    },
+    {
+      "platform": "itunes",
+      "url": "https://itunes.apple.com/app/example-app1/id123456789"
+    }
+  ]
+}
+</code></pre>
+<p>Each platform has its own method of verifying a relationship. In Android, the
+<a href="https://developers.google.com/digital-asset-links/v1/create-statement" rel="nofollow noopener">Digital Asset Links</a>
+system can be used to define an association between a website and an application.
+If the application is installed locally and defines an association with the
+requesting web application, we return the app as defined in the
+“related_applications” member.</p>
+<h1>Privacy Considerations</h1>
+<p>This feature only works with sites using HTTPS. This ensures that the website
+cannot be spoofed, and that the association between the site and application is
+valid.</p>
+<p>The association between the web app and its counterpart is bidirectional,
+meaning that the web app has to declare its association with the related app,
+and the related app has to declare its association with the web app. This
+prevents malicious websites from fingerprinting users and getting a list of
+their installed applications.</p>
+<p>The User Agent should return no installed applications when running in a privacy
+preserving mode, for example Incognito in Chrome or Private Browsing in Firefox.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jesup</div>
+          <div class="creation_date">2019-11-01</div>
+          <div class="post_content">
+<p>I note the issue <span class="hashtag">#1</span> opened in response to <span class="mention">@martinthomson</span>’s comment is still un-commented on (privacy/etc). Is this now addressed?
+“Being finalized and reviewed” - where, and who is doing so?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rayankans</div>
+          <div class="creation_date">2019-11-01</div>
+          <div class="post_content">
+<p>I didn’t go through the really old topics since they are out of date. I’ll sweep through those to close them out at some point.</p>
+<p>It’s worth mentioning that the counterpart of this spec already lives in the Manifest <a href="https://www.w3.org/TR/appmanifest/#externalapplicationresource-and-its-members">spec</a>, which is authored by Marcos, the person who gave the feedback.</p>
+<p>I’m writing the spec because it’s long overdue, and <a href="https://github.com/w3ctag/design-reviews/issues/436" rel="nofollow noopener">here</a> is the TAG review issue.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

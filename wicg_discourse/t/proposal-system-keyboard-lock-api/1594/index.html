@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: System Keyboard Lock API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: System Keyboard Lock API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jondahlke</div>
+          <div class="creation_date">2016-07-18</div>
+          <div class="post_content">
+<p><a href="https://github.com/jondahlke/system-keyboard-lock/" rel="nofollow noopener">System Keyboard Lock API Proposal</a></p>
+<p>The proposal in <a href="https://github.com/jondahlke/system-keyboard-lock/" rel="nofollow noopener">this Git repo</a> explores ideas for a new system keyboard lock API that enables websites to capture and use all available keys and keyboard combinations allowed by the OS, including Escape, Alt+Tab, Cmd/Ctrl+`, Cmd/Ctrl+N.</p>
+<p>Here is the problem statement from our <a href="https://github.com/jondahlke/system-keyboard-lock/blob/master/EXPLAINER.md" rel="nofollow noopener">explainer document</a>:</p>
+<blockquote>
+<p>Richly interactive web sites, games and remote desktop/application streaming experiences want to provide an immersive, full screen experience. Sites need access to special keys and keyboard shortcuts in full screen, such as Escape, Alt+Tab, Cmd+`, Ctrl+N, for easily or efficiently navigating through windows, tabs, applications, menus and gaming functionality. Today this isn’t possible, as these keys are typically captured by the browser or underlying operating system, making it challenging for developers to embrace the web for these types of applications.</p>
+</blockquote>
+<p>The explainer document contains additional requirements, sample code and an example UX. We hope to further evolve/incubate this API in the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1193_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edward_J</div>
+          <div class="creation_date">2016-07-20</div>
+          <div class="post_content">
+<p>Yes this idea sounds <strong>useful</strong> but I think it is <strong>not great and unnecessary</strong>.
+Allowing access to these keys whilst still allowing the browser and operating system to access them <strong>would not work well</strong> and blocking the browser and operating system would be worse. <strong>Keyboard navigation is as important as mouse</strong> so allowing applications use of them whilst stopping/allowing the browser and O.S. to use the same shortcuts at the same time would <strong>make the browser and O.S. harder to use</strong>. Both should be <strong>allowed shortcuts that don’t control key parts of the other</strong>.</p>
+<aside class="quote no-group" data-post="1" data-topic="1594">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/j/50afbb/40.png" width="20"/> jondahlke:</div>
+<blockquote>
+<p>Sites need access to special keys and keyboard shortcuts in full screen, such as Escape, Alt+Tab, Cmd+`, Ctrl+N, for easily or efficiently navigating through windows, tabs, applications, menus and gaming functionality.</p>
+</blockquote>
+</aside>
+<p><em>Need access?</em> Websites and online games should use different command shortcuts as many already do, and online remote desktop applications should do what existing (remote desktop) software does to avoid this issue - to have buttons that send the signal of system keys such as <code>alt</code> being held down. See below example image:<br/>
+<img height="76" src="//discourse.wicg.io/uploads/default/original/2X/e/eae352ed1115d5ba087b904b8629da6b85784582.png" width="409"/><br/>
+But if this proposal does get accepted for some reason, it should be that <em>a limited selection</em> of shortcuts is enabled <em>only in full screen mode</em> - see <a href="https://discourse.wicg.io/t/proposal-system-keyboard-lock-api/1594/6?u=edward_j">post #6 by me</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-20</div>
+          <div class="post_content">
+<p>This is a good idea but it should be tied to a permission or require a user gesture.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jondahlke</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>Edward_J, thank you for your feedback. When you say the following:</p>
+<blockquote>
+<p>Allowing access to these keys whilst still allowing the browser and operating system to access them would not work well and blocking the browser and operating system would be worse.</p>
+</blockquote>
+<p>Can you help me understand what your specific concerns are (e.g.,  users will not understand what capabilities to expect, race conditions, etc.)</p>
+<p>You are correct that sites can provide alternate key strokes and “inject keystroke x” menu items, but many users find those work arounds inconvenient at best. If a user spends a lot of time working on a remote desktop for development or IT-related job functions, being able to interact with the remote device as if it is local is essential to the job (in their view).</p>
+<p>The proposal is currently scoped to only be enabled in full-screen mode as you recommended. I agree that in windowed mode it could be too difficult for the user to interpret what the result would be. However, if the user is in full screen, it is reasonable to interpret that they would want the actions to impact the full screen content.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jondahlke</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>DanielHerr - The website would have to request the capability from the browser in order be able to use it. Whether the browser should require prior user consent or simply inform the user of the change (and how to exit the mode) would be up to the browser.  Does that make sense?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1193_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edward_J</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>I agree that the browser <strong>should notify the user that “advanced keyboard shortcut mode” is being requested</strong> by the webpage with a notification overlay similar to “exit full screen” ones like the example below and a <strong>keyboard shortcut to exit</strong>. This mode should also <strong>only be enabled in full screen</strong>.<br/>
+<img height="97" src="//discourse.wicg.io/uploads/default/original/2X/6/6d4ca3b48bcf443d24202c835c59fc2105025a6e.png" width="468"/><br/>
+There would also need to be <strong>a few shortcuts</strong> that the browser (and probably O.S.) <strong>have access to throughout</strong> the mode and perhaps some <strong>menu items on the standard context menu of the webpage to do the same commands</strong> - useful if users forget the keyboard shortcuts. Some examples:</p>
+<ul>
+<li>
+<code>Control+Alt+Delete</code> (for in case the browser crashes in full screen mode, the O.S. may always have access to this shortcut).</li>
+<li>
+<code>Meta/logo key+Anything</code> (optional, can make O.S. taskbar pop up but this happens when another window such as Task Manager is opened with <code>Control+Alt+Delete</code>).</li>
+<li>Some shortcut to exit <em>advanced keyboard shortcut mode</em> (this should ideally be standard across browsers or if not standard the A.P.I. should be able to get it, to allow webpages using the special shortcuts to avoid using it).</li>
+<li>Some shortcut to exit full screen (this could be disabled until the advanced shortcut mode is exited).</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>I agree with everyone else that this should be a fullscreen only API. In fact I’d argue that in the spec it should be taken as a parameter to requestFullSreen, with the user being prompted that the application is requesting “fullscreen with keyboard”. Having it as a variation on an existing function as opposed to a second function that is never independently toggled seems to make a lot more sense.</p>
+<p>I agree that there do need to be some keys and combinations that can’t be cancelled and some work needs to be done to capture a common subset for various OSes as <span class="mention">@Edward_J</span> has started. The standard here should be what your average game would allow (as they are the most common full screen application). So OS control keys, task switchers like Alt+Tab etc would not be cancelable.</p>
+<p>When the fullscreen API was being created there was a lot of talk about preventing clever phishing attempts that pretended to look/act like a desktop which is how we ended up with things like <code>requestFullScreen()</code> rather than <code>makeFullScreen()</code>.</p>
+<p>Similarly I’m happy that games may well want the sort of shortcuts that my browser claims and if I’m crouching while walking backwards in an FPS I don’t want a save dialog popping up. But when I hit certain OS level key combinations I need to know it is legitimate. If a game is full screen it’s no different to me as a user as any other fullscreen game, I’d therefore want to be able to alt-tab away. There is a reason that remote desktop software does not override certain OS key combinations despite how annoying it might be at times.</p>
+<p>Finally I suggest that rather than declaring keys to request a lock for it should just be an all or nothing request. If we are going to allow capturing higher level key combinations users need to understand when told they are in this mode what does and does not work. This massively simplifies the implementation for browsers, usage by developers and burden of knowledge for a user.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>I do not think this needs to be limited to fullscreen. The Pointer Lock api is a comparable precedent for this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1193_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edward_J</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>This could work in normal windowed mode but it might be better to only allow it in full screen as users wanting to change tab or do some other things could forget that they are in advanced keyboard shortcut “locked” mode however in full screen having more key combinations with a larger screen could be more appropriate. Also <em>jondahlke</em> says:</p>
+<aside class="quote no-group" data-post="4" data-topic="1594">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/j/50afbb/40.png" width="20"/> jondahlke:</div>
+<blockquote>
+<p>in windowed mode it could be too difficult for the user to interpret what the result would be. However, if the user is in full screen, it is reasonable to interpret that they would want the actions to impact the full screen content.</p>
+</blockquote>
+</aside>
+<p>However it could be done, with the benefit of being able to use space near the page tabs and address bar to have a warning icon reminding the user that they are in <em>advanced keyboard shortcut mode</em> with a popup option to exit it and view the keyboard shortcut to exit it. Example of icon (not real):<br/>
+<img height="88" src="//discourse.wicg.io/uploads/default/original/2X/8/8a78efc5ad2aed6d8b6475d4074c7dddb2edfbc4.png" width="120"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-21</div>
+          <div class="post_content">
+<p>If the user changes the tab or the page is not visible, the browser should automatically stop forwarding shortcuts, just as normal key presses are only forwarded to the current view.</p>
+<p>One use case of nonfullscreen support would be a text editor overriding shortcuts like ctrl+o, ctrl+s, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p>The problem is a case of context. A text editor is an application in its own right. A web based text editor is an application within an application. Users have no clear and obvious way of knowing if ctrl+s is going to save their document or the page they are on.</p>
+<p>At least in full screen mode there is context that this application is the primary one. There’s no chrome or list of tabs reminding you that you are in a browser and it’s a much clearer break between when your standard shortcuts may or may not work.</p>
+<p>Even if a web app did have a clear message when opened listing the shortcuts it was overtaking, and the browser had clear and obvious on screen hints to a page being in this mode, once you start tab switching you’re going to be out of that context. Oh and of course then the frustration of me flicking through my tabs until I try to flick past one that locks shortcuts.</p>
+<p>It’s also yet another “ask the user for permission” feature which browser makers are wanting to avoid where possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jondahlke</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p><span class="mention">@chaoaretasty</span> I agree that context is the key to minimizing confusion and maximizing satisfaction. While the web site (app) being full screen is not a perfect heuristic of user intent, it is a pretty good one. It is also a clear signal that users can both understand and remember.</p>
+<p><span class="mention">@DanielHerr</span> - the intent is that once the user exits full screen on that tab, the browser would no longer forward the shortcuts. I will make that explicit in the proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JamieWalch</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p><span class="mention">@Edward_J</span>
+There will always be a secure attention sequence that browsers can’t intercept; for example, <code>Ctrl+Alt+Delete</code> is not interceptable on Windows. However, I don’t agree that this proposal should preclude any keys that the OS would otherwise allow applications to intercept. Specifically, for a user working via a remote desktop application, access to <code>Alt+Tab</code> is a big productivity boost.</p>
+<p><span class="mention">@chaoaretasty</span>
+Regarding making this API all-or-nothing: it’s something we considered, but we felt it was important to make the set of intercepted shortcuts configurable because many sites will want to intercept some keys but not others, and <code>preventDefault()</code> may not work on intercepted system keys due to the synchronous nature of the low-level OS APIs used to intercept them. A concrete example would be a game that wants to intercept <code>Escape</code>, but not <code>Alt+Tab</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p>The browser can display a message, similar to fullscreen and pointer lock behavior, and maybe also an indicator in the tab similar to audio behavior.
+The lock should be canceled when switching tabs, consistent with pointer lock, and should require a user gesture but not fullscreen to activate.</p>
+<p>With the remote desktop use case, users may want to be doing things on both systems. If this is tied to fullscreen they may need to enter and exit fullscreen with annoying frequency.</p>
+<p>With the other use cases, users may not want to be fullscreen so they can see time, battery level, notifications, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1049_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dominickn</div>
+          <div class="creation_date">2016-07-23</div>
+          <div class="post_content">
+<p><span class="mention">@DanielHerr</span>: the pointer lock analogy is a good one. Pointer lock began as a fullscreen-only API, similar to what we are proposing here. Over time, the restrictions on it were gradually loosened as vendors worked out precisely how users and developers interacted with it, and today pointer lock is entirely decoupled from fullscreen.</p>
+<p>Messages and icons are all tricky in their own way:</p>
+<ul>
+<li>messages are only briefly visible; having them come back all the time works against some of the use cases this API is intended to enable</li>
+<li>warning icons in the address bar/tab are small and easily missed, and often users don’t want to click on them because they don’t know what they do</li>
+</ul>
+<p>Do any of these points matter? Maybe? Maybe not? But we should acknowledge the concerns and be cautious with the initial implementation. We feel that it’s safest to start with the full screen restriction on keyboard lock, and iterate from there with a longer term goal of possibly allowing it everywhere.</p>
+<p><span class="mention">@chaoaretasty</span>: another part of the reason for the proposed API being independent of <code>requestFullscreen</code> is that some day we may be able to drop the fullscreen requirement and have this work in ordinary tabs. I imagine we’d need to have seen that the API is useful, and that we can balance the context/security concerns with demand for this outside of fullscreen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">JamesC</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>Interesting idea, though I strongly feel that ESC should be a protected key under any and all circumstances. The simple reason for this is that pressing ESC to exit full screen mode is intuitive—any other key (or holding ESC) is not.</p>
+<p>True, you can flash a message on the screen when launching (i.e. “Press F11 to exit”) but a message like this is very easy to miss. Just the other day my wife got trapped in Chrome’s fullscreen mode for this very reason (our cat got her into it by stepping on the keyboard).</p>
+<p>In the instances where ESC is needed by the app, I think it would be better to require an alternative (ALT + ESC, tilde, F1, etc) rather than overriding the default action of ESC. This seems particularly important in case the user makes the mistake of allowing a malicious app to go full screen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>I agree that escape should not be blockable by the site. But perhaps the user holding escape for 2 seconds could forward it to the site instead of exiting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jondahlke</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p><span class="mention">@JamesC</span>: I agree that ESC places a valuable role for users to get in and out of full screen. However, we feel the ability to use the functionality of the escape key overrides the convenience of using it as a full-screen exit for the relatively scoped set of sites that will chose to use system keyboard lock. We believe it is possible to make the “reminder UX” quite obvious when someone does hit the escape key to ensure that they don’t get trapped.</p>
+<p><span class="mention">@DanielHerr</span>: I don’t believe the hold and forward logic would work for many applications (especially games) where low interaction latency is critical. For someone who spends their day working in a remote desktop environment, that model would also be really clunky. Whereas, it is unlikely that someone who is using a site that leverages system keyboard lock would be constantly switching in and out of full screen or require low latency for that activity.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2397_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gked</div>
+          <div class="creation_date">2016-08-17</div>
+          <div class="post_content">
+<p><span class="mention">@jondahlke</span>: I’ve read an explainer and would like to understand the need a little more. Are there a lot of requests from the web developers for this? Is there a telemetry that shows the need for this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2397_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gked</div>
+          <div class="creation_date">2016-08-17</div>
+          <div class="post_content">
+<p>I am a bit scared of solutions that involve timeouts.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

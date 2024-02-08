@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Document Picture-in-Picture</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Document Picture-in-Picture</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">steimel</div>
+          <div class="creation_date">2022-01-14</div>
+          <div class="post_content">
+<aside class="onebox allowlistedgeneric" data-onebox-src="https://github.com/steimelchrome/document-pip-explainer">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/steimelchrome/document-pip-explainer" rel="noopener nofollow ugc" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:690/345;"><img class="thumbnail" height="345" src="https://opengraph.githubassets.com/ba16c88497556d0dde7e55f1887f2649aaaf0c072ff0e7286f7528b3f018e5e6/steimelchrome/document-pip-explainer" width="690"/></div>
+<h3><a href="https://github.com/steimelchrome/document-pip-explainer" rel="noopener nofollow ugc" target="_blank">GitHub - steimelchrome/document-pip-explainer: Explainer for the Document...</a></h3>
+<p>Explainer for the Document Picture-in-Picture API feature - GitHub - steimelchrome/document-pip-explainer: Explainer for the Document Picture-in-Picture API feature</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<h3>
+<a class="anchor" href="#summary-1" name="summary-1"></a>Summary</h3>
+<p>There currently exists a Web API for putting an HTMLVideoElement into a Picture-in-Picture window (HTMLVideoElement.requestPictureInPicture()). If a website wants to have something as simple as custom media controls icons or as complex as a full scrollable playlist in the PiP window, they can’t currently provide it in the existing HTMLVideoElement experience.</p>
+<p>We want to expand upon that functionality with a new method on the Window object (window.requestPictureInPictureWindow()) which opens a picture-in-picture (i.e. always-on-top) window with a blank document that can be populated with arbitrary HTMLElements instead of only a single HTMLVideoElement.</p>
+<h3>
+<a class="anchor" href="#example-code-2" name="example-code-2"></a>Example code</h3>
+<h4>
+<a class="anchor" href="#html-3" name="html-3"></a>HTML</h4>
+<pre><code>&lt;body&gt;
+  &lt;div id="player-container"&gt;
+    &lt;div id="player"&gt;
+      &lt;video id="video" src="foo.webm"&gt;&lt;/video&gt;
+      &lt;!-- more player elements here --&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;input type="button" onclick="enterPiP();" value="Enter PiP" /&gt;
+&lt;/body&gt;
+</code></pre>
+<h4>
+<a class="anchor" href="#javascript-4" name="javascript-4"></a>JavaScript</h4>
+<pre><code>// Handle to the picture-in-picture window.
+let pipWindow = null;
+
+function enterPiP() {
+  const player = document.getElementById('player');
+  let pipOptions = { width: player.clientWidth, height: player.clientHeight,
+                     constrainAspectRatio: true };
+  window.requestPictureInPictureWindow(pipOptions).then(pipWin =&gt; {
+    pipWindow = pipWin;
+
+    // Style remaining container to imply the player is in PiP.
+    playerContainer.classList.add('pip-mode');
+
+    // Add styles to the PiP window.
+    const styleLink = document.createElement('link');
+    styleLink.href = 'pip.css';
+    styleLink.rel = 'stylesheet';
+    styleLink.type = 'text/css';
+    pipWindow.document.body.appendChild(styleLink);
+
+    // Add player to the PiP window.
+    pipWindow.document.body.appendChild(player);
+
+    // Listen for the PiP closing event to put the video back.
+    window.addEventListener('exitpictureinpicture', onExitPiP,
+        { once: true });
+  });
+}
+
+// Called when the PiP window has closed.
+function onExitPiP(event) {
+    // Remove pip styling from the container.
+    const playerContainer = document.getElementById('player-container');
+    playerContainer.classList.remove('pip-mode');
+
+    // Add the player back to the main window.
+    const player = event.pictureInPictureWindow.document
+                        .getElementById('player');
+    playerContainer.appendChild(player);
+
+    pipWindow = null;
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2022-01-15</div>
+          <div class="post_content">
+<p>This looks like it might be good for using with canvas. Perhaps small web games could go in PiP windows!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1597_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomayac</div>
+          <div class="creation_date">2022-01-17</div>
+          <div class="post_content">
+<p>Also see <a class="inline-onebox" href="https://chromestatus.com/feature/4844605453369344" rel="noopener nofollow ugc">Picture-in-Picture for arbitrary content - Chrome Platform Status</a> where this has been proposed before.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2642_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chrisn</div>
+          <div class="creation_date">2022-01-24</div>
+          <div class="post_content">
+<p>Very happy to see this, we are interested in using this for video with custom player controls and caption rendering for accessibility. See also discussion in <a class="inline-onebox" href="https://github.com/w3c/picture-in-picture/issues/113" rel="noopener nofollow ugc">Picture-in-Picture for any Element · Issue #113 · w3c/picture-in-picture · GitHub</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3822_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Xaekai</div>
+          <div class="creation_date">2022-02-08</div>
+          <div class="post_content">
+<p>As per the related issue I raised <a href="https://github.com/w3c/picture-in-picture/issues/209" rel="noopener nofollow ugc">on the github issue tracker</a>, I believe this proposal would enable useful functionality for my end users by facilitating a canvas overlayed atop a video element for displaying supplementary information in the PIP in a manner a simple solution like webvtts would simply be incapable of, such as animated sliding comments a la Nicovideo, or a webassembly of libass rendering SSA formatted subtitles.</p>
+<p>I hope this moves forward.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3831_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">BEEDELLROKEJULIANLOC</div>
+          <div class="creation_date">2022-02-22</div>
+          <div class="post_content">
+<p>This was extensively discussed at ‘<a href="http://github.com/w3c/picture-in-picture/issues/113#issuecomment-1047201076" rel="noopener nofollow ugc">http://github.com/w3c/picture-in-picture/issues/113#issuecomment-1047201076</a>’, so consider observation of some of the useful suggestion that was provided.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

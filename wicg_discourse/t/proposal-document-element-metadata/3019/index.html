@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Document Element Metadata</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Document Element Metadata</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2018-09-09</div>
+          <div class="post_content">
+<h2>Introduction</h2>
+<p>This proposal broaches document element metadata which can be implemented via a combination of a <code>&lt;metadata&gt;</code> element and a <code>metadata</code> attribute. The <code>&lt;metadata&gt;</code> elements can each be identified by <code>id</code> attributes and thusly referenced via <code>metadata</code> attributes of other document elements. The <code>&lt;metadata&gt;</code> elements can contain <code>&lt;meta&gt;</code> and <code>&lt;link&gt;</code> elements and noteworthy is an extension to the <code>&lt;meta&gt;</code> element so that it can contain XML markup.</p>
+<pre><code class="lang-xml">&lt;metadata id="metadata1"&gt;
+  &lt;meta name="..." content="..." /&gt;
+  &lt;meta name="..."&gt;&lt;xml&gt;...&lt;/xml&gt;&lt;/meta&gt;
+  &lt;link rel="..." href="..." /&gt;
+&lt;/metadata&gt;
+
+&lt;element metadata="metadata1"&gt;...&lt;/element&gt;
+</code></pre>
+<h2>Examples</h2>
+<p>Some illustrative examples are provided with respect to document element metadata in hypertext documents.</p>
+<h3>Accessibility</h3>
+<p>Document element metadata can provide new expressiveness for accessibility scenarios.</p>
+<h3>Hyperlinks</h3>
+<p>In addition to cryptographic hashes indicated on hyperlinks, we can (see also: .NET assembly linking and strongly named assemblies) consider the titles, versions, cultures/languages and the public keys or public key tokens, if linked-to resources are digitally signed. We could attach to hyperlinks the expected metadata of linked-to resources.</p>
+<pre><code class="lang-xml">&lt;metadata id="resource1"&gt;
+  &lt;meta name="title" content="Example Resource" /&gt;
+  &lt;meta name="version" content="1.0.0.0" /&gt;
+  &lt;meta name="language" content="en-US" /&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;a href="http://example.com/resource.html" metadata="resource1" /&gt;
+</code></pre>
+<h3>Articles and Sections</h3>
+<p>Document element metadata can provide metadata for <code>&lt;article&gt;</code> and <code>&lt;section&gt;</code> elements.</p>
+<pre><code class="lang-xml">&lt;metadata id="article1"&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;article metadata="article1"&gt;
+  ...
+&lt;/article&gt;
+</code></pre>
+<pre><code class="lang-xml">&lt;metadata id="section1"&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;section metadata="section1"&gt;
+  ...
+&lt;/section&gt;
+</code></pre>
+<h3>Hypertext</h3>
+<p>Document element metadata can provide metadata for document hypertext.</p>
+<pre><code class="lang-xml">&lt;metadata id="txt1"&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;span metadata="txt1"&gt;This is a sentence of hypertext.&lt;/span&gt;
+</code></pre>
+<h3>Tables</h3>
+<p>Document element metadata can provide metadata for tables.</p>
+<pre><code class="lang-xml">&lt;metadata id="table1"&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;table metadata="table1"&gt;
+  ...
+&lt;/table&gt;
+</code></pre>
+<h3>Multimedia</h3>
+<p>Document element metadata can provide metadata for document multimedia resources. As multimedia resources can contain embedded metadata, the <code>&lt;metadata&gt;</code> elements attached to multimedia document elements could, in addition to being specified, be populated when content is loaded.</p>
+<pre><code class="lang-xml">&lt;metadata id="img1"&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;img src="image.jpg" metadata="img1" /&gt;
+</code></pre>
+<h3>Mathematics</h3>
+<p>Document element metadata can provide metadata for mathematics expressions.</p>
+<pre><code class="lang-xml">&lt;metadata id="equation1"&gt;
+  ...
+&lt;/metadata&gt;
+
+&lt;math metadata="equation1"&gt;
+  &lt;mi&gt;i&lt;/mi&gt;
+  &lt;mi&gt;ℏ&lt;/mi&gt;
+  &lt;mfrac&gt;
+    &lt;mo&gt;∂&lt;/mo&gt;
+    &lt;mrow&gt;
+      &lt;mo&gt;∂&lt;/mo&gt;
+      &lt;mi&gt;t&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+  &lt;mn&gt;Ψ&lt;/mn&gt;
+  &lt;mo&gt;=&lt;/mo&gt;
+  &lt;mfrac&gt;
+    &lt;mrow&gt;
+      &lt;mo&gt;-&lt;/mo&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;h&lt;/mi&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+      &lt;/msup&gt;
+    &lt;/mrow&gt;
+    &lt;mrow&gt;
+      &lt;mn&gt;2&lt;/mn&gt;
+      &lt;mi&gt;m&lt;/mi&gt;
+    &lt;/mrow&gt;
+  &lt;/mfrac&gt;
+  &lt;msup&gt;
+    &lt;mo&gt;∇&lt;/mo&gt;
+    &lt;mn&gt;2&lt;/mn&gt;
+  &lt;/msup&gt;
+  &lt;mn&gt;Ψ&lt;/mn&gt;
+  &lt;mo&gt;+&lt;/mo&gt;
+  &lt;mi&gt;V&lt;/mi&gt;
+  &lt;mn&gt;Ψ&lt;/mn&gt;
+&lt;/math&gt;
+</code></pre>
+<h3>Mathematical and Notational User Input</h3>
+<p>Document element metadata can be utilized to provide hints for mathematical and notational handwriting and speech recognition.</p>
+<pre><code class="lang-xml">&lt;metadata id="hints1"&gt;
+  &lt;meta name="subject" content="msc2010:12D05" /&gt;
+  &lt;meta name="symbol" content="x" /&gt;
+  &lt;meta name="symbol" content="y" /&gt;
+  &lt;meta name="hint"&gt;
+    &lt;math&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;x&lt;/mi&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+      &lt;/msup&gt;
+      &lt;mo&gt;+&lt;/mo&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;y&lt;/mi&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+      &lt;/msup&gt;
+    &lt;/math&gt;
+  &lt;/meta&gt;
+  &lt;meta name="hint"&gt;
+    &lt;math&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;x&lt;/mi&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+      &lt;/msup&gt;
+      &lt;mo&gt;-&lt;/mo&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;y&lt;/mi&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+      &lt;/msup&gt;
+    &lt;/math&gt;
+  &lt;/meta&gt;
+&lt;/metadata&gt;
+
+&lt;input type="math" metadata="hints1" /&gt;
+
+&lt;matharea metadata="hints1" /&gt;
+</code></pre>
+<pre><code class="lang-xml">&lt;metadata id="hints1"&gt;
+  &lt;meta name="subject" content="chemistry" /&gt;
+  &lt;meta name="symbol" content="C" /&gt;
+  &lt;meta name="symbol" content="H" /&gt;
+  &lt;meta name="symbol" content="N" /&gt;
+  &lt;meta name="symbol" content="O" /&gt;
+  &lt;meta name="hint"&gt;
+    &lt;math&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;C&lt;/mi&gt;
+        &lt;mn&gt;8&lt;/mn&gt;
+      &lt;/msub&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;H&lt;/mi&gt;
+        &lt;mn&gt;10&lt;/mn&gt;
+      &lt;/msub&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;N&lt;/mi&gt;
+        &lt;mn&gt;4&lt;/mn&gt;
+      &lt;/msub&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;O&lt;/mi&gt;
+        &lt;mn&gt;2&lt;/mn&gt;
+      &lt;/msub&gt;
+    &lt;/math&gt;
+  &lt;/meta&gt;
+&lt;/metadata&gt;
+
+&lt;input type="math" metadata="hints1" /&gt;
+
+&lt;matharea metadata="hints1" /&gt;
+</code></pre>
+<h3>Speech Recognition</h3>
+<p>Document element metadata can be utilized to provide lexicons and grammars for input elements for speech recognition scenarios.</p>
+<pre><code class="lang-xml">&lt;metadata id="speech1"&gt;
+  &lt;link rel="lexicon" type="application/pls+xml" href="lexicon-file.pls" /&gt;
+&lt;/metadata&gt;
+
+&lt;input type="text" metadata="speech1" /&gt;
+</code></pre>
+<pre><code class="lang-xml">&lt;metadata id="speech1"&gt;
+  &lt;link rel="grammar" type="application/srgs+xml" href="grammar-file.srgs" /&gt;
+&lt;/metadata&gt;
+
+&lt;input type="text" metadata="speech1" /&gt;
+</code></pre>
+<h2>Hyperlinks</h2>
+<p><a class="onebox" href="https://www.w3.org/community/exercises-and-activities/wiki/User_Input_of_Mathematics" target="_blank">https://www.w3.org/community/exercises-and-activities/wiki/User_Input_of_Mathematics</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/4_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">myakura</div>
+          <div class="creation_date">2018-09-11</div>
+          <div class="post_content">
+<p>Those use cases can be addressed by Microdata/RDFa or JSON-LD, aren’t they?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AdamSobieski</div>
+          <div class="creation_date">2018-09-12</div>
+          <div class="post_content">
+<p><span class="mention">@myakura</span>,</p>
+<p>The use cases can be addressed with the expressiveness of JSON-LD but not entirely with that of Microdata/RDFa.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

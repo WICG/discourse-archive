@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Allowing a parent window to provide modules to a child frame</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Allowing a parent window to provide modules to a child frame</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1590_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Andy_Earnshaw</div>
+          <div class="creation_date">2018-02-15</div>
+          <div class="post_content">
+<p>A while ago, I <a href="https://github.com/whatwg/loader/issues/155" rel="nofollow noopener">posted an issue</a> on the whatwg/loader repo about an idea that I think would be great for the web.  That issue talks about a parent window hooking the loader for an iframe so that it can provide modules to the content in it, without an actual web request needing to take place or without the content knowing where the module is located.  The issue didn’t gain much interest to generate a discussion, so I’m hoping to retry here.</p>
+<p>I work for an ad serving company, I’m responsible for scripts that load advertiser-created content into publisher pages in iframes.  Those iframes usually reference our API and lots of communication takes place between the host and the creative during the lifecycle of the ad.  <code>postMessage</code>, in this situation, is not ideal (although we still use it), because we run scripts on pages that are not our own which means the messages from the creative to the top window can be intercepted or cause side-effects on the host page.  <code>MessageChannel</code> might be a solution to this, if timing wasn’t difficult.  If the child frame loads scripts asynchronously, we may send the <code>MessagePort</code> object in too soon, resulting in it being neutered.</p>
+<p>One of the ways we get around some problems is providing configuration via JSON in the name attribute:</p>
+<pre><code class="lang-auto">&lt;iframe src='https://...' name='{ "foo": "bar", ... }'&gt;&lt;/iframe&gt;
+</code></pre>
+<pre><code class="lang-javascript">ad.config = JSON.parse(window.name);
+
+// do something with ad.config
+</code></pre>
+<p>ES Modules provide a great opportunity here, in my opinion.  Imagine if an iframe script could do this:</p>
+<pre><code class="lang-javascript">import creativeAPI from '@some-parent-identifier';
+import config from '@another-parent-identifier';
+</code></pre>
+<p>If the parent can define these module identifiers for an iframe and either return an object (containing transferables or primitives), perhaps even callable async functions (that throw for security-sensitive arguments) or just a resolved URL, it could remove a huge chunk of complexity for situations like this.</p>
+<p>It’s not just the evil ad tech industry that could benefit from this. Apps that run on Facebook could no longer require auth tokens and many web API requests could be eliminated (by providing the data directly from the host).  eBay item descriptions also run in iframes, but aren’t allowed to reference external scripts.  Embedded video players and other components could me simplified.  There are many examples where iframes could be hugely improved by something this.</p>
+<p>I don’t have a solid proposal together, I’m hoping to get some opinions and discussion around feasibility first.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

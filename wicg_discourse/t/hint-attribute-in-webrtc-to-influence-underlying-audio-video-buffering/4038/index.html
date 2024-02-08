@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Hint attribute in WebRTC to influence underlying audio/video buffering</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Hint attribute in WebRTC to influence underlying audio/video buffering</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2621_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kuddai</div>
+          <div class="creation_date">2019-10-25</div>
+          <div class="post_content">
+<p>In WebRTC it is currently up to the User Agent to decide how much or little audio/video received on the network to buffer before playout. More buffering increases the likelihood of smooth playout but increases the playout delay. The User Agent makes the decision based on network conditions, internal bandwidth estimation, congestion control mechanisms, etc. This is an implementation-specific heuristic that has been fine-tuned with video conferencing use cases in mind. However, different applications may have different preferences for the tradeoff between latency and smoothness. The JavaScript application has no means to influence this decision today.</p>
+<h2>Objective</h2>
+<p>We want to provide means for javascript applications to set their preferences on how fast they want to render audio or video data. As fast as possible might be beneficial for applications which concentrates on real time experience. For others additional data buffering may provide smother experience in case of network issues.</p>
+<h2>Use cases</h2>
+<p>Cloud gaming is a good example where application requires a very high level of interactivity. 60 FPS corresponds to 16.6 milliseconds delay and we would like to provide User Agent a hint to render media as fast as possible without hurting the user experience.</p>
+<p>On the other hand, for live streaming additional 500~1500 milliseconds probably won’t hurt live experience but it would allow smoother playback because when small network issues happen you would still have some data to play.</p>
+<h2>API Surface</h2>
+<pre><code class="lang-auto">partial interface RTCRtpReceiver {
+  attribute double? playoutDelayHint;
+};
+</code></pre>
+<p><em><strong>playoutDelayHint</strong></em> is measured in seconds. <em><strong>null</strong></em> value corresponds to the current default User Agent behavior or in other words “no application preference”. More details can be found in this <a href="https://henbos.github.io/webrtc-extensions/#dom-rtcrtpreceiver-playoutdelayhint" rel="nofollow noopener">spec</a> where we collect WebRTC extensions.</p>
+<p>We have experimented with it in Chrome for half year, and additional buffering indeed shows measurable benefits in applications which don’t require “as fast as possible” level of interactivity.</p>
+<h2>Example Usage</h2>
+<pre><code class="lang-javascript">// Here |pc| represent peer connection
+// with remote audio and video streams attached.
+let pc = new RTCPeerConnection();
+// ... setup connection with remote audio and video.
+const [audioReceiver, videoReceiver] = pc.getReceivers();
+// Add additional 500 milliseconds of buffering.
+audioReceiver.playoutDelayHint = 0.5;
+videoReceiver.playoutDelayHint = 0.5;
+</code></pre>
+<h2>Links</h2>
+<ul>
+<li>WebRTC <a href="https://henbos.github.io/webrtc-extensions/#dom-rtcrtpreceiver-playoutdelayhint" rel="nofollow noopener">extensions spec</a>
+</li>
+<li>WebRTC <a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=10287" rel="nofollow noopener">bug</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

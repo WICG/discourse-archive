@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Support an omission character in shorthand CSS</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Support an omission character in shorthand CSS</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-10</div>
+          <div class="post_content">
+<p>Could CSS support something like an asterisk (<code>*</code>) character that prevents overrides on shorthand CSS properties like <code>margin</code> and <code>padding</code>?</p>
+<pre><code class="lang-css">.container {
+	margin: * auto; /* would not override margin-top or margin-bottom */
+}
+</code></pre>
+<p>It could follow the existing <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Shorthand_properties#Tricky_edge_cases" rel="nofollow noopener">1-to-4-value</a> syntax.</p>
+<pre><code class="lang-css">.button {
+	padding: .25em 1em *; /* would not override padding-bottom */
+}
+</code></pre>
+<h3>Issues</h3>
+<p><a href="https://twitter.com/tabatkins/status/608665324389425152" rel="nofollow noopener">Tab Atkins pointed out</a> that complex shorthands that rely on types may have issues. This may refer to properties like <code>background</code>, which explicitly have no order (per layer).</p>
+<pre><code class="lang-css">background: * url(data:...) red; /* what did the asterisk just omit?  */
+</code></pre>
+<p>One solution for unordered shorthands might be to specify that starting asterisks prevent all shorthand overrides.</p>
+<pre><code class="lang-css">background: * url(data:); /* equivalent to background-image  */
+background: * url(data:) red; /* equivalent to background-color and background-image  */
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-06-10</div>
+          <div class="post_content">
+<p>Yup, something like an asterisk will only work for shorthands with purely positional grammars.  If you have any choice in the order, it’s ambiguous; for these we instead rely on type or even value (of certain keywords, for example).  Even purely-ordered properties can be problematic if they have a lot of optional values: what did you omit in “flex: 1 *;”, the flex-shrink value or the flex-basis value?</p>
+<p>I’d have to look through the grammars to see how many shorthands this could actually apply to.  I suspect it’s a pretty small number, unfortunately.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-10</div>
+          <div class="post_content">
+<p>If the order is optional, what if an asterisk at the beginning of the value prevented all overrides?</p>
+<pre><code class="lang-css">flex: * 1; /* equivalent to flex-grow */
+</code></pre>
+<p>Or is this how flex already works out of the box?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-06-10</div>
+          <div class="post_content">
+<p>A different issue, but sort of related to this, is what happens with properties like text-decoration-skip.
+<a class="onebox" href="http://dev.w3.org/csswg/css-text-decor-4/#text-decoration-skip-property" target="_blank">http://dev.w3.org/csswg/css-text-decor-4/#text-decoration-skip-property</a>
+It can take several values at the same time, and it would be nice to be able to specify an additional value, regardless of what was there before. I doubt a * syntax would be all that good, but I’m not too sure what else to do.
+text-decoration-skip: * ink;</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

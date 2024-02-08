@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Screenshot API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Screenshot API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1473_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">salvan13</div>
+          <div class="creation_date">2017-10-31</div>
+          <div class="post_content">
+<p>Proposal for an API that let create an image from an HTML element.</p>
+<p><code>[ImageData img] = window.screenshot([HTMLElement element])</code></p>
+<p>the API should be able to create images only for elements owned by the document (maybe using same origin policy) and - if necessary - by asking the user for a screenshot permission.</p>
+<p>this API can solve the problem of export part of document as image as the user see in the browser, as developer I was asked to do this many times in my life (eg: export a chart, a table, etc…), and the only current solution is to create a specific print css (but I don’t want print anything, I want download/save an image, and this also confuse the user), or use solutions like html2canvas (with all their pitfalls).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1381_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SebastianZ</div>
+          <div class="creation_date">2017-11-01</div>
+          <div class="post_content">
+<p>As chaals <a href="https://github.com/w3c/html/issues/1062#issuecomment-340620197" rel="nofollow noopener">noted in the GitHub issue</a>, this raises some privacy and security issues, so this definitely needs to be guarded by security measures.</p>
+<p>Regarding this, what should happen with iframes within the document, which don’t fall under the same origin policy? What if the user wants to black parts of the screenshot (for privacy reasons) before the data is made available through the API.</p>
+<p>Besides the security implications, I think the currently suggested API is pretty restricted in what it can do. In my opinion, it should also allow to make a screenshot of an arbitrary rect of the document (making full-page screenshots possible) and provide options to define the output format and other options similar to the <a href="https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-toblob"><code>HTMLCanvasElement.toBlob()</code></a> API.</p>
+<p>So, I’d imagine something like this:</p>
+<p><code>ImageData = window.screenshot(HTMLElement element or DOMRect rect, optional DOMString type, optional any quality)</code></p>
+<p>Or two separate functions for elements and rects. The <code>toBlob()</code> method of the <a href="https://html.spec.whatwg.org/multipage/canvas.html#htmlcanvaselement"><code>HTMLCanvasElement</code></a> interface could be moved to the <code>HTMLElement</code> interface and another <code>toBlob()</code> method could be added allowing to take screenshots of rects:</p>
+<p><code>void window.toBlob(BlobCallback callback, DOMRect rect, optional DOMString type, optional any quality)</code></p>
+<p>Sebastian</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-01</div>
+          <div class="post_content">
+<p>I think this would be a good feature (if the privacy details can be worked out), but I think it would make sense to spec a video version at the same time (i.e. a MediaStream). E.g. getting a video of the current tab to send over WebRTC, recording activity on a page with MediaRecorder, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-01</div>
+          <div class="post_content">
+<p>In fact one way of doing this would be to only spec a video feature, and reply on ImageCapture.grabFrame() for still images: <a href="https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/API/ImageCapture</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-05</div>
+          <div class="post_content">
+<p>Could you clarify the use case? Why would the user need a screenshot of a chart or table? Isn’t a text format preferable?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2017-11-07</div>
+          <div class="post_content">
+<p>Text formats e.g. CSV will ignore table styles, merged cells, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-11-07</div>
+          <div class="post_content">
+<p>But an HTML document with inlined CSS should be capable of achieving any design. I guess my question is, what does the user intend to do with the screenshot? Send it via email? Store it locally? Embed it in documents?</p>
+<p>My intuition tells me that a website should encourage text formats (HTML, SVG, etc.) over bitmap images, because the latter don’t provide any form of accessibility.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2017-11-07</div>
+          <div class="post_content">
+<p>My use case was to embed a visually rendered version to my word processor.</p>
+<p>Otherwise, Google <a href="http://www.google.com/tools/feedback/intl/en/learnmore.html#tab=step5-text" rel="nofollow noopener">uses in-browser screenshot</a> (by a library) to send feedback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-11-07</div>
+          <div class="post_content">
+<p>One good use case is making documentation, guides, tutorials etc. where you want to have screenshots, possibly with additional content drawn on top like circles and arrows to emphasize particular areas. Like <span class="mention">@SaschaNaz</span> suggests these can be pasted in to other documents (even HTML pages) to assemble documentation. Being able to do this directly from the page makes it easier to provide a feature for this, or automate it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1029_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dmikis</div>
+          <div class="creation_date">2017-11-08</div>
+          <div class="post_content">
+<p>JFYI, similar in terms of privacy and security discussion is happening now for <code>WEBGL_texture_source_iframe</code> extension for WebGL that will allow using a rendered <code>iframe</code> as a texture in a WebGL app. Given that in WebGL a developer can read data back from GPU, it’ll also allow obtaining image data for an iframe.</p>
+<p>Here’s the PR and related issue in Khronos GH:</p>
+<ul>
+<li><a href="https://github.com/KhronosGroup/WebGL/pull/2518" rel="nofollow noopener">https://github.com/KhronosGroup/WebGL/pull/2518</a></li>
+<li><a href="https://github.com/KhronosGroup/WebGL/issues/2520" rel="nofollow noopener">https://github.com/KhronosGroup/WebGL/issues/2520</a></li>
+</ul>
+<p>IIUC, the discussion boils down to a <code>safe</code> attribute that, if set on an iframe, will properly restrict what’s allowed in the iframe (i.e., turn off <code>:visited</code> CSS pseudo-class, forbid non-same-origin images, etc).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1395_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vincentriemer</div>
+          <div class="creation_date">2017-12-10</div>
+          <div class="post_content">
+<p>This sort of primitive is very useful on <a href="https://developer.apple.com/documentation/uikit/uiview/1622531-snapshotview" rel="nofollow noopener">other platforms</a> for creating efficient “visual” clones of views/elements.</p>
+<p>One important use-case would be to transition to a blurred version of an element you would create a snapshot/screenshot of the element, blur the screenshot, and then just animate the opacity of the blurred screenshot.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2811_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fernap3</div>
+          <div class="creation_date">2020-05-10</div>
+          <div class="post_content">
+<p>I would like to add another use case for this API.  Exago BI lets users view dashboards and reports. A frequent request we get is to be able to generate a snapshot image from whatever the current view is.  The current methods are to either:</p>
+<ul>
+<li>Use a JavaScript-based screenshot tool (more bytes to download, potentially inaccurate render)</li>
+<li>Use server-side rendering with a tool like Puppeteer (more architecture and development burden)</li>
+</ul>
+<p>This kind of API would be super valuable for us to give users a quick, stable way of capturing a view of their data and sending it to a colleague or otherwise saving for later.</p>
+<p>I would also like to expand the conversation with some further considerations:</p>
+<p>Specifically on security:</p>
+<ul>
+<li>How do we control cross-origin scripts’ use of this API? (Our use case at Exago would likely need a script on a different origin to be able to screenshot the page.)</li>
+<li>Would need to work out how permission is granted and potential interoperability with the Permissions API</li>
+</ul>
+<p>Other:</p>
+<ul>
+<li>I like the “bounding rect” API more than the “Element” API and I think skipping out on the Element version may significantly reduce complexity in design. Should probably state explicitly that no browser chrome (context menus, etc.) are included in the resultant image.</li>
+<li>Should there be an option to include or exclude the mouse cursor?</li>
+<li>We should probably define when in the frame lifecycle the image is collected. Is a valid use case
+to use requestAnimationFrame with the screenshot function to capture video of user interaction?</li>
+<li>As was suggested above, the return type and options for image type and quality should be worked out</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2811_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fernap3</div>
+          <div class="creation_date">2020-05-10</div>
+          <div class="post_content">
+<p>I’ve bootstrapped <a href="https://github.com/fernap3/screenshot" rel="nofollow noopener">an explainer</a> here. I’m happy to add collaborators to the repo if anyone wants to contribute!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">9pfs1</div>
+          <div class="creation_date">2022-02-25</div>
+          <div class="post_content">
+<p>Is this canceled?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

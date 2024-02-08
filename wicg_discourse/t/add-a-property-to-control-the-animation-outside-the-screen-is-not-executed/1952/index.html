@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add a property to control the animation outside the screen is not executed</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add a property to control the animation outside the screen is not executed</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rmli</div>
+          <div class="creation_date">2017-01-10</div>
+          <div class="post_content">
+<p>Animations that are frequently executed on the mobile side are very power hungry. But outside the screen</p>
+<p>animation users can not see.The use of JS code can control the animation outside the screen is not</p>
+<p>implemented, but this is too time-consuming.Consider adding an animation property that automatically</p>
+<p>pauses the animation element beyond the screen.</p>
+<p>demo:</p>
+<p>animation: name duration timing-function delay iteration-count direction autostop;</p>
+<p>transition: property duration timing-function delay autostop;</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-01-11</div>
+          <div class="post_content">
+<p>I’m interested, I think this could be extremely useful but I’m seeing some edge cases, mostly with the <code>transition</code> property, i.e.: what happens if there’s a transition on class change, and the element happens to be outside of the viewport? Does the transition happen when that elements enters the viewport again? This can cause some confusion.</p>
+<p>Looking forward to see where this leads.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rmli</div>
+          <div class="creation_date">2017-01-12</div>
+          <div class="post_content">
+<p>Adding this property is the hope that web developers will be able to write code with lower power</p>
+<p>consumption. The animation element is outside the screen and does not start the animation directly.The</p>
+<p>animation that begins within the screen, over the boundary, continues the animation,Does not produce the</p>
+<p>boundary conditions you are considering.</p>
+<p>The web developer should be aware of the effect of this attribute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-01-12</div>
+          <div class="post_content">
+<p>I understand the main reason why something like this would be implemented, and I’m a fan of anything that may improve performance, yet I’m not able to completely grasp how a property like this one could work for some edge cases, like I mentioned before.</p>
+<p>For animations this could work in a similar manner as the <code>animation-play-state</code> property with a <code>paused</code> value for elements outside the viewport and a value of <code>running</code> for elements that entered/are in the viewport. For linear transitions is a bit trickier, maybe the best way to approach this is to jump directly to the ending state of the transitioned properties if the element is outside the viewport? Doing nothing at all seems like a wrong way to provide a solution, and like I said, animating the transitioned properties once the element has entered the viewport can cause a lot of confusion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rmli</div>
+          <div class="creation_date">2017-01-12</div>
+          <div class="post_content">
+<p>I understand your thoughts and agree with your concerns. animation-play-state with a paused/running  value</p>
+<p>for elements will be more clarity，maybe this requires developers to more carefully debug the animation.On</p>
+<p>the confusion you talk about,  I may think that the  simple, Only concerned with the beginning of</p>
+<p>the animation, the location of elements in the screen.If you want to control the life cycle of the animation, I</p>
+<p>feel there will be a lot of confusion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1145_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adamschwartz</div>
+          <div class="creation_date">2017-01-15</div>
+          <div class="post_content">
+<p>This would be a great addition. I think this would be most flexible / clear with something like a pseudo-class. So you could do something like this:</p>
+<pre><code>.animated {
+  animation: animation-name infinite;
+}
+
+.animated:not(:contained-within-viewport) {
+  animation-play-state: paused;
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rmli</div>
+          <div class="creation_date">2017-02-05</div>
+          <div class="post_content">
+<p>Add a property with a definite meaning .  Is this usage simpler?</p>
+<p>.animated {
+animation: animation-name infinite autopause;
+}</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

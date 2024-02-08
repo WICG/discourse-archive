@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] SRC attribute for Declarative Custom Element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] SRC attribute for Declarative Custom Element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2023-05-07</div>
+          <div class="post_content">
+<p>Use cases:</p>
+<ul>
+<li>
+<code>&lt;custom-element tag="dce-internal" src="#template1"&gt;</code> - reference the template in page DOM</li>
+<li>
+<code>&lt;custom-element src="#template2"&gt;&lt;/custom-element&gt;</code> - inline instantiation, no tag</li>
+<li>
+<code>&lt;custom-element tag="dce-external" src="toc.html"&gt;</code> - external file</li>
+<li>
+<code>&lt;custom-element tag="dce-hash" src="../index.html#shared-template"&gt;</code> - by ID in external file</li>
+<li>
+<code>&lt;custom-element tag="dce-hash" src="embed-1.html" &gt;</code> - external file with embedding of another external DCE</li>
+<li>
+<code>&lt;custom-element tag="dce-hash" src="../index.html#shared-template" &gt;</code> - deep external files, complex rendering</li>
+<li>own import maps</li>
+<li>deep external files with own import maps</li>
+<li>local template as a “loading…” or fallback for remote , error handling</li>
+</ul>
+<p><a href="https://github.com/EPA-WG/custom-element/issues/19" rel="noopener nofollow ugc">More on the handling</a></p>
+<h2>
+<a class="anchor" href="#out-of-scope-1" name="out-of-scope-1"></a>Out of scope:</h2>
+<ul>
+<li>DCE tag name</li>
+<li><a href="https://github.com/WICG/webcomponents/issues/997" rel="noopener nofollow ugc">DCE template</a></li>
+</ul>
+<h1>
+<a class="anchor" href="#dce-as-dwa-container-2" name="dce-as-dwa-container-2"></a>DCE as DWA container</h1>
+<p>The DCE is a container for <a href="https://github.com/EPA-WG/dwa#introduction-to-declarative-web-applications-" rel="noopener nofollow ugc">Declarative Web Application</a> which, of course can be run standalone. It would require the page itself be treated as template, the proposal is coming. In worst case the browser plugin, bookmarklet, and self-served polyfill would be provided as part of implementation/POC.</p>
+<blockquote>
+<p>third party web page into a web component</p>
+</blockquote>
+<p>The DWA purpose is to be embedded into 3rd party apps via DCE as a container. That is a main web 3.0 feature addressed by DWA/DCE. This proposal enables the DWA serving by DCE.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2023-05-07</div>
+          <div class="post_content">
+<p>A thousand times, yes!!!</p>
+<p>I have a few comments on this:</p>
+<ol>
+<li>For concerns about security, perhaps url’s that aren’t relative (at a minimum) would have to pass through a “test” to make sure the web site has given a green light to the url:  Either an import map or a link rel=preload path with an onerror attribute.  I address that in more detail <a href="https://github.com/bahrus/be-written#what-about-security" rel="noopener nofollow ugc">here</a> .  I realize this proposal is for purely declarative custom elements, but I think it should be extended to support elements with js dependencies (carefully).</li>
+<li>Support for streaming declarative shadow DOM a must.</li>
+<li>A strategy for bundling needs to be included, so that it is possible with a single modification to switchc between bundlind and not bundling.  I suggest how that could be done <a href="https://github.com/bahrus/be-written#support-for-bundling" rel="noopener nofollow ugc">here</a>
+</li>
+<li>Also, support for specifying loading=lazy.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2023-05-07</div>
+          <div class="post_content">
+<p>I also think the ability to specify some snip criteria, to ignore some stuff that could allow the web component to act as a standalone page would be super.  I support that <a href="https://github.com/bahrus/be-importing#functionality" rel="noopener nofollow ugc">here</a>, and I can say from personal experience, that simple support makes developing a whole lot easier.  Perhaps not optimal when deploying to production, at which it could be turned off during the build.  But think of how many things we support in the browser for JavaScript developers, starting with supporting non-minified code.  Maybe a little HTML love can be spared for us HTML-firsters?</p>
+<p>The snipping ability could also be useful for turning a third party web page into a web component.  Jquery’s load function supports snipping, in case there’s any doubt about the demand for that feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2023-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="6183" data-username="bahrus">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/bahrus/40/1674_2.png" width="20"/> bahrus:</div>
+<blockquote>
+<ul>
+<li>For concerns about security, perhaps url’s that aren’t relative (at a minimum) would have to pass through a “test” to make sure the web site has given a green light to the url: Either an import map or a link rel=preload path with an onerror attribute. I address that in more detail <a href="https://github.com/bahrus/be-written#what-about-security" rel="noopener nofollow ugc">here</a> . I realize this proposal is for purely declarative custom elements, but I think it should be extended to support elements with js dependencies (carefully).</li>
+</ul>
+</blockquote>
+</aside>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP" rel="noopener nofollow ugc"> Content Security Policy (CSP)</a> would be responsible for cross-origin handling. That is a general security mechanism and not specific to DCE or template.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2023-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="6183" data-username="bahrus">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/bahrus/40/1674_2.png" width="20"/> bahrus:</div>
+<blockquote>
+<p>Support for streaming declarative shadow DOM a must.</p>
+</blockquote>
+</aside>
+<p>The streaming is more related to template parsing and is implementation specific. Browsers currently are capable of XML and HTML parsing using streaming, the transformation (mix of data and template) as streaming process is available on XSLT. But whether the template and transformer would be XSLT based <a href="https://github.com/WICG/webcomponents/issues/997" rel="noopener nofollow ugc">yet to be defined</a> and out of scope of this proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2023-05-08</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="6183" data-username="bahrus">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" loading="lazy" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/bahrus/40/1674_2.png" width="20"/> bahrus:</div>
+<blockquote>
+<p>A strategy for bundling needs to be included,</p>
+</blockquote>
+</aside>
+<p>The support for import maps is part of this proposal. But details including the bundled containers are out of scope for this proposal. It belongs to import maps itself.</p>
+<blockquote>
+<p>support for specifying loading=lazy.</p>
+</blockquote>
+<p>The hydration rules and life cycle are out of scope of this proposal. It would be addressed in separate proposal and include whole range of loading/rendering cases including not just the template but also the data.</p>
+<blockquote>
+<p>allow the web component to act as a standalone page</p>
+</blockquote>
+<p>The DCE is a container for <a href="https://github.com/EPA-WG/dwa#introduction-to-declarative-web-applications-" rel="noopener nofollow ugc">Declarative Web Application</a> which, of course can be run standalone. It would require the page itself be treated as template, the proposal is coming. In worst case the browser plugin, bookmarklet, and self-served polyfill would be provided as part of implementation/POC.</p>
+<blockquote>
+<p>third party web page into a web component</p>
+</blockquote>
+<p>The DWA purpose is to be embedded into 3rd party apps via DCE as a container. That is a main web 3.0 feature addressed by DWA/DCE.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1674_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bahrus</div>
+          <div class="creation_date">2023-05-09</div>
+          <div class="post_content">
+<p>Sounds promising.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

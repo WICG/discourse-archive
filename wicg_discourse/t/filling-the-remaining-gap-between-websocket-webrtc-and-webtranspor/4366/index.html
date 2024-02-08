@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Filling the remaining gap between WebSocket, WebRTC and WebTranspor</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Filling the remaining gap between WebSocket, WebRTC and WebTranspor</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2304_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ericwilligers</div>
+          <div class="creation_date">2020-04-08</div>
+          <div class="post_content">
+<p>Existing web platform facilities for network communication include <a href="https://html.spec.whatwg.org/multipage/web-sockets.html">WebSocket</a> and <a href="https://w3c.github.io/webrtc-pc/" rel="nofollow noopener">WebRTC</a>. Each mandates a specific protocol, ensures TLS, and respects the <a href="https://www.w3.org/Security/wiki/Same_Origin_Policy">Same Origin Policy</a>. The proposed <a href="https://github.com/WICG/web-transport" rel="nofollow noopener">WebTransport</a> is similar in these respects.</p>
+<p>Unfortunately, these APIs are impractical when the developer has no control over the endpoint. In general, you can’t create a web app that talks to servers and devices that have their own protocols incompatible with what’s available on the web, e.g. <a href="https://en.wikipedia.org/wiki/Secure_Shell" rel="nofollow noopener">SSH</a>, <a href="https://en.wikipedia.org/wiki/Remote_Desktop_Protocol" rel="nofollow noopener">RDP</a> or <a href="https://en.wikipedia.org/wiki/List_of_printing_protocols" rel="nofollow noopener">printer protocols</a>. Another example is that you can’t create a web app that needs to talk to a legacy system. Requiring users to change or replace said system would be hard as it could be deployed on-premise by countless parties. Similarly, devices often have their own protocols, last for decades, and are expensive to replace.</p>
+<p>Native platforms universally provide APIs to access local network devices and information systems over TCP or UDP. For example, Windows applications can use <a href="https://docs.microsoft.com/en-us/windows/win32/winsock/winsock-reference" rel="nofollow noopener">WinSock</a>, and Android applications can use <a href="https://developer.android.com/reference/android/net/package-summary" rel="nofollow noopener">android.net</a>. Applications depending on these facilities cannot be ported to the web platform without a rewrite of the servers they connect to (which may range from easy to impossible). Nevertheless, there are risks in adding such a powerful capability to the web platform, for users and their organizations, which need to be carefully considered.</p>
+<p>A general API like a prior proposal from 2015 (<a href="https://www.w3.org/TR/tcp-udp-sockets/">TCP and UDP Socket API</a>) would allow listening for incoming connections, but this may not be necessary to satisfy the main use cases, so a more restrictive API may be more feasible. The only way to know for sure would be to identify the key use cases that need to be solved.</p>
+<p>So, we would like to first explore the use cases. Once interest is proven and the use cases are understood, a threat model will have to be defined in order to clearly identify and tackle the ensuing security and privacy challenges.</p>
+<p>Do folks have use cases that relate to this gap? Is there interest in exploring an API proposal?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2318_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oliverdunk</div>
+          <div class="creation_date">2020-04-08</div>
+          <div class="post_content">
+<p>Hi Eric! I definitely think this would be a great addition to the platform. There was a small amount of discussion in a <a href="https://discourse.wicg.io/t/proposal-full-network-access-in-progressive-web-apps/3602">previous thread</a>, but unfortunately, that didn’t go very far.</p>
+<p>I was first disheartened by this limitation when I had the idea to build a mail client. This would require implementing IMAP and SMTP, which of course, isn’t currently possible in the web. To list a few more use cases - it’d be great to build an IRC client! Or something to communicate with IOT devices on your network.</p>
+<p>I understand why this proposal will be scary to some people - but I really want to push past that, and get even closer to feature parity with native apps <img alt=":crossed_fingers:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/crossed_fingers.png?v=9" title=":crossed_fingers:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1095_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feross</div>
+          <div class="creation_date">2020-04-17</div>
+          <div class="post_content">
+<p>I’ll mention one “use case” that actually unlocks dozens if not hundreds of different applications. Specifically, <strong>Distributed Hash Tables</strong>.</p>
+<p><a href="https://en.wikipedia.org/wiki/Distributed_hash_table" rel="nofollow noopener">DHTs</a> are a fundamental building block of almost every P2P system. They are the primary routing layer in WebTorrent, IPFS, Dat, and other decentralized protocols. Almost every decentralized/distributed system needs to provide a lookup service similar to a key-value hash table. Using this distributed data structure, it’s possible to build higher-level capabilities like peer-finding without a central signaling infrastructure.</p>
+<p><strong>Limitations of WebRTC Data Channels:</strong></p>
+<p>It’s not possible to build a DHT on top of a WebRTC connection model. We need the ability to store the “contact information” for a peer, close the connection to that peer, and then re-connect to that peer at some point in the future (if they’re still online). This is the way that DHT routing tables get built up over time. With TCP/UDP, this is quite easy to accomplish – simply store the ip:port (12.34.56.78:9000) and try to connect. If the peer is still online, it will just work. However, in WebRTC, the offer/answer connection model makes it impossible to store a peer’s “contact information” and attempt to connect again later. A WebRTC connection offer or answer is one-time use.</p>
+<p><strong>Required features in a solution:</strong></p>
+<p>I think that rectifying this requires these features currently lacking in WebRTC:</p>
+<ol>
+<li>
+<p>Peers need the ability to “listen” for incoming connections.</p>
+</li>
+<li>
+<p>Peers also need the ability to publish a some kind of “reusable offer/answer” that multiple peers can use to connect to listening peers (currently an offer/answer is usable only once). In normal TCP/UDP, this peer contact information is simply an IP address and port (i.e. 12.34.56.78:9000). We don’t strictly need support for connecting using an IP address and port, but some kind of long-lived “contact information” for a listening peer is required.</p>
+</li>
+<li>
+<p>Lighter-weight connections. It seems that the current WebRTC spec is very complex This leads to a situation where it’s really hard to open more than a dozen connections at once without the browser process hitting 100% CPU utilization. This prevents applications that would like to open 20+ connections from doing so, which makes Data Channels a lot less useful for use cases like peer-assisted delivery, peer-assisted live streaming, WebTorrent, DHTs, in-browser cryptocurrency networks, etc.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2868_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chr15m</div>
+          <div class="creation_date">2020-04-19</div>
+          <div class="post_content">
+<p>Just want to say this would be amazing and liberate so much deventralized software from technical infeasibility. Like the other people said, web-first mail clients, and DHTs are two huge use-cases.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2086_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">lidel</div>
+          <div class="creation_date">2020-04-20</div>
+          <div class="post_content">
+<p>Our primary use-cases are application resilience, direct and multi-party collaboration, and archiving.</p>
+<p><em>Resilience:</em> We want connectivity options that enable more resilient web applications for users in low/unpredictable bandwidth scenarios, when servers are down (operator error, cert expiration, etc), and when the connection is blocked from internet shutdowns (Myanmar, Kashmir, Ethiopia and more) or censorship (China, Turkey, Thailand, Indonesia and more).</p>
+<p><em>Collaboration:</em> We want to enable users to collaborate in scenarios not well-supported by existing web platform connectivity options. Examples are publishing, editing, sharing and discovering documents on disconnected networks such as LAN, BLE+WifiDirect connections, and overlays which span hardware combinations and transitions.</p>
+<p><em>Archiving:</em> We want users to be able to revisit content and applications, as well as to ensure access to information in the state needed by those users and under challenging conditions. Archiving features enable the data survival over time, combat mis/disinformation and fake news, and give users more control over their experiences on the web.</p>
+<p>We address these use-cases with the IPFS protocol, which is built on <a href="https://docs.libp2p.io/" rel="nofollow noopener">libp2p</a>, a modular system of protocols, specifications and libraries that enable the development of peer-to-peer network applications. Libp2p is a standalone project, used by many applications aside from IPFS.</p>
+<p>The WebRTC challenges related to DHTs in web content are well defined by <span class="mention">@feross</span> in the <a href="https://discourse.wicg.io/t/filling-the-remaining-gap-between-websocket-webrtc-and-webtranspor/4366/3">previous comment</a>. All those points are valid in the context of our IPFS/libp2p use-cases.</p>
+<p>Building web applications with <a href="https://github.com/ipfs/js-ipfs" rel="nofollow noopener">js-ipfs</a> and <a href="https://github.com/libp2p/js-libp2p" rel="nofollow noopener">js-libp2p</a> in web content means our transport options are limited to HTTP, WebSockets and WebRTC, each with challenges:</p>
+<p><em>HTTP and WebSockets</em></p>
+<ul>
+<li>Centralized and brittle: both require hardcoding address of an arbitrary service that is assumed to always work (a single point of failure)</li>
+<li>Use in Secure Contexts requires a TLS setup that relies on PKI</li>
+</ul>
+<p><em>WebRTC</em></p>
+<ul>
+<li>No permanent address that can be dialed later for quick resume</li>
+<li>Uses DTLS (a bit better, no PKI), but there is no way to use a custom keypair and no way to pass any additional metadata like we can with <code>EncryptedExtensions</code> in TLS 1.3</li>
+<li>Does not work in Service Workers, which means additional overhead due to <code>postMessage</code>, duplicated instances</li>
+</ul>
+<p>This translates into <strong>high level gaps</strong>:</p>
+<ul>
+<li>Nodes running in web browser are unable to build and participate efficiently in DHTs because they cannot discover and connect directly to each other.</li>
+<li>Need to bootstrap connections using WebSockets or HTTP each time a web application starts or WebRTC connection is initialized, which is slow and sometimes not possible (see resilience notes earlier in post)</li>
+<li>No way to directly reconnect after initial connections have been made.</li>
+<li>No discovery/connectivity in offline environments, or local network. The web doesn’t have a mDNS-like local discovery method for web browser to find peers on the same network and/or on the same web Origin</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2864_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathanberi</div>
+          <div class="creation_date">2020-04-20</div>
+          <div class="post_content">
+<p>Re-iterating IoT as a use case - <a href="http://coap.technology/" rel="nofollow noopener">CoAP</a> (UDP) and <a href="http://mqtt.org/" rel="nofollow noopener">MQTT</a> (TCP) and other protocols would be awesome to enable in a PWA. Local/privacy-first controllers and ease dev exp are very compelling!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2871_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jbaicoianu</div>
+          <div class="creation_date">2020-04-20</div>
+          <div class="post_content">
+<p>I for one would absolutely love it if this ability were added to the web platform.  I’ve had a number of real-world use cases over the years that would have benefited from direct network access.  Some are my own personal projects, some are projects I’ve worked on for various companies, and some pertain to projects I’ve worked with in the past where I thought “if only this could connect to normal TCP or UDP sockets, it would be so much better”.</p>
+<ul>
+<li>
+<p><strong>SMTP client</strong>: <a href="https://github.com/jbaicoianu/elation-component-mail" rel="nofollow noopener">https://github.com/jbaicoianu/elation-component-mail</a> - I built this 10 years ago and had to implement IMAP talking to a custom backend speaking SMTP over REST, direct TCP would allow users to securely access their own mail services without having to relay through a server I have to host.</p>
+</li>
+<li>
+<p><strong>IRC client</strong>: <a href="https://github.com/jbaicoianu/elation-irc" rel="nofollow noopener">https://github.com/jbaicoianu/elation-irc</a> - 7 years ago, implemented with a custom WebSocket backend to allow connecting multiple clients to multiple servers. Same as above - this arrangement decreases user security and reliability, because the relay could be sniffing traffic, or the relay could go down.</p>
+</li>
+<li>
+<p><strong>Emscripten SDL2_net</strong>: <a href="https://github.com/emscripten-ports/SDL2_net" rel="nofollow noopener">https://github.com/emscripten-ports/SDL2_net</a> - allows us to compile SDL2 apps to WASM with networking support, which Emscripten can proxy through either WebSockets or WebRTC.  Normally requires additional server-side software to bridge with specific TCP or UDP services (commonly either websockify or custom server software)</p>
+</li>
+<li>
+<p><strong>PPPoW</strong>: <a href="https://github.com/jbaicoianu/PPPoW-server" rel="nofollow noopener">https://github.com/jbaicoianu/PPPoW-server</a> - Dialup over websockets. Implementing full TCP/UDP support by running pppd and a WebSocket relay in an AWS instance, allowing WASM-compiled native apps running in the browser to speak to it as if it were a dial-up ISP.  Used for Win3.11 in VR demo: <a href="https://assets.metacade.com/emulators/win311vr.html" rel="nofollow noopener">https://assets.metacade.com/emulators/win311vr.html</a></p>
+</li>
+<li>
+<p><strong>Internet Archive Emularity networking project</strong>: <a href="https://docs.google.com/document/d/16Vc-PxHxbVo5WG20tuF4zDHHa3oWO5DcEs-w3teNEYM" rel="nofollow noopener">https://docs.google.com/document/d/16Vc-PxHxbVo5WG20tuF4zDHHa3oWO5DcEs-w3teNEYM</a> - a work in progress, this is a proposal for extending <a href="http://Archive.org" rel="nofollow noopener">Archive.org</a>’s emulated software collections to support multiplayer games and internet-connected applications.  This would add multiplayer support for historical games which used earlier networking technologies like null modem, dial-up, or IPX.  Current experiments are implemented with a WebSocket relay which bridges to a TCP server (existing open source project).</p>
+</li>
+<li>
+<p><strong>JanusVR Presence Server</strong>: <a href="https://github.com/janusvr/janus-server" rel="nofollow noopener">https://github.com/janusvr/janus-server</a> - A presence server for web-based virtual worlds. Allows connections from native app users over TCP and web users with WebSockets on the same port - server autodetects type, and relays between both.</p>
+</li>
+<li>
+<p><strong>High Fidelity WebRTC Relay</strong>: <a href="https://github.com/janusvr/hifi_webrtc_relay" rel="nofollow noopener">https://github.com/janusvr/hifi_webrtc_relay</a> - Bridges the High Fidelity virtual world networking protocol to the web, using a custom WebRTC DataChannel relay to let web users connect to the same servers as the existing native app, and participate in voice calls and 3d world building from a lightweight web interface.</p>
+</li>
+<li>
+<p><strong>libp2p</strong>: <a href="https://github.com/libp2p" rel="nofollow noopener">https://github.com/libp2p</a> - a cross-language library for building p2p apps. Already covered in much greater detail by <span class="mention">@lidel</span> above.</p>
+</li>
+<li>
+<p><strong>WebTorrent</strong>:  already covered in much greater detail by <span class="mention">@feross</span> above</p>
+</li>
+</ul>
+<p>All of these use cases would have been significantly easier to implement without involving a server-side relay component, and in many cases requiring a relay actually decreased the security of the end user.</p>
+<p>Direct TCP and UDP support for PWAs would open up a new wave of interoperability between web and native platforms, and give web app developers access to decades of software and services that were just never written with the web in mind.  It would allow native app developers to open up parts of their systems to web users without needing to do full rewrites of the entire networking stack to accommodate the web.</p>
+<p>Plenty of security concerns involved, of course, but I’ll hold off on those until we get to that part of the conversation <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=9" title=":smiley:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2020-07-23</div>
+          <div class="post_content">
+<p>Given the level of expressed support, have transferred in a repo: <a href="https://github.com/WICG/raw-sockets">https://github.com/WICG/raw-sockets</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2021-03-05</div>
+          <div class="post_content">
+<p>Chrome shows intent to implement this: <a class="inline-onebox" href="https://bugs.chromium.org/p/chromium/issues/detail?id=1119620&amp;q=udp&amp;can=2" rel="noopener nofollow ugc">1119620 - chromium - An open-source project to help move the web forward. - Monorail</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3805_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">9pfs</div>
+          <div class="creation_date">2022-01-07</div>
+          <div class="post_content">
+<p>Do you have any ideas for using TCP/UDP in Bugout?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3806_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ShortFuse</div>
+          <div class="creation_date">2022-01-10</div>
+          <div class="post_content">
+<p>Are there any plans for listening for TCP connections? Perhaps I’m missing it in the API.</p>
+<p>Still, the use case would be ability to use what’s known as “Webhooks” which are event callbacks from providers when things change.</p>
+<p>For example, with Cisco’s Broadworks API for phones, you can create a virtual extension and connect over WebRTC just fine. But to get the actual events you need to do some long polling (Comet) or use an “HTTP Contact”. Being able to run a tiny HTTP server that receives a POST coded in JS can be extremely useful instead of having it hit a server somewhere else and then bounce that information over to the web client. It eliminates the “proxying” needed.</p>
+<p>It doesn’t even need to be HTTPS really. And it’s a lot “better” than using using and maintaining a WebSocket connection for data. I know Asterisk uses WebSocket for events/callbacks, but that requires a constant connection which a step above long polling with Comet. The other alternative is Server-Side Events (SSE), but you have the HTTP connection limits (even with HTTP/2). Also that has the polling and keep-alive mechanism as the other. Instead, a single point of contact with a disposable connection is easier to maintain. Yes, there is also using a UDP endpoint, and that can work too technically, but Webhooks are already somewhat popular and asking these companies to move from HTTP Post is unlikely to happen.</p>
+<p>Other providers that use Webhooks include Twilio, GitHub, Facebook, and Stripe.</p>
+<p>Edit: There’s also the possibility of using headless Chrome/Firefox instead of Node or Deno on server environments. All I personally need is the ability to run an HTTP server, though I’m not expecting much in terms of performance. And HTTP/2 or HTTP/3 would be prohibitively slow unless we’re considering WebASM or Web Workers to help. Still, neat.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3315_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">easrng</div>
+          <div class="creation_date">2022-01-26</div>
+          <div class="post_content">
+<p>That wouldn’t be possible, most clients are behind NAT so webhooks from a server would never make it past the router, at least on IPv4. There are holepunching options that don’t require preexisting knowledge of client IPs to act as a server like <a href="https://samy.pl/pwnat/" rel="noopener nofollow ugc">pwnat</a> but they aren’t super reliable so you’d still need a relay server for some connections. Another option is modifying WebPush to be able to silently push to an open page, but push services might not be happy about that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3817_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Distortions81</div>
+          <div class="creation_date">2022-01-31</div>
+          <div class="post_content">
+<p>I think think the way to get this adopted is this:</p>
+<p>1: Easily disabled by admins</p>
+<p>2: Only allow connections to same domain and cert as HTTPS site.</p>
+<p>3: Anything else requires a prompt, probably only on accounts with sudo/admin privileges (password prompt)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

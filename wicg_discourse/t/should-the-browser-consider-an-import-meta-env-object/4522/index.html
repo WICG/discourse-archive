@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Should the browser consider an import.meta.env object?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Should the browser consider an import.meta.env object?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2470_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guybedford</div>
+          <div class="creation_date">2020-06-01</div>
+          <div class="post_content">
+<p>I just noticed that Snowpack <a href="https://github.com/pikapkg/snowpack/pull/394" rel="nofollow noopener">recently merged in support for <code>import.meta.env</code></a> being a replacement for the <code>process.env</code> global variable that is typically used in Node.js application workflows (and browser workflows through bundlers) to set environment state information.</p>
+<p>I thought it would be interesting to discuss if the browser might consider something similar.</p>
+<p>The most typical use case for this is the <code>process.env.NODE_ENV === 'production'</code> check which has become a JS idiom and not just a Node.js one. See for example React for the browser shipping this here - <a href="https://unpkg.com/react@16.13.1/index.js" rel="nofollow noopener">https://unpkg.com/react@16.13.1/index.js</a>.</p>
+<p>In the transition to ES modules, it would be nice for users not to try to maintain the same <code>process</code> global being “shimmed” for the browser, but instead to have an idiomatic way of doing this for ES modules.</p>
+<p>The alternatives seem to be globals, an <code>import env from 'env'</code> module or always requiring a precompilation step like Snowpack has shipped which adds a line to the top of every module containing <code>import.meta.env = env</code>.</p>
+<p>The alternatives do have the problem of not providing a pattern that can be used in portable code such that fragmentation or convergence on a pattern that won’t be supported in browsers seems to be a risk otherwise.</p>
+<p>Perhaps giving the browser control over such a variable would provide a useful alignment for tools while continuing to allow idiomatic modular code to run in browsers without a build step being a mandatory prerequisite?</p>
+<p>It would be great to hear thoughts further on this topic.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2791_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jkrems</div>
+          <div class="creation_date">2020-06-01</div>
+          <div class="post_content">
+<p>This feels like a rather awkward use of <code>import.meta</code>. Right now it’s used for values that are contextual to the executing module (matching its scope, scoped to module). This seems to add data that is not at all specific to the module but more general about the runtime. A global or a shared module (<code>import env from 'env'</code>) sounds like a much more appropriate API for that kind of information to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2732_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jack-Works</div>
+          <div class="creation_date">2020-06-03</div>
+          <div class="post_content">
+<p>Agree, I don’t think this is the use case, what do you want to add in the browser version of import.meta.env?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2470_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guybedford</div>
+          <div class="creation_date">2020-06-03</div>
+          <div class="post_content">
+<p>To reiterate the problem, the best solution to environment data is an <code>env.js</code>:</p>
+<pre><code class="lang-auto">export const mode = 'production';
+export const serverName = 'blah';
+</code></pre>
+<p>sort of thing where you have <code>import { mode } from 'env'</code> all over the codebase.</p>
+<p>The specific problem though is that most code executed by JS applications is library code - and that library code often needs to know environment information such as if you are running a development or production build.</p>
+<p>The ecosystem will solve this problem in whatever way, regardless of any standards work.</p>
+<p>The question then is if standards work might help find a solution that retains the specific guarantees of:</p>
+<ul>
+<li>
+<p>Code portability - when running code in different JS engines, do the assumptions of this “environment import” break workflows or do they work correctly. If all code did <code>import env from 'env'</code> we would be ok here, but laying that pattern down would require work.</p>
+</li>
+<li>
+<p>Browser compatibility - with Snowpack shipping <code>import.meta.env</code> it is now encouraging library code to exist that will not work correctly in browsers. Hoepfully most users will check <code>typeof import.meta.env !== 'undefined'</code>, but it just takes one library to skip that check and there is a compatibility gap in having a top-level undefined member expression error.</p>
+</li>
+</ul>
+<p>I think the two “standards approaches” to this problem would be:</p>
+<ol>
+<li>
+<p>Specify that import.meta.env is a mutable object, that can be configured by runtimes during boot either directly or through an API.</p>
+</li>
+<li>
+<p>Specify a standard builtin module for <code>std:env</code> or similar to encourage a standard environment import pattern.</p>
+</li>
+</ol>
+<p>I’m not saying that either of the above are definitely things that should be done - I’m just saying that they are things that might be done to help solve these portability problems, and as such are exactly where being able to discuss these problems within a standards forum can be a useful exercise even if the result is a negative one.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

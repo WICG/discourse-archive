@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Resize event for elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Resize event for elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-09-03</div>
+          <div class="post_content">
+<p>Listening to size changes on elements is currently an <a href="http://stackoverflow.com/questions/23982440/how-to-detect-dom-element-mutations-without-jquery" rel="nofollow noopener">abominable pain</a>.</p>
+<p>It’d be nice if there was simply a <code>resize</code> event for any <code>HTMLElement</code>, not just the <code>window</code>.</p>
+<p>Performance shouldn’t really be a problem. At some point in the code path there is a size calculation for a given element, and simply calling callbacks at that point IFF any exist should be perfectly fine. So, the only perf hit would be the conditional statement that checks if any callbacks exist.</p>
+<p>Elements that have been resized could be pushed into a list, then the list iterated over after all layout sizing is complete and the callbacks called all at once (in a batch).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-09-03</div>
+          <div class="post_content">
+<p>Oops, this is duplicate of <a href="https://discourse.wicg.io/t/resize-event-on-dom-elements/785">Resize event on DOM elements</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-09-05</div>
+          <div class="post_content">
+<p>Have you seen the Resize Observer API? It’s available in Chrome Canary behind “Web Platform” flag (chrome:flags page).</p>
+<p>Status page: <a href="https://www.chromestatus.com/feature/5705346022637568" rel="nofollow noopener">https://www.chromestatus.com/feature/5705346022637568</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-09-08</div>
+          <div class="post_content">
+<p>Yup, ResizeObserver is the way to do this, actively being standardized as we speak.</p>
+<p>It helps avoid resize loops by batching up all the observer calls, running them, then batching up all the new observer calls on children of the root, running them, then batching up all the new observer calls on grandchildren of the root, running them, etc. If you ever break that pattern and produce a new observer call at a higher level than it’s currently evaluating, that’ll get held until the next frame, and will throw an async error at Window so you can tell you’ve done something wrong (or some library has).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

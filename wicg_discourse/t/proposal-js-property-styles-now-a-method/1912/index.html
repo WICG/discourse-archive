@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] JS property `styles` (now a method)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] JS property `styles` (now a method)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>Current, if you want to set multiple styles on an element using JS, you have to set them one at a time. What I’m proposing is a <code>styles</code> property that is set with a JSON object. This can be achieved pretty easily in vanilla JS:</p>
+<pre><code class="lang-javascript">
+Object.defineProperty(Object.prototype, 'styles', {
+	enumerable: true,
+	configurable: false,
+	get: function() { return this.style; },
+	set: function(param) {
+		if(this instanceof HTMLCollection) {
+			for(i=0; i&lt;this.length; i++) {
+				for(key in param) {
+					key = key.replace(/-[a-z]/g, "$&amp;".toUpperCase() );
+					this[i].style[key] = param[key];
+				}
+			}
+		}
+		else if(this instanceof HTMLElement) {
+			for(key in param) {
+				key = key.replace(/-[a-z]/g, "$&amp;".toUpperCase() );
+				this.style[key] = param[key];
+			}
+		}
+	}
+});
+</code></pre>
+<p>Obviously it would be implemented in ES6, rather than including that piece of code, but it shows how it <em>could</em> be done with current JS capabilities.</p>
+<p>Proposed usage:</p>
+<pre><code class="lang-javascript">document.getElementById("foo").styles = {
+    "background-color" : "red",
+    "border"           : "3px solid purple",
+    "color"            : "grey"
+};
+</code></pre>
+<p>With the code block I included above, it would also work on iterable objects (returned by <code>document.getElementsByClassName</code>). It also uses regex to replace hyphens with the camelCase version, although that’s just because of the fact that it’s done using vanilla JS. Obviously that wouldn’t be necessary in a full implementation.</p>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1912">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>What I’m proposing is a styles property that is set with a JSON object.</p>
+</blockquote>
+</aside>
+<p>Assigning may be confusing as for whether styles should be <em>added</em> to existing or <em>replace</em> those. A method like <code>setStyles()</code> or <code>setStyle()</code> would probably be better in this regard.</p>
+<aside class="quote" data-post="1" data-topic="1912">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>It also uses regex to replace hyphens with the camelCase version</p>
+</blockquote>
+</aside>
+<p>Fwiw, all modern browsers including Firefox 35+ support setting hyphen-separated properties directly, with no need to convert their names to camelCase:</p>
+<pre><code>element.style['background-color'] = 'green';</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1912">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Assigning may be confusing as for whether styles should be added to existing or replace those.</p>
+</blockquote>
+</aside>
+<p>I don’t think so. It works the exact same way <code>style</code> does, just setting multiple at once. Apart from a JSON object, I can’t think of any other way to do this.</p>
+<blockquote>
+<p>Fwiw, all modern browsers including Firefox 35+ support setting hyphen-separated properties directly, with no need to convert their names to camelCase:</p>
+</blockquote>
+<p>Did now know this! Regardless, that script is more a demonstration of what I picture it to be, rather than what would actually be implemented.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1912">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>Apart from a JSON object, I can’t think of any other way to do this.</p>
+</blockquote>
+</aside>
+<p>A method like <code>setStyle()</code> could take an object of the <em>same type</em> as you’ve proposed to assign to the <code>styles</code> attribute. The potentially confusing thing is not the object, but the assignment syntax. It’s typical that assignment <em>replaces</em> what has been previously stored in the variable or property the value is assigned to.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>Note that the pattern below is already possible:</p>
+<pre><code>Object.assign(foo.style, {
+    "background-color" : "red",
+    "border"           : "3px solid purple",
+    "color"            : "grey"
+});
+</code></pre>
+<p><code>Object.assign</code> seems like a nice, terse way to do this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p>Nice, <span class="mention">@simevidas</span>.</p>
+<p>I like the idea of setting multiple properties at one time.</p>
+<p>This method would also need to consider that it can be confusing on which key would win when declaring multiple styles that are associated and can potentially overlap like:</p>
+<pre><code class="lang-auto">{
+    "background" : "red",
+    "background-color" : "blue",
+    "border-left"  : "3px solid purple",
+    "border" : "3px dotted red",
+}
+</code></pre>
+<p>When settings styles today, this is clear because the winning style would be the last declared. With this way, it’s not so clear since key value pairs don’t necessarily guaranteed an order. I could be wrong here, though. It’s been a while since I’ve looked at this spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p><span class="mention">@simevidas</span>, I could be wrong in my guess as to how that <code>Object.assign()</code> works, but isn’t that very expensive in terms of DOM lookups? Also, does this resolve the issue <span class="mention">@mkay581</span> put forth?</p>
+<p>I actually didn’t even consider the order. It could certainly be an edge case that outputs a warning in the console.</p>
+<p><span class="mention">@MT</span> Would a method make sense over a property here? The current <code>style</code> is a property, as is most everything else that affects the DOM directly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<p><span class="mention">@mkay581</span> I think, ECMAScript guarantees order now.</p>
+<p><span class="mention">@jhpratt</span> It adds a bunch of properties to <code>foo.style</code> in sequence. I don’t see how that’s different from setting inline styles in any other way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="1912">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>Would a method make sense over a property here? The current style is a property, as is most everything else that affects the DOM directly.</p>
+</blockquote>
+</aside>
+<p>I think what <span class="mention">@MT</span> is saying is that normally when you set an object on a property, like this:</p>
+<pre><code class="lang-javascript">element.styles = {
+  border: '1px solid blue';
+};
+</code></pre>
+<p>You are essentially wiping out every property on the styles object <code>font-size</code>, <code>color</code>, or anything other <code>styles</code> property that may have a value at the time.</p>
+<p>So to have your <code>styles</code> setter just add properties, instead of replacing the <code>element.styles</code> object entirely, is not clear to the implementor. But adding it as a method name could help with eliminating any possible confusion with the behavior.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-19</div>
+          <div class="post_content">
+<blockquote>
+<p>You are essentially wiping out every property on the styles object font-size, color, or anything other styles property that may have a value at the time.
+So to have your styles setter just add properties, instead of replacing the element.styles object entirely, is not clear to the implementor.</p>
+</blockquote>
+<p>Gotcha. Now I understand the issue. Yes, I agree a method would be the way to go in this circumstance.</p>
+<p>Given that a method is appropriate and JSON objects <strong>are</strong> in order (<a href="http://www.ecma-international.org/ecma-262/6.0/#sec-object.keys" rel="nofollow noopener">ES6 spec here</a>), are there any other issues anyone can think of?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>I, too, would like to define styles with an object, especially after experiencing the joys of doing so with <code>.animate</code>. <span class="mention">@simevidas</span>’ method is how I currently handle these things, and I would be in favor of the <code>setStyles</code> method. It avoids the confusion of <code>styles = {}</code> wiping out previous styles, and the plurality of <code>setStyles</code> prevents confusion with the already familiar <code>setAttribute</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-12-25</div>
+          <div class="post_content">
+<p>Bikeshedding here, but <code>setStyles</code> would mean (to me) that it also replaces existing inline styles.
+<code>updateStyles</code> might have made it clear to me that it only adds or updates but does not remove, though I am not even sure about that.
+Think about that - how would you remove multiple properties using a single property or method?
+Perhaps a delta-type object, like <code>{update: {'background-image': '...', 'cursor': 'default'}, remove: ['background', 'float']}</code> (just thinking out loud, not suggesting as I can see some unnecessary overhead here).</p>
+<p>And on the other hand, perhaps inline styles are discouraged in general, which is why there is no real need to add multiple properties at once?</p>
+<p>Also, consider <code>element.style.cssText += 'background-image: ...; cursor: default;'</code> which should kind of already do exactly what you want, albeit using actual strings instead of an object (though template strings can take care of the beauty of it).
+(And the memory implications of having a large <code>cssText</code>, despite the fact that it simply includes many duplicate properties)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1177_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">phistuck</div>
+          <div class="creation_date">2016-12-25</div>
+          <div class="post_content">
+<p>By the way, the category should be “APIs” (or maybe “HTML”), not “JS” as “JS” is for JavaScript only things, like language, syntax, built ins (that are relevant to any JavaScript environment, like Node).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

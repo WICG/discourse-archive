@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Main Thread Scheduling</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Main Thread Scheduling</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2019-03-08</div>
+          <div class="post_content">
+<p>I’d like to propose moving this repo to WICG:
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicon.ico" width="32"/>
+<a href="https://github.com/spanicker/main-thread-scheduling" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="420" src="https://avatars3.githubusercontent.com/u/4945616?s=400&amp;v=4" width="420"/>
+<h3><a href="https://github.com/spanicker/main-thread-scheduling" rel="nofollow noopener" target="_blank">spanicker/main-thread-scheduling</a></h3>
+<p>Contribute to spanicker/main-thread-scheduling development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+<p>Intent to implement:
+<a class="onebox" href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/eLq8t56CbaQ/KdbOY7ZHCwAJ" rel="nofollow noopener" target="_blank">https://groups.google.com/a/chromium.org/d/msg/blink-dev/eLq8t56CbaQ/KdbOY7ZHCwAJ</a></p>
+<p>(from the Intent thread)</p>
+<p><strong>Summary</strong>
+This (umbrella) intent covers a set of proposed APIs for main thread scheduling, for improved user responsiveness. Separate Intents will also be sent for individual APIs.</p>
+<p><strong>Motivation</strong>
+It is too difficult to build web apps that are responsive to user interaction, and that remain responsive over time. <a href="https://tdresser.github.io/input-latency-deep-reports/" rel="nofollow noopener">Script is a primary culprit</a> that hurts responsiveness.</p>
+<p>Consider a “search-as-you-type” application: this app needs to be responsive to user input i.e. user typing in the search-box. At the same time any animations on the page must be rendered smoothly, as well as the work for fetching, preparing and displaying search results must progress quickly.</p>
+<p>This is a lot of different deadlines for an app developer to contend with; it is hard to reason about and correctly use myriad existing APIs as well workarounds for missing hooks.</p>
+<p>Today this also requires an understanding of the browser’s rendering engine to plug into the right places. It is easy for script running at inopportune times to hold up the main thread and cause responsiveness issues.</p>
+<p>This problem can be tackled by systematically chunking and scheduling main thread work i.e. prioritizing and executing work async at an appropriate time relative to current situation of user and browser. This proposal explores a set of APIs to achieve this, towards the goal of improving guarantees of responsiveness.</p>
+<p>Concretely, we will:
+I. Develop a proof-of-concept for a native platform scheduler, that is directly integrated into the browser’s event-loop.
+II. Develop (low level) primitives to enable Javascript / userland schedulers to succeed: this effort focuses on filling gaps in existing scheduling primitives.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-03-11</div>
+          <div class="post_content">
+<p>This was <a href="https://docs.google.com/document/d/1bYMLTkjcyOZR5Jt3vrulzMSoS32zOFtwyH33f6hW_C8/edit#heading=h.3g7y5ooy3jo" rel="nofollow noopener">discussed</a> as part of the WebPerfWG F2F meeting at TPAC and there was support in the room for that kind of effort, both from other vendors as well as developers. I support bringing in the repo to the WICG org.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">n8schloss</div>
+          <div class="creation_date">2019-03-12</div>
+          <div class="post_content">
+<p>Very excited to see this happening! We’re really supportive of all this work!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-03-14</div>
+          <div class="post_content">
+<p>The repo is now at <a href="https://github.com/WICG/main-thread-scheduling" rel="nofollow noopener">https://github.com/WICG/main-thread-scheduling</a></p>
+<p>Happy incubation! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

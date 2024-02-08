@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>MHTML Generation and Loading as Implemented in Chrome</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">MHTML Generation and Loading as Implemented in Chrome</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jianli</div>
+          <div class="creation_date">2017-10-04</div>
+          <div class="post_content">
+<p>In Chrome, the static snapshots of web pages are captured and saved in a modified MHTML format (RFC 2557), that is a web page archive format used to combine resources together with HTML into a single file. A set of modifications, as summarized in this doc, are made to the existing MHTML generator and loader in order to improve security and privacy
+and ensure the snapshot mimics as close as possible to the original page.</p>
+<p>There are ongoing efforts to try to add better support for creating packages of files for use on the web, as drafted in the Packaging on the Web spec. But it is a long way to get all things sorted out and agreed upon. So Chrome builds its own support upon the existing MHTML spec with improvement described in this document.</p>
+<aside class="onebox googledocs">
+<header class="source">
+<a href="https://docs.google.com/document/d/1FvmYUC0S0BkdkR7wZsg0hLdKc_qjGnGahBwwa0CdnHE/edit" rel="nofollow noopener" target="_blank">docs.google.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://docs.google.com/document/d/1FvmYUC0S0BkdkR7wZsg0hLdKc_qjGnGahBwwa0CdnHE/edit" rel="nofollow noopener" target="_blank"><span class="googledocs-onebox-logo g-docs-logo"></span></a>
+<h3><a href="https://docs.google.com/document/d/1FvmYUC0S0BkdkR7wZsg0hLdKc_qjGnGahBwwa0CdnHE/edit" rel="nofollow noopener" target="_blank">MHTML Generation and Loading</a></h3>
+<p>MHTML Generation and Loading As implemented in Chrome Authors: jianli@chromium.org Last Updated: Nov 21, 2017  Overview In Chrome, the static snapshots of web pages are captured and saved in a modified MHTML format (RFC 2557), that is a web page...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-10-05</div>
+          <div class="post_content">
+<p>What’s the benefit of MHTML over regular HTML with external resources embedded as standard Data URIs?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jianli</div>
+          <div class="creation_date">2017-10-05</div>
+          <div class="post_content">
+<p>There’re a lot of benefits from saving as MHTML:</p>
+<ul>
+<li>MHTML is self-contained while regular HTML does not have such constraint.</li>
+<li>Certain browser version may impose size limit for data URIs. Also data URIs are base64 encoded, which is not efficient.</li>
+<li>It may be hard to try encapsulate iframe of iframe using data URIs.</li>
+<li>In Chrome, MHTML is loaded in sandboxing mode and other constraints while loading regular HTML file does not.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2017-10-05</div>
+          <div class="post_content">
+<blockquote>
+<p>MHTML is self-contained while regular HTML does not have such constraint.</p>
+</blockquote>
+<p>What exactly do you mean?</p>
+<blockquote>
+<p>Certain browser version may impose size limit for data URIs.</p>
+</blockquote>
+<p>Apart from the ancient IE8’s 32KB limit, are you aware of such limitation in specific current browsers?</p>
+<blockquote>
+<p>data URIs are base64 encoded, which is not efficient.</p>
+</blockquote>
+<p>Afaict, Data URIs (base64) are used in MHTML as well, e.g. for images.</p>
+<blockquote>
+<p>It may be hard to try encapsulate iframe of iframe using data URIs.</p>
+</blockquote>
+<p>What exactly do you mean?</p>
+<blockquote>
+<p>In Chrome, MHTML is loaded in sandboxing mode and other constraints while loading regular HTML file does not.</p>
+</blockquote>
+<p>This could probably be solved (if needed in the first place) by using a special meta element inside HTML to inform browser that this specific HTML document should be viewed in sandboxing mode.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jianli</div>
+          <div class="creation_date">2017-10-07</div>
+          <div class="post_content">
+<p>The MHTML is a web page archive format used to combine resources together with HTML into a single file. All the resources needed to render this page should be contained in the MHTML file. If it is not found, it should not be loaded from cache or network.</p>
+<p>The binary content-transfer encoding can be used for each included resource. This is what we currently do for MHTML saving on Chrome on Android. We’re considering to also do this across all other platforms.</p>
+<p>If the original page contains multiple nested iframes, it will be a bit of work to try to construct all data URIs correctly. It is also a great pain if we want to debug what’s going on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">justsomeguy</div>
+          <div class="creation_date">2017-10-11</div>
+          <div class="post_content">
+<p>I would think you’d need to keep elements like <code>&lt;p hidden=""&gt;</code>, <code>input</code>, <code>object</code>, <code>video</code>, and <code>script</code>. Those elements can be used for sibling and <code>:empty</code> pseudo-class selector matching. Attributes such as <code>href</code>, <code>onclick</code>, <code>ping</code>, and <code>src</code> can likewise used for selector matching. Likewise, the absence of those attributes can trigger style changes.</p>
+<p>And while everything inside of <code>&lt;p hidden=""&gt;</code> can be safely discarded per the semantics described in the HTML spec, I can foresee people using hacks like pairing <code>&lt;html hidden=""&gt;</code> with <code>display: block</code>, <code>&lt;body&gt;&lt;object&gt;Hello, world!&lt;/object&gt;&lt;/body&gt;</code>, or <code>&lt;body&gt;&lt;a ping=""/&gt;</code> with <code>body &gt; a:not([ping]) ~ * { display: none; }</code> to prevent their page content being saved with this feature.</p>
+<p>Also, it’s sad there’s no audio or video support in the proposal. It’s nice to see some rare interest in MHTML though. I used to save pages with it when I still used Opera as a web browser.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Siemenskun</div>
+          <div class="creation_date">2017-12-22</div>
+          <div class="post_content">
+<p>Hello, I’m developer that uses MTHML format for my own purposes for years and I have something to say about the implementation for header Snapshot-Content-Location.
+I think you can just use regular Content-Location header in the heading of a multipart/related.</p>
+<p>Opera on Presto engine adds the header Conent-Location in the main MHTML header. Many years ago - greather than ten for sure - only IE and Opera could make MHTML files and that was the industry standart. So I think MHTML readers can handle Content-Location header in the main header.</p>
+<p>About <a href="https://tools.ietf.org/html/rfc2557#section-4.3" rel="nofollow noopener">https://tools.ietf.org/html/rfc2557#section-4.3</a></p>
+<blockquote>
+<p>If a Content-Location header field is used
+in the heading of a multipart/related, this Content-Location SHOULD
+apply to the whole aggregate, not to its root part.</p>
+</blockquote>
+<p>I think it can mean, for example, we can have Content-Location: <a href="http://example.com/page/subpage" rel="nofollow noopener">http://example.com/page/subpage</a>, but the root header can be <a href="http://example.com/SPAengine.html" rel="nofollow noopener">http://example.com/SPAengine.html</a> if we deal with some kind of Single-Page Application that use HTML5 History API. (Yes, I know that Blink doesn’t allow Javascript for MHTML pages, but other browsers do.)
+And some simple example: Content-Location in the MHTML header is <a href="http://example.com/article.html#paragraph5" rel="nofollow noopener">http://example.com/article.html#paragraph5</a> but the root header just is <a href="http://example.com/article.html" rel="nofollow noopener">http://example.com/article.html</a>.
+By the way, others browsers (I’ve checked IE 11, Opera 12) strips URI <span class="hashtag">#anchor</span> for root Content-Location and it seems logical (Opera strips it for the header in the top headers too and it’s not so logical), but Blink don’t do that.</p>
+<p>Sorry for my bad English.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

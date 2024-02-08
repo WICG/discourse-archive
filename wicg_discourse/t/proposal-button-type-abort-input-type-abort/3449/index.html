@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] button[type=&ldquo;abort&rdquo;]/input[type=&ldquo;abort&rdquo;]</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] button[type=&ldquo;abort&rdquo;]/input[type=&ldquo;abort&rdquo;]</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lcfvs</div>
+          <div class="creation_date">2019-03-24</div>
+          <div class="post_content">
+<p>Since the <code>fetch</code> requests are now abortables, via an <code>AbortController</code>, I’m self-asking about why the HTML doesn’t have the dedicated <code>input</code>/<code>button</code> type for that behavior, a few like the <code>[type="reset"]</code>.</p>
+<p>It can be used to unify the abortion process, between the <code>fetch</code> API, non-JS fetching or any future JS feature.</p>
+<p>Related to a <code>form</code>, it follows the current <code>input</code>/<code>button</code> spec, nested in it or targeted by its <code>form</code>attribute.</p>
+<p>Related to an <code>a</code> or another media requesting a resource, we should find a relevant attribute.</p>
+<p>Imho, the <code>AbortController</code> constructor should be a few touched too, to take the <code>input</code>/<code>button</code> to listen.</p>
+<p>What do you think about it, please?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2019-03-26</div>
+          <div class="post_content">
+<p>The button and input element’s are already fairly overloaded. Input more-so than button granted. I think the spec designers would rather not jump to modifying very old specs of the web without a very good reason. As it is, fetch can’t even be used without JS. So, modifying an element to provide a “non-js” way to abort a JS only API seems weird.</p>
+<p>I think this is a case best explained by simply isolating scope and needs to keep effort to a minimum amount. What is your use-case/need to have a dedicated element modification to allow for auto-aborting a request?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Lcfvs</div>
+          <div class="creation_date">2019-04-01</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@Garbee</span>,</p>
+<p>Sorry for the delay, I just published a new DOM tool, inspired on the native constructors, which it can illustrate the needs: <a href="https://github.com/Lcfvs/content-handler" rel="nofollow noopener">https://github.com/Lcfvs/content-handler</a></p>
+<p>The idea is to have a standard element to rely on it for request abortions and automatically detect it if any.</p>
+<p>Imho, even without JS, the abortion is useful, thinking to these points:</p>
+<ul>
+<li>to cancel a download, without ending to a blank page</li>
+<li>to have an UI element to do that, to don’t let the user’s attention getting away from the UI</li>
+<li>to have a standard way to the seamless apps, with JS or not</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2019-04-02</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="3449">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v3/letter/l/a4c791/40.png" width="20"/> Lcfvs:</div>
+<blockquote>
+<ul>
+<li>to cancel a download, without ending to a blank page</li>
+</ul>
+</blockquote>
+</aside>
+<p>A download of what exactly? Files don’t abort to a blank page. And last I used the stop load button in any browser UX, the page stayed as-is in memory.</p>
+<aside class="quote no-group" data-post="3" data-topic="3449">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v3/letter/l/a4c791/40.png" width="20"/> Lcfvs:</div>
+<blockquote>
+<ul>
+<li>to have an UI element to do that, to don’t let the user’s attention getting away from the UI</li>
+</ul>
+</blockquote>
+</aside>
+<p>We have <code>button type=button</code>, so if you need to abort something within your app, that’s available for wiring up. Not sure why you need a specific abort type with murky functionality based on context.</p>
+<aside class="quote no-group" data-post="3" data-topic="3449">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v3/letter/l/a4c791/40.png" width="20"/> Lcfvs:</div>
+<blockquote>
+<ul>
+<li>to have a standard way to the seamless apps, with JS or not</li>
+</ul>
+</blockquote>
+</aside>
+<p>So without JS what would this do that the browsers stop loading button doesn’t already do?</p>
+<hr/>
+<p>As you can probably tell, I’m highly opposed to stuffing more contexts into an already difficult to understand area. Especially when there doesn’t seem to be a core problem that need solving, it is pure developer convenience as far as I am understanding it.</p>
+<p>If it can be justified that <em>end users</em> need this kind of functionality to improve their experiences, then there is something to talk about. As is though, it’s a few extra lines of JS to cancel things, so if you’re doing that already it’s no big deal. Gzip will handle compressing it down just fine. And non-JS apps, well what are you aborting that isn’t done already by a browser with the stop button?</p>
+<p>Prove it benefits end users. Until then, I personally wouldn’t help push something like this.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

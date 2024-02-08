@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>HTML Server Relief: Password Input Attributes for Client-side Hashing</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">HTML Server Relief: Password Input Attributes for Client-side Hashing</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-04-02</div>
+          <div class="post_content">
+<p>This is something I’ve wanted for around a decade: a polyfillable, pure-HTML standard for making it so that <em>clients</em> compute a <em>hash</em> of the password before sending it to the server. This allows servers to offload resource-heavy key derivation algorithms (like PBKDF2, or scrypt) off to clients (who can then compare the strong derived key using a much more light-weight hash function).</p>
+<h2>Example</h2>
+<p>Ideally, it would work something like this:</p>
+<pre><code class="lang-auto">&lt;input type="username"&gt;
+&lt;input type="password" crypt="bcrypt"  work="cost:11" salt="username"&gt;
+&lt;noscript&gt;Your do not have JavaScript enabled; your login may be significantly delayed.&lt;/noscript&gt;
+</code></pre>
+<p>The “crypt” attribute names the algorithm that should be used by the client to hash the password on submission. The “work” attribute defines the work parameters for that function to be configured with. The “salt” attribute defines the ID of an element to derive the salt from. (This could maybe be expanded to allow for multiple fields to derive salts from.)</p>
+<p><em>(Edit: renamed “hash” to “crypt” to avoid resemblance to the unrelated “hash” property on HTMLAnchorElement.)</em></p>
+<h3>On salts</h3>
+<p>If a server wishes to use per-user salts, it should first prompt for a username, then send (or generate via AJAX) a second form with a hidden input containing the user’s salt. (Requests for non-existent users may either be responded to with an error, or with a fake salt, depending on whether or not the server wishes to disclose user existence.)</p>
+<p>Alternatively, clients may elect to use a fixed global salt (a “pepper”), or to eschew salts together, as salts are <a href="http://chargen.matasano.com/chargen/2015/3/26/enough-with-the-salts-updates-on-secure-password-schemes.html" rel="nofollow noopener">not as necessary as they once were</a>.</p>
+<h2>Polyfilling</h2>
+<p>A polyfilling library may check for WebCrypto implementation of an algorithm, and fall back to an (HTTPS loaded) script implementing any algorithm not supported by the client.</p>
+<p>Due to the way the DOM event bubbling model works, without a synchronous WebCrypto API, the submit event will need to be cancelled, then re-emitted after the hashing completes.</p>
+<h2>Legacy Support</h2>
+<p>In the event that a client which does not support Server Relief has scripting disabled (so the relief cannot be polyfilled), their plaintext login attempt, detectable by not matching the syntax of a valid password hash, may be placed into a limited server-side stable of hashing (where a fixed number of requests may be hashed at a time).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-04-02</div>
+          <div class="post_content">
+<p>Actually, this may be better as a separate input that is derived from another input (specified by ID rather than name):</p>
+<ul>
+<li>It clearly distinguishes between a hashed password and a non-hashed password</li>
+<li>It allows forms to not submit the password (saving space and potential leakage)</li>
+<li>It allows for chaining, for servers that wish to use a nonce
+<ul>
+<li>Doing this correctly requires saving a public key derived from the password, any existing standards for which I don’t really know of. It would also probably require a third attribute.</li>
+</ul>
+</li>
+</ul>
+<p>Perhaps better than “salt” would be an attribute defining the complete input string as an ES6-style template, like “#{salt}#{password}”. There could then be a second attribute for “message”, for algorithms that use a public key. (Alternately, the “value” attribute could be re-used as the content for the nonce, with an unchanged value being the sentinel of a failure.)</p>
+<p>Also, it seems like nonces could potentially be used in place of CSRF tokens for login.</p>
+<p>Alternate formulation example:</p>
+<pre><code class="lang-auto">&lt;form&gt;
+&lt;input type="hidden" id="nonce" value="2015-04-01T12:25"&gt;
+&lt;input type="hidden" id="pepper" value="abcdef123456"&gt;
+&lt;input type="text" name="username"&gt;&lt;label for="username"&gt;Username&lt;/label&gt;
+&lt;input type="password" name="plaintextpw" id="password"&gt;
+&lt;input type="hidden" name="validation" crypt="pbkdf2-ecdh" work="iterations:86000" basis="#{pepper}#{username}#{password}" message="#{nonce}"&gt;
+&lt;button type="submit"&gt;Log In&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-10</div>
+          <div class="post_content">
+<p>I just found out about the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/keygen" rel="nofollow noopener"><code>&lt;keygen&gt;</code> element</a>: it seems like this is 80% of the way toward what I’m looking for above (in terms of being an existing element that already has a defined form behavior regarding crypto inputs). Sticking a pin in that to revisit next time I come around to this spec (of course, right now I’m more in the “passwordless by default” headspace that makes this kind of auth mechanism largely unnecessary).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-07-10</div>
+          <div class="post_content">
+<p>Also relevant is the <a href="https://w3c.github.io/webappsec/specs/credentialmanagement/" rel="nofollow noopener">Credential Management API</a> and this issue: <a href="https://github.com/w3c/webappsec/issues/250" rel="nofollow noopener">https://github.com/w3c/webappsec/issues/250</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Anonymous2292900</div>
+          <div class="creation_date">2022-12-29</div>
+          <div class="post_content">
+<p>Hey! great proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3945_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">suns</div>
+          <div class="creation_date">2023-01-02</div>
+          <div class="post_content">
+<p><code>&lt;keygen&gt;</code> is just a form signature, as I understand a substitution for secure connection in the times where https was not required. Definitely not a same purpose.</p>
+<blockquote>
+<p>may be better as a separate input that is derived from another input</p>
+</blockquote>
+<p>Separate input would not exclude the submission of original <code>salt</code> field in the form which would defeat the whole purpose of the proposal. Instead, another proposal could be made to</p>
+<ul>
+<li>fill out the form and submit action points to another form filled with transfromed data. The chain of form submissions would give ability to mix various tokens and server-side generated data like CSRF token.</li>
+</ul>
+<blockquote>
+<p>Alternate formulation example</p>
+</blockquote>
+<p>Proposed method of silencing the password by omitting the <code>name</code> attribute and using <code>id</code> is not scalable as document could have multiple forms with fields of same name. Unique ID would be problematic.</p>
+<p>Perhaps you want to introduce the <code>omitsubmission</code> kind of attribute to omit unwanted fields in the form and keep <code>salt</code> reference by <code>name</code> attribute. Or imply if the input field used by <code>salt</code> would not be submitted?</p>
+<hr/>
+At the moment the `Declarative Web Application` concept and series of proposals are in baking. It would cover the given scenarios without JS enabled in a different more generic markup syntax. 
+LMN if want to participate.
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

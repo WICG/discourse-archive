@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Don&rsquo;t allow nested headings</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Don&rsquo;t allow nested headings</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ssollinger</div>
+          <div class="creation_date">2014-09-26</div>
+          <div class="post_content">
+<p>I propose to change the HTML spec for heading elements &lt;h1&gt;, &lt;h2&gt; etc. to no longer allow nested headings, i.e. heading tags nested inside other heading tags.</p>
+<p>Currently it is allowed to have nested headings, e.g.<br/>
+<code>&lt;h1&gt;Top level &lt;h2&gt;First nested level&lt;h2&gt;Second nested level&lt;/h2&gt;&lt;/h2&gt;&lt;/h1&gt;</code></p>
+<p><strong>Reason for this suggestion:</strong></p>
+<ul>
+<li>This doesn’t make sense from a semantic point of view</li>
+<li>I can not think of a single use case where headings should be nested inside each other</li>
+<li>Current implementation causes problems: The following page is well known for missing all the heading end tags which causes all sub headings to be nested inside each other, on some systems this even causes the browser to crash:
+<a href="http://www.sewingandembroiderywarehouse.com/embtrb.htm" rel="nofollow noopener" title="Embroidery Trouble Shooting Guide">Embroidery Trouble Shooting Guide</a>
+</li>
+</ul>
+<p><strong>Suggested change:</strong></p>
+<ul>
+<li>Change the spec to not allow nested headings. Open for suggestions what exactly is allowed inside headings, but I suggest to base it on &lt;p&gt; element with some additional elements allowed inside headings.</li>
+<li>Change browser implementation of headings. All heading opening tags should auto-close any heading that is already open</li>
+</ul>
+<p>So the following code</p>
+<pre><code>&lt;h1&gt;Top level &lt;h2&gt;sub heading&lt;/h2&gt;&lt;/h1&gt;
+</code></pre>
+<p>would show two parsing errors (missing &lt;/h1&gt; end tag before &lt;h2&gt; and orphaned &lt;/h1&gt; end tag after &lt;/h2&gt;) and would be treated as</p>
+<pre><code>&lt;h1&gt;Top level&lt;/h1&gt; 
+&lt;h2&gt;sub heading&lt;/h2&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/4_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">myakura</div>
+          <div class="creation_date">2014-09-27</div>
+          <div class="post_content">
+<p>It’s already defined so. The <a href="https://html.spec.whatwg.org/multipage/semantics.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">definition of heading elements</a> says the content model only allows phrasing content, which doesn’t have headings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1826_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sideshowbarker</div>
+          <div class="creation_date">2014-09-27</div>
+          <div class="post_content">
+<p>Hi <span class="mention">@ssollinger</span>. Along with what <span class="mention">@myakura</span> pointed out about the conformance rules, the other thing to keep in mind is that if somebody intentionally puts <code>&lt;h1&gt;Top level &lt;h2&gt;sub heading&lt;/h2&gt;&lt;/h1&gt;</code> into a document, they’re not going to end up with what a DOM that’s like they’d expect, because the HTML parsing algorithm causes it to go into the DOM as <code>&lt;h1&gt;Top level &lt;/h1&gt;&lt;h2&gt;sub heading&lt;/h2&gt;</code> anyway.</p>
+<p>You can confirm that using the DOM inspector in a browser or <a href="http://software.hixie.ch/utilities/js/live-dom-viewer/?%3C!DOCTYPE%20html%3E%0A%3Ch1%3ETop%20level%20%3Ch2%3Esub%20heading%3C/h2%3E%3C/h1%3E" rel="nofollow noopener">using Live DOM Viewer</a></p>
+<p>HTH</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

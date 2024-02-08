@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Custom CSS properties are so ugly with those leading dashes!</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Custom CSS properties are so ugly with those leading dashes!</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<p>For example:</p>
+<pre><code class="lang-auto">    &lt;style&gt;
+
+      /* Make all toolbar titles in this host green by default */
+      :host {
+        --my-toolbar-title-color: green;
+      }
+
+      /* Make only toolbars with the .warning class red */
+      .warning {
+        --my-toolbar-title-color: red;
+      }
+
+    &lt;/style&gt;
+</code></pre>
+<p>I think it just looks horrible. Why not just remove those?</p>
+<pre><code class="lang-auto">    &lt;style&gt;
+
+      /* Make all toolbar titles in this host green by default */
+      :host {
+        my-toolbar-title-color: green;
+      }
+
+      /* Make only toolbars with the .warning class red */
+      .warning {
+        my-toolbar-title-color: red;
+      }
+
+    &lt;/style&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<p>I spoke too soon. I see now that the <code>--</code> prefix is needed in order for the engine to know a <code>var</code> is defined, but it’s still an eye sore.</p>
+<p>What about something like</p>
+<pre><code class="lang-auto">    &lt;style&gt;
+      /* Make only toolbars with the .warning class red */
+      .warning {
+        var my-toolbar-title-color: red;
+      }
+    &lt;/style&gt;
+</code></pre>
+<p>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<p>Custom CSS properties already started with <code>var-</code> in earlier spec drafts. But then the syntax has been <a href="https://lists.w3.org/Archives/Public/www-style/2014Mar/0261.html">changed</a> to use the <code>--</code> prefix. AFAIK, one of purposes of this was to make custom properties somewhat more clear as a way for <strong>polyfilling</strong> and make the difference between static preprocessor variables and CSS variables (custom properties) <a href="https://lists.w3.org/Archives/Public/www-style/2014Mar/0407.html">more obvious</a>. It’s also in line with future custom things like Custom media queries that are planned to use the same <code>--</code> prefix.</p>
+<p>But actually, exact <em>prefix</em> is not a problem at all.</p>
+<p>The real problem with CSS custom properties as for polyfilling is that elements <strong>cannot be selected by custom property</strong> like <code>getElementsByStyleProperty('--foo')</code>. So to write a polyfill, we need to enumerate <strong>ALL</strong> elements in the document and check value of specific property for each of them one by one.</p>
+<p>Another problem with CSS custom properties is that they are <strong>inherited</strong>, and there is no way to determine whether specific property has been specified for specific element itself or for its ancestor. So when writing a polyfill, we are forced to ignore all descendants of elements that have the custom property though this wouldn’t necessarily be needed for the polyfilled thing itself.</p>
+<p>So for polyfilling, it’s currently easier just to use a JS-powered CSS parser as if there were no CSS variables at all.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<p>The exact syntax with its benefits and drawbacks has been discussed back in forth during the specification process and changed several times in the Editor’s Drafts. I for one argued in favor of non-prefixed names and even making default keywords like <code>red</code> overwritable.</p>
+<p>The double hyphen is an ugly but okayish compromise, but I’m not sure why it had to be a <em>pre</em>fix. It could as well be an infix (<code>my-toolbar--title-color</code>) or a suffix (<code>my-toolbar-title-color--</code>) or any of that at the author’s decision, and it could even have been repeatable (<code>my--toolbar--title--color</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2016-05-19</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="3" data-topic="1519">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Another problem with CSS custom properties is that they are <strong>inherited</strong>, and there is no way to determine whether specific property has been specified for specific element itself or for its ancestor. So when writing a polyfill, we are forced to ignore all descendants of elements that have the custom property though this wouldn’t necessarily be needed for the polyfilled thing itself.</p>
+</blockquote>
+</aside>
+<p>With <a href="https://drafts.css-houdini.org/css-properties-values-api/#example-1" rel="nofollow noopener">properties and values</a> you’ll be able to define if a custom property should inherit or not.</p>
+<p>(as a side note the <code>--</code> prefix can also be thought as a vendorless prefix, e.g. <code>-webkit-foo</code> is <code>--foo</code> ).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-20</div>
+          <div class="post_content">
+<p>Thanks, Ian. I am aware of that document, but it is unfortunately not even an official draft spec, instead it’s just “a collection of interesting ideas”™ that probably have not too big chances to become available as working features in the foreseeable future. And, actually, ability to select elements by CSS variables is more crucial as for polyfilling.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2016-05-20</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="6" data-topic="1519">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Thanks, Ian. I am aware of that document, but it is unfortunately not even an official draft spec, instead it’s just “a collection of interesting ideas”™ that probably have not too big chances to become available as working features in the foreseeable future. And, actually, ability to select elements by CSS variables is more crucial as for polyfilling.</p>
+</blockquote>
+</aside>
+<p><a href="https://drafts.css-houdini.org/css-properties-values-api/" rel="nofollow noopener">Properties and Values</a> should be a first public working draft within the next few days.</p>
+<p>The blink team are going to begin to implement parts of this spec in the next couple of months.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-20</div>
+          <div class="post_content">
+<p>Thanks, Ian. Nice to hear that (are you an insider?). Hopefully a JS method to select elements by custom property could then be added to that draft too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2016-05-21</div>
+          <div class="post_content">
+<p>Is <span class="mention">@iank</span> an insider, I believe he’s in the running for CSS Houdini man of the year.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-22</div>
+          <div class="post_content">
+<p>Fwiw, I have no idea what you mean.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-05-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="1519">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>ability to select elements by CSS variables</p>
+</blockquote>
+</aside>
+<p>Could you give a practical example this feature to show why/how it would be useful and in which situations?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-27</div>
+          <div class="post_content">
+<p>As I said, to write a polyfill to emulate a nonstandard CSS property, we currently need to enumerate ALL elements in the document and check value of the corresponding custom property [subject to be polyfilled] for each of them one by one.</p>
+<p>That’s like enumerating all elements in the document and check each of the elements for matching a selector one by one instead of just using <code>querySelectorAll()</code>, or checking all elements for having a specific class instead of just using <code>getElementsByClassName()</code>.</p>
+<p>Having a native function to select elements by CSS property, we could get a narrow set of just those elements that have the specific property, and this would be not just more usable, but probably <em>much faster</em> in terms of JS/DOM performance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-05-27</div>
+          <div class="post_content">
+<p>The Custom Properties spec handles that use-case <em>much</em> better, by actually hooking into the CSS style pipeline.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-27</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="13" data-topic="1519">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>The Custom Properties spec handles that use-case much better, by actually hooking into the CSS style pipeline.</p>
+</blockquote>
+</aside>
+<p>Tab, could you be more specific? (E.g. <em>what</em> “this”, better than <em>what exactly</em>, with a provided explicit <em>link</em> or code <em>example</em>.) Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-05-27</div>
+          <div class="post_content">
+<p>The thing you just said - using JS to polyfill a property using a custom property.  Check the Custom Properties houdini spec, that’s literally what that spec is about.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-28</div>
+          <div class="post_content">
+<blockquote>
+<p>Check the Custom Properties houdini spec</p>
+</blockquote>
+<p>Are you meaning the <a href="https://drafts.css-houdini.org/css-properties-values-api/" rel="nofollow noopener">CSS Properties and Values API</a> spec or some other spec named exactly as you said (<em>Custom Properties</em>)? (Hint: providing a link would rule out any ambiguity.)</p>
+<p>I have read the draft, it’s interesting and seems to solve the forced-inheritance issue, but I can’t figure out how it helps to <em>search elements by property</em>. (Fwiw, forced inheritance of CSS variables and inability to select elements by property are two <strong>separate</strong> unrelated issues with CSS variables in their current state as for polyfilling). Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/8_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">gregwhitworth</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>Ian works on a ton of the specs and is actively involved in implementing them. Was just giving him the props <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>Yes, the Houdini “CSS Properties &amp; Values” spec.</p>
+<p>All of the Houdini specs are real specs; the editors are just cheekily using the “DREAM” status in Bikeshed (the preprocessor that builds the specs) rather than “ED”. And we agreed at the recent Houdini f2f to take these all to Working Draft.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-01</div>
+          <div class="post_content">
+<p>Thanks. Still unclear about getting elements by (custom) style property.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-06-02</div>
+          <div class="post_content">
+<p>There is nothing for that, because so far there’s been no demonstrated use-case for it.  Anything along the lines of “I want to make a custom property do X on an element…” is solved by the Custom Properties spec already, in a better way.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

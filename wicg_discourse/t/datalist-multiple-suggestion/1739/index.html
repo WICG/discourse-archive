@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Datalist multiple suggestion</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Datalist multiple suggestion</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-10-05</div>
+          <div class="post_content">
+<p>In several places where a custom version of <code>&lt;datalist&gt;</code> is implemented, it is used to provide suggestions multiple times, namely each time users insert one of the listed values or when a specific “separator” character (comma, dot, space, hyphen, pipe) is typed. Just think about social network tag systems, or even in the “choose optional tags” box under new topics here on WICG.</p>
+<p>Unfortunately, the suitable form control for this kind of input is <code>type=text</code>, which cannot have a multiple value. This is correct, because text input accepts free-form text: a separator can be an input character as well and this cannot be foreseen.</p>
+<p>But I strongly believe that this should be modified. In particular, I would suggest two changes:</p>
+<ol>
+<li>The possibility to indicate a character used as separator for the control</li>
+<li>The possibility to show the suggestion list when said separator is typed.</li>
+</ol>
+<p>As I said, the first is necessary: this way programmers can specify what separator(s) to use, employing characters not used in suggestions. It should be discussed whether UAs are expected to send control data as a single field or as a collection (the same way a multiple <code>&lt;select&gt;</code> is expected to work).
+The second, which is the core of my proposal, can be achieved in two ways:</p>
+<ul>
+<li>Natively: the browser resets list filter and shows it when separator character is typed.</li>
+<li>As API: the form control could really use a method to show the list itself (and maybe filter it). This way authors could replicate initial datalist behavior on request (namely when the separator is typed).</li>
+</ul>
+<p>What do you think? Is it viable?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2016-10-05</div>
+          <div class="post_content">
+<p>I think an additional use case to consider is for textarea (multi-line input)–such as when entering people tags in this form (<span class="mention">@person</span>) or <span class="hashtag">#tag</span>. These aren’t necessarily “separator” characters but special “trigger” characters used to make the datalist re-appear. Interestingly, you get a different datalist for @ than for #.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-10-05</div>
+          <div class="post_content">
+<p>This could introduce a totally different yet extremely interesting scenario.</p>
+<p>A datalist could be designed by a specific “trigger character” like this:</p>
+<pre><code>&lt;input name="labels" list="tags hash" /&gt;
+&lt;datalist id="tags" char="@"&gt;
+  &lt;option value="foo" label="Foo McFoo" /&gt;
+  &lt;option value="bar" label="Bar Barrson" /&gt;
+&lt;/datalist&gt;
+&lt;datalist id="hash" char="#"&gt;
+  &lt;option value="int" label="Interest" /&gt;
+  &lt;option value="pas" label="Passion" /&gt;
+&lt;/datalist&gt;
+</code></pre>
+<p>Each datalist is labeled by a different character. Every time that character is typed in the associated control, the alternatives for that list are shown.
+Issues:</p>
+<ol>
+<li>Is it necessary to type that character even when the field is empty? If so, datalists lose some of their immediacy.</li>
+<li>It becomes really useful only when more than one datalist can be associated to the same form control, which in itself is not a bad idea (after all, ids can be separated by space).</li>
+</ol>
+<p>Just one note: unfortunately datalists cannot be associated to textareas as of today. Were that the case, everything would be much more natural - textarea definitely has its own separator: line feed. Every time user types newline, suggestions could appear again.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-10-05</div>
+          <div class="post_content">
+<p>EDIT: needless to say, the different suggestions can be implemented in the same datalist, just starting each value with the appropriate trigger character. As most UAs filter suggestion using the input already inserted by users, typing an @ will maintain only the suggestions starting with an @.</p>
+<pre><code class="lang-auto">&lt;input name="labels" list="tags" /&gt;
+&lt;datalist id="tags"&gt;
+  &lt;option value="@foo" label="Foo McFoo" /&gt;
+  &lt;option value="@bar" label="Bar Barrson" /&gt;
+  &lt;option value="#int" label="Interest" /&gt;
+  &lt;option value="#pas" label="Passion" /&gt;
+&lt;/datalist&gt;
+</code></pre>
+<p>In that sense, the simple “separator way” remains the most viable solution IMHO.</p>
+<p><span class="mention">@travisleithead</span> what would you prefer, datalists connected to textareas or a separator/trigger specified on the input element? Also, I don’t know how to gather attention on this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2016-10-18</div>
+          <div class="post_content">
+<p>I think even in the textarea case, a specified separator character would be useful, as assuming that newline is the separator character reduces the number of useful scenarios which I think could be equally applied to single-line input as well as multi-line input. I don’t know all the complexities around why datalist doesn’t work for textarea, but a polyfil for this idea might help draw some of them out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/853_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndySky21</div>
+          <div class="creation_date">2016-10-20</div>
+          <div class="post_content">
+<blockquote>
+<p>assuming that newline is the separator character reduces the number of useful scenarios which I think could be equally applied to single-line input as well as multi-line input</p>
+</blockquote>
+<p>I don’t actually understand how that is reduced, apart from the interface dimension, but as far as I know textareas can be scrolled. I thought about that because datalist input cannot contain a newline character - but perhaps this limitation is simply inherent to the fact that suggestions are meant for inline text input. So, should textarea suggestions allow newline?</p>
+<p>I doubt that the fact <code>&lt;datalist&gt;</code> cannot be associated to textareas has any technical complexity. I rather think it is due to the limited use cases datalist was conceived for.</p>
+<p>However, I’ll try and patch out something to test it.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

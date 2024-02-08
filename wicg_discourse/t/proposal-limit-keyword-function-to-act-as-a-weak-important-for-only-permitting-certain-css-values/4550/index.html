@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal !limit() keyword function to act as a &ldquo;weak !important&rdquo; for only permitting certain CSS values</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal !limit() keyword function to act as a &ldquo;weak !important&rdquo; for only permitting certain CSS values</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">paceaux</div>
+          <div class="creation_date">2020-06-11</div>
+          <div class="post_content">
+<p><code>!important</code> serves a legitimate purpose as an interrupt to the defined cascade. It’s useful for resolving “disputes” in the “contracts” between author, user, and user agent cascades.</p>
+<p>Unfortunately, this isn’t how it’s used. It’s often used to:</p>
+<ol>
+<li>Reactively breaking the cascade (i.e. I don’t know why my style isn’t working, so I’ll use <code>!important</code> )</li>
+<li>pro-actively preventing an override (i.e. utility classes)</li>
+</ol>
+<p>In neither case is the author resolving issues in the cascade; instead the author is trying to break it.</p>
+<p>I would like to see a keyword that fully addresses the fallout of both of these issues: <code>!limit()</code>. This would allow an author set a value of a property, and pro-actively prevent <em>certain overrides</em>, but not all.</p>
+<p>This would be the CSS:</p>
+<pre><code>.button {
+  display: inline-flex !limit(none); // "none" is a property that is allowed to override inline-flex
+}
+
+.ui--hidden {
+  display: none;  // this would work
+}
+
+.embiggen{
+  display: inline-block; // this won't work
+  padding: 2em;
+  font-size: 1.5em;
+}
+</code></pre>
+<p>We then get the following cases, as a result:</p>
+<p><strong>Case 1: Standard behavior</strong></p>
+<p>The button is now <code>display:none</code>.</p>
+<pre><code>&lt;button class="button ui--hidden"&gt;Click me&lt;/button&gt;
+</code></pre>
+<p><strong>Case 2: Preventing a reactive cascade override</strong></p>
+<p>Assuming the undesirable behavior is the element going from <code>display:none</code> to <code>display: inline-block</code>:</p>
+<pre><code>&lt;button class="button embiggen ui--hidden"&gt;You Can't See me&lt;/button&gt;
+</code></pre>
+<p>Previously, this would be fixed reactively</p>
+<pre><code>// increasing specificity
+.button.ui--hidden {
+    display: none;
+}
+
+// making sure nothing can ever override it
+  .button.ui--hidden {
+     display: none !important; 
+  }
+</code></pre>
+<p>Please note my use of the term “fix” here. In an ideal world, we might solve this issue by going to <code>.ui--hidden</code> and proactively setting <code>!important</code>. In the real world, we often find cases where there is much risk in modifying earlier, already-implemented styles.</p>
+<p><strong>Case 3: Preventing proactive overide</strong></p>
+<p>Assuming the prevented behavior is the element going from <code>display:none</code> to <code>display: inline-block</code>:</p>
+<pre><code>&lt;button class="button embiggen ui--hidden"&gt;You Can't See me&lt;/button&gt;
+</code></pre>
+<p>Previously, the original code would have to be written as</p>
+<pre><code>.ui--hidden {
+  display: none !important; 
+}
+</code></pre>
+<p>Which is fine so long as we never have a class like</p>
+<pre><code>.ui--unHidden {
+display: block !important;
+}
+</code></pre>
+<p>And since “never” is a four-letter-word with an off-by-1 error:</p>
+<pre><code>.button.ui--unHidden {
+display: inline-flex !important;
+}
+</code></pre>
+<p>So <code>!limit()</code> acts as good pro-active control with more mild distruption</p>
+<p><strong>Syntax, etc</strong></p>
+<p><code>!limit()</code> would behave like <code>!important</code>:</p>
+<ul>
+<li>It would sit inline with the property, before the semicolon</li>
+<li>it would follow the same precedence as !important</li>
+<li>it would also be overridable by <code>!important</code>
+</li>
+<li>it would accept functions as arguments effectively allowing ranges of overrideability</li>
+</ul>
+<p>e.g.:</p>
+<pre><code>.button {
+   height: 200px !limit(min(10vh, 20px)); // height could be overrided to 20px or 10vh
+   width: 200px !limit(clamp(100px, 200px, 400px)); // width can be overrided between 100px and 400px
+}
+
+   .modal {
+    z-index: 10 !limit(clamp(8, 10, 12)); // z-index can be overrided between 8 and 12
+  }</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Conditional tag for changing structure based on media queries</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Conditional tag for changing structure based on media queries</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-10-21</div>
+          <div class="post_content">
+<p>The problem: designing pages for multiple devices means using media queries in CSS to hide and show parts of the page based on device sizes, capabilities, or preferences. These hidden sections of markup still participate in the DOM, which can cause problems like duplicate IDs breaking form accessibility, or slowing down parsing when querying the DOM or changing styles.</p>
+<p>Proposed solution: Similar to the <code>&lt;noscript&gt;</code> tag, which removes its descendants from participating in the DOM (does not download assets and does not parse CSS or JavaScript included inline), a generalized tag could wrap sections of markup to be included only when a media query matches.</p>
+<p>Example: The following image and CSS assets would not be requested on devices with a viewport less than 1200px wide.</p>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;when media="(min-width: 1200px)"&gt;
+  &lt;img src="big_pic.png"&gt;
+  &lt;link href="large.css" rel="stylesheet"&gt;
+&lt;/when&gt;
+</code></pre>
+<p>A similar problem space is changing element attributes based on media queries. With the <code>&lt;picture&gt;</code> element, we can change an <code>img</code> element’s <code>src</code> attribute, but it would be helpful to extend this to other elements and other attributes.</p>
+<p>Examples:</p>
+<ol>
+<li>Change a video to play inline (instead of fullscreen) when on a small screen in portrait mode. Enable <code>autoplay</code> when user preferences indicate it’s ok.</li>
+</ol>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;when&gt;
+  &lt;source media="(max-width: 400px) and (orientation: portrait)" attr="playsinline"&gt;
+  &lt;source media="(prefers-reduced-motion: no-preference)" attr="autoplay"&gt;
+  &lt;video src="vid.mp4&gt;&lt;/video&gt;
+&lt;/when&gt;
+</code></pre>
+<ol start="2">
+<li>Change the input method for an image file upload based on device orientation.</li>
+</ol>
+<pre data-code-wrap="html"><code class="lang-nohighlight">&lt;when&gt;
+  &lt;source media="(orientation: portrait)" attr="capture" value="user" &gt;
+  &lt;source media="(orientation: landscape)" attr="capture" value="environment" &gt;
+  &lt;input type="file" accept="image/*" /&gt;
+&lt;/when&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2022-10-25</div>
+          <div class="post_content">
+<p>How would you handle situations where the media query results change dynamically (e.g. user resizes the window, turns their device, switches a preference, etc)? It seems this would require browsers to keep a copy of the original markup “for reference” somewhere and then dynamically swapping out DOM nodes?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-10-25</div>
+          <div class="post_content">
+<p>Yep, the browser would do the hard work and heavy lifting to make authoring easier.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2022-10-25</div>
+          <div class="post_content">
+<p>Where nodes need to be stable (e.g. when they have listeners attached) the attribute version would only change the attributes of the node and not substitute a whole new node.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

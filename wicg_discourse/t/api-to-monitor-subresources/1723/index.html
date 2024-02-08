@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>API to monitor subresources</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">API to monitor subresources</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>It would be useful if a browsing context could be notified of HTTP responses for sub-resources. What would be the security/privacy implications of this? It would be read-only and transitive (so top-level can see all descendent sub-resources)</p>
+<p>Has this already been discussed?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-09-25</div>
+          <div class="post_content">
+<p>Doesn’t a service worker solve this usecase?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>As <span class="mention">@jonathank</span> noted, a Service Worker should give you the ability to introspect outgoing requests, but it would be dangerous to give an origin read access to another origin’s data. Consider <code>evil.com</code> embedding <code>bank.com</code> to get your account number, for instance. Likewise, giving an origin the ability to see an embedded origin’s requests would be dangerous (again, <code>evil.com</code> shouldn’t be able to embed <code>bank.com</code> and see its request for <code>/[account-number]/balance</code>.</p>
+<p>What are the use cases you’re interested in addressing? Perhaps there’s a safer way to give you what you’re looking for?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>I was thinking of a a way for a site to show the user all the actual descendant embeddees and whether they support DNT. Given the url one could look up the /.well-known/dnt TSR with an XHR. It would also be nice to check the value of the DNT request header, and  the Tk response. It looks like looking at response headers would not be allowed cross-origin in a Service Worker (for good reasons as you say). Would it be possible to just allow access to the Tk header?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-09-26</div>
+          <div class="post_content">
+<p>Sounds a little like the Embedded enforcement <a href="https://w3c.github.io/webappsec-csp/embedded/" rel="nofollow noopener">https://w3c.github.io/webappsec-csp/embedded/</a> reqirement where the parent site can enforce a CSP on the sub resources; which if they choose to ignore are blocked by the browser.</p>
+<p>I’m not convinced DNT capabilities should ever belong in CSP however that approach could be a direction.</p>
+<p>The other direction is exposing an API on the frame itself of it’s sub-resources similar to the <a href="https://www.w3.org/TR/tracking-dnt/#h-rep.status-object">status object</a>. As the site would have to opt in to exposing this, it seems safe enough. This however wouldn’t give the ability to restrict loading, just warn the user of it.</p>
+<p>Given the increasing complexity of the tracking headers I can’t see an easily enforcable policy like CSP has.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>An API would be good, there is a TSR “config” property which goes part of the way, better would be a URI that would force an opt-out, or execute “clear site data”… Embedded enforcement is also good. The DNT signal would give “good actor” embedees a chance to self-regulate , Blocking them via CSP or FP would be the fall back for those that were unknown or who ignored DNT</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>I wonder if starting with the ability to ‘query’ for a documents TSR configs would be enough here. Where the URL of the subresources wouldn’t be accessible to the parent frame just the contents of it’s tracking record.</p>
+<pre><code class="lang-auto">for (let track of iframe.getTrackingStatusRecords()) {
+  if (track == null || track.tsv == "T") {
+    throw 'Tracking or no policy detected';
+  }
+}
+</code></pre>
+<p>This would be enough to build a block list over time and libraries etc. I’m not sure if I can see a way through using the blocking header based on the variety of responses of the TSV etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>I agree that would be great to have. I have used an SR (after your suggestion) and I can get the foreign Urls, so I should be able to get the TSRs. That will mean the TSR will have to support CORS preflights, yes? It would be fantastic to have this built into browsers.
+I agree the TSV is mostly redundant, the only response that is useful is Tk: C which can be used to declare user consent when the DNT API is not supported.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>s/SR/SW/ (SW means Service Worker)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>Service workers will only load the resources loaded by yourself not redirects and subresources within them which I don’t think gives you the full picture you want.
+Yeah loading the TSRs would require CORS on those resources.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-27</div>
+          <div class="post_content">
+<p>Yes, so a new API is needed. Your example was on frame, should it just be on navigator because it covers all the tributory origins? If its new it could return the parsed TSRs if any, if there is a Tk header what is the TSV, and a boolean to say if cookies are placed (maybe only needs to check for high-entropy persistent ones)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>Mike, it would be helpful if you would spell out your proposal in a little more detail. It’s not clear to me what data you actually need, nor what the core use cases are.</p>
+<p>Generally speaking, I’m reluctant to endorse APIs that pull data from one origin and give it to another without some sort of opt-in (CORS or otherwise). Perhaps your use case justifies a narrow SOP bypass, but it’s not clear to me that it does. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>Hi Mike. The core use case is where sites want to inform users of privacy issues arising from embedded third-parties. As you know it is a legal requirement in Europe to get informed consent for personal data collection/processing and the SOP stops sites getting all the current information to do that. Persisted data from a previous scan is often insufficient because the current load of embedees a user gets is dynamic (due to programmatic insertion). It would also be useful for sites to use javascript to report on embeddees. I know they can block them with CSP and use FP to control that in iframes but I am looking for a “softer” sanction where the user can be informed and DNT used to signal consent downstream. I think this would complement CSP/FP and encourage its use later on, i.e. if a subresource refuses to respect the consent signal then a site can choose to remove them from a CSP directive.
+I know I was pushing it with getting a persistent cookie boolean, but getting whether subresource domains have valid TSRs (and a referencve to the parsed objects) would be enough. It would have to be all descendant subresources so Service Workers cannot do it (also the TSR resources would have to support CORS preflights)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>If you simply want to “inform users of privacy issues”, then would a boolean be enough? <code>window.doesAnySubresourceNotHaveTheHeaderYouWant()</code>?</p>
+<p>If you want much more granularity than that (e.g. resource X has the header, resource Y doesn’t), then it’s not clear to me that you can get the data without also revealing resource URLs, which is dangerous (as it would reveal redirect endpoints, interesting data in GET parameters, etc).</p>
+<p>You suggest that you’re looking for a “softer” approach than blocking, but it’s not clear to me how we can give that to you in a reasonable way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>It would only need to return a list of domains, no urls or headers. The onlly thing that matters is if a resource has the TSR at the {domain}/.well-known/dnt location
+I imagine the API returning an an array of objects [{domain:domain, tsr: tsr }] where tsr is null if it does not exist, otherwise the parsed TSR. domain is the host domain name.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-29</div>
+          <div class="post_content">
+<p>A notify pattern might be better, you get an event posted when a new domain arrives (this is common on many publishers sites)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-09-30</div>
+          <div class="post_content">
+<p>Yeah I didn’t make it clear from my API I suggested, as <span class="mention">@mikewest</span> mentions SOP bypasses should be clearly defined and opt in.</p>
+<p>However providing the domain or URL would be a bypass further than ones currently available and proving just as TSV header isn’t really a clear opt in to revealing domains/URLs.</p>
+<p>An observer to a bool or just the TSV values would be far more likely to be adopted.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-30</div>
+          <div class="post_content">
+<p>What if there was a new CSP directive to block subresources that did not have a TSR? This would be opt-in from the first-party site (it is already up to it whether subresources are there or not). The new API would then only need to supply the urls of those with TSRs.</p>
+<p>I think the TSR (Tracking Status Resource) <a href="https://www.w3.org/TR/tracking-dnt/#status-resource">https://www.w3.org/TR/tracking-dnt/#status-resource</a> is a better way to supply transparency  than the (single character) TSV</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2016-09-30</div>
+          <div class="post_content">
+<aside class="quote" data-post="18" data-topic="1723">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/incloud/40/696_1.png" width="20"/> incloud:</div>
+<blockquote>
+<p>What if there was a new CSP directive to block subresources that did not have a TSR? This would be opt-in from the first-party site (it is already up to it whether subresources are there or not). The new API would then only need to supply the urls of those with TSRs.</p>
+</blockquote>
+</aside>
+<p>The risk is to the third party being fully exposed to the first party, for example <a href="http://bank.com" rel="nofollow noopener">bank.com</a>’s urls shouldn’t be visible to <a href="http://evil.com" rel="nofollow noopener">evil.com</a> when framed.</p>
+<aside class="quote" data-post="18" data-topic="1723">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/incloud/40/696_1.png" width="20"/> incloud:</div>
+<blockquote>
+<p>I think the TSR (Tracking Status Resource) <a href="https://www.w3.org/TR/tracking-dnt/#status-resource">https://www.w3.org/TR/tracking-dnt/#status-resource</a> is a better way to supply transparency  than the (single character) TSV</p>
+</blockquote>
+</aside>
+<p>Sure but the broader you make the bypass the bigger the exposure to potential security risks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/696_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">incloud</div>
+          <div class="creation_date">2016-09-30</div>
+          <div class="post_content">
+<p>OK there needs to be an opt-out from subresources like <a href="http://bank.com" rel="nofollow noopener">bank.com</a> having their urls exposed, but there should be no reason not to see their TSRs which are designed for visibility. How could the subresource opt-out, would that be a new header, or a new CSP directive?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

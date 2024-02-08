@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Built-in E2E encryption into web browsers</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Built-in E2E encryption into web browsers</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3896_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Minigugus</div>
+          <div class="creation_date">2022-05-27</div>
+          <div class="post_content">
+<aside class="onebox githubissue" data-onebox-src="https://github.com/privacycg/proposals/issues/31">
+<header class="source">
+<a href="https://github.com/privacycg/proposals/issues/31" rel="noopener nofollow ugc" target="_blank">github.com/privacycg/proposals</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/privacycg/proposals/issues/31" rel="noopener nofollow ugc" target="_blank">Privacy by design with Offline-only Storage</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2022-05-26" data-format="ll" data-time="12:31:10" data-timezone="UTC">12:31PM - 26 May 22 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/Minigugus" rel="noopener nofollow ugc" target="_blank">
+<img alt="Minigugus" class="onebox-avatar-inline" height="20" src="https://avatars.githubusercontent.com/u/43109623?v=4" width="20"/>
+          Minigugus
+        </a>
+</div>
+</div>
+<div class="labels">
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-body-container"># Offline-only storage
+
+&gt; TLDR Add built-in end-to-end encryption support into<span class="show-more-container"><a class="show-more" href="" rel="noopener">…</a></span><span class="excerpt hidden"> web browsers, and prevent first-party from leaking data by denying network access once enabled. Also, allow users to choose where their encrypted data should be stored (the web site publisher won't be able to read data anyway, because of E2E encryption)
+
+Here is a summarized description of traditional architecture for web apps:
+
+```mermaid
+flowchart LR;
+  subgraph P ["Back-end (Publisher's servers)"]
+    SPB("Web app");
+  end
+
+  subgraph C ["Front-end (Consumer device)"]
+    SC(User);
+    subgraph BB ["Web browser"]
+      SPF("Web app");
+      B("Storage API");
+    end
+  end
+
+  style BB fill:darkblue,stroke-width:0px;
+
+  SC--&gt;|Request/Update|SPF;
+  SPF--&gt;|Respond/Inform|SC;
+  SPF-.-&gt;|Request/Update|SPB;
+  SPB---&gt;|Front-end code|SPF;
+  SPB-.-&gt;|Respond/Inform|SPF;
+  SPF--&gt;|Process|SPF;
+  SPB-.-&gt;|Process|SPB;
+  SPF--&gt;|"Write"|B;
+  B--&gt;|"Read"|SPF;
+```
+
+This architecture works great, except for privacy: the web app publisher owns users data (or at least this architecture
+requires the web app publisher to have full access to users data, in order for the web app to work properly). This is an
+issue, for users, but also for the web app publisher:
+
+* Costs increase along with the number of users
+* Managing user data mean additional development, maintenance and storage costs (authentication needed, requiring a
+  database for users account, and so on...)
+* Users pay the price for weak server-side security (e.g. database leaks)
+
+Actually, with this architecture, the web app publisher doesn't really have the choice to own user data. The modern web
+offers solutions to theses issues (e.g. PWAs), but that's not enough for web apps in production that could leverage
+browser storage as main storage provider (e.g. single player games, IDEs, authenticators/passwords managers apps):
+
+* The security/privacy risk is still present: compromised front-end code can still intercept user data (even with E2E
+  encrypted apps: listening to DOM changes is enough)
+* Browser storage seams still considered more like a cookie container than a reliable application storage:
+  * Users may accidentally and permanently lose their data if they clear their cookies in bulk for instance
+  * No data mobility/backup: each browser instance has its own storage state, saved locally. Authentication is then
+    the only way for users to access their data on multiple device.
+
+Theses are true blockers for many web apps that could work entirely without a back-end. A good example of such apps are
+single-player games, or even authenticator/passwords managers apps: web app's publisher must not be able to access
+highly sensitive user data, and once loaded, the app doesn't need a server to provide credentials (OTP for instance), then
+the best would be to only store user data client-side only, but that's risky: the browser may not encrypt browser's
+storage, and even worse, the user might accidentally clean application storage permanently, which is extremely dangerous
+for OTP. As a result, authenticator/passwords managers apps can't be built as web apps, or at least required E2E
+encryption + authentication, which is costly for the publisher, and don't prevent all security risks (on compromised
+update of the front-end code could still leak sensitive user data). As explained below, the solution proposed here try
+to address these issues with a small architecture change for web apps that opt-in.
+
+## Proposed solution: External storage provider + Fenced frames
+
+Offer to web apps a way for storing all data client-side rather than server-side, but with the trade-off of loosing
+network access (to prevent data leaks):
+
+```mermaid
+flowchart RL;
+  subgraph C ["Front-end (Consumer device)"]
+    SC(User);
+    subgraph BB ["Web browser"]
+      B("Storage API");
+      SPF("Web app");
+    end
+  end
+
+  subgraph S ["Storage provider environment"]
+    SSP("Storage provider");
+  end
+
+  subgraph P ["Back-end (Publisher's servers)"]
+    SPB("Web app");
+  end
+
+  style BB fill:darkblue,stroke-width:0px;
+  style SSP fill:green,stroke-width:0px;
+
+  SC--&gt;|Request/Update|SPF;
+  SPF--&gt;|Respond/Inform|SC;
+  SPF--&gt;|"Write"|B;
+  B--&gt;|"Read"|SPF;
+  B==&gt;|"Persist"|SSP;
+  SSP==&gt;|"Retrieve"|B;
+  SPB---&gt;|Front-end code|SPF;
+  SPB-.-&gt;|Inform|SPF;
+  SPF--&gt;|Process|SPF;
+  SPF-.-&gt;|Request/Update|SPB;
+
+  linkStyle 4 stroke:green,stroke-width:4px;
+  linkStyle 5 stroke:green,stroke-width:4px;
+  linkStyle 9 stroke:red,stroke-width:4px;
+```
+
+As shown above, the proposed solution consist of 2 parts:
+
+* (in :green_circle:) Introduce an external storage provider, that the browser use to synchronize application data with.
+  The external part is important: it let the user choose where their data should be stored: on disk storage (probably
+  the default), cloud-based storage (using an account, for multi-device synchronization), or anything else the community
+  can provide (let web extensions endorse the role of storage provider for instance). Also, for privacy reasons,
+  browsers should encrypt user data before passing them to the storage provider, so that providers don't have access to
+  what's stored, not even web apps origins (i.e. no need for the user to trust the storage provider; data can even be
+  stored publicly (e.g. IPFS could work)). *Follow points 2.8 and 2.11 of the [W3C TAG Ethical Web Principles](#related)
+  .*
+* (in :red_circle:) Disable communication with first- and third-parties (like [Fenced frames](#25) but on the top level
+  frame too for instance). This is the final peace to add Privacy by design to all compatible web apps: this change
+  ensure that even the web app publisher won't be able to access user data. Web app can still opt-out at anytime, but
+  will lose access to what they stored then (browsers won't delete data thought, they'll just stay in the storage
+  provider). *Follow points 2.5 and 2.8 of the [W3C TAG Ethical Web Principles](#related).*
+
+As a result, web apps using the offline-only storage will always respect user privacy. Browsers should then inform the
+user about that positive point, so that web apps get "rewarded" with happier users (much like with the green lock when
+websites preferred HTTPS over HTTP). That way, the web should tend to become safer at the same time.
+
+For quite obvious reasons, the proposed solution have to be opt-in for web apps providers, or it would break all the
+web. The "how" is still to be discussed thought.
+
+### Pros
+
+* Privacy
+  * Users now owns their data on compatible websites. Organizations could store their members' data on premise.
+  * Users only have to trust their browsers (no more the web app publisher (no data access), or the storage provider (
+    encrypted data, no even possible to infer what origin the data is coming from)): since browsers are already
+    trusted for their sandboxing capabilities, and that most implementation are open source, it seems better that
+    way (only having to trust the browser)
+* Security
+  * Fix a whole class of attacks: even the web app owner wouldn't be able to access user data! The only weak point
+    left is the browser itself, but they proved to be very fast to deliver security fixes, often faster than web apps
+    providers
+  * :fire: Fix another class of attacks: since even web app publishers don't have access to user data, there is
+    nothing to leak! Moreover, since each user store its own data, it becomes impossible to leak millions of users at
+    once (attackers would have to infect devices of each user). Finally, since storage providers only see encrypted
+    data, even storage providers leaks are not an issue
+* Freedom
+  * Web app publishers are no more charged with user data storage, related code maintenance and legislation: it
+    becomes possible for anyone to build a web app that's used by millions of users at no costs other than these
+    related to web app's development (especially with [SXGs](https://web.dev/signed-exchanges/)). This point can
+    really benefit to independent developers and small businesses, that generally can't afford good security measures
+    for user data protection.
+* Experience
+  * All browsers features remain available
+  * Users gain more control over web apps they use: they could select which "application profile" to recover, on a
+    per-origin basis
+  * Authentication is often no more required, since web apps no more have to deal with user data management, resulting
+    in improved user experience
+  * Developers experience is improved too: less boilerplate code to maintain (authentication, communication with
+    back-end code for user data retrieval)
+  * Many browsers' features require user interaction (e.g. camera/mic, geo-location, reading filesystem, etc.),
+    primarily because of the sensitivity of data that to the web app could leak, potentially to any server on the
+    internet. With communication disallowed, such risk no more exists, then maybe some features access could be
+    relaxed, or at least the user could choose which feature to enable by default on web apps supporting the solution
+    described here. Also, this new architecture give access to new potential features, e.g. allow reading third-party
+    and/or unpartitioned storage
+* Analytics/Advertising
+  * Advertising is still possible, especially with upcoming proposals like TURTLE DOVE
+  * Analytics are still possible, but only the user would be able to see them (and if web apps providers really need
+    analytics, maybe some proposals could be requested too I guess)
+* Compatibility
+  * Communication with external storage providers could be polyfilled with web extensions, so that web apps relying on
+    offline-only storage could still work on older browsers, without the privacy guaranties thought, but it's up to
+    the user to acknowledge the risks or not.
+* Web's future
+  * Whilst offline-only storage restrict web apps capabilities, it gives new privacy-first evolution perspectives for
+    future proposals (e.g. privacy-respectful multi-users communication, offline cross-origin storage access, ...)
+  * The web is built around decentralization, an aspect that offline-only storage contribute to
+* Environment
+  * No network communication mean reduced environmental footprint
+  * Users can choose where their data are stored, so they can reduce their environmental footprint by selecting a
+    greener storage provider (avoiding cloud-based one for instance)
+
+### Cons
+
+* Security
+  * A new threat model emerge, where web apps may leak data via QR codes, file system access, and so on. These threats
+    already exists, but they risk to become more intrusive than before. Anyway, web apps already get flagged as
+    malicious when they try to harm users so mitigation already available.
+* Analytics
+  * Web app publishers may not like not being able to get analytics, especially since they won't be able to detect
+    cases where the app breaks because of outdated user data. However, Service Workers' cache have a similar issue
+    that developers seams to handle quite well globally, so it's more a web app design issue. Also, nothing prevent
+    the web app publisher to stay on the traditional model, that's the trade-off to pay to enjoy the architecture
+    proposed here.
+* Adoption (by publishers)
+  * Not all web apps can be converted to this architecture (e.g. banking apps, multi-players games), but future
+    proposals may fix that, still in a privacy by design manner. Anyway, at least web apps who can, could.
+  * All the web is built around web servers, then a lot of tools become useless. However, as explained before, not all
+    web apps are compatible, and servers to servers, semantic web, and so on still need these tools
+  * Developers are not used to design web apps without a web server accessible, it may take some time for the
+    environment to adapt. Yet, it's not impossible as PWAs are already asked to work at least partially offline. Also,
+    incoming communications are still allowed, so real-time user experience might still be possible (
+    see [Implementation details](#implementation-details) below for more details)
+
+## Implementation details
+
+While this document is entitled "Offline-only", not all requests are expected to be blocked: actually, here, the meaning
+of "offline-only" is more "side-effect free", i.e. that can't leak user data content. For instance, requests resulting
+of a user navigation are side effect free, because the server can't infer anything about the user data content (assuming
+the URL wasn't generated using user data - the anchor (`&lt;a&gt;`) case is still to be discussed thought). On the other side,
+it's not possible for the web browser to know which `fetch('http(s)://...')` requests are side effect free, so they
+should be blocked. JS-triggered requests may still be allowed on some cases thought, for instance with prefetched SXG,
+but it's still to be discussed. Furthermore, note that readonly communication is still allowed while having user data
+access (e.g. via `postMessage` (with SharedArrayBuffer disallowed), or reading Unpartitionned Storage).
+
+Depending on the feasibility, it might be possible to allow web apps to work in both *trusted* (user data access,
+communication restrictions) and *untrusted* (no user data access, no communication restriction) modes, at the same time:
+for instance, the service worker might be running in an *untrusted* context and the main page in a *trusted* one. The
+service worker would be able to send messages via `postMessage` to the main page when a push notification is received
+for instance.
+
+Concerning how a web app request *trusted* mode, multiple solutions are available for discussion:
+
+* Via a HTTP response header
+  * \+ simple, consistent with CSP
+  * \+ (probably) simpler to implement
+  * \- limited, no dynamic loading possible
+* Via a one-way switch API (e.g. `navigator.offlineStorage.enable()`):
+  * \+ simple, powerful, consistent with Service Workers
+  * \+ supports dynamic loading (do fetch requests, then call `enable()`)
+  * \+ supports `location.reload()` to leave the *trusted* context without leak
+  * \+ supports live updates (e.g. spawn a web worker that manage a web socket connection to feed the main page
+    via `postMessage()`)
+  * \- (probably) harder to implement (active connections have to be closed, SharedArrayBuffers access invalidated)
+* (other solutions to discuss)
+
+Offline-only storage could work in private browsing, since no user data would leave the browser anyway.
+
+Other points to discuss:
+
+* Same origin tabs communication
+  * Does *trusted* mode apply to all tabs of the same origin, or per tab?
+    * "All tabs" seems to add complexity to web apps' developers, and maybe to browsers' implementations too
+  * Where to place the Service Worker?
+    * Could be useful to have the worker intercepting requests in *trusted* mode, but what to do if others tabs are
+      in *untrusted* mode? 1 Service Worker per mode, or only one in *untrusted* for simplicity?
+  * Allow communication between same origin tabs in *trusted* mode?
+* Allow communication between cross-origin tabs in *trusted* mode?
+  * Could be useful for some apps (e.g. analytics apps) but could interfere with existing browser security measures
+* New storage API or current storage (e.g. Local Storage, Indexed DB, ...) synchronization?
+* Multi-devices synchronization (sharing the same storage provider for instance)?
+  * Can be handled by good design decision if a new storage API is preferred
+  * Even without real-time synchronization, conflicts would happen anyway, so it's still a point to discuss
+* Web apps can still manipulate the user to leak their data (e.g. with a QR code), is it an issue?
+  * I guess no: actually, it really depends on whether the first-party care about users' privacy or not, which seams
+    to be often the case as of today. Then, at least at the beginning, trusting web apps might be enough (not all
+    apps' data are critical), as long as we keep an eye on how the web evolves.
+
+## Conclusion
+
+The suggested feature is ambitious, there are some implementation challenges to overcome, yet implications for security,
+privacy and web's future are worth a look. Not all web apps can use the proposed storage, but at least some could,
+empowering users by letting them deal with their data as they which. Anyway, I hope this document could contribute to
+W3C privacy goals for the web.
+
+## Related
+
+* [TURTLEDOVE](https://github.com/WICG/turtledove): same idea (let the browser own application state access) but for
+  advertising only and without DOM access
+* Fenced Frames: mostly how communication restrictions should apply
+* #28: original idea, but not attractive enough (was too restrictive on implementation details and did not solve the
+  data mobility issue)
+* [W3C Privacy Principles](https://w3ctag.github.io/privacy-principles): W3C guidelines about privacy on the web.
+  Considered related as I think the design proposed here fit well (
+  especially [High-Level Threats](https://w3ctag.github.io/privacy-principles/#threats), since these threats no more
+  apply when parties can't access user data)
+* [W3C TAG Ethical Web Principles](https://www.w3.org/2001/tag/doc/ethical-web-principles-20211215#privacy)
+* [Trusted Execution Environments](https://en.wikipedia.org/wiki/Trusted_execution_environment): conceptually, offline-only storage is a kind of trusted execution environment, but without hardware required. The goal is to allow web apps that want to to operate inside this kind of environment, and to "reward" them for doing so.
+* [Chrome Privacy Sandbox](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox/): I guess could be a good starting point for testing the viability of the feature described here
+
+EDIT 2021/05/27: realized it's a form of E2E encryption (simpler to describe)</span></p>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>TLDR Add built-in end-to-end encryption support into web browsers, and prevent first-party from leaking data by denying network access once enabled. Also, allow users to choose where their encrypted data should be stored (the web site publisher won’t be able to read data anyway, because of E2E encryption)</p>
+<p>The idea is to offer a way for web apps to run in a kind of Trusted Execution Environment (without the hardware requirement), so that user data never leaves browser, and add synchronization mechanisms so that multi-device still work (see <a class="inline-onebox" href="https://en.wikipedia.org/wiki/Trusted_execution_environment" rel="noopener nofollow ugc">Trusted execution environment - Wikipedia</a> for more about TEE)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3432_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hamblingreg52</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p>Your idea is pretty great. Genius <img alt=":heart_eyes:" class="emoji" height="20" loading="lazy" src="//discourse.wicg.io/images/emoji/twitter/heart_eyes.png?v=12" title=":heart_eyes:" width="20"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p>wowwwwwwwwww my god! Dude! great idea!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pauwels</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p>Dropping a link to the post that generated this, which includes details on an implementation of something like this: <a class="inline-onebox" href="https://discourse.wicg.io/t/building-websites-that-cannot-read-exfiltrate-or-store-the-data-they-operate-on/5729">Building websites that cannot read, exfiltrate, or store the data they operate on</a></p>
+<p>I think there’s a greater discussion to be had on storage models and where data should physically live, along with how that data can then be leveraged by tools that display it in a useful way. At the beginning of the web, the browser was a dumb device that received HTML and remained content with that. Logically, all the storing, processing, and analyzing became server-work. It’s time we reconsider where some of that work should reside in order to limit who can see what data, while still providing a valuable service.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-28</div>
+          <div class="post_content">
+<p><span class="mention">@pauwels</span> I wrote something here - <a class="inline-onebox" href="https://discourse.wicg.io/t/idea-decentralized-and-distributed-network-of-static-content-html-css-and-js/5869/2">[Idea] Decentralized and distributed network of static content - html, css and js - #2 by raphaellouis</a> - “cdn_p2p” - The goal is to load pages faster through a Content Delivery Network with Peer to Peer  -  in theory  - all people receive and send content to people close to them anonymously, privately</p>
+<ul>
+<li>for companies that still think web 3.0 is bad initially, cdn-p2p can be a good solution as companies want their websites/platforms to be faster</li>
+<li>with cdn-p2p companies could have content faster with p2p</li>
+<li>in this cdn-p2p network it is important to have E2EE</li>
+<li>the big advantage of a cdn-p2p network for companies is that it reduces bandwidth consumption</li>
+<li>system efficiency increases with the number of concurrent users</li>
+<li>Natural scalability at peak demand</li>
+<li>Improved quality of experience for the end user (better video quality, less buffer pauses)</li>
+</ul>
+<h5>
+<a class="anchor" href="#reference-1" name="reference-1"></a>Reference</h5>
+<ul>
+<li><a class="inline-onebox" href="https://www.w3.org/wiki/Networks/P2P_CDN">Networks/P2P CDN - W3C Wiki</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2022-05-29</div>
+          <div class="post_content">
+<p>This is a great idea! I took a pretty quick glance at the proposal so sorry if I missed this. But if browsers were to implement this, wouldn’t it technically be possible for them to intercept data before encryption happens?</p>
+<p>After all, this seems to move the responsibility of data encryption from web publishers to browser vendors. But many browsers don’t open source their code. How could we guarantee that pre-encrypted data isn’t being manipulated or stored somewhere else before encryption happens?</p>
+<p>Thanks again for drafting this. <img alt=":blue_heart:" class="emoji" height="20" loading="lazy" src="//discourse.wicg.io/images/emoji/twitter/blue_heart.png?v=12" title=":blue_heart:" width="20"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3896_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Minigugus</div>
+          <div class="creation_date">2022-05-30</div>
+          <div class="post_content">
+<blockquote>
+<p>wouldn’t it technically be possible for them to intercept data before encryption happens?</p>
+</blockquote>
+<p>Yes it is, but only by the web browser (actually, it should be the only part allowed to see data in clear while having network access)</p>
+<blockquote>
+<p>How could we guarantee that pre-encrypted data isn’t being manipulated or stored somewhere else before encryption happens?</p>
+</blockquote>
+<p>I guess the best way solution is to let the public opinion decide what we want, thanks to competition between browsers vendors (users are expected to prefer privacy, so, in the long term, privacy might become the default). I agree this is risky, but I don’t think the spec could do more, as it’s more a political issue (users don’t really have the choose to trust their browsers/device (web browser will always be able to intercept E2E encrypting happening in JavaScript anyway), but they can choose which one to trust). Actually, the goal of the proposed solution is not exactly to solve all privacy issues, but at least to the users decide what they want, empowering them and W3V at the same time.</p>
+<blockquote>
+<p>Thanks again for drafting this.</p>
+</blockquote>
+<p>This draft is nothing without your support, thanks a lot <img alt=":heart:" class="emoji" height="20" loading="lazy" src="//discourse.wicg.io/images/emoji/twitter/heart.png?v=12" title=":heart:" width="20"/> <img alt=":+1:" class="emoji" height="20" loading="lazy" src="//discourse.wicg.io/images/emoji/twitter/+1.png?v=12" title=":+1:" width="20"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-06-07</div>
+          <div class="post_content">
+<p><span class="mention">@Minigugus</span> <span class="mention">@pauwels</span> <span class="mention">@hamblingreg52</span> <span class="mention">@mkay581</span> Hi all! A question is it possible to use the FIDO protocol and hardware keys through E2E in browsers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3896_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Minigugus</div>
+          <div class="creation_date">2022-08-29</div>
+          <div class="post_content">
+<p>I don’t think hardware keys where designed for that use case, but I don’t see why it couldn’t work: I guess browsers could generate a long random code, store it using the public key and ask the key to decode the generated code. Then browsers could use that code for AES encryption for instance.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: Array.prototype.unique</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: Array.prototype.unique</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fflorent</div>
+          <div class="creation_date">2014-08-14</div>
+          <div class="post_content">
+<p>For a long time I have wanted an Array.prototype.unique() method.</p>
+<p>This method would return a unique set of elements contained in an Array.</p>
+<p>I would easily see this signature: <strike><code>Array.prototype.unique(sorted, callback)</code></strike><code>Array.prototype.unique(callback)</code>, where:</p>
+<ul>
+<li><strike><code>sorted</code> is a boolean (optional, default=false), indicating whether the Array is already sorted or not for optimizations. If it is wrongly true, an exception should be thrown</strike></li>
+<li>
+<code>callback</code> is a function (optional too) that is given two elements of the array (like the callback of Array.prototype.sort) and is expected to return true if they are considered as equal.</li>
+</ul>
+<p>If the callback is not provided, the function would run as if the provided callback would return the result of a strict equality (i.e. <code>callback = function(a, b) { return a === b; };</code></p>
+<p>Even though having a unique Array is already possible in EcmaScript 6 using <code>[...new Set(...myArray)]</code>, or using <code>Array.prototype.filter()</code> with the appropriate callback, I think this function would be more convenient, more concise and easier to read.</p>
+<p>What do you think?</p>
+<hr/>
+<p>Edit: In retrospection, maybe the assertion that the Array is sorted could be made by default and be rejected if an element is expected to be put before its predecessor. Therefore, the <code>sorted</code> parameter is not necessary. Moreover, checking that the Array is sorted would have been hard to spec with the callback.</p>
+<p>Florent</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2014-08-14</div>
+          <div class="post_content">
+<p>Like you said, you can already do all this using a combination of Array, and Set. I don’t see any additional need for this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fflorent</div>
+          <div class="creation_date">2014-08-16</div>
+          <div class="post_content">
+<p>I see some reasons:</p>
+<ol>
+<li>Even though the Set is (relatively) easy to use to set an array (using <code>[...new Set(array)]</code>), the readability is not nice at least for new / occasional JS programmers, and is pretty slow (at least using Firefox implementation compared to the use of Array.prototype.filter). Moreover, it doesn’t support callbacks</li>
+<li>Using Array.prototype.filter could be an option, but that’s something which is (my guess) recurrent to use and redefined several times.</li>
+<li>There would probably be optimizations if it is embedded by default, which would be neat especially for large arrays</li>
+<li>It would be user-friendly, especially for occasional developers.</li>
+</ol>
+<p>Here is an equivalent of what I have in mind (except that it should modify the array itself, to be consistent with Array.prototype.sort):</p>
+<pre><code>Array.prototype.unique = function(callback, thisArg) {
+  let isSorted = !callback;
+  return this.filter((x, i, arr) =&gt; {
+    if (isSorted)
+    {
+      let prev = arr[i-1]
+      if (prev &amp;&amp; prev &gt; x)
+        isSorted = false;
+      else
+        return prev !== x;
+    }
+    return callback ? 
+      arr.findIndex(callback.bind(thisArgs || null, x)) === i :
+      arr.indexOf(x) === i;
+  });
+}
+</code></pre>
+<p>There could be some more optimizations (especially if we stop finding an index at the current element).</p>
+<p>Example of use:</p>
+<pre><code>console.log([1,1,1,1,2,3,4,4,4,5].unique());
+console.log([1,2,3,1,2,3,1,1,1,2,3,4].unique());
+console.log([
+      {a:1, b:2}, 
+      {a:2, b:3}, 
+      {a:3, b:4}, 
+      {a:1, b:2}, 
+      {a:2, b:3}, 
+      {a:3, b:4}, 
+      {a:1, b:2},
+      {a:1, b:2},
+      {a:1, b:2},
+      {a:2, b:3},
+      {a:3, b:4},
+      {a:4, b:5}
+].unique((x, y) =&gt; x.a === y.a));
+</code></pre>
+<p>Florent</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3687_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">4086606</div>
+          <div class="creation_date">2021-07-07</div>
+          <div class="post_content">
+<p>Shame that this proposal died, I’ve reimplemented this many many times <img alt=":pensive:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/pensive.png?v=9" title=":pensive:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

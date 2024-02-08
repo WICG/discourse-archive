@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Img#toDataURL() and Img#download() and Element#screenshot()</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Img#toDataURL() and Img#download() and Element#screenshot()</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>I’d like the following to be possible:</p>
+<p>Let’s say we have reference of an Image:</p>
+<pre><code class="lang-auto">var img = document.createElement('img');
+img.src = "image.png";
+</code></pre>
+<p>I should be able to convert that image to <code>DataURL</code>:</p>
+<pre><code class="lang-auto">img.toDataURL(); // returns DataURL of that image just like Canvas#toDataURL();
+</code></pre>
+<p>I should be able to download it as well, but not like:</p>
+<pre><code class="lang-auto">&lt;a download="filename"&gt;
+</code></pre>
+<p>Because the file is downloaded when that anchor tag’s <code>click()</code> is called either by API or user gesture.</p>
+<p>So for <code>&lt;img&gt;</code> it should be a method: (since we wouldn’t want it to download on click)</p>
+<pre><code class="lang-auto">img.download('fileName.png');
+</code></pre>
+<p>Now the <code>screenshot()</code> method on Elements:</p>
+<pre><code class="lang-auto">Element.screenshot(); // returns an &lt;img&gt; element
+</code></pre>
+<p>This returns a <code>&lt;img&gt;</code> element so that I don’t have to create an <code>&lt;img&gt;</code> element and change the <code>src</code>, it would be done automatically, and now I can easily:</p>
+<pre><code class="lang-auto">var screenShot = Element.screenshot(); // get &lt;img&gt;
+screenShot.download('filename'); // can easily download image
+document.body.appendChild(screenShot); // can easily add to DOM
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>IMO it would be better to have <code>toBlob()</code> instead of <code>toDataURL()</code> since data URLs bloat the data size. My <a href="//discourse.wicg.io/t/request-for-feedback-async-imagedata-conversion-api/967">ImageData conversion API</a> proposal already includes a way to do this via <code>ImageData.create(img).toBlob()</code>, or you can use a synchronous draw to canvas then call <code>toBlob()</code> on the canvas.</p>
+<p>Similarly you can already download an image by first converting it to a Blob, calling <code>URL.createObjectURL(blob)</code>, then downloading that URL.</p>
+<p>Screenshotting elements has been discussed before IIRC and has some privacy issues. I think the biggest problem with <code>screenshot()</code> returning <img/> is you need to know what to set for the <code>src</code> attribute. Returning a Blob, ImageData or Canvas would probably be more suitable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>That’s kind of the whole point, what your doing is more work.</p>
+<pre><code class="lang-auto">var a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = 'filename.png';
+a.click();
+</code></pre>
+<p>or <code>window.open()</code></p>
+<p>compare to:</p>
+<pre><code class="lang-auto">img.download('filename.png');
+</code></pre>
+<p>and creating a canvas just to download a picture.</p>
+<p>So instead of dealing with a blob, your dealing with an <code>&lt;img&gt;</code> element which will allow you to easily add to the <code>DOM</code></p>
+<p>Well you did say <strong>IMO</strong> so I’ll wait for others to respond or please add on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>You could easily write a helper function to do that, and even attach it to HTMLImageElement so your exact example works.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>And you could too for your <code>ImageData.create(img)</code> so your point is??</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>No, you couldn’t - not asynchronously, which is the purpose of the proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<p>Okay and you couldn’t do what I would do asynchronously as well, because that’s all internally, so again your point??</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>I’m not sure what you mean. I don’t see any problem with downloading an image being a synchronous function.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

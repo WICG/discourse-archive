@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Async Event Handling</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Async Event Handling</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-10-02</div>
+          <div class="post_content">
+<p>With more web APIs going async (and promise-based), I’m feeling more constrained by event handlers’ synchronous nature. Decisions about the default action need to be made immediately.</p>
+<p>Take this simple example of needing to prompt for user action to confirm the submission of a form. You can exploit the fact that <code>confirm</code> or <code>prompt</code> stop the world and block before returning a result.</p>
+<pre><code class="lang-javascript">form.addEventListener('submit', function(event) {
+  if (!confirm("Are you sure?")) {
+    event.preventDefault();
+  }
+});
+</code></pre>
+<p>But theres no way to get this behavior if <code>confirm</code> was async and returned a Promise. You can’t define an application modal that could act like the system’s blocking <code>confirm</code>.</p>
+<p>Related is an async waiting mechanize in the Service Worker event API.</p>
+<pre><code class="lang-javascript">this.addEventListener('install', function(event) {
+  event.waitUntil(shellResources.ready());
+});
+</code></pre>
+<p>Here, application logic can delay the default “install” action.</p>
+<p>I thought it would be interesting if a similar API could be expose on other event types. Going back to the modal example blocking the form submit.</p>
+<pre><code class="lang-javascript">form.addEventListener('submit', function(event) {
+  event.waitUntil(showConfirmModal("Are you sure?").then(function(result) {
+    if (!result) {
+      event.preventDefault();
+    }
+  }));
+});
+</code></pre>
+<p>I think <code>event.waitUntil</code> has raised some criticism about its awkwardness, but it definitely exposes some useful functionality. Maybe theres a third aspect to event properties in addition to <code>cancelable</code> and <code>bubbles</code>. Event dispatch is optionally <code>pausable</code>.</p>
+<p>Looking further into the future, it’d be pretty neat if <code>await</code> just magically worked in event handlers.</p>
+<pre><code class="lang-javascript">form.addEventListener('submit', function^(event) {
+  var result = await showConfirmModal("Are you sure?");
+  if (!result) {
+    event.preventDefault();
+  }
+});
+</code></pre>
+<p>This glosses over the fact every event dispatch caller would than have to be async. Which I don’t see how this could be supported in a backwards compatible way. Maybe if some new observables API totally replaces events one day, they could be designed to handle async handlers better.</p>
+<p>This isn’t meant to be a specific feature request or proposal, I was just hoping to discuss the how these async cases should be handled in event handlers. Could <code>event.waitUntil</code> become the convention for handling theses use cases for other event types? I’m mostly interested in implementing this type of API on custom events provide by web components.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

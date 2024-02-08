@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>WebTransport Proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">WebTransport Proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-04-17</div>
+          <div class="post_content">
+<p>API that allows web applications to establish interactive, bidirectional, multiplexed network connections</p>
+<p>It fills gaps in the web platform:</p>
+<ul>
+<li>Lack of UDP-like networking API</li>
+<li>Lack of WebSocket-like API without head-of-line blocking</li>
+</ul>
+<p>It provides:</p>
+<ul>
+<li>Reliable streams</li>
+<li>Unreliable datagrams</li>
+<li>Encryption and congestion control</li>
+<li>An origin-based security model</li>
+<li>Bindings for QUIC</li>
+<li>Multiplexing with existing HTTP/3 connections</li>
+<li>Flexible API that can be extended to other protocols, such as TCP fallback and p2p</li>
+<li>Ability to change transport without changing application code</li>
+</ul>
+<p>It’s great for:</p>
+<ul>
+<li>sending or receiving high-frequency, small messages that don’t need to be reliable (like game state)</li>
+<li>sending or receiving low-latency media</li>
+<li>transferring files</li>
+</ul>
+<p>See the <a href="https://github.com/pthatcherg/web-transport/blob/master/explainer.md" rel="nofollow noopener">explainer</a> for more info.</p>
+<p>See the <a href="https://pthatcherg.github.io/web-transport/" rel="nofollow noopener">proposed spec</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2283_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vvv</div>
+          <div class="creation_date">2019-05-01</div>
+          <div class="post_content">
+<p>I wrote up Internet Drafts for how this would look on the wire: <a href="https://github.com/vasilvv/webtransport" rel="nofollow noopener">https://github.com/vasilvv/webtransport</a></p>
+<p>Feedback would be much appreciated.  I believe people would find the <a href="https://vasilvv.github.io/webtransport/draft-vvv-webtransport-http3.html" rel="nofollow noopener">Http3Transport</a> one interesting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2318_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oliverdunk</div>
+          <div class="creation_date">2019-05-09</div>
+          <div class="post_content">
+<p>If I’m understanding correctly, this could technically support TCP, but that hasn’t been explicitly considered so far?</p>
+<p>If so, I think it would be great to make TCP something promised by the spec. Admittedly, we would likely need to place restrictions on the domains a page could access, and add permission prompts. Those could be bypassed in the case of QUIC. I think that shouldn’t put people off, however, as it would fill such a huge gap in the web today - email clients, database explorers and a whole host of other applications could be built. I know this has been generally something for extensions, and that there are concerns about DDOS attacks. However, I think this will give the web too much power to miss out on, and hence is a challenge we should embrace.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-05-09</div>
+          <div class="post_content">
+<p>WebTransport is designed to be an API that can map onto different protocol, so it’s possible it could map onto TCP.  However, there are some considerations:</p>
+<ol>
+<li>
+<p>TCP is already available via WebSocket.  Victor (vvv) is planning on writing an implementation of the WebTransport API on top of WebSocket so that one could have a better API but with existing protocols (an API with multiple streams, albeit with head of line blocking).</p>
+</li>
+<li>
+<p>For security reasons, a TCP-based WebTransport would likely be TCP+TLS, not just TLS.</p>
+</li>
+<li>
+<p>Again, for security reasons, the server would need to opt-in to the client’s connection much like the QUIC WebTransport (QuicTransport)  does, and like WebSocket does.   This would require changes to the servers that you want to connect to which would be similar to supporting WebSockets (which could already do).</p>
+</li>
+<li>
+<p>TCP would prevent many of the benefits of WebTransport: support for multiple streams and avoiding head-of-line-blocking.  A protocol on top of TLS/WebSockets could provide for multiple streams (much like vvv plans to write, or HTTP/2 does), but you still have head-of-line blocking.</p>
+</li>
+</ol>
+<p>So, it could be done, but I’m not sure how much you’re gaining compared to what you can do now with WebSockets.  On the other hand, it might be worth doing something for good fallback for networks on which UDP is blocked (and thus QUIC and HTTP/3 cannot work).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2049_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">lgrahl</div>
+          <div class="creation_date">2019-05-09</div>
+          <div class="post_content">
+<p>I very much endorse the idea but not the proposed API <a href="https://github.com/w3c/webrtc-quic/issues/2" rel="nofollow noopener">as explained a while ago</a>.</p>
+<p>This API should use <a href="https://streams.spec.whatwg.org/">streams</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-05-09</div>
+          <div class="post_content">
+<p>I’ve been meaning to make a branch that uses WHATWG streams.  We have built a very early prototype in Chromium that uses ReadableStream, which sheds some light on how feasible it is.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-05-09</div>
+          <div class="post_content">
+<p>OK, here’s a branch with an explainer that uses WHATWG streams:</p>
+<aside class="onebox githubblob">
+<header class="source">
+<a href="https://github.com/pthatcherg/web-transport/blob/whatwg-streams/explainer.md" rel="nofollow noopener" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/pthatcherg/web-transport/blob/whatwg-streams/explainer.md" rel="nofollow noopener" target="_blank">pthatcherg/web-transport/blob/whatwg-streams/explainer.md</a></h4>
+<pre><code class="lang-md"># WebTransport Explainer
+
+Updated: April 2019
+
+## Problem and Motivation
+
+Many applications, such as games and live streaming, need a mechanism to send
+many messages as quickly as possibly, possibly out of order, and possibly
+unreliably from client to server or server to client.  The web platform is
+missing the capability to do this easily.
+
+Native applications can use raw UDP sockets, but those are not available on the
+web because they lack encryption, congestion control, and a mechanism for
+consent to send (to prevent DDoS attacks).
+
+Historically, web applications that needed bidirectional data stream between a
+client and a server could rely on WebSockets [RFC6455], a message-based
+protocol compatible with Web security model.  However, since the abstraction it
+provides is a single, reliable, ordered stream of messages, it suffers from head-of-line
+blocking (HOLB), meaning that all messages must be sent and received in order
+</code></pre>
+
+  This file has been truncated. <a href="https://github.com/pthatcherg/web-transport/blob/whatwg-streams/explainer.md" rel="nofollow noopener" target="_blank">show original</a>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Take a look.  If you think that’s good, I could update the spec in that branch as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2301_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboba</div>
+          <div class="creation_date">2019-05-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-full="true" data-post="4" data-topic="3508">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/pthatcher/40/2282_2.png" width="20"/> pthatcher:</div>
+<blockquote>
+<p>TCP would prevent many of the benefits of WebTransport: support for multiple streams and avoiding head-of-line-blocking.  A protocol on top of TLS/WebSockets could provide for multiple streams (much like vvv plans to write, or HTTP/2 does), but you still have head-of-line blocking.</p>
+<p>So, it could be done, but I’m not sure how much you’re gaining compared to what you can do now with WebSockets.</p>
+</blockquote>
+</aside>
+<p>[BA] Not only would the API not provide gains over TCP, it could hurt. Head-of-line blocking can have very undesirable effects on the behavior of applications written to the API – loss on a TCP connection will block i/o on all streams sharing that connection. That would not happen if individual TCP connections were used. Overall, an application desiring fallback would do better to utilize legacy APIs (e.g. Websockets) if QUIC is unavailable, even if more code is required to do so.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2283_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vvv</div>
+          <div class="creation_date">2019-05-24</div>
+          <div class="post_content">
+<p>I’ve been trying to reach out to people shipping games for the Web and gather their thoughts on this proposal.  Jukka Jylänki (Unity) provided the following comments, which I found really helpful:</p>
+<blockquote>
+<p>Pthatcher’s notes on the missing gaps (unordered datagrams, avoiding head-of-line blocking) are spot on. Something I’d like to highlight here is that WebRTC data channels did add UDP-like communication, but because of the complexity involved in implementing both a client and a server stack for WebRTC data channels, adoption has remained practically zero in games. Contrast this to WebSockets, which is quite lightweight in its definition, and much easier for a programmer to implement a client stack or a server stack to converse in WebSockets.</p>
+<p>In order for any kind of new server-client protocol spec to be successful, it is not enough that there is a spec for the feature that browser/shell vendors implement as part of a tight spec+development iteration cycle, but the spec needs to be friendly towards independent implementors who need to ground up build a stack to talk the protocol. Back with WebRTC the browser implementations were initially riddled with quirks that were not well defined in the spec, and Chrome and Firefox had a long tail of bug bashing work stemming from confusion with unspecified scenarios, due to the complexity of the spec. So I would like to stress how important it is that a protocol spec of this kind is built up with simplicity and practicality in focus, keeping independent implementations in mind. Reading through <a href="https://pthatcherg.github.io/web-transport/" rel="nofollow noopener">https://pthatcherg.github.io/web-transport/</a> , it has user guide examples, and from there the transport spec leads to <a href="https://tools.ietf.org/html/draft-pauly-quic-datagram-02" rel="nofollow noopener">https://tools.ietf.org/html/draft-pauly-quic-datagram-02</a> which is a bit short treatise - so I am not sure how much work will currently be involved in implementing the protocol stack.</p>
+<p>In summary, “implementor’s guide” is as important as “user’s guide”, or perhaps even more important, to guarantee adoption.</p>
+<p>It is great to see efforts on this front progress - game networking with WebSockets is really painful, and game networking with WebRTC data channels is too messy to pull off.</p>
+</blockquote>
+<p>I think the part about independent implementers matches with what we’ve been trying to achieve with QuicTransport design: minimizing the gap between basic QUIC and QUIC as useful for the web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2283_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vvv</div>
+          <div class="creation_date">2019-05-24</div>
+          <div class="post_content">
+<p>I’ve gave a brief presentation on Wednesday at the QUIC IETF interim meeting (<a href="https://github.com/quicwg/wg-materials/blob/master/interim-19-05/webtransport-20190522.pdf" rel="nofollow noopener">slides</a>).  Some notes on the feedback that I got while at the meeting (pthatcher has his own notes, so he should feel free to correct me if I’m missing something):</p>
+<ul>
+<li>Mark Nottingham noted that due to freeform nature of WebSockets, the service providers in traditional HTTP space (CDNs, load balancers, etc) have struggled to provide services for WebSockets, and this will likely be the case with this proposal too.</li>
+<li>Roberto Peon said he’s very interested and “have been waiting for something like this for 8 years”, and provided some helpful comments about importance of scatter-gather and TTL that is transmitted across hops (something I should add to Http3Transport at some point).</li>
+<li>Mirja Kühlewind pointed out that we should take a closer look at TAPS, since a lot of the design problems we have are also faced by TAPS.</li>
+<li>Lucas Pardue mentioned that there might be projects at Cloudflare that would benefit from API like this.</li>
+<li>David Schinazi said he’s interested in Http3Transport as a potential basis for <a href="https://tools.ietf.org/html/draft-schinazi-masque-00" rel="nofollow noopener">MASQUE</a>.</li>
+</ul>
+<p>I feel like we do have a fair amount of interest.  I’m also pretty convinced that there will be a fair share of smaller Web developers to whom I don’t have good means of reaching out to who would benefit from this proposal.  At this point, is it possible for us to go ahead and move the draft to the WICG org?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-05-24</div>
+          <div class="post_content">
+<p>Sounds like there is wide-agreement on the use-case the proposal is solving, even if not on all the proposal’s details. which is a great starting point for more engaged incubation.</p>
+<p>Moving the repo over to the WICG org SGTM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fenix</div>
+          <div class="creation_date">2019-05-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="10" data-topic="3508">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/vvv/40/2283_2.png" width="20"/> vvv:</div>
+<blockquote>
+<p>e’s very interested and “have been waiting for something like this for 8 years”, and provided some helpful comments about importance of scatter-gather and TTL that is transmitted across hops (something I should ad</p>
+</blockquote>
+</aside>
+<p>And I’m interested enough to sign up to make comments and other contributions <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-05-29</div>
+          <div class="post_content">
+<p>The repo is now live at <a href="https://github.com/WICG/web-transport" rel="nofollow noopener">https://github.com/WICG/web-transport</a>!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2049_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">lgrahl</div>
+          <div class="creation_date">2019-06-17</div>
+          <div class="post_content">
+<p>Commented on that commit. Sorry for the delay. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kixelated</div>
+          <div class="creation_date">2019-07-12</div>
+          <div class="post_content">
+<p>Hey guys, Luke from Twitch here. I originally wrote a longer wall of text but I’ll keep it brief for now.</p>
+<p>We’re messing around with WebRTC and definitely agree with the direction of this proposal. There are a lot of people (including ourselves) that are using WebRTC outside of video conferencing and would like to decouple the transport layer. WebRTC built on top of WebTransport would be amazing.</p>
+<p>In our case, we want a way to transfer ordered but semi-reliable messages. This was not possible in browsers until WebRTC DataChannels.</p>
+<p>DataChannels are great because the browser handles fragmentation, retransmitting individual packets, ordering packets into a message, dropping messages, and ordering any delivered messages into a stream. All you have to do is configure the stream and you get a function callback for each delivered message in the order they were sent.</p>
+<p>With WebTransport unreliable streams, the browser performs fragmentation and orders packets into a message. We would have to make a stream per message and append some identifier to each message (in order mux other types of streams). If we determine a packet is lost after a timeout (NACK/SACK not possible), we need to retransmit the ENTIRE message (blocker: our messages are big). We would need to append a sequence number to each message, reordering them ourselves. This wouldn’t be acceptable.</p>
+<p>With WebTransport datagrams, we would probably implement something similar to SCTP/QUIC on top. That’s fine to be honest. I’m not a fan of the overhead involved in implementing SCTP on top of UDP on top of QUIC on top of UDP.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-07-12</div>
+          <div class="post_content">
+<p>So it sounds like what you’re looking for is message order to be taken care of, but still have option for unreliability.   That’s a combo that isn’t well supported by QUIC streams since to get ordered delivery, you must put messages in one stream (not one message per stream), and that requires reliability.</p>
+<p>But if you do the “one message per stream” approach, you can do the ordering yourself on top, as you mention, but I’d like to understand better why you don’t find that acceptable.  In any “ordered unreliability” system, there is the big question of how long to wait for gaps in the order, and you’ll probably want to decide for yourself what kind of timeout you’re willing to live with rather than relying on the browser to decide for you, which means doing that yourself.</p>
+<p>As far as reliability of streams: you don’t have to explicitly ask for retransmission of a stream, nor retransmit and entire stream/message.  You can instead simply send the message reliably, and then if later you decide it’s past the point when you would want to retransmit, you could abort the stream.</p>
+<p>If you built on top of datagrams, you’d be doing your own message packetization and reassembly, which is more work than doing the simple reordering of messages, but it’s not nearly as large as SCTP or QUIC is.  It could be much more simple since you don’t have to worry about congestion control or encryption.  The most complex part would probably be figuring out when to retransmit lost packets.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kixelated</div>
+          <div class="creation_date">2019-07-17</div>
+          <div class="post_content">
+<p>Yeah, message ordering would be nice but you’re right, ordered but non-reliable streams depend on the browser to determine when a message is lost. It’s possible today with data channels but it relies on heuristics that developers should instead control.</p>
+<p>Like you mentioned, partially reliable messages could be implemented by calling <code>Reset()</code> on a stream. The decision won’t be optimal without access to congestion-control statistics like RTT, retransmits, packet loss. Also, when the reset is called on the receiver’s side, there’s a delay (based on RTT + packet loss) during which time the sender will keep retransmitting packets for naught.</p>
+<p>I would drop the support for non-reliable streams. It’s not an elegant API to create a stream for each message and it really suffers from packet loss. With 1% uniform packet loss, a 1k byte message would arrive 99% of the time while a 100k byte message would arrive 36% of the time (0.99^100). You need some form of reliability when messages are split into multiple datagrams.</p>
+<p>I would include a <code>MessageTransport</code>. It will make it much easier to port WebSocket code, even if it just adds delimiters on top of reliable streams. If you want unreliable messages, then it makes more sense to add them in the context of a MessageTransport API.</p>
+<p>I don’t think I emphasized it enough but datagram support is huge and for the first time, gives developers the ability to fully control unreliable packet delivery. I can now build my own end-to-end protocol instead of being forced to use TCP and QUIC’s stream-based semantics. There’s definitely room for a message-based API that performs fragmentation and reordering but it’s not a critical component.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-07-23</div>
+          <div class="post_content">
+<p>A few responses:</p>
+<ol>
+<li>
+<p>We do want to add congestion control and RTT stats.  A related discussion about that is going on at <a href="https://github.com/WICG/web-transport/issues/21" rel="nofollow noopener">https://github.com/WICG/web-transport/issues/21</a>.</p>
+</li>
+<li>
+<p>Many people want to drop unreliable streams, but others want to keep it :).  You’re right that it doesn’t make sense for very large messages, but it can make sense for small messages that are 3-4 packets.  And that’s even more true if you experience bursty loss rather than random loss.  Of course, if you don’t want to use it and it stays, you don’t have to use it.</p>
+</li>
+<li>
+<p>A MessageTransport can be implemented as a library on top of WebTransport fairly easily.  I wrote an example of an unreliable WebSocket API on top of WebTransport here: <a href="https://github.com/w3c/webrtc-quic/blob/master/examples/quic-ws.js" rel="nofollow noopener">https://github.com/w3c/webrtc-quic/blob/master/examples/quic-ws.js</a>.  But you could make a similar one with a simple framing protocol.   I can write that into the example if you want.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-05-10</div>
+          <div class="post_content">
+<p>Hi all! How are you guys?</p>
+<ol>
+<li>Guys, I wanted to know your opinion, I was having an idea for a cdnp2p - Content Delivery Network with Peer to Peer.</li>
+<li>The idea is to make the web faster, less congested. So… I found the discussion here interesting…</li>
+<li>I think what you guys are proposing can help me in some way - or not only to me exclusively, but people who still don’t have a good internet</li>
+<li>If possible I would like some feedback, I would be happy with some feedback</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

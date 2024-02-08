@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>SIMD: should they be returned from / passed to FFI?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">SIMD: should they be returned from / passed to FFI?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/335_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ben</div>
+          <div class="creation_date">2014-07-17</div>
+          <div class="post_content">
+<p>Hi everyone,</p>
+<p>In exploratory work for SIMD support in Odin, we were wondering if FFI should accept SIMD arguments and return SIMD values.</p>
+<p>Returning SIMD values from FFI is quite easy: it will only mean that we need to take an interpreter representation of a SIMD value and spill components into a register.</p>
+<p>Passing SIMD value arguments to FFI is more tricky: we need to re-materialize interpreter’s SIMD values, and that means re-constructing objects, which involves garbage collection and has a cost for each SIMD argument.</p>
+<p>For Float32, we finally decided to avoid having Float FFI arguments and return values, to keep things simpler. Any opinions about that?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-07-17</div>
+          <div class="post_content">
+<p>I could go either way.  On the one hand, having SIMD types be &lt;: extern is sortof a performance footgun since it entails a GC allocation when the whole point of SIMD is to stay in registers.  If you need to pass out a SIMD vector, you’d be better off passing the components by hand.  On the other hand, this <em>could</em> be optimized in the future (with significant work on both the Odin/Ion side).  However, asm.js is all about standardizing the “fast path” so maybe we should wait until there is a use case.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

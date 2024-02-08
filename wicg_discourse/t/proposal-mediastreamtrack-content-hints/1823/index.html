@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] MediaStreamTrack content hints</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] MediaStreamTrack content hints</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pbos</div>
+          <div class="creation_date">2016-11-14</div>
+          <div class="post_content">
+<p>This is a proposal to transfer the <a href="https://github.com/pbos/mst-content-hint" rel="nofollow noopener">mst-content-hint repo</a> to the WICG. Currently in a readable format <a href="https://pbos.github.io/mst-content-hint/" rel="nofollow noopener">here</a>.</p>
+<p>Multiple MediaStreamTrack consumers such as MediaRecorder and PeerConnection APIs do not have strictly defined behaviors for how to process the incoming content. How to do this best is dependent on the type of content that’s being encoded/processed/transmitted.</p>
+<p>For audio: Applying noise suppression improves speech intelligibility, but removes drum snares from music. Packet loss concealment helps conceal packet loss by smearing/time stretching samples. This messes up rhythm in music and might not be the best way to conceal packet loss there.</p>
+<p>For video: Highly detailed content (webpages with a lot of text, line art, etc.) cannot be downscaled or highly quantized without losing intelligibility. For fluid content (movies/games) degrading by dropping resolution/detail is acceptable and as a result fluid content can preserve a higher framerate without dropping intelligibility.</p>
+<p>For RTCRtpSender there’s degradationPreference for framerate/resolution, but max quantization levels for instance are not defined, and are different for detailed content. As far as I’m aware the audio side has no standard knobs/buttons for turning on/off audio processing either. Adding the content hint would also be useful for PeerConnection and MediaStreamRecorder as well (without having to propose the same knobs there).</p>
+<p>Blink currently treats tab capture/desktop capture as “screenshare” to preserve detailed content of website/presentations and USB video is treated as non-screenshare (webcam). This assumption is incorrect and results in a bad experience when screencasting videos/games or incorrectly believing that a HDMI capture card is a webcam rather than monitor input.</p>
+<p>When the application can make a reasonable guess (game live streaming service likely selects “fluid”, audio workstations likely select “music”) or by providing an option in their UI, underlying track consumers can handle the content in a better way. When the application has no idea, it can keep the value unset as “”, and content will be treated the same way as it is today.</p>
+<p>Instead of adding buttons/knobs for all of these features (and future features that are applicable to speech but not music) across all track consumers we propose a simpler hint that can guide implementations. This hint is also significantly simpler to understand for a web developer without a video encoding backgrounds than video-encoder parameters such as max quantization.</p>
+<p>This API would not be in place of adding knobs/buttons to interfaces to turn on/off specific features, but help guide implementations where this behavior is not defined, or for values that are not overridden by the user. It should not override behavior specified on the track consumer, e.g. setting a content hint should not invalidate standards compliance in consumers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2301_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aboba</div>
+          <div class="creation_date">2016-11-28</div>
+          <div class="post_content">
+<p>A few comments/questions:</p>
+<ol>
+<li>
+<p>The contentHint attribute is read-write.  This does not permit errors to be returned if an application attempts to set contentHint to an illegal value.  Suggest that the contentHint attribute be read-only with a sync method (e.g. setContentHint) to set the value.</p>
+</li>
+<li>
+<p>For video, a contentHint value of “detailed” applies to text content, painting or line art.  Is this meant to indicate computer-generated content to which screen coding techniques can be applied? If the content is not computer generated (e.g. video captured in an art museum), screen coding might not be appropriate.  So it might be worthwhile to clarify that this is for computer-generated content (or have a “screen content” category).</p>
+</li>
+<li>
+<p>contentHint values generated by existing APIs.  Would a video track returned from a webcam by getUserMedia have a contentHint value of “fluid”, and screen content (whether from getUserMedia or getDisplayMedia) have a contentHint value of “detailed”?</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alvestrand</div>
+          <div class="creation_date">2016-11-29</div>
+          <div class="post_content">
+<p>re 3) our initial thought was that an empty contentHint would mean “platform does what it thinks best”, and that the value of the attribute was always the one last set by the user.</p>
+<p>re 2) I’m not sure “screen coding” is well defined - a capture of a Mondrian painting might very well benefit from screen-coding tricks, while a capture of a Matisse wouldn’t. My sense would be to leave this to the user.</p>
+<p>re 1) the standard web platform style for setting enums seems to be to read back the value to see if it “took”. Seems strange to me, but if that’s what people are used to, we shouldn’t deviate without a good reason.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2016-12-01</div>
+          <div class="post_content">
+<p>Given the participation in the repo by Mozilla, and the commentary here, I think we should transfer this to WICG for incubation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pbos</div>
+          <div class="creation_date">2016-12-02</div>
+          <div class="post_content">
+<p>Done, the repository now resides at <a href="https://github.com/WICG/mst-content-hint" rel="nofollow noopener">https://github.com/WICG/mst-content-hint</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

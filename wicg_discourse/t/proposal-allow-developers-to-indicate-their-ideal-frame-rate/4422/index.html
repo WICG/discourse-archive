@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Allow developers to indicate their ideal frame rate</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Allow developers to indicate their ideal frame rate</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2878_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ksagar</div>
+          <div class="creation_date">2020-04-24</div>
+          <div class="post_content">
+<p>A web developer currently has no way of indicating to the browser the rate at which they want to update the page content. The browser generally schedules rendering lifecyle updates at the same frequency as the display’s default refresh rate, which is also the frequency at which requestAnimationFrame is dispatched. However, a page may wish to animate at a lower frame rate for multiple reasons :</p>
+<ul>
+<li>If the page can not consistently produce frames at the display’s refresh rate given the workload for each frame update.</li>
+<li>If reducing the update frequency for power efficieny is a better tradeoff for the user experience.</li>
+</ul>
+<p>The common patterns developers can use to control the frequency of their content updates are:</p>
+<ul>
+<li>Use a timer to schedule the next animation update.</li>
+<li>Use requestAnimationFrame but skip rendering in callbacks at a fixed frequency.</li>
+</ul>
+<p>The above methods can allow the page to control the rate of updates driven solely by script on the main event loop. However, it doesn’t enable aligning the presentation of these updates by the browser to the same vsync as other fixed rate animations (such as video). An explicit hint from the app could allow the browser to align all such animations to the same frame and reduce overall composition overhead.</p>
+<p>The exact proposal details for this feature are still being worked out.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2020-04-24</div>
+          <div class="post_content">
+<p>Relevant Chrome issue: <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=485600" rel="nofollow noopener">crbug.com/485600</a></p>
+<p>A way to reduce canvas games to half-vsync rate or even quarter-vsync rate has long been a popular suggestion for games. Timers or skipping rAFs is not a reliable way to do this since it either doesn’t tie in with presentation, or doesn’t respond properly under load (i.e. if the frame time takes &gt;16ms). Note some console games are specifically designed to run at a regular half-vsync rate (30 FPS), which is not currently possible to handle properly on the web.</p>
+<p>There’s also the opposite case: some high display rate devices, e.g. running at 120 Hz, still run rAF callbacks at 60 Hz for compatibility reasons (because lots of content has hard-coded assumptions that the rate is 60 Hz). This is a shame if you have lots of content already designed to handle variable refresh rates, as is the case with our game engine. Having some way to opt-in to the true display rate if you know it’s correctly supported would be useful as well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2517_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnordine</div>
+          <div class="creation_date">2020-04-24</div>
+          <div class="post_content">
+<blockquote>
+<p>The browser generally schedules rendering lifecyle updates at the same frequency as the display’s default refresh rate</p>
+</blockquote>
+<p>I don’t think that’s true, for at least a couple of examples. I think iOS devices run rAF at 60fps, even though some devices refresh at 120Hz. I think it also runs at 30fps in low-power mode.</p>
+<p>On Pixel 4, which has a 90Hz screen, I think it varies, depending on certain things, such as battery life.</p>
+<p>Not trying to be picky, just that these caveats support your proposal.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

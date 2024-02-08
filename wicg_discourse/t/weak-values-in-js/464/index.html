@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Weak Values in JS</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Weak Values in JS</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1987_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pixelcort</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>It is sometimes useful to maintain an identity map of objects in JavaScript, but then it becomes unclear when it is safe to dereference them when nothing has used them in awhile.</p>
+<p>One solution is to introduce weak values in JS, so an object wouldn’t keep its values around forever.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p><span class="mention">@pixelcort</span> what are the use cases for this above what is set out in WeakMaps: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>Yes, this is the exact use case for WeakSets and WeakMaps, which are notably shipping in every browser (except maybe Safari 7?)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1987_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pixelcort</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>As I understand it, WeakMaps and WeakSets behave the opposite of what would be needed to make an identity map. That is, a WeakMap has weak keys, not weak values.</p>
+<p>The use case is this: you want to only have one instance of each model object per primary key. But, if nothing is referring to an instance, you’d like it to be garbage collected. So ideally you’d like some way to refer to these model instances, such that you wouldn’t accidentally instantiate another with the same primary key.</p>
+<p>If there is a way to do this with WeakSet or WeakMap, I’d love to know.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>Both keys and values are held weakly in a weak map.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-06-20</div>
+          <div class="post_content">
+<p>To be specific, the key has a strong reference to the value, so as long as the key is reachable, you can always get the value back out.  (It won’t GC out from under you.)</p>
+<p>But yeah, if the key ever GCs, the value is then (a) unreachable from the WeakMap, and (b) GCable as long as there are no other references.</p>
+<p>Note that the key has to be an object; primitives can’t be used, as they get collected and regenerated transparently constantly, and so don’t have a coherent sense of “identity” to base the key-&gt;value ref off of.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fflorent</div>
+          <div class="creation_date">2014-08-03</div>
+          <div class="post_content">
+<blockquote>
+<p>One solution is to introduce weak values in JS, so an object wouldn’t keep its values around forever.</p>
+</blockquote>
+<p>Aren’t you looking for weak references?</p>
+<p><a class="onebox" href="http://wiki.ecmascript.org/doku.php?id=strawman:weak_references" rel="nofollow noopener" target="_blank">http://wiki.ecmascript.org/doku.php?id=strawman:weak_references</a></p>
+<p><a class="onebox" href="http://wiki.ecmascript.org/doku.php?id=strawman:weak_refs" rel="nofollow noopener" target="_blank">http://wiki.ecmascript.org/doku.php?id=strawman:weak_refs</a></p>
+<p>Florent</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1987_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pixelcort</div>
+          <div class="creation_date">2014-08-03</div>
+          <div class="post_content">
+<p>Ah yes, weak references would work perfectly; thanks <span class="mention">@fflorent</span>!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fflorent</div>
+          <div class="creation_date">2014-08-03</div>
+          <div class="post_content">
+<p>You’re welcome.</p>
+<p>AFAIK, <a href="https://lists.mozilla.org/pipermail/dev-tech-js-engine-internals/2013-November/001274.html" rel="nofollow noopener">it is (was?) being debated</a> (lots of questions have been raised regarding GC if I am not wrong).
+But some people here may answer more precisely here ;).</p>
+<p>Florent</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

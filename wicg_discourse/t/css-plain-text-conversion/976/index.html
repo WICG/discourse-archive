@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS Plain-Text Conversion</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS Plain-Text Conversion</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/standardizing-innertext/799/4">Standardizing innerText</a>:</p>
+<aside class="quote" data-full="true" data-post="4" data-topic="799">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/><a href="//discourse.wicg.io/t/standardizing-innertext/799/4">Standardizing innerText</a>
+</div>
+<blockquote>
+<p>I think, more than / before specifying selection behavior, it’s crucial to specify <em>plain-text style normalization</em> behavior, which would then be used as <em>part of</em> selection behavior (which also entails things like element boundaries and such, which, while important, don’t affect the behavior of innerText).</p>
+</blockquote>
+</aside>
+<p>Okay, so looking directly at <a href="http://perfectionkills.com/the-poor-misunderstood-innerText/#diff-with-textContent" rel="nofollow noopener">this table</a>, I think rather than trying to invent a parallel logic that sorta-kinda-interacts with some of CSS sometimes, Plain-Text Conversion should start from the CSS style/layout/selector engine browsers are already using for rich content (because, essentially, how an element should be converted to text is as much a property of its “style” as its margins or font are). Here are some of my thoughts around the process for doing that (note that I’m not really a CSS lawyer so some of this might be a little muddled):</p>
+<ul>
+<li>Hidden elements MUST NOT be included in the plain text. This includes elements hidden with <code>display: none</code> as well as <code>visibility: hidden</code>.
+<ul>
+<li>
+<code>visibility: hidden</code> <em>may</em> be replaced by a space-equivalent empty element - I’m not really familiar enough with HTML spec behavior to dictate the transformation yet.</li>
+</ul>
+</li>
+<li>Anonymous boxes MUST be treated the same as non-anonymous boxes.</li>
+<li>Within an inline content block, whitespace should be collapsed/preserved according to the <code>white-space</code> CSS rule, after applying the text insertions defined below.</li>
+</ul>
+<p>The remaining differences are handled by <code>plaintext</code> CSS rules dictating the transformation of the HTML content into plain text.</p>
+<p>Many of the plaintext rules specify what text to insert before, after, or between each type of <code>display</code> with known values (<code>between</code> values are only applied between two sibling elements of the same display type, after any <code>before</code> value and before any <code>after</code> value):</p>
+<ul>
+<li>
+<code>plaintext-after-table-caption</code>, <code>plaintext-after-block</code>, <code>plaintext-between-block</code>: Defaults to <code>"\n"</code>.</li>
+<li>
+<code>plaintext-between-inline</code>: Defaults to <code>" "</code>.</li>
+<li>
+<code>plaintext-between-table-cell</code>: Defaults to <code>"\t"</code>.</li>
+</ul>
+<p>Other values maybe be defined but are all defaulted to <code>""</code>.</p>
+<p>Also:</p>
+<ul>
+<li>
+<code>plaintext-fallback-content</code>: Defaults to “remove”, meaning that complex (media) elements with fallback content should be removed. A value of “replace” states that the fallback content should replace the value of the media element.</li>
+<li>
+<code>plaintext-transform</code>: Whether <code>text-transform</code> transformations should apply to copied text. A value of “preserve” uses the transformed text: a value of “discard” uses the non-transformed text. Defaults to <code>preserve</code>.</li>
+<li>
+<code>plaintext-input-content</code>: What to use for the plaintext content of <code>&lt;input&gt;</code> elements. Defaults to “value”, which uses the string value of the element as its content. A value of “remove” for this rule removes the <code>&lt;input&gt;</code> element from consideration.</li>
+</ul>
+<p>Also, there should probably be some kind of <code>plaintext-include: discard</code> to otherwise hide elements when converting to plaintext, although I don’t know if there’s an existing rule (eg. for accessibility) that may be better suited to this purpose and repurposed here.</p>
+<p>Similarly, there should maybe be general rules for “text pseudo-elements” that may imitate other styling features in plaintext, like a <code>plaintext-before</code> that may be used to add <code>"* "</code> bullets for list items. (These may instead be called <code>plaintext-prefix</code> and <code>plaintext-suffix</code> to differentiate them from the <code>plaintext-before-*</code> display rules.)</p>
+<p>Note that this spec <em>does not handle word-wrap</em> - in the CSS Plain-Text Transformation model, all lines may be of an arbitrarily long length. A future extension to this spec may attempt to specify word-wrapping constraints based on character limits or font metrics, which may then interact with the <code>word-wrap</code> rule specifying text wrapping behavior for display: that is out of scope for this specification. It is recommended that implementations wishing to wrap text use a general algorithm for wrapping plain text of arbitrary line width.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>Relevant: <a href="http://www.w3.org/Tools/html2things.html">http://www.w3.org/Tools/html2things.html</a></p>
+<p>It’s probably worth reaching out to the plain-text browser vendors like w3m and Lynx about this (they <em>must</em> have some thoughts on this).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>Actually, more versatile than <code>plaintext-include: discard</code> would be <code>plaintext-content: ""</code>, which would also allow for alternative replacements to use when converting the element’s text content to plaintext.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>Okay, so it looks like <span class="mention">@kangax</span> wrote <a href="http://perfectionkills.com/the-poor-misunderstood-innerText/#naive-spec" rel="nofollow noopener">a “naive spec” for this</a>, which is sort of sensible but also sort of one of those “parallel logic that sorta-kinda-interacts with some of CSS sometimes” things I mentioned in my introduction.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>What I need here is somebody who really understands the CSS layout model and can work with me to rewrite this in a way that hooks into that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="976">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>plaintext-between-inline: Defaults to " ".</p>
+</blockquote>
+</aside>
+<p>Actually, I don’t know that I necessarily agree with this. If I have two immediately-adjacent spans, I don’t want a space being inserted between then when converted to text (unless there actually <em>is</em> a whitespace node between them). I think, considering that, it’s more sensible to default this to the empty string.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>With the <code>plaintext-content</code> property, <code>&lt;br&gt;</code> would be handled with the rule <code>br {plaintext-content: '\n'}</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>The CSS properties introduced by this spec aim to replace the functionality of Blink’s <a href="https://code.google.com/p/chromium/codesearch#chromium/src/third_party/WebKit/Source/core/editing/iterators/TextIteratorFlags.h&amp;sq=package:chromium&amp;type=cs&amp;l=47&amp;rcl=1438572829" rel="nofollow noopener">TextIteratorBehaviorFlags</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>Actually, what would be better than having several different plaintext-*-content properties, as well as one plaintext-content property that defines a literal, would be one plaintext-content property that takes either a string literal or a keyword, the same way as <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/content" rel="nofollow noopener">the <code>content</code> property for pseudo-elements</a>.</p>
+<p>Valid values for <code>plaintext-content</code>:</p>
+<ul>
+<li>
+<code>normal</code>: uses the text content of the element. If the element has no text content (or has text content that is not displayed, ie. is fallback content), this is equivalent to <code>''</code>.</li>
+<li>
+<code>&lt;string&gt;</code>: Uses literal text content.</li>
+<li>
+<code>none</code>: Synonym for <code>''</code>.</li>
+<li>
+<code>fallback</code>: Uses the fallback content of an element. If the element does not treat text content as a fallback, this is equivalent to <code>''</code>.</li>
+<li>
+<code>attr()</code>: Uses the content of an attribute on the element.</li>
+<li>
+<code>value</code>: Uses the value of an input. Unlike <code>attr(value)</code>, this uses the <em>live</em> value of the input. For non-input elements, this is equivalent to <code>''</code>.</li>
+<li>
+<code>selected-options</code>: Uses the value of the selected option (or options) of a <code>&lt;select&gt;</code> element. On non-<code>&lt;select&gt;</code> elements, this is equivalent to <code>''</code>.</li>
+</ul>
+<p>The logic behind these values being equivalent to <code>''</code> in the non-applicable case is so that they may be concatenated together to apply for multiple elements, eg. <code>normal fallback value</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-10-05</div>
+          <div class="post_content">
+<p><span class="mention">@rocallahan</span> <a href="https://github.com/whatwg/compat/issues/5#issuecomment-145406699" rel="nofollow noopener">just stated that Gecko could use a standard for this</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

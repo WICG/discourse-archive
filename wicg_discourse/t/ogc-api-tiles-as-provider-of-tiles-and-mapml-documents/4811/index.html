@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>OGC API Tiles as provider of tiles and MapML documents</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">OGC API Tiles as provider of tiles and MapML documents</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3096_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joanma747</div>
+          <div class="creation_date">2020-09-22</div>
+          <div class="post_content">
+<p>We are seeing that OGC API tiles uses the same MapML tile templates. Actually the common OGC URI template can be expressed in MapML as:</p>
+<pre><code class="lang-auto">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;mapml&gt;
+	&lt;extent units="OSMTILE"&gt;
+		&lt;input name="tileCol" type="location" units="tilematrix" axis="column" /&gt;
+		&lt;input name="tileRow" type="location" units="tilematrix" axis="row" /&gt;
+		&lt;input name="tileMatrix" type="zoom" value="15" min="0" max="15"&gt; 
+		&lt;link rel="tile" tref="https://.../tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}/" /&gt;
+	&lt;/extent&gt;
+&lt;/mapml&gt;
+</code></pre>
+<p>Actually we could make an extension of OGC API Tiles to suggest another Tileset metadata document that will make that a GET request to this endpoint
+\collections{collectionId}\tiles{TileMatrixSetId}
+negociating “text/mapml” as content type will return a mapml document pointing to the right collectionId.</p>
+<p>This will completely connect OGC API tiles and MapML</p>
+<p>For more details on the proposal, see the presentation done in the Maps for the web 2020 conferences in the second day of the first week called “Connection of the MapML initiative with OGC standards such as the new OGC API Tiles candidate or the old WMS”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zcorpan</div>
+          <div class="creation_date">2020-09-22</div>
+          <div class="post_content">
+<p>Linking to the slides:</p>
+<ul>
+<li>Connection of the MapML initiative with OGC standards such as the new OGC API Tiles candidate or the old WMS <a href="https://www.w3.org/2020/maps/supporting-material-uploads/presentations/Joan_Maso_Connection_Of_The_MapML_Initiative_With_OGC_Standards-V2.pptx">(slides)</a>
+</li>
+</ul>
+<p>In the talk you said that “MapML is the simplest way of adding geospatial information in web browsers”. I didn’t quite follow what led to this conclusion, and as compared to what. Can you elaborate here?</p>
+<p>Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3096_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joanma747</div>
+          <div class="creation_date">2020-09-22</div>
+          <div class="post_content">
+<p>For a user, adding a map in a page will be extremely simple. Only a  element in the page with a link to a MapML file. No need for JavaScript libraries, no need to know about APIs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2020-09-22</div>
+          <div class="post_content">
+<p>I think the use of the future tense “will” is great here, btw.  That is the objective, indeed is to make authoring a map about the same level of complexity as <code>&lt;video&gt;</code>, <code>&lt;audio&gt;</code> or <code>&lt;img&gt;</code>.  Nothing in that is meant to say that there are whole careers or more built on the complexities of authoring those media types, but it shouldn’t take a career in GIS to make a map on the Web. In fact, it should be perhaps the first thing taught to kids in school.  So, it’s not only about saving money, although I imagine it could do that, but more about reducing barriers to entry.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satakagi</div>
+          <div class="creation_date">2020-09-23</div>
+          <div class="post_content">
+<p>I have concerns about things URL-like string, which are called templates in WMTS.</p>
+<p><code>https://.../tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}/</code></p>
+<p>Something like this. Can a document with such a string be called a hyper-document?</p>
+<p>I feel this is incomplete as a hyperlink in the world of documents for web browsers.
+The implication is that by expanding this part({…}) based on some tiling rule, a large number of links will be generated. I could not find such a link-like description in other web browser standards.</p>
+<p>What seems to me to be a rather close story to this is the video streaming by HTML VIDEO MSE, fragmented video files. Even there, there’s no mention of this kind of template that automatically expands the path of fragmented resources in a nice way. It seems to use its own javascript logic to specify the fragmented resources. It also seems that even the source fragment files are basically inline extracts. For example, an MPD file from MP4Box.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3096_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joanma747</div>
+          <div class="creation_date">2020-09-23</div>
+          <div class="post_content">
+<p>First, let me say that URI Template is a IETF standard: <a href="https://tools.ietf.org/html/rfc6570" rel="nofollow noopener">https://tools.ietf.org/html/rfc6570</a></p>
+<p>Said that, I sympathize with what you said. we should not use href for something that is not a URI.
+In MapML the use of “&lt;input” to define the variables in the URI template partially addresses  of your concern.
+In the OGC API Tiles, the use of OpenAPI should clarify the meaning of the URI variables and, in principle, they are described there.</p>
+<p>Still your concern persists. We are using a href for a this that is not a URI but a template.
+Actually, in MapML tref is used instead of href.
+In OGC API there will be a templated=true to tell the reader that the URL is not completed.</p>
+<p>I have complained about the use of “link href” for tamplates in the OGC but the results of the discussion converged to worse solutions and I’m now trying to avoid the issue.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satakagi</div>
+          <div class="creation_date">2020-09-23</div>
+          <div class="post_content">
+<p>As I described in <a href="https://satakagi.github.io/mapsForWebWS2020-docs/QuadTreeCompositeTilingAndVectorTileStandard.html" rel="nofollow noopener">my paper</a>, I think it would be more flexible and compatible with web browsers to consider a mechanism to generate URLs for freely designed tiles with short javascript.</p>
+<p>As such a mention was made on day one, tiling is widely used in areas other than maps.
+But the attribute value “OSMTILE”, which seems to imply the expansion rule of the resource group of map tiles, seems to be dedicated to the map.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satakagi</div>
+          <div class="creation_date">2020-09-24</div>
+          <div class="post_content">
+<p>Supplemental.</p>
+<p>As I showed in my paper, in-line expanded tiling can be easily described within the current browsers’ specifications. And in some cases, this kind of  in-line expanded tiling even has an advantage over the equality divided tile pyramid with sequence functions that you might expect. Moreover, you can build an equality divided tile pyramid by making good use of those inline-expansion tiling features and piece of javascript code.</p>
+<p>So, I think it would be a desirable standard to have a mechanism that can support various tiling logics according to the current browser specification as a basis, and to put a mechanism for the equally-divided tile pyramid on top of it.</p>
+<p>Also, as the IETF document says about the template, it is something that changes to a URL depending on the expansion of the variable, so it would be essential to explain the variable.</p>
+<p>In the example above, it would be <code>{tileMatrix}, {tileRow}, {tileCol}</code>.
+The descriptive information about how the variables are created includes the attribute values of the three <code>input</code> elements and the special keyword <code>"OSMTILE"</code> for the <code>extent</code> element.
+But to understand the tiling logic behind it, you will surely need to decipher that OpenAPI thing you pointed out. However, it seems to me that asking the browser to understand it is a challenge. Rather, as I’ve <a href="https://discourse.wicg.io/t/use-cases-and-requirements-for-web-maps/4796/5">shown in my sample</a>, a few lines of javascript code making the tiling logic explicit will allow the browser to interpret it naturally. This is similar to the problem of data to describe services (GetCapabilities), which can be seen in WMS and others, and which I pointed out in the paper.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2020-09-25</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="4811" data-username="satakagi">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/satakagi/40/2084_2.png" width="20"/> satakagi:</div>
+<blockquote>
+<p>I have concerns about things URL-like string, which are called templates in WMTS.</p>
+<p><code>https://.../tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}/</code></p>
+<p>Something like this. Can a document with such a string be called a hyper-document?</p>
+<p>I feel this is incomplete as a hyperlink in the world of documents for web browsers.
+The implication is that by expanding this part({…}) based on some tiling rule, a large number of links will be generated. I could not find such a link-like description in other web browser standards.</p>
+</blockquote>
+</aside>
+<p>I believe so; I wondered about this for a long time, but the clue I needed about hypertext, and URL templates, is not so much the syntax of the strings, but how the variables get their values. In the MapML proposal, as in HTML, server variables get their names from the <code>&lt;input name&gt;</code> attribute. In the MapML proposal, the values get their value <strong>automatically</strong>, based on the  <code>&lt;extent&gt;</code> requirements.  This mechanism allows the server and the client to be decoupled, or coupled indirectly, through the media type.</p>
+<p>Per <a href="https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven" rel="nofollow noopener">Roy Fielding</a>:</p>
+<blockquote>
+<p>A REST API must not define fixed resource names or hierarchies (an obvious coupling of client and server). Servers must have the freedom to control their own namespace. Instead, allow servers to instruct clients on how to construct appropriate URIs, such as is done in <strong>HTML forms and URI templates</strong>, by defining those instructions within media types and link relations.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/751_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AmeliaBR</div>
+          <div class="creation_date">2020-09-27</div>
+          <div class="post_content">
+<p>Here’s the <a href="https://www.youtube.com/watch?v=kYZ1RBQFHEU&amp;list=PLNhYw8KaLq2VuEWzz096iRjtvWel-p2AJ&amp;index=2&amp;t=1850s" rel="nofollow noopener">video of Joan’s presentation on this topic</a> at the <a href="https://www.w3.org/2020/maps/agenda#day-2">Maps for the Web workshop</a>. Thanks <span class="mention">@zcorpan</span> for already posting the link to the <a href="https://www.w3.org/2020/maps/supporting-material-uploads/presentations/Joan_Maso_Connection_Of_The_MapML_Initiative_With_OGC_Standards-V2.pptx">powerpoint slides</a>.</p>
+<p>The live chat comments during the presentation were integrated with the spillover from <span class="mention">@ghobona-ogc</span>’s presentation, <a class="inline-onebox" href="https://discourse.wicg.io/t/ogc-geospatial-standard-apis-for-web-use/4842/3">OGC (geospatial standard) APIs for web use</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2084_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satakagi</div>
+          <div class="creation_date">2020-09-29</div>
+          <div class="post_content">
+<p>This thread is related to the mapml tile description.
+</p><aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f7329d45b75b305ddd18a82" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f7329d45b75b305ddd18a82" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@prushforth: @satakagi my question around that is: do the coordinate systems of deep zoom applications need to be unique?  Can they re-use tiled coordinate reference systems, or a tiled coordinate system defined explicitly for deep zoom applications?</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Also, following posts appears to be related to the tiles.</p>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b78eab39cb873c07b3dce" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b78eab39cb873c07b3dce" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: Re: tile zoom, See the Leaflet concep of  `max`/`minZoom` vs  `max`/`minNativeZoom` https://leafletjs.com/reference-1.7.1.html#gridlayer-minzoom
+One is the zoom levels that the thing is visible at, the other is the levels of the...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b6bdc6a6e094525b0449a" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b6bdc6a6e094525b0449a" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: &gt; Leaflet allows you to place any element in a grid, but I imagine getting all those videos synched up would be a challenge.
+
+I don't think it's a big deal, assuming all videos have the same length and are seekable. Keep a...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a4548417bf140aa07c932" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a4548417bf140aa07c932" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@prushforth: Leaflet allows you to place any element in a grid, but I imagine getting all those videos synched up would be a challenge.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f69ff2faaff36059b4ccadc" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f69ff2faaff36059b4ccadc" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@joanma747: We have to thing on how we can express a time slider in MapML. I suppose, it is part of the "controls".But we need the time in the URL template of tiles so it need to go as an "input" describing the time dimension of the tiles</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a45065efe9467b10c8629" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a45065efe9467b10c8629" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@zcorpan: For maps with a time dimension where the tiles change over time, I wonder if it makes sense to encode the tiles as videos</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d3ca80b5f3873c9ef1fe6" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d3ca80b5f3873c9ef1fe6" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: *Ideally*, the DOM scripting interface would have the same functionalities as, say, Leaflet / OpenLayers / etc, so stuff like custom tile buffers could be in.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b6ca1b8a99f4519a13309" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b6ca1b8a99f4519a13309" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: [![imagen.png](https://files.gitter.im/5f5a7673d73408ce4fee95e4/plHJ/thumb/imagen.png)](https://files.gitter.im/5f5a7673d73408ce4fee95e4/plHJ/imagen.png)</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b6c015efe9467b10f8b3c" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6b6c015efe9467b10f8b3c" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: I did some experiments with animated `.gif` tiles way back in the past, though. It was glittery fun.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a26ba4002c640b5dd9348" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a26ba4002c640b5dd9348" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: &gt; I don't know how GL works
+
+tl;dr: very different than 2D graphics APIs (think SVG), so IMO it's a mistake to force 2D rendering concepts into GL frameworks/ideas/engines</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a2464aaff36059b4d2eae" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a2464aaff36059b4d2eae" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: (as opposed to OpenLayers' WebGL layer to stitch tiles together, MapboxGL's WebGL magic for vector rendering, *et al*)</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a2413f41f4105e4ce49e0" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6a2413f41f4105e4ce49e0" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: Sure thing!</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f69ff9ab8a99f45199d7003" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f69ff9ab8a99f45199d7003" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: @joanma747 That's a fourth dimension to the map (lat, lng, zoom, time), and first we should separate the data visualization from the UI (buttons, sliders)</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f69f9e30b5f3873c9e67e12" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f69f9e30b5f3873c9e67e12" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@joanma747: If you want to comment on my presentation proposal for fully connecting OGC API tiles and MapML, you can go here:  https://discourse.wicg.io/t/ogc-api-tiles-as-provider-of-tiles-and-mapml-documents/4811</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f68ac39ce5bbc7ffddbb8ba" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f68ac39ce5bbc7ffddbb8ba" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@prushforth: @satakagi 
+
+&gt; This is one of the reasons why I prefer to use SVG as a description format for vector maps.
+
+Yes, the fact that you can target SVG with CSS is vital.  The issue with SVG paths is that because all the geometry is wrapped...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d3c64b8a99f4519a6068c" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d3c64b8a99f4519a6068c" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@shepazu: One way of integrating CSS is to allow an outline on the tile grid elements</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d30e1f41f4105e4d655e5" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d30e1f41f4105e4d655e5" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@AmeliaBR: Fred… just when you thought it was all about tiles, here we get ``!</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://cdn03.gitter.im/_s/cbf2cd498/images/favicon-normal.ico" width="32"/>
+<a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d2e398fe6f119635ca78f" rel="noopener nofollow ugc" target="_blank">gitter.im</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="128" src="https://avatars-04.gitter.im/group/iv/4/57542d40c43b8c601977afe6" width="128"/>
+<h3><a href="https://gitter.im/Maps4HTML/W3C-OGC-Workshop-Maps-For-Web?at=5f6d2e398fe6f119635ca78f" rel="noopener nofollow ugc" target="_blank">Maps4HTML/W3C-OGC-Workshop-Maps-For-Web</a></h3>
+<p>@IvanSanchez_gitlab: One of my wild ideas is to get rid of "zoom level", and specify the scale as the number of CRS units *on a diagonal*, to cover the use case of dynamic container sizes (i.e. when the map uses `vh` and/or `vw`)</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

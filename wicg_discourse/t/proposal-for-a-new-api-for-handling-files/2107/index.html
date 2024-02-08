@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for a new API for handling files</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for a new API for handling files</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simonbrown</div>
+          <div class="creation_date">2017-04-09</div>
+          <div class="post_content">
+<p>Native applications such as image editors and word processors are able to provide streamlined saving functionality. Once they take ownership of a file, either by opening an existing one or saving a new one, the user can save their changes to it without selecting a file again.</p>
+<p>Web applications are unable to do this. Saving changes to a file requires either opening the save dialog and the user re-selecting the file, or the file being saved to downloads under a new name.</p>
+<p>Previous proposals for solving this would give a web application permission to write to a file once it has been opened, which presents security issues. I believe a better solution would be for the user agent present a UI for opening and saving, and ask the web application to load or serialise a document when the user has indicated a clear intention e.g. clicking an “open” menu, or pressing ctrl/cmd-S. I believe this would have minimal security impact, but open up a wide range of possible new web applications e.g. image editors, text editors, IDEs which work with local files.</p>
+<p><a href="https://app.moqups.com/simonbrown60@gmail.com/6yhlhR6Qez/view" rel="nofollow noopener">UI mockup</a></p>
+<p><a href="https://gitlab.com/simonbrown/represented-files/blob/master/EXPLAINER.md" rel="nofollow noopener">Early draft explainer</a></p>
+<p>The API is currently called <em>represented files</em> after a vaguely similar concept in OSX, but this may need to be changed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-04-09</div>
+          <div class="post_content">
+<p>I really do not see how this is an improvement over writable files in any way.</p>
+<p>“Web applications having writable access to files for an extended period of time presents a security problem. This proposal avoids this by giving the user agent control over the process based on user interaction.”</p>
+<p>The user agent already has control of everything. Also, what is the security problem? The user would have already given permission to write to the opened file, and the browser could allow selecting whether access is retained.</p>
+<p>“This would tackle the issue of sites billing “save as” like “download,” as it would be clear to the user that the user agent is saving the app’s represented file rather than downloading something.”</p>
+<p>How is that a meaningful difference to users?</p>
+<p>“In native applications, a lot of boilerplate code has to be written for applications to be able to open, save, etc. This proposal would make it a much simpler process for web applications.
+It would save webapps from writing a lot of boilerplate code for opening and saving files and keeping track of open files.”</p>
+<p>Actually, that api looks rather unnecessarily complicated, compared to the open/save simplicity of the writable files proposal or even the more powerful native <a href="https://developer.chrome.com/apps/fileSystem" rel="nofollow noopener">chrome.fileSystem</a> api.</p>
+<p>“Features such as a recently opened list could also be implemented at the user agent level, without giving a webapp access to them for extended periods of time. Features such as autosave could also be implemented, and integration with other APIs would be simpler.”</p>
+<p>How would integration with other apis be simpler? And again, not having persistent access could be inconvenient. For example, when I open a code editor, I want it to automatically open whatever files I had previously.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simonbrown</div>
+          <div class="creation_date">2017-04-09</div>
+          <div class="post_content">
+<p>The security implications of writable files would depend on how long access to files is granted for:</p>
+<ul>
+<li>
+<p>If it is only for the session, it may only be a minor problem. There would be the issue of web applications prompting the user to open a file and then modifying it without permission. This could happen even if the browser warns the user that she is granting write access, as users don’t always read warnings or know whether they present a security issue. Granting access only for a session would make it difficult to implement features such as automatically opening recent files.</p>
+</li>
+<li>
+<p>If it is persistent, as would be required for functionality such as recent files, it may be more serious. A user might open a file with a webapp, granting it write access, and then the webapp modify it six months down the line, with the user having no way of knowing that the webapp modified it. They could use a browser UI to check which origins have access to which files, but this is unlikely to be something that non-technical users would do.</p>
+</li>
+</ul>
+<blockquote>
+<p>“Web applications having writable access to files for an extended period of time presents a security problem. This proposal avoids this by giving the user agent control over the process based on user interaction.”</p>
+</blockquote>
+<blockquote>
+<p>The user agent already has control of everything. Also, what is the security problem? The user would have already given permission to write to the opened file, and the browser could allow selecting whether access is retained.</p>
+</blockquote>
+<p>It would have control in the sense that it would determine when files are opened or saved, rather than the web application determining this. The security issues would be:</p>
+<ul>
+<li>A web application asks the user to select a file to open, but actually writes to it, either immediately, or at a much later date if it retains access. Even if the browser makes clear that the user is granting write permission, the user may not take note of this if they don’t read warnings.</li>
+<li>A web application asks the user to download a file, but retains access to it and overwrites it at a later date. As above, the web application may warn of the risk but it is likely to be difficult for the browser to convey this risk in a way the user can understand, and it would be difficult for the user to determine whether the webapp really needs what it is asking for.</li>
+</ul>
+<p>“This would tackle the issue of sites billing “save as” like “download,” as it would be clear to the user that the user agent is saving the app’s represented file rather than downloading something.”</p>
+<p>How is that a meaningful difference to users?</p>
+<p>“Download” is an action that writes to a file on a one-off basis, while “save as” would allow a webapp to retain access to a file.</p>
+<blockquote>
+<p>“In native applications, a lot of boilerplate code has to be written for applications to be able to open, save, etc. This proposal would make it a much simpler process for web applications.
+It would save webapps from writing a lot of boilerplate code for opening and saving files and keeping track of open files.”</p>
+</blockquote>
+<blockquote>
+<p>Actually, that api looks rather unnecessarily complicated, compared to the open/save simplicity of the writable files proposal or even the more powerful native chrome.fileSystem api.</p>
+</blockquote>
+<p>Fair enough. It requires less code to work with files but has the tradeoff of being conceptually harder to learn to use. There may be a way to better explain how the API works.</p>
+<blockquote>
+<p>How would integration with other apis be simpler?</p>
+</blockquote>
+<p>The example I have in mind is if an API is created for cloud file managers such as Dropbox to open files:</p>
+<ul>
+<li>With the writable files API, there may be no way for the user agent to know which filetypes a webapp is capable of handling, or to open a file with a webapp programmatically. If such an API was part of writable files, there would be no incentive for webapps to implement it initially as user agents would not be using it yet.</li>
+<li>With a represented files API, the user agent would already have a list of webapps supporting opening and/or saving a particular filetype, and a way to programmatically open them with a particular webapp.</li>
+</ul>
+<p>The browser would also have the flexibility to e.g. replace saving changes to text files with committing to a git repo. Whereas a writable files API would require webapps to be quite rigid in their UI and expectations around opening and saving, a represented files API would make it possible to replace the UI around saving with UI to commit changes and write a commit message.</p>
+<blockquote>
+<p>For example, when I open a code editor, I want it to automatically open whatever files I had previously.</p>
+</blockquote>
+<p>This would be something that the user agent (or an extension) could implement for all apps. If it is more appropriate for some apps than others it may be helpful for them to be able to hint at the behaviour most suited to them.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

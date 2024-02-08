@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Contact Picker API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Contact Picker API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rayankans</div>
+          <div class="creation_date">2019-04-17</div>
+          <div class="post_content">
+<p><a href="https://github.com/beverloo/contact-api" rel="nofollow noopener">https://github.com/beverloo/contact-api</a></p>
+<h1>Contact Picker API</h1>
+<p>This is a proposal for adding a Contact Picker API to the Web. Contact pickers are frequently seen in native mobile applications for a variety of <a href="#use-cases">use cases</a>, and in various desktop applications such as e-mail clients and calendars.</p>
+<p>Contact information is among the most sensitive information on a device, which is why we’re proposing a picker rather than a lower level API. This enables user agents to offer an experience that’s consistent with platform expectations, and to highlight the exact information that is to be shared with the website.</p>
+<p>This proposal does not address the source of the contacts. Many operating systems offer functionality to access the user’s contacts, and various browsers allow the user to log in which might provide access to contact information as well.</p>
+<h2>Use cases</h2>
+<ul>
+<li>Social networks could use contact information to bootstrap a user’s social graph. This is particularly important for emerging markets, where users might prefer a PWA over a native app due to storage constraints.</li>
+<li>An e-mail application could allow the user to select the recipients for a message without needing their own address book.</li>
+</ul>
+<h2>Why do we need a new built-in API?</h2>
+<ul>
+<li>Excluding the operating system, there is no canonical place where users maintain a list of their contacts. Developers would have to integrate with a variety of services to provide a comprehensive experience.</li>
+<li>User agents can offer an experience to users that’s consistent with other applications on the user’s device. The information that will is going to be shared with the website can be clearly highlighted.</li>
+<li>Contact information is sensitive. Individual contacts can have <a href="https://en.wikipedia.org/wiki/VCard#Properties" rel="nofollow noopener">any number of properties</a> associated with them. Websites seeking the e-mail address of a single user should not have access to the same information of all other contacts.</li>
+</ul>
+<h2>Example</h2>
+<pre><code class="lang-javascript">selectRecipientsButton.addEventListener('click', async () =&gt; {
+  const contacts = await navigator.contacts.select({
+      properties: ['name', 'email'],
+      multiple: true
+  });
+    
+  if (!contacts.length) {
+    // Either no contacts were selected in the picker, or the picker could
+    // not be launched. Exposure of the API implies expected availability.
+    return;
+  }
+  
+  // Use the names and e-mail addresses in |contacts| to populate the
+  // recipients field in the website's UI.
+  populateRecipients(contacts);
+});
+</code></pre>
+<h2>Proposed WebIDL</h2>
+<pre><code class="lang-auto">dictionary ContactInfo {
+    sequence&lt;USVString&gt; name;
+    sequence&lt;USVString&gt; email;
+    sequence&lt;USVString&gt; tel;
+};
+
+enum ContactProperty { "email", "name", "tel" };
+
+dictionary ContactsSelectOptions {
+    sequence&lt;ContactProperty&gt; properties;
+    boolean multiple = false;
+};
+
+[Exposed=Window, SecureContext]
+interface ContactsManager {
+    Promise&lt;sequence&lt;ContactInfo&gt;&gt; select(ContactsSelectOptions options);
+};
+
+[Exposed=Window, SecureContext]
+partial interface Navigator {
+    readonly attribute ContactsManager contacts;
+};
+</code></pre>
+<ul>
+<li>Sequences are returned for the properties as multiple may be available in the user’s address book. User agents are encouraged to enable users to limit their selection.</li>
+<li>Support for additional properties can be added iteratively. Whether the returned data can (and should) be sanitized is a question that’s unique to each property. At least one property must be provided.</li>
+<li>Some future might include the ability to add contacts, or even <em>contact management</em>, so having an intermediary object on <code>navigator</code> helps extensibility.</li>
+</ul>
+<h2>Security and Privacy</h2>
+<p>Exposing contact information has a clear privacy impact. We propose a picker model so that the user agent can offer a user experience that makes it clear what information in going to be shared with the website: the spec will have a MUST requirement to ensure that the user understands and selects which contacts or information to share.</p>
+<p>The API will only be available on secure contexts. Additionally, we propose that a user gesture is required in order to trigger the contact picker, to help avoid users from inadvertently seeing the picker.</p>
+<h2>Alternatives Considered</h2>
+<h5><code>&lt;input type="file" accept="text/contacts+json;items=name,tel" /&gt;</code></h5>
+<p>The Web Platform already supports a picker for external data through <code>&lt;input type="file" /&gt;</code>, which some user agents specialize based on the mime types that are being selected.</p>
+<p>Supporting contacts this way has a number of downsides:</p>
+<ul>
+<li>There is much contention in file types for expressing contact information. For most use cases, a <code>FileReader</code> would be used to read and parse the file in order to access the individual properties. We can optimize for this. Libraries can be used for converting this data in another format of the developer’s choosing.</li>
+<li>Feature detection is harder, and would likely need a new API such as <code>HTMLInputElement.isTypeSupported()</code> mimicking the <a href="https://www.w3.org/TR/mediastream-recording/#dom-mediarecorder-istypesupported"><code>MediaRecorder</code></a>. Unlike existing specializations of file pickers, contacts would be unlikely to gracefully degrade to a general picker.</li>
+<li>Extensibility is harder, as it would rely on additional parameters being passed to the mime type.</li>
+</ul>
+<h2>Potential follow-up work</h2>
+<ul>
+<li>As mentioned, more properties can be added iteratively as use cases are identified. It is a non-goal of this API to share <em>all</em> information stored for a particular contact without filtering.</li>
+<li>A Contact Provider API can be considered to complement data available from the operating system or the user’s account.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/954_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AaronGustafson</div>
+          <div class="creation_date">2019-04-21</div>
+          <div class="post_content">
+<p>I’d been thinking about a potential Contacts API, especially with respect to privacy, a bunch over the last 6 months and this hits every point for me. I love it! I also like the idea of a user gesture being an additional gate. I do wonder if we could consider install as a valid (and persistent) user gesture for PWAs, however.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npdoty</div>
+          <div class="creation_date">2019-04-21</div>
+          <div class="post_content">
+<p>I think the picker pattern is exactly right for this kind of granular and sensitive data, from a privacy and usability perspective.</p>
+<p>I wonder if another way to align it with the existing file picker metaphor would be to have it as a button or drag-and-drop rather than initiated by JavaScript (which also adds the requirement of making sure it’s triggered based on a user gesture). I see the suggestion that overloading <code>input type="file"</code> could have problems, but I could imagine a new input type (e.g. <code>input type="contacts"</code>) for this kind of picking. Personally, I think we should have the same for Geolocation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rayankans</div>
+          <div class="creation_date">2019-06-28</div>
+          <div class="post_content">
+<p>This API seems to have gathered enough interest so I’m requesting to move the spec to the WICG repo.</p>
+<p>Relevant Links:</p>
+<ul>
+<li><a href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/brKChSa9_d0" rel="nofollow noopener">Chrome/Blink intent to implement email</a></li>
+<li><a href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/GBgoS_eCmzM" rel="nofollow noopener">Chrome/Blink intent to experiment email</a></li>
+<li><a href="https://crbug.com/860467" rel="nofollow noopener">Chrome implementation bug</a></li>
+<li><a href="https://github.com/beverloo/contact-api/issues" rel="nofollow noopener">Issues on GitHub repo</a></li>
+</ul>
+<p>The GitHub issues contain contributions from Google, Microsoft, and Firefox. There’s also interest from Facebook on some of the issues. This thread includes <a href="https://discourse.wicg.io/t/proposal-contact-picker-api/3507/2">support</a> from Microsoft.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-06-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="3507">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/r/48db29/40.png" width="20"/> rayankans:</div>
+<blockquote>
+<p>The GitHub issues contain contributions from Google, Microsoft, and Firefox. There’s also interest from Facebook on some of the issues. This thread includes <a href="https://discourse.wicg.io/t/proposal-contact-picker-api/3507/2">support</a> from Microsoft.</p>
+</blockquote>
+</aside>
+<p>Support from Microsoft noted, so moving the repo to WICG LGTM.</p>
+<p>At the same time, I failed to find interest from Facebook on the issues, so for next time, would be good to provide direct links to such support statements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-07-08</div>
+          <div class="post_content">
+<p>The repo now lives under <a href="https://github.com/WICG/contact-api" rel="nofollow noopener">https://github.com/WICG/contact-api</a></p>
+<p>Happy incubationing!! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2776_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ab_fgo</div>
+          <div class="creation_date">2020-03-02</div>
+          <div class="post_content">
+<p>I hope that I can use my own stylesheet with the API to make some harmony in the app; because the page looks bad <img alt=":sob:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/sob.png?v=9" title=":sob:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Coms</div>
+          <div class="creation_date">2020-07-05</div>
+          <div class="post_content">
+<p>I’ve deployed the <span class="hashtag">#contactpicker</span> in coms.global’s Messenger product to make it easier for users to invite friends to the platform. Works like a charm - sends an editable default message by SMS. I hope this is adopted as a standard and other browser vendors catch up fast (Y). I like <strong>npdoty</strong>’s input type=“contacts” suggestion - that’s a very good idea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2993_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">masoud-msk</div>
+          <div class="creation_date">2020-07-07</div>
+          <div class="post_content">
+<p>This API is really useful for the new era of web apps and PWAs. Social network or IM apps often want to get all contact entries to build the user’s social graph, but I noticed for this to happen, user must manually select all entries. Am I missing something or it’s intended to be like this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3102_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Trapfether</div>
+          <div class="creation_date">2020-08-14</div>
+          <div class="post_content">
+<p>Being able to pick a contact is a great first step. Being able to to request to add a contact would be another. Like a portfolio page where the “Add To Contacts” button appears, when clicked a dialog appears for the user to accept or reject the contact.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kylesierens</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<p>This feature would open so many amazing doors for Web Apps and PWAs. We have long been waiting for something like this and anxiously await its arrival and acceptance on a grand scale! A big thank you to all behind it! &lt;3</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3452_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satyapratap-dev</div>
+          <div class="creation_date">2021-04-22</div>
+          <div class="post_content">
+<p>How can we get all contacts(with all contact properties) from the device phone book?</p>
+<p>We have one requirement where need to import the contacts and show on the page load. So, per my understanding only there is an option to open a picker and select the contacts.</p>
+<p>It would be great if navigator.contacts gives the all contacts on page load without showing the picker…  Please help me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2021-05-05</div>
+          <div class="post_content">
+<p>For privacy and security getting all contacts will <strong>NEVER</strong> be an option. The user MUST opt-in to what information is shared through this API.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

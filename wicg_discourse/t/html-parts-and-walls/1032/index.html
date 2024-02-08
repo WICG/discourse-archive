@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>HTML Parts and Walls</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">HTML Parts and Walls</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>This is a spec I’m currently drafting at <a href="https://github.com/stuartpb/pwalls-spec" rel="nofollow noopener">https://github.com/stuartpb/pwalls-spec</a> to solve a widespread problem many other developers and I have encountered with the current Web platform, in a simple, prollyfillable fashon that, unlike Web Components, doesn’t require widespread overhauls/throw-outs of an app/developer’s codebase, toolchain, organization pattern, or encapsulation model.</p>
+<p>You can read the proposal <a href="https://github.com/stuartpb/pwalls-spec/blob/master/README.md" rel="nofollow noopener">on GitHub</a> - rather than maintain a copy of the proposal in two places (GitHub and this post), I’m going to keep the proposal in that location up-to-date.</p>
+<p>Some differences from when I initially wrote my draft and when I most recently edited this post (seen in the replies below):</p>
+<ul>
+<li>The Walled Descendant Selector (originally called the Proot Boundary Selector) was originally suggested as <code>/</code>, not <code>|&gt;</code> as it is in the current spec.</li>
+<li>The original spec made a lot more references to Shadow DOM, which were removed because they made it seem like it was a declarative-DOM-encapsulation proposal.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>Without commenting on the rest (there’s a lot to take in), something that jumped out at me at first glance is I think that the Part Boundary Selector is problematic/needs tweaking…  Slash is already reserved for combinators of the style /foo/ (both sides slash)…  It’s a little tough to know what to suggest you change it to because I’m not sure what it ‘is’ here - it’s not a pseudo class or pseudo element, it’s not exactly like a combinator as described because somehow you are also using it to identify the thing itself too…  I suppose you could pick one of the few remaining characters left and invent something new but I don’t see anyone wanting to give up $ for example or wanting to invent a new concept within selectors to implement if we can somehow reasonably fit it into something existing… can we?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>I think that the Part Boundary Selector is problematic/needs tweaking…  Slash is already reserved for combinators of the style /foo/ (both sides slash)…</p>
+</blockquote>
+</aside>
+<p>I was thinking that avoiding the conflict with that is feasible, as all the uses of that <a href="http://www.w3.org/TR/selectors4/#idref-combinators">reference combinator</a> that I’ve seen have used (what I’m assuming is mandatory) whitespace on both sides. This would dictate the behavior of a single slash <em>immediately following</em> a selector, with no intervening space.</p>
+<p>If the space <em>isn’t</em> mandatory, this could be replaced with some arrow-like selector (eg. <code>=&gt;</code> or, since <code>/deep/</code> has been walked back, <code>&gt;&gt;&gt;</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>there’s a lot to take in</p>
+</blockquote>
+</aside>
+<p>TL;DR:</p>
+<ul>
+<li>Two new global attributes, <code>root</code> and <code>part</code>
+</li>
+<li>Elements with <code>root</code> count as a base / boundary when getting elements by <code>part</code> in JS</li>
+<li>CSS descendant selector for elements within <code>root</code> (and/or Shadow DOM) boundaries
+<ul>
+<li>Within bounded descendant selector, <code>#</code> matches <code>part</code> as well as <code>id</code>
+</li>
+</ul>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>It is <strong>exceedingly</strong> unlikely that something that was similar to, but wholly distinct from, Shadow DOM will have any traction whatsoever.  Nobody wants to implement two completely separate, but mostly overlapping, APIs if they don’t have to.</p>
+<p>Instead, helping to come up with ways to make Shadow DOM easier to use and solve other use-cases would be far more productive.</p>
+<p>Some specific points:</p>
+<ul>
+<li>
+<p>the /deep/ combinator and ::shadow pseudo-element were purposely removed, because they are crazy performance killers, and actually had fairly limited purpose; most styling either takes place within the component, or can be done via custom properties inheriting in.</p>
+<p>We plan to introduce ::part() or something like it in the future, once things finish settling down and get agreed on, to allow for a different kind of shadow-piercing.  (Variables let you pierce arbitrary values through a shadow, but the component has to predeclare what things will use variables. It’s best for adjusting things that are used repeatedly throughout a component, but bad for having particular parts of a component be highly customizable.  ::part() should be the opposite - ideal for making particular elements fully stylable, but terrible for overall theming.)</p>
+</li>
+<li>
+<p>Having getElementsByTagName() and querySelector() see different things and return different results would be very confusing.  Having querySelector() and CSS Selectors see different things and return different results would be very confusing.  By transitivity, all three need to have a consistent view of the DOM.  Without this, libraries will get very confused; today it doesn’t matter which of the three methods are used to apply styles in the DOM.</p>
+</li>
+<li>
+<p>Declarative shadow DOM is planned for the future. Again, we’re waiting for agreement and general interop for the basics first, getting the minimum viable product working well before we start tacking on nice-to-have features.</p>
+</li>
+<li>
+<p>I don’t understand what you mean by the “indexing elements within” section.</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>It is exceedingly unlikely that something that was similar to, but wholly distinct from, Shadow DOM will have any traction whatsoever.  Nobody wants to implement two completely separate, but mostly overlapping, APIs if they don’t have to.</p>
+</blockquote>
+</aside>
+<p>They’re not “mostly overlapping”, though. Shadow DOM cuts you off from a <em>lot</em> of techniques page authors have been using to build their pages, and will <em>continue</em> to use to build their pages. Unlike Shadow DOM, these <code>part</code> and <code>root</code> attributes do <em>not</em> impact existing behaviors of elements within pages when an element uses them. All the normal, working-joe content authors I’ve shown this to have said it makes more sense to them and their workflow than Shadow DOM.</p>
+<aside class="quote" data-full="true" data-post="5" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Having getElementsByTagName() and querySelector() see different things and return different results would be very confusing. Having querySelector() and CSS Selectors see different things and return different results would be very confusing.</p>
+</blockquote>
+</aside>
+<p>Yes, which is why neither of those things happen. I think you might have misread the spec. This <em>does not change</em> the behavior of <code>querySelector</code> or <code>getElementsByTagName</code>. It adds a <em>new descendant selector</em>, which works analogously to the <code>getPart()</code> function. When <em>not</em> using this descendant selector, <em>nothing changes</em>. (Again, I think you misunderstood and thought this is supposed to be something like “Declarative Shadow DOM”, which it’s not.)</p>
+<aside class="quote" data-post="5" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>I don’t understand what you mean by the “indexing elements within” section.</p>
+</blockquote>
+</aside>
+<p>If you’re talking about this:</p>
+<aside class="quote" data-post="1" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>Indexing elements within the component requires you to either go full-hog about designing the inner HTML to depend on Shadow DOM’s ID isolation, or use clumsy class-based addressing techniques.</p>
+</blockquote>
+</aside>
+<p>What I mean is you either have to use <code>id</code>, which is going to break if you use the HTML for your component in any context <em>other than</em> its own Shadow DOM, or you use <code>class</code>, which requires the really kludgy <code>getElementsByClassName('name-of-part')[0]</code>. (Also, <em>every sub-component of your HTML</em> is going to have to face one of these two restrictions as well - so you’re either juggling a half-dozen Shadow DOMs just to make a nametag, or you’re stuck with the same problems of CSS namespacing this was supposed to ameliorate.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>Ah, I did indeed completely misunderstand the proposal.  Now that I know what it is, I see the benefit a bit more.</p>
+<p>Correct me if this summary is wrong: This is a way to canonicalize BEM-style component-part-naming standards into a more usable, more dependable mechanism.  When you use the “component” combinator, it <em>only</em> selects elements within the component, not those inside of further-nested components.</p>
+<p>If this is correct, then I see the value and kinda like it.  I’m not sure I understand the value of adding <code>part</code> as an alternate ID (we can just stick with classes; just limit yourself to one use if you want it to be unique), but otherwise it’s pretty cool.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-07</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>I’m not sure I understand the value of adding part as an alternate ID (we can just stick with classes; just limit yourself to one use if you want it to be unique)</p>
+</blockquote>
+</aside>
+<p>I had the same thought coming into this, and here are the two reasons I went this way:</p>
+<ul>
+<li>using <code>part</code> specifically signals to validators or whatever that the attribute value is supposed to appear <em>only once</em> within the proot boundary (I’m using the term “proot boundary” instead of “component’s scope” for the moment to avoid confusion with other ways components can historically and speculatively be defined).
+<ul>
+<li>Beyond mere validation, having it as a distinct uniqueness-oriented namespace enables doing things like gathering all elements with a <code>part</code> attribute by name into a <code>parts</code> object-property on the proot element (or a special parts-only tree view eg. in DevTools), which would be less practical to do for all the defined <code>class</code> names.</li>
+</ul>
+</li>
+<li>using <code>part</code> lets you not have to worry about collisions in the global <code>class</code> namespace (ie. if I’m thinking about making a global “gauge” class, I don’t have to worry about how it will interact with any time I’ve ever used the name “gauge” as a part name within a component).</li>
+</ul>
+<p>EDIT: Also, using <code>part</code> allows for <code>getPart</code> to be optimized similarly to <code>getElementById</code>, rather than <code>getElementsByClassName</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>Can you explain how this might be different than adding in namespaces into tags?</p>
+<p>I get that:</p>
+<ul>
+<li>Tags would need to be defined with new namespaces</li>
+<li>That yours allows immediate access to adding <code>roots</code>
+</li>
+</ul>
+<p>However I feel namespaces give the same level of abstraction in terms of selecting elements and also specificity.</p>
+<p>Also I’m pretty sure there was some rumblings of adding that back into custom elements.</p>
+<p>Also yeah <code>root</code> isn’t a good name to use here if this happens as you mentioned.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>The big difference that makes this immediately work for me is that this doesn’t require new tags, at all. The root of your “component” with this can be an ordinary HTML tag with all its semantics ready-to-go, like <code>div</code>, or <code>select</code>, or <code>form</code>, or <code>picture</code> (which is usually all I really want - just a way of identifying and styling child elements underneath a parent element, without needing to write or formulate a script for “registration” constructions).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>The big difference that makes this immediately work for me is that this doesn’t require new tags, at all.</p>
+</blockquote>
+</aside>
+<p>I like that part of it certainly.</p>
+<p>So if all CSS used the root based selectors then there would be no CSS leakage? So in a external widget implementation it would be similar to them using scoped styles right?</p>
+<p>Does normal CSS impact the root’s? Would the following CSS impact your example?:</p>
+<pre><code class="lang-auto">div div {color:red !important;}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>So if all CSS used the root based selectors then there would be no CSS leakage? So in a external widget implementation it would be similar to them using scoped styles right?</p>
+</blockquote>
+</aside>
+<p>When using only proot-bounded-descendant-selectors, yes. An example of a stylesheet that could be applied to style the example HTML in the OP (using <code>=&gt;</code> as the PRBDS):</p>
+<pre><code class="lang-css">.lotto=&gt;.lid {
+  color: #800;
+}
+.lotto=&gt;#timer {
+  font-size: 24px;
+}
+.lotto=&gt;#bubble {
+  background-color: #0ff; border-radius: 999px;
+}
+.lotto=&gt;#track {
+  /* would only affect example-chosen-track,
+     without leaking to example-running-track */
+  border-bottom: 4px solid #999;
+}
+.lotto=&gt;#bubble=&gt;#track {
+  /* would only affect example-running-track */
+  border-bottom: 4px solid #999;
+}
+.lotto=&gt;#bubble=&gt;#funnel {
+  /* would affect example-bubble-funnel */
+  background: #444;
+}
+.lotto=&gt;#funnel {
+  /* would not affect anything because
+     example-lotto-bubble is a proot boundary
+     which is not crossed by =&gt; */
+  border: red; color: red; background: red;
+}
+</code></pre>
+<p>(This stylesheet would style elements with the <code>lotto</code> class name anywhere on the page: if you wanted to restrict it from use in sub-element contexts, you could prefix <code>.lotto</code> itself with <code>=&gt;</code>, though this is not currently in the spec.)</p>
+<aside class="quote" data-post="11" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Does normal CSS impact the root’s? Would the following CSS impact your example?:</p>
+<pre><code class="lang-auto">div div {color:red !important;}
+</code></pre>
+</blockquote>
+</aside>
+<p>Parts and roots do not change the behavior of normal CSS. This would apply the exact same way as if the part/root attributes were not present.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1032">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Also yeah <code>root</code> isn’t a good name to use here if this happens as you mentioned.</p>
+</blockquote>
+</aside>
+<p>Since “root” is used in so many other places in the DOM (and it introduces undue conflation with things like Shadow Roots), I’ve renamed everything that was described as a <code>root</code> or “proots” in this spec to <strong>walls</strong> (with the attribute now being <code>wall</code>). On top of being less likely to collide with names used for other aspects of elements, I think this also better conveys the purpose of this mechanism.</p>
+<p>I’ve also changed the proposed “walled descendant” selector to use the otherwise-invalid <code>|&gt;</code> sequence, to avoid issues with <code>/</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-18</div>
+          <div class="post_content">
+<p>I’ve written a proof-of-concept first-pass prollyfill for this spec: <a href="https://github.com/stuartpb/partywall" rel="nofollow noopener">https://github.com/stuartpb/partywall</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-23</div>
+          <div class="post_content">
+<p>I’ve migrated the much-smaller DOM aspects of the aforementioned polyfill to their own polyfill: <a href="https://github.com/stuartpb/getpart-polyfill" rel="nofollow noopener">https://github.com/stuartpb/getpart-polyfill</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-23</div>
+          <div class="post_content">
+<p>The next level of tooling I’d like to see for this is some plugin for Grunt / Gulp / whatever the kids are using these days, converting stylesheets written using the <code>|&gt;</code> Walled Descendant Selector (using postcss/autoprefixer or similar) into partywall-compatible <code>.parent[data-partywall-level="0"][wall] .child[data-partywall-level="1"]</code>-type rules (which the prollyfill then recognizes after the browser loads the stylesheet, and extends in the event that elements get created at further depths than the statically-generated rules include).</p>
+<p>This could also be combined with an HTML post-processor (and/or middleware for Express) that loads the <code>data-partywall-level</code> attributes onto elements in static HTML files (or rendered responses), so that the aforementioned styles apply immediately on first load, rather than waiting for the prollyfill to add the necessary depth attributes for matching (or breaking if the user has scripts disabled).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

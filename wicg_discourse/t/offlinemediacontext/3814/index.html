@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>OfflineMediaContext</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">OfflineMediaContext</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-13</div>
+          <div class="post_content">
+<p><strong><code>OfflineMediaContext</code></strong></p>
+<p><strong>Motivation:</strong></p>
+<ul>
+<li>
+<p>Create a video collage (<a href="https://creativecommons.org/about/videos/a-shared-culture" rel="nofollow noopener">A Shared Culture</a>; <a href="https://mirrors.creativecommons.org/movingimages/webm/ScienceCommonsJesseDylan_240p.webm" rel="nofollow noopener">Jesse Dylan</a>) in the browser, using only APIs shipped with the browser.</p>
+</li>
+<li>
+<p><a href="https://vimeo.com/168545600" rel="nofollow noopener">AT THE FRONTEND 2016 - Real time front-end alchemy, or: capturing, playing, altering and encoding video and audio streams, without servers or plugins!</a> by Soledad Penadés</p>
+<blockquote>
+<p>… so after a whole year of filing many bugs and crushing [sic] crashing the browser many many times, so like, all that, we are finally ready to talk about this kind of alchemy, the whole title is very long … so streams … it’s not like these streams you can’t join them … you can actually join them …</p>
+</blockquote>
+<blockquote>
+<p>… you might be like, “how many streams can you have?” …  <code>MediaStreams</code>  are  <code>track</code>  containers and probably that doesn’t tell you anything, but Tracks can be audio or video, so if you imagine [sic] a DVD, a DVD can have several tracks of audio, and in theory, several tracks of video, you can change between the scenes, which never happens because producers just gave up on the idea [sic] … But that’s the whole idea of DVD’s, and like, in general, streams of … media that you can have various tracks of things. So, you can have any number of tracks, so you can have any number of tracks streams. That was the premise that we got sold DVD’s based on.</p>
+</blockquote>
+<blockquote>
+<p>so we need people to have weird new ideas … we need more ideas to break it and make it better</p>
+<p>Use it</p>
+<p>Break it</p>
+<p>File bugs</p>
+<p>Request features</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>For now, two methods:</strong></p>
+<ul>
+<li><strong><code>decodeVideoData()</code></strong></li>
+<li><strong><code>merge()</code></strong></li>
+</ul>
+<p><strong><code>decodeVideoData()</code></strong></p>
+<p>Get image data from any video that HTML <code>&lt;video&gt;</code> element can play, both the total duration of a single video file and specific time slices or media fragment identifiers of multiple video files, (potentially) faster than real-time (we can parse the term “real-time” here if necessary; for this case we can begin with the definition: faster than default playback rate at HTML <code>&lt;video&gt;</code> element). It does not render the video data to a display device, but instead renders as quickly as possible, fulfilling the returned promise with the rendered result (<a href="https://github.com/WebAudio/web-audio-api/issues/1527" rel="nofollow noopener">https://github.com/WebAudio/web-audio-api/issues/1527</a>) as an <code>Array</code> of arrays of <code>ImageData</code> or <code>ImageBitmap</code> instances (see <a class="inline-onebox" href="https://discourse.wicg.io/t/efficiently-get-imagedata-from-a-video-mediastreamtrack/3755">Efficiently Get ImageData from a Video MediaStreamTrack</a>), or <code>ReadableStream</code>.</p>
+<pre><code>const omc = new OfflineMediaContext();
+const merged = await omc.decodeVideoData([
+                          , "data:video/webm;base64,&lt;data&gt;",
+                          , &lt;Blob&gt;
+                          , &lt;Blob URL&gt;
+                          , &lt;ArrayBuffer&gt;
+                          , &lt;TypedArray&gt;
+                          , "file:///path/to/media/file.ogv#t=2,5"
+                          , "https://path/to/media.file.mp4#t=5,7"
+                          , "https://path/to/media.file.mkv#t=5,7"
+                          ]); // Array of &lt;ImageData|ImageBitmap&gt; or ReadableStream
+</code></pre>
+<p><strong>Possible solutions:</strong></p>
+<ul>
+<li>Video <code>Worklet</code>
+</li>
+<li>Streams API</li>
+<li>Write the code from scratch</li>
+</ul>
+<p><strong><code>merge()</code></strong></p>
+<p>Any video that is capable of being played at HTML <code>&lt;video&gt;</code> element at the browser used should be capable of being decoded and written to a WebM compliant file (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=980822" rel="nofollow noopener">https://bugs.chromium.org/p/chromium/issues/detail?id=980822</a>), proven by <code>MediaRecorder</code> implementation. It should not be necessary to playback a previously determined list of full length videos and media fragments at HTML <code>&lt;video&gt;</code> to record using <code>MediaRecorder</code> and merge media fragments and entire videos into a single video (e.g., the experiments at <a href="https://github.com/guest271314/MediaFragmentRecorder" rel="nofollow noopener">https://github.com/guest271314/MediaFragmentRecorder</a>). The procedure should be possible without using HTML <code>&lt;video&gt;</code> or the current implementation of <code>MediaRecorder</code>, which requires playback in “real time”.</p>
+<pre><code>const omc = new OfflineMediaContext();
+const merged = await omc.merge([
+                          , "data:video/webm;base64,&lt;data&gt;",
+                          , &lt;Blob&gt;
+                          , &lt;Blob URL&gt;
+                          , &lt;ArrayBuffer&gt;
+                          , &lt;TypedArray&gt;
+                          , "file:///path/to/media/file.ogv#t=2,5"
+                          , "https://path/to/media.file.mp4#t=5,7"
+                          , "https://path/to/media.file.mkv#t=5,7"
+                          ]); // WebM compliant file
+</code></pre>
+<p><strong>Possible solutions:</strong></p>
+<ul>
+<li>Utilize the existing Media Decoder, Media Encoder, Web Media Player, WebM muxers already used in browser source code</li>
+<li>Utilize the FOSS MKVToolNix</li>
+<li>Write the code from scratch</li>
+</ul>
+<p><strong>Simiar proposals, issues:</strong></p>
+<ul>
+<li><a class="inline-onebox" href="https://discourse.wicg.io/t/rfc-proposal-for-integration-streams-mediastreamtrack-api/2256">RFC: Proposal for integration Streams &lt;--&gt; MediaStreamTrack API</a></li>
+<li><a class="inline-onebox" href="https://discourse.wicg.io/t/efficiently-get-imagedata-from-a-video-mediastreamtrack/3755">Efficiently Get ImageData from a Video MediaStreamTrack</a></li>
+<li><a href="https://github.com/domenic/streaming-mediastreams" rel="nofollow noopener">https://github.com/domenic/streaming-mediastreams</a></li>
+<li><a href="https://github.com/whatwg/html/issues/2824" rel="nofollow noopener">https://github.com/whatwg/html/issues/2824</a></li>
+<li><a href="https://github.com/whatwg/html/issues/2981" rel="nofollow noopener">https://github.com/whatwg/html/issues/2981</a></li>
+<li><a href="https://github.com/w3c/css-houdini-drafts/issues/905" rel="nofollow noopener">https://github.com/w3c/css-houdini-drafts/issues/905</a></li>
+<li><a href="https://github.com/w3c/mediacapture-record/issues/147" rel="nofollow noopener">https://github.com/w3c/mediacapture-record/issues/147</a></li>
+<li><a href="https://github.com/w3c/mediacapture-record/issues/166" rel="nofollow noopener">https://github.com/w3c/mediacapture-record/issues/166</a></li>
+<li><a href="https://github.com/w3c/mediacapture-record/issues/167" rel="nofollow noopener">https://github.com/w3c/mediacapture-record/issues/167</a></li>
+<li><a href="https://github.com/w3c/media-source/issues/190" rel="nofollow noopener">https://github.com/w3c/media-source/issues/190</a></li>
+<li><a href="https://github.com/w3c/mediacapture-record/issues/168" rel="nofollow noopener">https://github.com/w3c/mediacapture-record/issues/168</a></li>
+<li><a href="https://github.com/w3c/media-source/issues/209" rel="nofollow noopener">https://github.com/w3c/media-source/issues/209</a></li>
+<li><a href="https://github.com/whatwg/html/issues/3593" rel="nofollow noopener">https://github.com/whatwg/html/issues/3593</a></li>
+<li><a href="https://github.com/whatwg/html/issues/2981" rel="nofollow noopener">https://github.com/whatwg/html/issues/2981</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

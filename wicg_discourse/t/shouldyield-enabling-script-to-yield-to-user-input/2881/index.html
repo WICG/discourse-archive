@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>shouldYield - enabling script to yield to user input</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">shouldYield - enabling script to yield to user input</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-07-06</div>
+          <div class="post_content">
+<p>Explainer <a href="https://github.com/tdresser/should-yield/blob/master/README.md" rel="nofollow noopener">here</a>, and pasted below.</p>
+<h1>shouldYield</h1>
+<h2>The Problem</h2>
+<p>Today, developers must tradeoff how fast they can accomplish large blocks of
+work and how responsive they are to user input. For example, during page load,
+there may be a set of components and scripts to initialize. These are often
+ordered by priority: for example, first installing event handlers on primary
+buttons, then a search box, then a messaging widget, and then finally moving on
+to analytics scripts and ads.</p>
+<p>In this example, a developer can either optimize for:</p>
+<ul>
+<li>Completing all work as fast as possible.
+<ul>
+<li>For example, we want the messaging widget to be initialized by the time the
+user interacts with it.</li>
+</ul>
+</li>
+<li>Responding to user input as fast as possible.
+<ul>
+<li>For example, when the user taps one of our primary buttons, we don’t want to
+block until our whole page is ready to go before responding.</li>
+</ul>
+</li>
+</ul>
+<p>Completing all work as fast as possible is easy, the developer can simply
+execute all the work in the minimal number of tasks.</p>
+<p>Responding to user input as fast as possible today requires paying some
+performance overhead, and minimizing that performance overhead is quite
+complicated. The most straight forward approach is to perform a unit of work,
+and then <code>setTimeout(..., 0)</code> or <code>setImmediate(...)</code> to continue the work.</p>
+<p>The performance overhead of this approach comes from a few sources:</p>
+<ul>
+<li>Inherent overhead in posting a task.</li>
+<li>Task throttling from the browser.</li>
+<li>Execution of other browser work, such as rendering, postponing task execution.
+<ul>
+<li>Sometimes this is desirable, to get something visible on screen sooner. If
+we’re executing script which is required to display our app however, this
+isn’t desirable.</li>
+</ul>
+</li>
+</ul>
+<h2>Proposal</h2>
+<p>In order to enable developers to complete their work as fast as possible if the
+user isn’t interacting, but respond to user input as fast as possible if input
+occurs, we propose adding a new <code>window.shouldYield()</code> API, which returns true
+if there is user input pending. To avoid script from misbehaving, and preventing rendering for multiple seconds, user agents will also be permitted to return <code>true</code> if script has been executing for too long.</p>
+<h2>Example</h2>
+<p>Using <code>shouldYield</code> requires having some way to schedule tasks. We anticipate
+most adoption coming from frameworks and large sites. However, if you have a
+list of tasks that need executing, adoption is very simple.</p>
+<pre><code class="lang-javascript">let taskQueue = [task1, task2, ...];
+
+function doWork() {
+  while (let task = taskQueue.pop()) {
+    task.execute();
+    if (shouldYield()) {
+      setTimeout(doWork, 0);
+      break;
+    }
+  }
+}
+
+doWork();
+</code></pre>
+<h2>Constraints</h2>
+<p>Ideally, a solution to this problem would meet the following constraints:</p>
+<ol>
+<li>Enable stopping JS execution when input arrives.</li>
+<li>Enable efficiently resuming JS execution once input has been processed.</li>
+<li>Provide the browser a way to stop the JS from executing when input isn’t
+pending, in case the browser decides it really needs to draw something.</li>
+<li>Not require paying the cost of posting a task unless the browser has
+pending high priority work</li>
+<li>Prevent other JS from running between when the script stops and resumes JS
+execution
+<ul>
+<li>This excludes JS associated with browser work like event processing, rAF
+callbacks etc</li>
+</ul>
+</li>
+</ol>
+<p>This proposal focuses on constraints 1, 3 &amp; 4, and ignores 2 and 5, which will
+be addressed independently.</p>
+<p>The fifth constraint is interesting - in order for work which is incentivized to
+finish quickly (e.g., ads script) to be able to adopt this API and improve
+responsiveness to input, we need some way to prevent arbitrary javascript from
+executing between when script yields and when it is rescheduled.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-07-07</div>
+          <div class="post_content">
+<p>Isn’t this what <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback" rel="nofollow noopener">requestIdleCallback</a> is for?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-07-09</div>
+          <div class="post_content">
+<p>Great question: rIC is for low priority work, and will be postponed by a variety of other things the browser could be doing - rendering an animation for example.</p>
+<p>In particular, from <a href="https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm" rel="nofollow noopener">the spec</a>:</p>
+<blockquote>
+<p>The user agent SHOULD choose deadline to ensure that no time-critical tasks will be delayed even if a callback runs for the whole time period from now to deadline. As such, it should be set to the minimum of: the closest timeout in the list of active timers as set via setTimeout and setInterval; the scheduled runtime for pending animation callbacks posted via requestAnimationFrame; pending internal timeouts such as deadlines to start rendering the next frame, process audio or any other internal task the user agent deems important.</p>
+</blockquote>
+<p>rIC is for scheduling low priority tasks, but this API enables keeping work scheduled unless an extremely high priority task (i.e., an input related task) comes in.</p>
+<p>In the loading example I outlined, we don’t want to consider initializing a search box to be low priority, we just want to prioritize input higher.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-07-10</div>
+          <div class="post_content">
+<p>So this is basically rIC but with a higher priority? In that case why not reduce the API surface by making it a priority parameter to rIC?</p>
+<p>Even if you do that I think it will be tough to unambiguously define each priority level, and of all the possible events the browser could handle, which count as being allowed to interrupt which priority levels.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-07-10</div>
+          <div class="post_content">
+<p>If you want to respond to input as quickly as possible using some kind of “high priority rIC”, you need to break your tasks into tiny pieces, such that input could be processed between consecutive pieces of work. Breaking the tasks into tiny pieces means you’ll end up paying the overhead of posting a task many times, which is too expensive.</p>
+<p>See constraint <span class="hashtag">#4</span>. We want a solution that does “Not require paying the cost of posting a task unless the browser has pending priority work”.</p>
+<p>This proposal attempts to avoid talking about task priorities. The only signal we need to define is what it means for user input to currently be pending, which should be reasonably straight forward.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-07-10</div>
+          <div class="post_content">
+<p>But your own example uses <code>setTimeout</code>, which will post a task to invoke the callback after the specified timeout. It’s the same as rIC: you simply work for as long as it is safe to (50ms to meet the threshold of perception of instant response), then post a task to do the next chunk. The overhead of posting a task should be negligible compared to 50ms of useful work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-07-11</div>
+          <div class="post_content">
+<p>In my example, we only post a task if we receive input.</p>
+<p>We’re trying to eliminate the 50ms of latency introduced by a rIC type approach. One solution would be to break the work up into (for example) 1ms tasks, but then the task posting overhead becomes prohibitive.</p>
+<p>You’re right that if we’re willing to accept 50ms of added latency, we could get away with breaking the work into 50ms chunks. If we want to eliminate that latency, we need a new API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-07-11</div>
+          <div class="post_content">
+<p>It’s not 50ms of latency. It’s 50ms of useful work until you have to post a new task.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-07-11</div>
+          <div class="post_content">
+<p>Sorry, not quite following. The situation here is that we have some work that needs to get done, which isn’t related to input processing. In the example in the explainer, suppose we’re done installing event handlers on primary buttons, and are now working on initializing the search box, when a user taps on a primary button.</p>
+<p>If we’re initializing the search box in a series of 50ms tasks, then if the user taps at the beginning of a 50ms task, we get an extra 50ms of latency in processing that tap.</p>
+<p>On the other hand, if we initialize the search box in a series of 1ms tasks, then if the user taps at the beginning of a 1ms task, we get an extra 1ms of latency in processing the tap. However, initializing the search box will take much longer due to the overhead of posting a ton of tasks.</p>
+<p>Finally, if we use <code>shouldYield()</code>, then we can frequently check if there’s pending input while initializing the search box. Suppose we check once every 1ms. Then we get a maximum of 1ms of added latency, and only pay the overhead of posting a task if user input shows up.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-07-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="2881">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tdresser/40/1740_1.png" width="20"/> tdresser:</div>
+<blockquote>
+<p>If we’re initializing the search box in a series of 50ms tasks, then if the user taps at the beginning of a 50ms task, we get an extra 50ms of latency in processing that tap.</p>
+</blockquote>
+</aside>
+<p>That’s within the threshold of perception of instantaneous. So nobody will notice.</p>
+<p>Also I’m not sure if browsers are allowed to change the rIC deadline dynamically, but if they are, they could adjust it in response to incoming input events so it bails out earlier.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-07-12</div>
+          <div class="post_content">
+<p>An event which is handled in 50ms is perceived as instantaneous in some cases.</p>
+<p>Keep in mind that there’s also the event handler duration: an event with 50ms of queueing time and a 100ms event handler will feel noticeably more sluggish than an event that just has a 100ms event handler.</p>
+<p>There are also many types of input for which a 50ms feels nowhere near instantaneous. Typing for example. Compare typing on <a href="https://output.jsbin.com/buxapan/quiet" rel="nofollow noopener">this page</a> vs <a href="https://output.jsbin.com/hixewed/quiet" rel="nofollow noopener">this page</a>.</p>
+<p>One of these pages has (almost) back to back 50ms long tasks, the other doesn’t. It’s pretty easy to tell which is which.</p>
+<p>Touch dragging is even more latency sensitive, but touch dragging that blocks on script execution is fairly rare during page load.</p>
+<p>Making a higher priority rIC as we discussed above, and then also enabling it to update it’s deadline by changing the result of IdleDeadline.timeRemaining() would be another possible solution. It feels more complicated and less ergonomic to me though. What should the default deadline be for a high priority rIC? There are certainly times where executing more than 50ms of work is fine during page load. What does “high priority” mean in the context of an “idle callback”? The two sound somewhat contradictory.</p>
+<p>The high priority rIC approach would also prevent us from addressing constraint <span class="hashtag">#5</span> in the future, as it forces a specific way of rescheduling yourself, whereas ShouldYield allows rescheduling yourself any way you want.</p>
+<hr/>
+<p>Aside: <a href="https://www.nngroup.com/articles/powers-of-10-time-scales-in-ux/" rel="nofollow noopener">The literature</a> doesn’t claim that there’s no value to responding in &lt; 100ms. If you respond in &lt; 100ms then users feel like they’re directly manipulating objects in the UI. This is fairly subjective. More <a href="http://www.tactuallabs.com/papers/designingLowLatencyDirectTouchInputUIST12.pdf" rel="nofollow noopener">rigorous research</a> has shown that users can identify differences in latency down to 6ms (and some participants in this study down to &lt;3ms).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">n8schloss</div>
+          <div class="creation_date">2018-07-18</div>
+          <div class="post_content">
+<p>This api would be incredibly useful for Facebook!</p>
+<p>Looking at our data for the time between when we an event and the event start time (in Chrome only, since in Chrome event start time is when the browser got the event not when it was dispatched) it looks like this could improve many interactions by 50-150ms on average for us. This would be very impactful, as an improvement like that tends to positively affect downstream metrics in large ways.</p>
+<p>We would use this API in places where we wouldn’t normally like to take the perf hit of deferring work via requestIdleCall back, but we would like to stop what we’re doing if we know that there’s higher pri work. A great example here is loading the site, normally we want to totally focus on finishing loading the current page, however if there’s a click event we’d rather start focusing on that. shouldYield would let us know we need to pause running the scripts involved in loading the page so we can get the click event and change our priorities based on the event.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2018-07-26</div>
+          <div class="post_content">
+<p>Are you referring to the Event.timestamp? Firefox also uses the timestamp from when the event was generated, not when it was dispatched (as of Firefox 33, about 4 years ago).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/966_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nic_Jansma</div>
+          <div class="creation_date">2018-08-15</div>
+          <div class="post_content">
+<p>This would be useful for our RUM library, Boomerang, as well.</p>
+<p>Boomerang is often loaded as a third-party library before <code>onload</code>, so any work we’re doing can affect responsiveness and possibly trigger long tasks.  We have two main phases of work before onload (“initialization” and when we receive “config”), and through our experimentation and observation[1], we can bump against or exceed the 50ms LongTask threshold, especially on lower-end devices.</p>
+<p>We’ve been considering how we can break apart the work we’re doing during these phases so we’re not executing solid chunks of work, potentially getting in the way of page responsiveness.  We’re planning on using <code>setTimout()</code> / <code>setImmediate()</code>, but when we have a lot of little chunks of work, it would be nice to have something like <code>shouldYield()</code> to signal we can run serially.</p>
+<p>One thought is how <code>shouldYield()</code> would interact with synthetic and RUM Time to Interactive measurements – if a developer is using <code>shouldYield()</code> and they know work is not pending, it would be good to incorporate this so TTI calculations aren’t extended.</p>
+<p>[1] <a href="https://nicj.net/an-audit-of-boomerangs-performance/" rel="nofollow noopener">https://nicj.net/an-audit-of-boomerangs-performance/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-08-15</div>
+          <div class="post_content">
+<p>Good point regarding impact on metrics. We’ve considered this for some of our internal metrics, but haven’t thought about it for the long tasks API.</p>
+<p>Should a 60ms task with a shouldYield call at 30ms fire a long task event?
+Probably not. We likely want to consider shouldYield() calls to be the equivalent of ending the current task and immediately starting another.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/878_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">toddreifsteck</div>
+          <div class="creation_date">2018-09-04</div>
+          <div class="post_content">
+<p>I’ve been thinking a fair amount about this. My first thought is that previous task queuing systems I’ve been part of designing have chosen not to expose this type of bit because all tasks should self-manager. Tim and I have discussed and I’m willing to agree that the single-threaded nature of the web may make it different and thus perhaps this type of API is needed. (Note that my preferred method for improving UI thread availability is continuing to improve the ability for JavaScript to do important work off of the UI thread.)</p>
+<p>I wonder if exposing the oldestInputQueuedTime would be a better primitive? This allows the user code to determine how many ms is important. High speed games may want to use 16 ms while other applications may want to use something as high as 200 ms. This also couples the API to input rather than making it a heuristic that browsers can fiddle with after shouldYield becomes used. This helps to ensure that user agents behave in a similar way as the primitive of exposing the oldest input event’s time is a crisp primitive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2018-09-07</div>
+          <div class="post_content">
+<p>I 100% agree that ideally we’d move more work off the UI thread, but in cases where that isn’t possible (and until we’ve build sufficient tooling to make that easy), I think a primitive like this makes sense.</p>
+<p>One of my concerns with this API is that developers will avoid yielding for multiple seconds if no input shows up, preventing any rendering at all during page load, for example. That’s the only reason I opted for <code>shouldYield</code> over <code>hasPendingUserInput</code> or similar - to give the browser an escape hatch if the page is blocking for extremely long periods of time.</p>
+<p>If others don’t share that concern, then I’m certainly happy focusing on just the user input case.</p>
+<p>My thinking previously was that developers would want to yield as soon as input showed up in all cases, but it’s true that there are cases where input is lower priority. This could be a bit of a slippery slope though. Knowing how long the event has been queued is helpful, but maybe you also want to respond more quickly to touchmoves than to clicks! Maybe clicks in some locations are higher priority than clicks in other locations! Pretty soon we’ve invented a polling based event system.</p>
+<p>Just exposing the oldest input timestamp does feel like a reasonable position along that continuum though. I’m happy to rephrase either as a boolean <code>hasPendingUserInput</code> or <code>oldestInputQueuedTime</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1740_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tdresser</div>
+          <div class="creation_date">2019-01-18</div>
+          <div class="post_content">
+<p>We hope to move the explainer repo to WICG shortly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-01-18</div>
+          <div class="post_content">
+<p>The explainer repo was adopted by the WICG GH org and now lives at <a href="https://github.com/WICG/is-input-pending" rel="nofollow noopener">https://github.com/WICG/is-input-pending</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

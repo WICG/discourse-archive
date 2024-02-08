@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Dynamically Zoom-able Elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Dynamically Zoom-able Elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/848_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wenyu_dong</div>
+          <div class="creation_date">2015-12-15</div>
+          <div class="post_content">
+<p>Dynamically Zoom-able Elements<br/>
+<br/>
+Author:<br/>
+DONG Wenyu, China Mobile<br/>
+WANG Xiaozhen, RAN Songnan, UC Web<br/>
+ZHANG Hongfei, BAIDU<br/><br/></p>
+<p>Abstract<br/>
+This document proposes a means to enable web page developers to designate specific element(s) which can be zoomed on screen according to users’ orders. That is, when a user performs specific actions on the element(s) like continuous pressing or double clicking, the browser can display the element(s) on a large scale on the top level, while the overall page is still displayed with original size.
+This means balances details in focused area as well as overall layout of the whole page, applicable for scenarios like geo-navigation, jewelry presentation, etc…<br/></p>
+<ol>
+<li>Introduction<br/>
+1.1	Scenarios<br/>
+There are some cases where users need to amplify the appearance of a focus areas while being able to see the overall layout of the whole page.<br/>
+</li>
+</ol>
+<p>As shown in the following figures, the dynamic zooming-in capability can be used to <br/></p>
+<ol>
+<li>display details of a static picture, or <br/>
+</li>
+<li>display the inputted text in real-time <br/>
+<br/>
+<img height="158" src="//discourse.wicg.io/uploads/default/original/1X/d4f14db1d24b962aef2e489c5e327736939573fd.png" width="234"/> <br/>
+Fig 1-1	zoom-in while displaying a picture <br/>
+<img height="69" src="//discourse.wicg.io/uploads/default/original/1X/0efb17046e92dc6d1172017aa906c9ff2ce23e00.png" width="263"/><br/>
+Fig 1-2	zoom-in while inputting <br/>
+</li>
+</ol>
+<p>1.2	Existing approaches <br/>
+There have been solutions to zoom-in/out the web pages. <br/>
+1.2.1,	Browser-based <br/>
+Browsers amplify the whole page and all elements will be zoomed-in on the same scale. <br/>
+This capability is supported by most browsers like Chrome, IE. <br/>
+But the limitation is obvious. The zoomed-in page might be larger than the screen, so users have to scroll left-to-right and/or up-to-down to see the complete page. <br/>
+1.2.2,	CSS-based <br/>
+Developers use CSS to select specific elements, and endow them the ability to dynamically zoom-in/out. The following statement will enable the element <span class="hashtag">#zoomdemo</span> to display 300% larger.</p>
+<div>This sentence will be zoomed to 300%</div>
+<br/>
+<p>3,	Content-trimmed <br/>
+When users require to zoom-in a specific area to a larger scale, only elements that fit in the destination scope is displayed, while the rest of page will be discarded since it will be out of the page on the desired scale. <br/>
+For nowadays geo-navigation application, when users zoom-in a portion of the map, the selected portion will fill the whole screen, and the rest part will be invisible at all. <br/>
+<br/>
+1.3	Suggested solution <br/>
+The suggested solution is that we shall: <br/></p>
+<ol>
+<li>let element-level dynamic zooming-in become a standard, native capability of browsers, and <br/>
+</li>
+<li>introduce new attributes into HTML. <br/>
+This is because: <br/>
+</li>
+<li>The requirements are becoming popular, esp. on small-screen devices; <br/>
+</li>
+<li>Simplify the development; <br/>
+</li>
+<li>Every element can be amplified as users’ selection, contrast to existing CSS-based approach by which only those elements that are designated and programmed by developers can have the capability to zoom-in. Sometimes it is hard to anticipate which area(s) should have the zooming-in capability in developing period. <br/> <br/>
+</li>
+</ol>
+<p>-2-. Specification <br/>
+New attributes need to be introduced into specific elements.   <br/></p>
+<ol>
+<li>New attribute: localzoom. localzoom = enabled / disabled. ‘Disabled’ is by default. <br/>
+</li>
+<li>Element scope. It is suggested that container elements, like &lt; BODY&gt;、&lt; DIV&gt;、&lt; IFRAME&gt;, should have this attribute <br/>
+Note: <br/>
+</li>
+<li>Inheritance. Unless explicitly specified, inner elements inherit the value of ‘localzoom’ from outer elements. <br/>
+</li>
+<li>Zooming-in scope. It is the user who decide the scope of zooming-in. browsers shall provide mechanisms by which to ease the users’ operation (inputting/selecting etc) procedure. For example, when a user presses an area continually for a period of time, the browser can display a dashed-lined rectangle/circle which is enlarging steadily to indicate the desired zooming-in scope. When the user is satisfied with the scope, he/she can release the pressing finger. <br/>
+</li>
+<li>Zooming-in style. It is up to browsers’ decision, including scale, location, timing, auto wrapping, etc… <br/>
+</li>
+<li>Triggering condition. It is up to browsers’ decision. For example, long time pressing continually, or double/triple clicking. <br/> <br/>
+</li>
+</ol>
+<p>-3-. Use cases <br/>
+3.1 Zooming–in for a single element <br/>
+The following statement can zoom-in the &lt; input&gt; area on the top level, while the whole page still displayed.  <br/> <br/>
+&lt; form action=……&gt;
+……
+&lt; DIV localzoom=“enabled”&gt;
+&lt; input name=“AccountID” type=“text” &gt;
+&lt; /DIV&gt;
+……
+&lt; /form&gt;
+<br/> <br/>
+3.2 Zooming–in for a set of elements <br/>
+The following statement can enable all elements within  with the dynamic zooming-in capability. <br/>
+Note: this does not mean that all elements in the  will necessarily display at an amplified scale at the same time. On the contrary, only elements selected by the user will do so. The dynamical zooming-in scope is decided by the user when he/she is performing specific actions like pressing continually and acknowledge the browser’s hint (like dashed-lined rectangles). <br/> <br/>
+&lt; form  action=…… localzoom=“enabled”&gt;
+……
+&lt; input name=“AccountID” type=“text” &gt;
+……
+&lt; /form&gt;
+<br/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2015-12-21</div>
+          <div class="post_content">
+<p>This has some overlap with IE’s <a href="https://msdn.microsoft.com/en-ca/library/windows/apps/hh441251.aspx" rel="nofollow noopener">content zooming feature</a>.  Have you played with that at all?  We (chromium input team) have chatted with the Microsoft folks responsible for that feature a few times, but our mutual conclusion has been that this is really something that’s better left to a library than built into the browser.  The customers they built that API for ultimately didn’t use it because they wanted more control over how exactly the zoom behaved.</p>
+<p>How well could a browser implement such features without any API from the developer?  Eg. could a UA start by enabling this on all input fields and images?  I assume the benefit of an explicit API is to let developers disable the feature when it gets in the way, or to control the scope of what exactly gets zoomed, right?  Seeing a compelling feature that works automatically some of the time would help motivate the need for an API to give developers control over the behavior.</p>
+<p>Could what you describe be built as a polyfill/library today?  What are the limitations of such an approach that would require native browser support?  Again seeing a lot of sites adopt such a library could help motivate the need to build such APIs directly into the browser.</p>
+<p>You say a goal is to “balance details in focused area as well as overall layout of the whole page”.  But this seems very hard to do well automatically, right?  Eg. when zooming an input field, how should the UA decide where to position the zoomed content to minimize the risk that it’ll overlap something else the user cares about?  How is this inherently better than just zooming the whole page (“trimming”)?  I’d love to play with some examples of entering text on a phone.  It’s not obvious to me how we could get a UI that feels better in most situations than the existing behavior in Safari and Chrome (although I agree that’s not great).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/909_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">vitim</div>
+          <div class="creation_date">2016-03-06</div>
+          <div class="post_content">
+<p>Sorry if I’m getting off-topic, but this is what apple solved when they introduced pinch-to-zoom, a generic approach to zoomable content. which seems that a lot of devs disable with <code>&lt;meta name="viewport" content="initial-scale=1, maximum-scale=1"&gt;</code> which for me sound totally wrong. Because the feature is there, if a user tries to zoom-in is because they want/need to see it larger, so why don’t let then read at the size they want. Then if they don’t, they don’t. Why bother disabling this great accessibility feature.</p>
+<p>Back to the OP, I think this is more suited for a custom element rather than on the spec. Just my 2c.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/863_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SaschaNaz</div>
+          <div class="creation_date">2016-07-25</div>
+          <div class="post_content">
+<blockquote>
+<p>What are the limitations of such an approach that would require native browser support?</p>
+</blockquote>
+<p>I think zooming with responsive images will be better with native browser support. A library can load a larger image by detecting zoom level but with potentially long download delay.</p>
+<p>Example: <a href="https://jsfiddle.net/saschanaz/8Laaswgd/" rel="nofollow noopener">https://jsfiddle.net/saschanaz/8Laaswgd/</a> (image will be cached so please remove cache before page refresh)</p>
+<p>This example receives click event and load larger and larger file of the same picture. The problem is the browser first removes the whole image from display before reloading new one and thus causing flickering. This gets more critical when network speed is slow and image size is huge.</p>
+<p>XHR can be used instead to prevent flickering, but I can think a better one: repaint on existing image in real time. And this requires native support (as a polyfill will require manual image decoder which will be definitely slower than browser native one).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

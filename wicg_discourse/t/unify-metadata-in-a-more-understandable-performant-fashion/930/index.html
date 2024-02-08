@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Unify metadata in a more understandable &amp; performant fashion</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Unify metadata in a more understandable &amp; performant fashion</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-07-15</div>
+          <div class="post_content">
+<p>Page/site metadata is a horrible, inescapable, frustrating, time-sucking mess. There’s no way to achieve compatibility with one user-agent without having other user-agents suffer, if only because of extra HTML to download.</p>
+<h2>Icons &amp; Decoration</h2>
+<p>Icons and other bookmarking data are easily the worst of the lot.</p>
+<p>If you believe the standards about browsers deciding what icons to download based on the <code>sizes</code> attribute, then you would merely have to write this titanic pile of sludge in order for every browser/crawler to download only what it needs:</p>
+<pre><code class="lang-auto">&lt;link rel="icon" type="image/png" href="/icons/favicon-16.png" sizes="16x16"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/favicon-32.png" sizes="32x32"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/favicon-96.png" sizes="96x96"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/android-chrome-36.png" sizes="36x36"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/android-chrome-48.png" sizes="48x48"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/android-chrome-72.png" sizes="72x72"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/android-chrome-96.png" sizes="96x96"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/android-chrome-144.png" sizes="144x144"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/android-chrome-192.png" sizes="192x192"&gt;
+&lt;link rel="icon" type="image/png" href="/icons/opera-coast.png" sizes="228x228"&gt;
+
+&lt;link rel="shortcut icon" href="/icons/favicon.ico" sizes="16x16 32x32 64x64"&gt;
+&lt;link rel="icon" type="image/svg+xml" sizes="any" href="/icons/vector-icon.svg"&gt;
+&lt;link rel="mask-icon" color="#ffffff" sizes="any" href="/icons/safari-pinned-icon.svg"&gt;
+
+&lt;link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png"&gt;
+
+&lt;link rel="manifest" href="/icons/manifest.json"&gt;
+
+&lt;meta name="apple-mobile-web-app-title" content="My App"&gt;
+&lt;meta name="application-name" content="My App"&gt;
+&lt;meta name="msapplication-TileColor" content="#da532c"&gt;
+&lt;meta name="msapplication-TileImage" content="/icons/mstile-144.png"&gt;
+&lt;meta name="msapplication-config" content="/icons/browserconfig.xml"&gt;
+&lt;meta name="msapplication-starturl" content="http://example.com/start.html"&gt;
+&lt;meta name="msapplication-navbutton-color" content="#f00"&gt;
+&lt;meta name="theme-color" content="#ffffff"&gt;
+</code></pre>
+<p>(I left out things like the Yandex Tableau API and the other tags Apple and Microsoft look for when Adding to Home Screen/Pinning, so this isn’t even a worst-case scenario.)</p>
+<p>But of course, it’s not that easy. Some browsers only download the last referenced <code>icon</code>. Others, the first. Most of them ignore the PNG icons and go for the ICO if you leave a reference to it. Firefox downloads <em>all of them</em> <strong>during the critical path</strong> which is horrible and you should <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=751712#c7" rel="nofollow noopener">star this bugzilla</a> to put a stop to it.</p>
+<p>Philippe Bernard at <a href="http://realfavicongenerator.net/" rel="nofollow noopener">RealFaviconGenerator</a> has done a frightening amount of research and compatibility work, and even he is stumped on the best way of going about this issue, since performance and developer complexity are directly butting heads here. <a>His FAQ is a document of pain</a>, and <a>the compatibility charts are worse</a>.</p>
+<p>Lack of standardization has allowed “magic URLs” to blossom, which results in servers handing out 404s for spurious requests. <code>/favicon.ico</code> is the perennial problem child, but this happens with all the different size naming conventions for <code>apple-touch-icon</code>s up there, and <code>/browserconfig.xml</code>.</p>
+<p>Yeah, if you don’t define all of those <code>apple-touch-icon</code>s in the HTML with the proper <code>sizes</code>, and your host won’t let you put them in the root (think Blogger or Tumblr), here come the 404s.</p>
+<p>These unnecessary 404s are bad for the server, since 404 pages are often more complex than serving a tiny static file, and bad for the client, as they tied up their requests uselessly and received a far heavier 404 HTML page than a 16x16 ICO.</p>
+<p>As for  <code>theme-color</code>, it’s already starting to fragment with Safari’s new Pinned Tab feature debacle. Should it be used as a foreground color? A background color? Better add more meta tags!</p>
+<p>I for one would love for this to be rolled into CSS instead, similar to <code>@viewport</code>. That way, we could have something like this:</p>
+<pre><code class="lang-css">@interface {
+  color: #f00;
+  background-color: #00f;
+  fill: #0f0;
+  icon: image-set("/icons/16.png" 16w, "/icons/32.png" 32w, "/icons/64.png" 64w);
+}
+</code></pre>
+<p>But so far this sort of thing seems a better fit inside the WebApp Manifest. Fine by me. As long as it’s not gunking up every single page load. If we end up with a bloated metadata file, fine, at least it’s cacheable. But inviting problems on every single HTML page like this is a distraction from creating the actual content.</p>
+<p>With careful testing and compromises, you can get 80% of the way there for icons &amp; bookmarks with only a fraction of the end-user pain. But who wants to test their tiny icon frippery over the landscape of browser+OS combinations?</p>
+<h2>Link Previews</h2>
+<p>These are extraordinarily popular across services, showing a clear use-case with user benefits.</p>
+<ul>
+<li>Facebook’s link previews</li>
+<li>Twitter’s Cards</li>
+<li>Pinterest’s Rich Pins</li>
+<li>Google+'s link previews</li>
+<li>Tumblr’s Link Posts</li>
+<li>LinkedIn’s link previews</li>
+<li>Skype conversations’ link previews</li>
+<li>Search engines’ “rich snippets”, and arguably also their regular search results</li>
+<li>Any of the services that employ <a href="http://embed.ly/" rel="nofollow noopener">embed.ly</a>, meaning Reddit, <a href="http://bit.ly" rel="nofollow noopener">bit.ly</a>, Disqus, Medium, <a href="http://embed.ly/customers" rel="nofollow noopener">and many, many others</a>
+</li>
+</ul>
+<p>They all have the same baseline of required information:</p>
+<ol>
+<li>Page Name, because <code>&lt;title&gt;</code> often has the site name and/or taglines in it</li>
+<li>Canonical URL, because even Google can’t perfectly predict what query strings are important and which aren’t</li>
+<li>Preview Image, likely for aesthetic (but important) reasons</li>
+<li>A short tagline or description of what lies beyond</li>
+</ol>
+<p>Many also display author information and the site name/URL. Many of them do fall back onto native HTML semantics, like <code>&lt;link rel="canonical"&gt;</code>, so there may be value in providing a standard way of specifying site-wide information, featuring an on-page image, etc.</p>
+<h2>Service Autodiscovery</h2>
+<p>These aren’t a big problem, but they rarely change over a website, so having a unified place to store them and future things like them would be lovely.</p>
+<pre><code class="lang-auto">&lt;link rel="search" type="application/opensearchdescription+xml" href="/etc/osd.xml"&gt;
+&lt;link rel="alternate" type="application/rss+xml" href="/etc/rss.xml"&gt;
+&lt;link rel="alternate" type="application/atom+xml" href="/etc/atom.xml"&gt;
+&lt;link rel="pingback" href="/whatever"&gt;
+</code></pre>
+<p>These are the old guard, so for compatibility reasons we can’t do much about them, but for new experiments like Webmention I’d really rather not add yet another <code>&lt;link&gt;</code> for each.</p>
+<h2>Existing Standards</h2>
+<p>There are many metadata standards, solving the same problems over and over again:</p>
+<ul>
+<li>Facebook’s (obsolete) Share API</li>
+<li>XML Namespaces (also probably obsolete, and good riddance)</li>
+<li>OpenGraph</li>
+<li>Twitter Cards</li>
+<li>
+<a href="http://Schema.org" rel="nofollow noopener">Schema.org</a>
+<ul>
+<li>…using RDFa</li>
+<li>…using microdata</li>
+<li>…using JSON-LD</li>
+</ul>
+</li>
+<li>microformats</li>
+</ul>
+<p>Bespoke APIs for analytics and search services that specify the same damn information again also run rampant, like Swift and <a href="http://Parse.ly" rel="nofollow noopener">Parse.ly</a>.</p>
+<p>There are two existing methods for unifying site metadata: the in-development Web Applications Manifest, and Microsoft’s <code>browserconfig.xml</code>.</p>
+<p>We shouldn’t scrap the in-page methods because specifying unique info or dynamically changing it on a page can be useful. Vimeo switches its favicon to show Playing/Paused status, for example. Other information should remained embedded in the HTML for performance reasons, like prefetch <code>&lt;link&gt;</code>s.</p>
+<p>Instead, I want to make either <code>browserconfig.xml</code> or the WebApp Manifest extensible and provide a single, cacheable location for information that is highly unlikely to change across a site. XML is uncool and never did work all that well, so the Manifest is more appealing.</p>
+<h2>Existing HTML methods</h2>
+<p>I consider these shortcomings to be a failure of HTML, since the whole point was to let machines read it. I don’t even mean in the high-level, woo woo “Semantic Web” fashion, but “ah yes this is an element” and other bits of breaking up text.</p>
+<h3>Authorship</h3>
+<p>This one is especially bad. Between <code>&lt;address&gt;</code>, <code>&lt;link rel="author"&gt;</code>, and <code>&lt;meta name="author"&gt;</code>, we have 3 methods of authorship that all have problems and almost no consumers use.</p>
+<p><code>&lt;address&gt;</code> suffers from an incredibly confusing name, baroque restrictions on use, and a vague content model, meaning even valid use is difficult to parse.</p>
+<p>The <code>&lt;meta&gt;</code> and <code>&lt;link&gt;</code> methods of naming and linking authors fail miserably on pages with multiple articles by multiple people, like home pages and other indexes.</p>
+<h3>Site &amp; Page Titles</h3>
+<p><code>&lt;title&gt;</code> was designed only for documents and didn’t anticipate the needs of sites. However, adding context is useful, and <a href="http://www.w3.org/Provider/Style/TITLE.html">has been known to be useful since 1992</a>:</p>
+<blockquote>
+<p><code>&lt;TITLE&gt;Introduction -- AFS user's Guide&lt;/TITLE&gt;</code></p>
+</blockquote>
+<p>The proliferation of methods to parse out the document name from the site name suggests there is a real need for improvement here.</p>
+<p>Document name:</p>
+<ul>
+<li>
+<code>&lt;meta name="title"&gt;</code> (Yes, really)</li>
+<li><code>&lt;meta name="og:title"&gt;</code></li>
+<li><code>&lt;meta name="twitter:title"&gt;</code></li>
+<li><code>http://schema.org/name</code></li>
+<li><code>.h-entry &gt;&gt; .p-name</code></li>
+</ul>
+<p>Site name:</p>
+<ul>
+<li><code>&lt;meta name="og:site_name"&gt;</code></li>
+<li><code>&lt;meta name="twitter:site"&gt;</code></li>
+<li><code>&lt;head itemscope itemtype="http://schema.org/WebSite"&gt; &lt;title itemprop="name"&gt;</code></li>
+<li><code>.h-feed &gt;&gt; .p-name</code></li>
+</ul>
+<p>It would be backwards compatible to put tags inside <code>&lt;title&gt;</code> for clarification, since it ignores any attempted tags inside when displayed to the user. Something like this:</p>
+<pre><code class="lang-auto">&lt;title&gt;&lt;document&gt;My First Post&lt;/document&gt; - &lt;site&gt;My Weblog&lt;/site&gt;&lt;/title&gt;
+</code></pre>
+<p>It could also be <code>&lt;page&gt;</code> and <code>&lt;collection&gt;</code> or whatever you like, the actual names aren’t important.</p>
+<h2>And So On</h2>
+<p>This is already far too long, but the rabbit hole grows ever deeper. Peeking inside the <code>&lt;head&gt;</code> of large news sites is like staring into a cement truck hauling sardines. All that would be needed is some agreed-upon, extensible metadata file that can be cached, thereby providing an alternative to new standards and features that all want their own slot in the <code>&lt;head&gt;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>Regarding icons: <a href="//discourse.wicg.io/t/making-icons-less-painful-and-murky/870">Making icons less painful and murky</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

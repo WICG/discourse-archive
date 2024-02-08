@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A common pseudo-class for :hover and :focus</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A common pseudo-class for :hover and :focus</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<h2>:hover and :focus</h2>
+<p>We are familiar with the <code>:hover</code> pseudo-class, which targets elements with a pointer entered into them. The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/:hover" rel="nofollow noopener">MDN docs</a> refer to this state as “when the user <strong>designates</strong> an element with a <strong>pointing</strong> device”.</p>
+<p>I think limiting <code>:hover</code> to <strong>pointing devices</strong> was a missed opportunity, partially realized by the adoption of touch screens, and fully realized by attention now directed at keyboard accessibility. This limitation particularly affects keyboards, which must be separately targeted using the <code>:focus</code> pseudo-class.</p>
+<p>I suggest a new pseudo-class be introduced that will target all <strong>designations</strong> of an element, by any means; whether it be done by a mouse or a finger or a keyboard or any other device that can enter into an element.</p>
+<h2>:enter</h2>
+<p>I suggest the name be <code>:enter</code>. It is harmonious with <a href="http://www.w3.org/TR/pointerevents/">PointerEvents</a>, and it shares an intrinsic association with keyboards.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<p>It’s admittedly more verbose, but <code>:matches(:hover, :focus)</code> already exists. And there’s a proposal to give any selector a shorter name:</p>
+<p><a class="onebox" href="https://tabatkins.github.io/specs/css-aliases/#custom-selectors" rel="nofollow noopener" target="_blank">https://tabatkins.github.io/specs/css-aliases/#custom-selectors</a></p>
+<pre><code class="lang-css">@custom-selector :--enter :hover, :focus;
+:--enter { /* ... */ }
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<p>To clarify, do you mean:</p>
+<pre><code class="lang-css">@custom-selector :--enter :matches(:hover, :focus);
+:--enter { /* ... */ }
+</code></pre>
+<p>This could definitely start the cowpath to <code>:enter</code>. Related, is <code>:matches</code> a kind of weightless pseudo-class, like <code>:not</code>? If it does add weight, or if a custom selector carries a different weight, then that would definitely make a difference. I presume this is not the case, and not a concern.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2015-06-11</div>
+          <div class="post_content">
+<p>They’re equivalent, <code>@custom-selector</code> expands to <code>:matches</code> implicitly.</p>
+<p><code>:matches</code> is in Selectors 4. It does not add specificity.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-15</div>
+          <div class="post_content">
+<p>It seem the naming of <code>:hover</code> is misleading. It specifically means elements <em>designated</em> with a <strong>pointing</strong> device, rather than <strong>any</strong> form of input. From the <a href="http://dev.w3.org/csswg/selectors-4/#the-hover-pseudo">CSS4 specification</a>:</p>
+<blockquote>
+<p>The <code>:hover</code> pseudo-class applies while the user designates an element with a pointing device…</p>
+</blockquote>
+<p>Therefore, I would propose that:</p>
+<blockquote>
+<p>The <code>:enter</code> pseudo-class applies while the user designates an element with a keyboard, pointing device, or other form of input.</p>
+</blockquote>
+<p>To test and perhaps implement <code>:enter</code> in the wild, I’ve created a polyfill / prollyfill.</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/jonathantneal/postcss-pseudo-class-enter" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars2.githubusercontent.com/u/188426?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/jonathantneal/postcss-pseudo-class-enter" rel="nofollow noopener" target="_blank">jonathantneal/postcss-pseudo-class-enter</a></h3>
+<p>Use the :enter pseudo-class in CSS. Contribute to jonathantneal/postcss-pseudo-class-enter development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>And, thanks to your feedback, Simon, I’ve added a section that describes <a href="https://github.com/jonathantneal/postcss-pseudo-class-enter#alternatives" rel="nofollow noopener">alternatives to <code>:enter</code></a> using <code>@custom-selector</code>, <code>:matches</code>, and plain-old <code>:focus</code> and <code>:hover</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-06-15</div>
+          <div class="post_content">
+<p>Sorry, I didn’t see that you had posted this here until after I read the post to www-style, I would have rather responded here.  Is it simply because you frequently do both?  I mean, they definitely aren’t the same right - one is about actually selecting with focus which has a particular meaning in tab order and so on, hover is something that seems more purely for visual adornment.  In other words, if it is focusable anyway, you could just use focus.  If it isn’t focusable, you won’t be able to tab into it or something anyway?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-15</div>
+          <div class="post_content">
+<p>My need is to target and style the <strong>instant</strong>, pre-<code>:active</code> state of an element. It’s that moment when, as the spec describes it, I <em>designate an element</em>.</p>
+<p>For a keyboard, this instant <strong>enter</strong> event occurs <strong>simultaneously</strong> with focus.</p>
+<p>Pointers experience something similar, as their <strong>click</strong> event occurs <strong>simultaneously</strong> with focus.</p>
+<p>Developers target both <code>:hover</code> and <code>:focus</code> because they are actually targeting the same conceptual event, the entering into or designating of an element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-06-15</div>
+          <div class="post_content">
+<p>Do you think you could share a working example (I looked but didn’t see one in the github) that illustrates how this is a necessary thing?  I frequently use them differently because they have sort of different concepts.  “designating” in the hover has no change on where the focus is or what the active element is and so on… So If you have designed something which can be focused, it doesn’t matter how you focus on it, it should be good for a11y or mobile or whatever.  If it isn’t focusable, I’m trying to understand how you’d use non-mouse devices to operate that so that it is (specifically because you mentioned noticing this during a11y testing in the www-style post and I’m having trouble bridging).  To be clear, I’m not saying it’s a bad idea, just that I don’t see what you are seeing and could use help understanding it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2015-06-16</div>
+          <div class="post_content">
+<p>The working example in GitHub is fine.</p>
+<pre><code class="lang-css">nav :enter &gt; span {
+    background-color: yellow;
+}
+</code></pre>
+<blockquote>
+<p>Probably one of the most common accessibility oversights is neglecting to apply CSS to the :focus state of links whenever you style the :hover state. How much of a problem this oversight leads to for non-mouse users depends on what CSS is applied to the :hover state. — <a href="http://www.456bereastreet.com/archive/201004/whenever_you_use_hover_also_use_focus/" rel="nofollow noopener">456 Berea Street</a>.</p>
+</blockquote>
+<p>The <code>:enter</code> pseudo-class, like the <code>:matches</code> pseudo-class, is for convenience. With <code>:enter</code>, we have one selector that accurately describes and targets elements we intend users to interface with (using any input device).</p>
+<p>Since <code>:enter</code> selectors are half of what they are with <code>:focus</code> and <code>:hover</code>, we will have less selector duplication, which means we’ll have better code clarity. These benefits make using <code>:enter</code> very appealing to developers, which might then mean faster adoption, which means less scenarios where a <code>:focus</code> style is neglected, and better experiences for keyboard-wielding users.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/612_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Michiel</div>
+          <div class="creation_date">2015-06-16</div>
+          <div class="post_content">
+<p>How does one <em>designate</em> an element with a keyboard or another form of input? As Brian stated, <code>:hover</code> and <code>:focus</code> are different (and ideally would differ in style, too). What problem will be solved when <code>:hover</code> and <code>:focus</code> are combined into <code>:enter</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2015-06-18</div>
+          <div class="post_content">
+<p>But from that same short article you cite, they what I am bringing up:</p>
+<blockquote>
+<p>Then there are techniques that cause major problems because they make
+content inaccessible to non-mouse users. This can be either because
+:hover is used on elements that cannot receive keyboard focus, […OR…] because
+:hover is used to reveal content and no CSS is applied to the :focus
+state, or a combination</p>
+</blockquote>
+<p>So you’re saying that <code>:enter</code> applies only to focusable elements?  It’s some base level thing like ‘indicate’ that says “I dont care how it’s indicated or for what intent, I just want this css to apply always’”?  The problem with that is that the markup is very very very often the problem - in other words - keyboard users still can’t actually indicate things that aren’t focusable…</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

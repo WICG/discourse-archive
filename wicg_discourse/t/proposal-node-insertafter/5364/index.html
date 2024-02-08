@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] `Node.insertAfter`</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] `Node.insertAfter`</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2021-06-09</div>
+          <div class="post_content">
+<p>Link: <a class="inline-onebox" href="https://github.com/whatwg/dom/issues/986" rel="noopener nofollow ugc">Suggestion: `Node.insertAfter(newNode, referenceNode)` · Issue #986 · whatwg/dom · GitHub</a></p>
+<p>In frameworks, it’s <em>far</em> more common to want to insert after the current node than before the next node, and it’s significantly easier to implement. Problem is, for performance reasons, some of us employ various hacks <a href="https://github.com/MithrilJS/mithril.js/blob/08051e9d33d84ffac0c4eab8d25273322f3c0349/render/render.js#L559-L564" rel="noopener nofollow ugc">like this</a> (<a href="https://github.com/MithrilJS/mithril.js/blob/08051e9d33d84ffac0c4eab8d25273322f3c0349/render/render.js#L299" rel="noopener nofollow ugc">example call</a>) to avoid having to pay the cost of a C++ round trip just to get the next sibling of a given DOM node.</p>
+<p>I also see a gaping hole in this matrix for child-relative operations:</p>
+<div class="md-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Operation</th>
+<th style="text-align:center">
+<code>Node</code> method</th>
+<th style="text-align:center">
+<code>ChildNode</code> method</th>
+<th style="text-align:center">jQuery method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Insert before</td>
+<td style="text-align:center"><code>node.insertBefore(child, ref)</code></td>
+<td style="text-align:center"><code>child.before(...nodes)</code></td>
+<td style="text-align:center">
+<code>$(parent).before(child)</code>, <code>$(child).insertBefore(parent)</code>
+</td>
+</tr>
+<tr>
+<td style="text-align:center">Insert after</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"><code>child.after(...nodes)</code></td>
+<td style="text-align:center">
+<code>$(parent).after(child)</code>, <code>$(child).insertAfter(parent)</code>
+</td>
+</tr>
+<tr>
+<td style="text-align:center">Remove</td>
+<td style="text-align:center"><code>node.removeChild(child)</code></td>
+<td style="text-align:center"><code>child.remove()</code></td>
+<td style="text-align:center"><code>$(child).remove()</code></td>
+</tr>
+<tr>
+<td style="text-align:center">Replace</td>
+<td style="text-align:center"><code>node.replaceChild(child, prev)</code></td>
+<td style="text-align:center"><code>child.replaceWith(...nodes)</code></td>
+<td style="text-align:center">
+<code>$(child).replaceWith(newChild)</code>, <code>$(newChild).replaceAll(child)</code>
+</td>
+</tr>
+</tbody>
+</table>
+</div><p>I propose we fill that with the following method:</p>
+<pre><code class="lang-auto">partial interface Node {
+    [CEReactions] Node insertAfter(Node node, Node? child);
+};
+</code></pre>
+<p>The semantics are pretty obvious:</p>
+<ul>
+<li>If <code>child</code> is <code>null</code>, this prepends <code>node</code> as the first child.</li>
+<li>If <code>child</code> is not <code>null</code>, this inserts <code>node</code> after <code>child</code> similar to how <code>insertBefore</code> inserts it before <code>child</code>.</li>
+</ul>
+<p>I explain at length in the issue why <code>child.after</code> isn’t appropriate for all use cases.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&ldquo;after&rdquo; attribute for async scripts</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&ldquo;after&rdquo; attribute for async scripts</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/element-parsing-listeners/1022">Element Parsing Listeners</a>:</p>
+<aside class="quote" data-post="1" data-topic="1022">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/><a href="//discourse.wicg.io/t/element-parsing-listeners/1022/1">Element Parsing Listeners</a>
+</div>
+<blockquote>
+<p>Would it be possible to polyfill this with Mutation Observers? (The big advantage to having it be available natively, of course, being not having to wait for the polyfill to be ready to write a script using it.)</p>
+</blockquote>
+</aside>
+<p>What would be nice for handling async dependencies would be if we could include an <code>after</code> attribute on scripts loaded with <code>async</code>, stating that the script is not to be run until after the script or scripts with the specified <code>id</code> have been run (and/or discovered/created):</p>
+<pre><code class="lang-auto">&lt;script src="/vendor/aep.js" async id="await-element-polyfill"&gt;
+&lt;script src="app-logic.js" async after="await-element-polyfill"&gt;
+</code></pre>
+<p>The obvious way to polyfill this (to me) is to use an attribute like <code>data-src</code> instead of <code>src</code> on script tags that use <code>after</code>, but this loses out on having the script be potentially pre-loaded by the UA (without cache-warming/ServiceWorker hacks that <em>still</em> can’t implement pre-compilation).</p>
+<p>(<em>Edit:</em> actually, if the semantics of <code>after</code> are changed to be defined <em>instead of</em> <code>async</code>, then a polyfill might be able to make this change <em>without</em> requiring changes to the HTML, by tweaking script tags <em>as they’re discovered</em>.)</p>
+<p>The alternative (rewriting the script’s content to use an approach like AMD) introduces non-trivial overhead on the behalf of the author (which includes the author’s toolchain), <em>especially</em> in the event that the script can be included with <em>page-defined dependencies</em> (which makes this somewhere between non-trivial and impossible for requiring dependencies from a global CDN).</p>
+<p>If “page-defined dependencies” sound far-fetched to you, realize that this is the nature of <em>almost all polyfills</em> - allowing this kind of deferment to be defined by the page allows for async scripts to be written using polyfilled APIs with <em>no changes to the script</em> in the event that the polyfill is replaced/omitted.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>Don’t HTML imports do this? If each script is included in a HTML import, and the app-logic import first also imports the polyfill import, then you get dependency resolution, async fetch &amp; parse before execute, and execution order is preserved between scripts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-03</div>
+          <div class="post_content">
+<p>Async HTML imports (<em>if</em> the UA supports them, and <a href="https://hacks.mozilla.org/2014/12/mozilla-and-web-components/" rel="nofollow noopener">that’s a <strong>big</strong> if</a>) <em>do</em> let you specify scripts to load synchronously (without blocking parsing or rendering, I <em>think</em>) after async scripts, but that still involves author overhead, and it requires figuring out every script’s location in the dependency tree (which I’m not even sure <em>applies</em> if D requires A and B, E requires B and C, and F requires A and C) instead of just allowing the scripts to process using triggers, <strong>and</strong> it requires a ton of additional file requests (which, even in an HTTP/2 world where they don’t have much more overhead, likely correspond to a complex asset chain).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>IIRC HTML imports default scripts to deferred, so they are non-blocking and preserve execution order. Is that not enough? I think trying to say “async after” is a complicated way of reinventing “defer”, since you’re trying to re-impose execution order. I didn’t necessarily mean that the HTML import itself should be async, either.</p>
+<p>Using the default deferred mode of HTML imports has little author overhead AFAICT, since you just put any dependency imports at the top and you’re good. Tools like vulcanize can compile down a bundle of HTML import files in to a single resource, which is similar to the existing widespread practice of minifying code.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>From my understanding, the async nature of HTML imports (and by necessity the scripts within them) is controlled by an <code>async</code> attribute on the import’s <code>link</code> tag. See <a href="http://www.html5rocks.com/en/tutorials/webcomponents/imports/#performance" rel="nofollow noopener">http://www.html5rocks.com/en/tutorials/webcomponents/imports/#performance</a>.</p>
+<p>Also, in terms of this being "reinventing <code>defer</code>", the <code>defer</code> attribute’s only purpose, in practice, is to get a buggy <code>async</code>-like behavior in a few versions of IE that didn’t support <code>async</code> (if the browser recognizes <code>async</code>, <code>defer</code> has no effect). Even the effect <code>defer</code> <em>did</em> have didn’t have the same semantics as <code>after</code> (IIRC, <code>defer</code> deferred any script that used it to wait until after DOMContentLoaded). So, yes, maybe this is "reinventing <code>defer</code>" - but <code>defer</code> is due for reinvention.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<p>“defer” preserves execution order (so you don’t need to worry about the random execution order of async scripts) and does not block the rendering of the page, which scripts do by default. That sounds useful to me. Are you sure your disregard for it is warranted?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-04</div>
+          <div class="post_content">
+<aside class="quote" data-post="6" data-topic="1023">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Are you sure your disregard for it is warranted?</p>
+</blockquote>
+</aside>
+<p>Yes. When you use defer so as to not “worry about” the <em>problems</em> of the arbitrary execution order (and, crucially, arbitrary execution point / page state) of asynchronously-loaded scripts, you’re also not reaping the most significant <em>benefit</em> of that arbitrary execution: they allow your script to run <em>as soon as it is ready</em>, rather thain waiting for the page to be parsed (which is how <code>defer</code> <a href="https://html.spec.whatwg.org/multipage/scripting.html#attr-script-defer">is specced to work</a>).</p>
+<p>Anyway, even if there’s some theoretical subset or stricter semantics for <code>defer</code> that might be able to tackle most of the use cases for <code>after</code> (ie. disregarding the part where the script is deferred until the page is fully parsed), in practice, <a href="https://github.com/h5bp/lazyweb-requests/issues/42" rel="nofollow noopener"><code>defer</code>'s behavior has been historically poorly-defined by implementations</a> (eg. IE actually <em>did/does</em> disregard the part until waiting until the page is parsed), which is why the generally-agreed upon best-practice around using it is <a href="http://www.html5rocks.com/en/tutorials/speed/script-loading/" rel="nofollow noopener">only to give <code>async</code>-like performance in old versions of Internet Explorer</a> - this is also why <code>async</code> is specced to completely override <code>defer</code> by any UA that recognizes <code>async</code>.</p>
+<p>If you’re a big believer in some kind of <code>defer</code>-like semantics (and a disbeliever in the <em>many other</em> advantages of <code>after</code>), the biggest advantage of the <code>after</code> attribute that I’m proposing is that it would give authors a way of obtaining that with semantics <em>not</em> broken in browsers from the Bad Old Days before the Living Specification:</p>
+<pre><code class="lang-auto">&lt;html&gt;
+&lt;head&gt;
+&lt;script after="page-end" src="deferred.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;!-- ...insert 5 MB of HTML you simply *have* to parse first here... --&gt;
+&lt;script id="page-end"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

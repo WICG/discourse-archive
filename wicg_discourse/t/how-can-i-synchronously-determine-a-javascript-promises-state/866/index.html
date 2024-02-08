@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>How can I synchronously determine a JavaScript Promise&rsquo;s state?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">How can I synchronously determine a JavaScript Promise&rsquo;s state?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jokeyrhyme</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p>I asked <a href="http://stackoverflow.com/questions/30564053/how-can-i-synchronously-determine-a-javascript-promises-state" rel="nofollow noopener">this question on StackOverflow</a>.</p>
+<blockquote>
+<p>I have a pure JavaScript Promise (built-in implementation or poly-fill):</p>
+<p><code>var promise = new Promise(function (resolve, reject) { /* ... */ });</code></p>
+<p>From the <a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects" rel="nofollow noopener">specification</a>, a Promise can be one of:</p>
+<ul>
+<li>‘settled’ and ‘resolved’</li>
+<li>‘settled’ and ‘rejected’</li>
+<li>‘pending’</li>
+</ul>
+<p>I have a use case where I wish to interrogate the Promise synchronously and determine:</p>
+<ul>
+<li>is the Promise settled?</li>
+<li>if so, is the Promise resolved?</li>
+</ul>
+<p>I know that I can use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then" rel="nofollow noopener"><code>#then()</code></a> to schedule work to be performed asynchronously after the Promise changes state. I am NOT asking how to do this.</p>
+<p>This question is specifically about <strong>synchronous interrogation of a Promise’s state</strong>. How can I achieve this?</p>
+</blockquote>
+<p>There is apparently no API for this as part of the specification for native Promises.</p>
+<p>Some user-land implementations of Promises do offer this (e.g. jQuery). Can we please get a standard API for this purpose in native Promise?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2015-06-01</div>
+          <div class="post_content">
+<p>To get a standard API for this, you’ll need to convince the JavaScript standard committee, as well as the browser vendors, that your use case is widespread and important enough to be worth the standardization and implementation burden, and that it cannot be achieved in any other possible way.</p>
+<p>So … go!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jokeyrhyme</div>
+          <div class="creation_date">2015-06-02</div>
+          <div class="post_content">
+<p>Here’s the discussion on the ES Discuss mailing list: <a href="https://esdiscuss.org/topic/how-can-i-synchronously-determine-a-javascript-promise-s-state" rel="nofollow noopener">https://esdiscuss.org/topic/how-can-i-synchronously-determine-a-javascript-promise-s-state</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jokeyrhyme</div>
+          <div class="creation_date">2015-06-02</div>
+          <div class="post_content">
+<p>I <em>think</em> I replied to the mailing list, but I doubt I did it correctly:</p>
+<ul>
+<li>
+<a href="https://mail.mozilla.org/pipermail/es-discuss/2015-June/043023.html" rel="nofollow noopener">https://mail.mozilla.org/pipermail/es-discuss/2015-June/043023.html</a> (bad subject?)</li>
+<li><a href="https://mail.mozilla.org/pipermail/es-discuss/2015-June/043042.html" rel="nofollow noopener">https://mail.mozilla.org/pipermail/es-discuss/2015-June/043042.html</a></li>
+</ul>
+<h2>legacy use case</h2>
+<p>I am maintaining an existing API that includes asynchronous functions (mix
+of callbacks and Promises) and synchronous functions. After some
+asynchronous initialisation, the internal state settles and it is perfectly
+safe to use the synchronous functions as expected.</p>
+<p>So, I’d like to emit warnings when these synchronous functions are called
+prior to a Promise being “settled”. That way, downstream developers will
+know that they should be waiting for the Promise to settle before using
+such functions.</p>
+<p>This actually isn’t too different to the XHR / Fetch APIs conceptually. We
+get the ball rolling with an asynchronous API call, but there are
+deterministic blocks within which we can synchronously interrogate
+progress, etc.</p>
+<h2>activity indicator use case</h2>
+<p>I use a Promise to represent a network transaction. I wish to alter the
+visual state of my web app to reflect the state of this network
+transaction. I can, for example, show an indeterminate progress bar whilst
+the Promise is not “settled”.</p>
+<p>If I am using requestAnimationFrame, or a framework like React, then the
+state would be synchronously mapped to the DOM / canvas during each
+execution of my render function.</p>
+<p>I can track the state of the Promise using additional variables (as others
+have suggested), but those state values already exist somewhere private per
+the functioning of a Promise. I’d be duplicating work that the JavaScript
+engine is already performing internally, at the risk of introducing errors
+in my code.</p>
+<h2>third-party popular libraries</h2>
+<p>The following libraries implement some form of Promise and all expose such
+synchronous inspection capabilities:</p>
+<ul>
+<li>jQuery: <a href="http://api.jquery.com/deferred.state/" rel="nofollow noopener">http://api.jquery.com/deferred.state/</a>
+</li>
+<li>Bluebird:
+<a href="https://github.com/petkaantonov/bluebird/blob/master/API.md#synchronous-inspection" rel="nofollow noopener">https://github.com/petkaantonov/bluebird/blob/master/API.md#synchronous-inspection</a>
+</li>
+<li>Q:
+<a href="https://github.com/kriskowal/q/wiki/API-Reference#state-inspection-methods" rel="nofollow noopener">https://github.com/kriskowal/q/wiki/API-Reference#state-inspection-methods</a>
+</li>
+<li>Lie: <a href="https://github.com/calvinmetcalf/lie/blob/master/lib/promise.js#L17" rel="nofollow noopener">https://github.com/calvinmetcalf/lie/blob/master/lib/promise.js#L17</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shogun70</div>
+          <div class="creation_date">2015-09-11</div>
+          <div class="post_content">
+<p>Implementing a <em>performant</em> promisified reduce/fold function requires synchronous state inspection.</p>
+<p>Say I implement a reduce function with signature:</p>
+<pre><code>Promise.reduce(array, accumulator, fn)
+</code></pre>
+<p>where <code>fn</code> is of the form:</p>
+<pre><code>function(accumulator, item) { return promise_or_value; }
+</code></pre>
+<ul>
+<li>If <code>fn</code> returns a value then <code>reduce</code> can immediately continue with the next item.</li>
+<li>If <code>fn</code> returns a promise then <code>reduce</code> will defer processing through a <code>.then()</code> call, even if the promise is already fulfilled.</li>
+<li>If <code>fn</code> returns a promise-with-sync-state-inspection then <code>reduce</code> can immediately continue with the next item (assuming the promise already fulfilled).</li>
+</ul>
+<p>Some primitive perf testing based on:</p>
+<pre><code>Promise.reduce(new Array(10000), null, function(dummy, item) { 
+    return Promise.resolve(item); 
+})
+</code></pre>
+<p>Results can be a bit variable because deferring is unpredictable, but the following are reasonably representative on my (otherwise idling) desktop:</p>
+<ul>
+<li>Standard promises: Chrome: 1200ms, Firefox: 600ms</li>
+<li>Promises with sync inspection: Chrome: 150ms, Firefox: 200ms</li>
+</ul>
+<p>The promises with sync inspection would be even faster but the code honors a 12ms task limit. Probably a large part of the difference is that with standard promises <code>reduce()</code> requires the creation of an additional promise every time the callback returns a promise.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jsDev</div>
+          <div class="creation_date">2018-11-15</div>
+          <div class="post_content">
+<p>Hi! I curious what do you mean when you tell <strong>synchronously</strong> and</p>
+<aside class="quote no-group" data-post="1" data-topic="866">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jokeyrhyme/40/1850_1.png" width="20"/> jokeyrhyme:</div>
+<blockquote>
+<p>I know that I can use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then" rel="nofollow noopener"> <code>#then()</code> </a></p>
+</blockquote>
+</aside>
+<p><strong>Then</strong> will not tell us the actual state of the promise. But it will wait until the promise will be resolved.
+And if by <strong>synchronously</strong> you just mean to get the actual status with no waiting till the <strong>Promise</strong> will be resolved (which actually may even never happen) there’s an utility <a href="https://www.npmjs.com/package/promise-status-async" rel="nofollow noopener">promise-status-async</a> which is not a sync but does such a trick</p>
+<pre><code>const {promiseStatus} = require('promise-status-async');
+
+const myPromise = new Promise(resolve =&gt; setTimeout(resolve, 10000));
+console.log('promise status is "%s"', await promiseStatus(myPromise));
+// -&gt; promise status is "pending"
+await myPromise;
+console.log('after resolution status is "%s"', await promiseStatus(myPromise));
+// -&gt; promise status is "resolved"
+</code></pre>
+<p>So maybe it will be in help.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

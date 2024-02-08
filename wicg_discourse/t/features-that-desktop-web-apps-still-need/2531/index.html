@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Features that desktop web apps still need</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Features that desktop web apps still need</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-01-14</div>
+          <div class="post_content">
+<p>By popular demand, we recently released a desktop app version of our PWA. There are some features that users want but cannot be done in a browser, so we released a version that is wrapped with NW.js and uses Node APIs to cover some gaps. I’d prefer that this is not necessary and that we could do everything from our PWA. There are just a few points that we still need a desktop app for:</p>
+<ol>
+<li>
+<p><strong>Read/write access to a folder on disk.</strong> Users often work with very large projects in our software (e.g. 100mb+). In the browser we save to a zip. This is slow and makes using source control difficult. By saving a project as separate files in a folder, saves are much quicker and it naturally integrates with source control.</p>
+</li>
+<li>
+<p><strong>Launching external programs.</strong> Our software has a built-in image editor, but some users still prefer to use other tools, e.g. Photoshop. To make this convenient, our desktop app adds a button to open the image to edit in another program. This involves writing a temp file to disk and executing another program to open the temp file.</p>
+</li>
+<li>
+<p><strong>Reduced memory use.</strong> This one was a bit of a surprise, but it turns out many users have browser addons that substantially increase the memory usage of the browser. They want these addons for normal web browsing, but for a long session in a web app, this is unnecessary overhead. Since our NW.js build is isolated from the browser, it contains no addons and so has no extra memory overhead.</p>
+</li>
+</ol>
+<p>If we are to remove the need for a desktop app download, these points will need to be addressed. I know some of these have serious security concerns, but arguably downloading and installing an app with arbitrary capabilities is even less secure. It would be good if the browser could provide similar features but with extra sandboxing/security protections. I would be totally fine with these capabilities only being available when you “add to homescreen” and run as a PWA.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1022_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mgiuca</div>
+          <div class="creation_date">2018-01-16</div>
+          <div class="post_content">
+<p>Thanks for the suggestions.</p>
+<ol>
+<li>Is something I would like to explore and agree it’s important for productivity web apps.</li>
+<li>Is something we did a lot of thinking about with <a href="https://github.com/chromium/ballista" rel="nofollow noopener">Ballista</a>, which sadly has not seen much traction (as it morphed into the less-capable <a href="https://github.com/WICG/web-share" rel="nofollow noopener">Web Share</a>). I’m still very interested in this use case.</li>
+<li>Isn’t really a web platform feature, but a user agent feature.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-01-16</div>
+          <div class="post_content">
+<p>I forgot to add one more:</p>
+<ol start="4">
+<li>
+<strong>File extension assocations:</strong> our app uses a .c3p file extension. Users expect to be able to double-click this and have it open in our app. This isn’t possible with a PWA.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2018-01-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="2531">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p><strong>File extension assocations</strong>: our app uses a .c3p file extension. Users expect to be able to double-click this and have it open in our app. This isn’t possible with a PWA.</p>
+</blockquote>
+</aside>
+<p>This seems like an OS feature that it should expose to the browser, working with <code>registerContentHandler()</code>. Especially given read-write access to the file system, I agree this would be useful for a range of apps.</p>
+<p>It makes sense to me to use <code>registerContentHandler()</code> to deal with local file types, but different platforms have slightly different conventions about how identifying local file types works, no? More to the point, there is still not much uptake or apparent interest from many browsers for <code>registerContentHandler()</code> <img alt=":frowning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/frowning.png?v=5" title=":frowning:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/821_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mykmelez</div>
+          <div class="creation_date">2018-01-17</div>
+          <div class="post_content">
+<p>Not only are other browsers uninterested, but Mozilla intends to remove registerContentHandler from Gecko/Firefox, as noted in <a href="https://groups.google.com/forum/#!topic/mozilla.dev.platform/jeTDLz38_RE" rel="nofollow noopener">this mozilla.dev.platform thread</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

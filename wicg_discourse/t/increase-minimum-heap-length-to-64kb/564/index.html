@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Increase minimum heap length to 64kb</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Increase minimum heap length to 64kb</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-08-14</div>
+          <div class="post_content">
+<p>The heap length size restrictions are chosen to allow (but certainly not require) page protection tricks to avoid out-of-bounds checks on some platforms.  We’re starting to see 64kb page sizes (viz., an option on ARM64), so we might as well switch to that; in practice, virtually all asm.js apps should have much bigger heaps.</p>
+<p>Note: if the platform has a page size bigger than the heap, we can still offset the heap inside the page so that the ends line up (although this could potentially inhibit other future optimizations).  Thus, with this choice of minimum heap size, we’re just trying to simplify the job of the JS engine by allowing it to avoid handling degenerate cases on all popular current and coming platforms; in a future where a &gt;64kb page-sized platform becomes popular, we can still handle it w/o undue loss of optimization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azakai</div>
+          <div class="creation_date">2014-08-14</div>
+          <div class="post_content">
+<p>Do we need to change not just the minimum, but the multiple? That is, minimum 64kb or a multiple of 64kb? Or just the minimum needs to change?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-08-14</div>
+          <div class="post_content">
+<p>Just the lower bound.  So the only change would be changing “12” to “16” in the byteLength bullet in Section 7.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/327_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">azakai</div>
+          <div class="creation_date">2014-08-14</div>
+          <div class="post_content">
+<p>Ok, sounds good to me. Pushing the minimum size to emscripten to 64k now. (I doubt anyone would need to use less, and if so, they can still use smaller sizes in emscripten programs if they disable full asm.js support.)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

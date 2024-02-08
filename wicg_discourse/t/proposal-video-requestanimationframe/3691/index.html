@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] video.requestAnimationFrame()</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] video.requestAnimationFrame()</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2019-07-01</div>
+          <div class="post_content">
+<p><a href="https://github.com/dalecurtis/video-animation-frame/blob/master/explainer.md" rel="nofollow noopener">https://github.com/dalecurtis/video-animation-frame/blob/master/explainer.md</a></p>
+<h1>Summary</h1>
+<p>Today <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement" rel="nofollow noopener"><code>&lt;video&gt;</code></a> elements have no means by which to signal when a video frame has been presented for composition nor any means to provide metadata about that frame.</p>
+<p>We propose a new HTMLVideoElement.requestAnimationFrame() method with an associated VideoFrameRequestCallback to allow web authors to identify when and which frame has been presented for composition.</p>
+<h1>Example</h1>
+<pre><code class="lang-auto">  let video = document.createElement('video');
+  let canvas = document.createElement('canvas');
+  let canvasContext = canvas.getContext('2d');
+
+  let frameInfoCallback = (_, metadata) =&gt; {
+    console.log(
+      `Presented frame ${metadata.presentationTimestamp}s ` +
+      `(${metadata.width}x${metadata.height}) at ` +
+      `${metadata.presentationTime}ms for display at ` +
+      `${expectedPresentationTime}ms`);
+
+    canvasContext.drawImage(video, 0, 0, metadata.width, metadata.height);
+    video.requestAnimationFrame(frameInfoCallback);
+  };
+
+  video.requestAnimationFrame(frameInfoCallback);
+  video.src = 'foo.mp4';
+</code></pre>
+<p>Output:</p>
+<pre><code class="lang-auto">Presented frame 0s (1280x720) at 1000ms for display at 1016ms.
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2446_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Kenneth_Russell_gg</div>
+          <div class="creation_date">2019-07-02</div>
+          <div class="post_content">
+<p>Would be great to have this functionality!</p>
+<p>Any thoughts on generalizing the AnimationFrameProvider interface so it can support this usage?</p>
+<p><a class="onebox" href="https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animationframeprovider" target="_blank">https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animationframeprovider</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2019-07-03</div>
+          <div class="post_content">
+<p>Thanks Ken! I thought I had incorporated that feedback since you last mentioned it; hence the explainer says:</p>
+<blockquote>
+<pre><code>// Extends the AnimationFrameProvider mixin with the addition of an
+// VideoFrameMetadata parameter on the FrameRequestCallback.
+</code></pre>
+</blockquote>
+<p>Can you elaborate on what you’re asking for? I must have misunderstood.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2446_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Kenneth_Russell_gg</div>
+          <div class="creation_date">2019-07-03</div>
+          <div class="post_content">
+<p>Ah, sorry, I hadn’t remembered to revisit the explainer.</p>
+<p>We should get feedback from <span class="mention">@fserb</span> who added AnimationFrameProvider to the spec. Not all users of AnimationFrameProvider need the VideoFrameMetadata parameter, so maybe it makes sense for HTMLVideoElement’s requestAnimationFrame to be different from AnimationFrameProvider’s.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2465_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Johannes_Kron</div>
+          <div class="creation_date">2019-07-09</div>
+          <div class="post_content">
+<p>I think that this would be very useful to have.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2491_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">GurpreetV</div>
+          <div class="creation_date">2019-07-22</div>
+          <div class="post_content">
+<p>Excellent proposal. I can see this becoming very handy for improving diagnostics like gitch detection. Support it fully.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2493_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tbranyen</div>
+          <div class="creation_date">2019-07-25</div>
+          <div class="post_content">
+<p>Intent makes perfect sense and would be very valuable! Why is this API different from ontimeupdate? Is there a reason why the DOM event system is not sufficient? I’d expect this to be named something like onframeupdate which fires on every frame painted. Is this a question of timing? Can this question be addressed in the explainer?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-07-31</div>
+          <div class="post_content">
+<p>Good questions… probably want clarity on these questions before proceeding.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2754_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">steveanton</div>
+          <div class="creation_date">2019-08-15</div>
+          <div class="post_content">
+<p>I’ve been using the Chrome prototype to measure/control the latency of an application using MSE and have found it very useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-08-16</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="3691">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dale_curtis/40/2439_2.png" width="20"/> Dale_Curtis:</div>
+<blockquote>
+<h1>Summary</h1>
+<p>Today <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement" rel="nofollow noopener"> <code>&lt;video&gt;</code> </a> elements have no means by which to signal when a video frame has been presented for composition nor any means to provide metadata about that frame.</p>
+<p>We propose a new HTMLVideoElement.requestAnimationFrame() method with an associated VideoFrameRequestCallback to allow web authors to identify when and which frame has been presented for composition.</p>
+</blockquote>
+</aside>
+<p>Will <code>video.requestAnimationFrame(frameInfoCallback)</code> gurantee that <em><strong>every</strong></em> frame of an input video file or <code>MediaStream</code> is captured?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2019-09-03</div>
+          <div class="post_content">
+<p>Sorry for the delay, I’ve been out of office. This doesn’t use an event that would always be fired since it’s expensive to preserve the video frame for the callback. E.g., holding onto a frame from a hardware decoder will slow down decoding since it can’t always issue more frames until one is returned. So the API is designed to only function when the page is actively interested in this capability.</p>
+<p>What we could do is provide an event that does not provide the WebGL frame guarantees. I.e., you would not be able to upload the exact frame to canvas or WebGL based on the event. You would only be able to get the frame properties. This may be enough for most users.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2019-09-03</div>
+          <div class="post_content">
+<p>No, you’ll only get the frames for which you’ve managed to call requestAnimationFrame for in time. As mentioned in my other post, this is due to hardware decoder limitations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mfoltzgoogle</div>
+          <div class="creation_date">2019-10-14</div>
+          <div class="post_content">
+<p>This looks very cool!</p>
+<p>Can the explainer elaborate on the execution model?  Is video.rAF called once per:</p>
+<ul>
+<li>Decoded frame?</li>
+<li>Composited frame?</li>
+<li>Or compositor cycle (vsync)?</li>
+</ul>
+<p>Also the example suggests that the callback is invoked before video.play().  Is that intentional (i.e. can it be invoked before frames are presented)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2019-10-14</div>
+          <div class="post_content">
+<p>The video.rAF callback would be called once per composited frame. I.e., every unique composited frame will receive a callback. It is intentional that this can happen before play() if the first frame is composited before playback (For Chromium this is always for preload=auto elements, and upon visibility for preload=metadata elements).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2741_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Guilbert</div>
+          <div class="creation_date">2020-01-09</div>
+          <div class="post_content">
+<p>FYI, this is now available in Chrome Canary/Dev/Beta, after turning on the Experimental Web Platform Features flag (under chrome://flags, enable-experimental-web-platform-features).</p>
+<p>Note: it doesn’t work yet with webRTC, but that should be <a href="https://chromium-review.googlesource.com/c/chromium/src/+/1987069" rel="nofollow noopener">fixed soon</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2020-01-24</div>
+          <div class="post_content">
+<p>WICG repo created: <a href="https://github.com/WICG/video-raf/">https://github.com/WICG/video-raf/</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2741_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Guilbert</div>
+          <div class="creation_date">2020-03-04</div>
+          <div class="post_content">
+<p>FYI, the spec has been recently updated:
+<a class="onebox" href="https://wicg.github.io/video-raf/" rel="nofollow noopener" target="_blank">https://wicg.github.io/video-raf/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2741_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Thomas_Guilbert</div>
+          <div class="creation_date">2020-04-10</div>
+          <div class="post_content">
+<p>FYI, the API has been renamed to video.requestVideoFrameCallback. The updated spec can be found here:
+<a class="onebox" href="https://wicg.github.io/video-rvfc/" rel="nofollow noopener" target="_blank">https://wicg.github.io/video-rvfc/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2020-04-22</div>
+          <div class="post_content">
+<p>Thanks to <span class="mention">@Thomas_Guilbert</span> this has landed in Chrome 84.0.4122.0+. Thanks for the discussion everyone!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AndrewMD5</div>
+          <div class="creation_date">2020-04-24</div>
+          <div class="post_content">
+<p>we will definitely be testing this out at Rainway</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

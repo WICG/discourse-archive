@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Expand registerProtocolHandler() with service worker</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Expand registerProtocolHandler() with service worker</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hanguokai</div>
+          <div class="creation_date">2022-12-10</div>
+          <div class="post_content">
+<p>Hi everyone,</p>
+<p>I have a new proposal about registerProtocolHandler() and service worker. I posted two issues on their spec trackers:</p>
+<ul>
+<li><a href="https://github.com/whatwg/html/issues/8596" rel="noopener nofollow ugc">https://github.com/whatwg/html/issues/8596</a></li>
+<li><a href="https://github.com/w3c/ServiceWorker/issues/1665" rel="noopener nofollow ugc">https://github.com/w3c/ServiceWorker/issues/1665</a></li>
+</ul>
+<h3>
+<a class="anchor" href="#current-native-apps-behavior-1" name="current-native-apps-behavior-1"></a>Current Native Apps Behavior</h3>
+<p>When click a registered protocol link, the native app is woken up and the link is passed to the app for processing. Note: the current page are not closed or navigate to other page, you can continue to click other links in the page that active the native app again.</p>
+<h3>
+<a class="anchor" href="#current-web-behavior-2" name="current-web-behavior-2"></a>Current Web Behavior</h3>
+<p>At present, when click a registered protocol link, Chrome navigate current page to the registered URL. In other words, current page is unload, you can’t continue to click other links in this page. In some scenarios, this behavior is not expected, instead users expect the behavior like native apps. Of course, if the link has <code>target="_blank"</code> attribute, browser open the target URL in a new tab, but it depends on the websites, the developers who call registerProtocolHandler() can’t control them.</p>
+<p>At present, the spec of registerProtocolHandler doesn’t describe the detailed behavior what happen when click the link. The behavior depends on how the browser implements it.</p>
+<h3>
+<a class="anchor" href="#proposal-3" name="proposal-3"></a>Proposal</h3>
+<p>I hope registerProtocolHandler() can support native apps’ behavior. When users click the link, fire an event with the link information in service worker, then the website(web app) can handle it in service worker, and the current page stay there.</p>
+<p>This approach is more flexible for developers, and the current page does not navigate to other page. For example, in service worker, developers can open a new tab or popup window, or active(focus) an already opened page or popup window to handle it.</p>
+<p>Below is a sample code for demonstration purpose:</p>
+<pre><code class="lang-auto">// in a web page of example.com
+// here add a new parameter, which tell the browser fire event in service worker and don't navigate current.
+navigator.registerProtocolHandler(
+    "magnet", // protocal
+    "https://example.com/add?uri=%s", // url
+    {type: 'service-worker', navigation: 'none'} // new option object
+);
+</code></pre>
+<pre><code class="lang-auto">// in service worker of example.com
+self.addEventListener("protocol_handler", e =&gt; {
+  let protocol = e.protocol; // "magnet"
+  let link = e.originalLink; // the %s part
+}); 
+</code></pre>
+<h3>
+<a class="anchor" href="#h-1-pwa-protocol_handlers-4" name="h-1-pwa-protocol_handlers-4"></a>1. PWA “protocol_handlers”</h3>
+<aside class="onebox allowlistedgeneric" data-onebox-src="https://developer.chrome.com/articles/url-protocol-handler/">
+<header class="source">
+<img class="site-icon" height="32" src="https://developer.chrome.com/images/meta/favicon-32x32.png" width="32"/>
+<a href="https://developer.chrome.com/articles/url-protocol-handler/" rel="noopener nofollow ugc" target="_blank">Chrome Developers</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:690/461;"><img class="thumbnail" height="461" src="https://wd.imgix.net/image/8WbTDNrhLsU0El80frMBGE4eMCD3/KKxFqY5Q6ovfi3qomHcv.jpg?auto=format&amp;w=1521" width="690"/></div>
+<h3><a href="https://developer.chrome.com/articles/url-protocol-handler/" rel="noopener nofollow ugc" target="_blank">URL protocol handler registration for PWAs - Chrome Developers</a></h3>
+<p>After registering a PWA as a protocol handler, when a user clicks on a hyperlink with a specific scheme such as mailto, bitcoin, or web+music from a browser or a platform-specific app, the registered PWA will open and receive the URL.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>
+This is a declarative way. It is easy to use, but only for installed PWA. Non-PWA web and browser extensions can’t use it.</p>
+<h3>
+<a class="anchor" href="#h-2-firefox-extensions-protocol_handlers-5" name="h-2-firefox-extensions-protocol_handlers-5"></a>2. Firefox extension’s “protocol_handlers”</h3>
+<aside class="onebox allowlistedgeneric" data-onebox-src="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers">
+<header class="source">
+<img class="site-icon" height="48" src="https://developer.mozilla.org/favicon-48x48.cbbd161b.png" width="48"/>
+<a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers" rel="noopener nofollow ugc" target="_blank">developer.mozilla.org</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:690/388;"><img class="thumbnail" height="388" src="https://developer.mozilla.org/mdn-social-share.cd6c4a5a.png" width="690"/></div>
+<h3><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers" rel="noopener nofollow ugc" target="_blank">protocol_handlers - Mozilla | MDN</a></h3>
+<p>Use this key to register one or more web-based protocol handlers.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>
+Similar to PWA, it is also a declarative way, but just for extensions. There is no background event for clicking a register link.</p>
+<p>So both 1) and 2) are declarative ways, and are not general(universal) solution.</p>
+<h3>
+<a class="anchor" href="#my-proposal-6" name="my-proposal-6"></a>My proposal</h3>
+<p>My proposal expands <code>registerProtocolHandler</code> and let service worker to handle the click event.</p>
+<ol>
+<li>This is a programmatic solution. This approach is more flexible (than declarative way) and leaves it up to the developer to manage how it is handled. It is very similar to handle notification event in service worker.</li>
+<li>It should work for 1) installed PWA, 2) non PWA(general web), and 3) browser extensions (Chrome MV3 is service worker based, and Firefox now support event page).</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

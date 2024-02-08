@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>How to disable CSS @supports rules during debugging?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">How to disable CSS @supports rules during debugging?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2017-06-27</div>
+          <div class="post_content">
+<p>Remy Sharp has brought this issue up on Twitter <a href="https://mobile.twitter.com/rem/status/878212249889816577" rel="nofollow noopener">1</a>. It would be useful if you could disable <code>@supports</code> rules in order to test how the page renders in browsers that do not support a given CSS feature. Remy tried using a <code>var()</code>:</p>
+<pre><code class="lang-css">:root {
+  --grid: grid;
+}
+
+@supports (display: var(--grid)) {
+
+}
+</code></pre>
+<p>You would set <code>--grid</code> to something nonsensical in order to disable the <code>@supports</code> rule, but that doesn’t work. The condition is always true for any <code>--grid</code> value, even when it’s undefined. Why is that? Would it be possible to change this, so that this pattern becomes possible? If not, is there another way to disable <code>@supports</code> rules during debugging?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-06-27</div>
+          <div class="post_content">
+<blockquote>
+<p>The condition is always true for any --grid value, even when it’s undefined. Why is that?</p>
+</blockquote>
+<p>Because <code>@supports</code> just tests “does this property/value successfully parse?” and (almost) any value in a custom property validly parses.</p>
+<p>ETA: Oh whoops, was misreading the example. Similar thing - a normal property with a var() reference in it must, per spec, be <em>assumed</em> to be valid at parse time; it’s only grammar-checked <em>after</em> variable substitution occurs.  We can’t do variable substitution in this case, because there’s no element to draw the --grid property from, so we can’t even do something clever.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

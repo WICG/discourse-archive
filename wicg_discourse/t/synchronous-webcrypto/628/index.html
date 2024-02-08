@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Synchronous WebCrypto</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Synchronous WebCrypto</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-09-15</div>
+          <div class="post_content">
+<p>For some reason, UAs have steered the current WebCrypto spec to only implement WebCrypto functions via async promises under <code>window.crypto.subtle</code>.</p>
+<p>Wanting to make computationally-intensive and potentially-parallelizable functions asynchronous is all well and good and all, but there’s lots of JS out there <em>right now</em> that needs the normal, synchronous versions of these functions. Not making it available in the browser (<a href="https://code.google.com/p/chromium/issues/detail?id=414093#c5" rel="nofollow noopener">out of a desire to force programmers to use async</a>) is just going to continue the issue of code using remote scripts for their crypto functions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-16</div>
+          <div class="post_content">
+<p>What’s wrong with using a promise to obtain crypto data?  That is, why can’t you rewrite your code into a style that is friendly to promises?  It’s generally quite easy to do.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-09-16</div>
+          <div class="post_content">
+<blockquote>
+<p>That is, why can’t you rewrite your code into a style that is friendly to promises? It’s generally quite easy to do.</p>
+</blockquote>
+<p>Unless you’re, y’know, writing functions that use <em>return values</em>. The way <em>all npm modules that <code>require("crypto")</code></em>* have been written for. The way <em>all of <a href="https://github.com/creationix/git-sha1" rel="nofollow noopener">js-git</a></em> has been written for.</p>
+<p><small>*for anything other than <code>pbkdf2</code> or <code>(pseudo)randomBytes</code></small></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">awwright</div>
+          <div class="creation_date">2014-09-17</div>
+          <div class="post_content">
+<p>Asynchronous functions are good for modifying the event loop, but crypto by itself does not perform I/O operations and is generally fast enough to run without needing threads or other forms of context switching.</p>
+<p>Really the only crypto operation I’ve seen where a context switch would definitely be necessary is a PBKDF, deliberately being CPU-intensive. (And in Node.js, an async version of pbkdf2 is available.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-19</div>
+          <div class="post_content">
+<p>Now that Specifiction has its whole fancy semi-official Community Group status, what would be the way to move forward with this proposal? Just fishing the sync part of the WebCrypto spec out of the trash and pushing that?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

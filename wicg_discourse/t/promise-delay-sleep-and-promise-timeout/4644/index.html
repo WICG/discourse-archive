@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Promise.delay (sleep) and Promise.timeout</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Promise.delay (sleep) and Promise.timeout</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2732_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jack-Works</div>
+          <div class="creation_date">2020-07-11</div>
+          <div class="post_content">
+<pre><code class="lang-auto">await Promise.delay(2000)
+// resolves after _at least_ 2000 ms, same as setTimeout
+await Promise.timeout(fetchTaskPromise, 2000)
+// rejects after 2000ms if fetchTaskPromise not resolved
+</code></pre>
+<p>I previously posted this in tc39 discussion. <a href="https://es.discourse.group/t/promise-delay-sleep-and-promise-timeout/349" rel="nofollow noopener">https://es.discourse.group/t/promise-delay-sleep-and-promise-timeout/349</a></p>
+<p>But it’s hard to specify it in the ES spec so I post this in WICG hope we can use it in the Web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2020-07-12</div>
+          <div class="post_content">
+<p>Like the idea, but I have a couple suggestions:</p>
+<ol>
+<li>This should be attached to the window, not <code>Promise</code>, to align with other DOM APIs.</li>
+<li>I’m not convinced we should have a separate <code>.delay</code> and <code>.timeout</code> - that’s just <code>Promise.race([fetchTaskPromise, delay(2000)])</code>. Instead, this should really integrate with <code>AbortSignal</code> somehow.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2020-07-14</div>
+          <div class="post_content">
+<p>See <a href="https://github.com/whatwg/html/issues/617">https://github.com/whatwg/html/issues/617</a> for the <code>Promise.delay</code> equivalent.</p>
+<p>I am happy to specify this if we have any implementation interest. (And I agree it would be on <code>Window</code>, or more likely <code>WindowOrWorkerGlobalScope</code>, not on <code>Promise</code>. Another reason is that certain host environments, like worklets, want to prevent clock-dependent behavior, so having this in the language would be bad.) It would also be abortable using <code>AbortSignal</code>, per the above-linked thread.</p>
+<p>For your <code>Promise.timeout</code>, I suggest <code>AbortSignal.timeout(2000)</code>, used like so:</p>
+<pre><code class="lang-auto">fetch(url, { signal: AbortSignal.timeout(2000) })
+</code></pre>
+<p>(maybe <code>AbortSignal.after</code> would be a reasonable name too.) For that, the next step would be filing an issue on <a href="https://github.com/whatwg/dom/issues">https://github.com/whatwg/dom/issues</a> and working toward implementer interest. This was previously discussed a bit in <a href="https://github.com/whatwg/fetch/issues/951#issuecomment-541369940">https://github.com/whatwg/fetch/issues/951#issuecomment-541369940</a>. Again, I am happy to specify this if we have any implementation interest.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2732_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jack-Works</div>
+          <div class="creation_date">2020-10-02</div>
+          <div class="post_content">
+<aside class="onebox allowlistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/Jack-Works/proposal-promise.delay-and-timeout" rel="noopener nofollow ugc" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars2.githubusercontent.com/u/5390719?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/Jack-Works/proposal-promise.delay-and-timeout" rel="noopener nofollow ugc" target="_blank">Jack-Works/proposal-promise.delay-and-timeout</a></h3>
+<p>Promise.delay and Promise.timeout proposal. Contribute to Jack-Works/proposal-promise.delay-and-timeout development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Hi! <span class="mention">@domenic</span> My spec writes:</p>
+<blockquote>
+<p>The interpretation of <em>afterTime</em> is depending on the host. Host can return AbortCompletion if the environment does not allow clock-dependent behaviors or <em>afterTime</em> is invalid value.</p>
+</blockquote>
+<p>With this spec text, it is possible to “<code>certain host environments, like worklets, want to prevent clock-dependent behavior</code>”</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

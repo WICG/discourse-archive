@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Needed: New “champion” for CSS @apply rule</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Needed: New “champion” for CSS @apply rule</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2017-02-15</div>
+          <div class="post_content">
+<p>The <a href="http://tabatkins.github.io/specs/css-apply-rule/" rel="nofollow noopener">CSS @apply rule</a> no longer has a “champion” (in ES parlance), so it has essentially reverted to Stage 0 (though it is still behind a flag in Chrome), and it is on a path to extinction.</p>
+<p>The champion of the feature was previously Tab Atkins, who has since moved on to a better solution for the shadowdom [<a href="https://twitter.com/tabatkins/status/830174633508818944" rel="nofollow noopener">citation</a>, <a href="https://twitter.com/tabatkins/status/830174457234755584" rel="nofollow noopener">citation</a>]. Unfortunately, this leaves regular “lightdom” elements without a possible feature to <em>store a set of properties in a named variable, and then reference them in other style rules, reducing the amount of effort required to keep your stylesheet consistent as things change in the page</em>. [<a href="https://twitter.com/jon_neal/status/830165596113342465" rel="nofollow noopener">citation</a>].</p>
+<p>If anyone wishes this feature to survive, it needs a new advocate within the CSSWG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1223_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dbox</div>
+          <div class="creation_date">2017-02-15</div>
+          <div class="post_content">
+<p>I also very very much want to see <span class="mention">@apply</span>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-02-17</div>
+          <div class="post_content">
+<p>Seconded, I’d love to see <code>@apply</code> happen, independently if its initial intention was for usage within the Shadow DOM or the Light DOM. Sadly I’m not a part of the CSSWG, but I would definitely love to contribute to the spec in any way I can though.</p>
+<p>I’ll make sure to take a look at the current draft and see what I can do. Maybe we can also check with other members of the CSSWG via twitter and see if they would like to become the ‘champion’ of the spec?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-02-28</div>
+          <div class="post_content">
+<p>#<span class="hashtag">#What</span> if we create extend/composes instead of <span class="mention">@apply</span>?</p>
+<p>syntaxes flavour:</p>
+<pre><code class="lang-css"> /* 1) similar to pseudo selector :not(.class) */
+.class-a:extend(.class-b) {}
+.class-a:composes(.class-b, .class-c) {}
+
+ /* 2) property style */
+.class-a {
+  extend: .class-b;
+}
+
+.class-a {
+  composes: .class-b, .class-c;
+}
+
+.class-a {
+  extend: eval(.class-b); /* in case browser need to use function to evaluate class like with css custom properties */
+}
+
+/* 3) similiar to :before &amp; :after */
+.class-a:extend {
+  content: eval(.class-b, .class-c);
+}
+</code></pre>
+<p>happy to hear any suggestions.</p>
+<h4>I am going for the first option because:</h4>
+<p>pros</p>
+<ul>
+<li>it resemble :not(), this pseudo selector use selector as parameters</li>
+<li>pseudo classes has multiple purposes like :before add an element</li>
+<li>it resemble js extend:
+cons</li>
+<li>maybe it increase specificity because is a pseudo selector</li>
+</ul>
+<pre><code class="lang-auto">class Person extend Animal {}
+.Person:extend(.Animal) {}
+</code></pre>
+<h3>The main goal of this new feature are:</h3>
+<ol>
+<li>non deterministic resolution</li>
+<li>reuse style, creating pattern</li>
+<li>no need to worry about specificity</li>
+<li>abstract css into css instead of html, create one source of truth and avoid dependency hell in html</li>
+<li>reduce css file size</li>
+</ol>
+<p>Extending classes on html is dangerous, it creates an invisible amount of dependency and depend on css code order and specificity. On big code base changing classes on html, changing order of your css, changing css specificity are all possible cause of breaking something somewhere. Extend does not rely on code order or specificity and allow to abstract your css inside css not in html.</p>
+<h3>How does it work</h3>
+<p>When the browser parse this selector will create a .class-a CSS object</p>
+<pre><code class="lang-css">.class-a:extend(.class-b) {
+   width: 100px;
+   background-color: orange;
+}
+
+output =&gt;
+{
+  width: 100px;
+  background-color: orange;
+}
+
+</code></pre>
+<p>When the CSS parser reach .class-b definition create an object and .class-a it will referenced it</p>
+<pre><code class="lang-css">.class-b {
+   font-size: 12;
+   color: red;
+}
+
+output =&gt;
+{
+   font-size: 12;
+   color: red;
+}
+
+/* now this selector will add .class-b styles */
+.class-a:extend(.class-b) {
+   width: 100px;
+   background-color: orange;
+}
+
+output =&gt;
+{
+   font-size: 12;
+   color: red;
+   width: 100px;
+   background-color: orange;
+}
+</code></pre>
+<p>The properties do not depend on code order or specificity. When class-b is parsed class-a will reference class-b.</p>
+<h3>specificity back again <img alt=":frowning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/frowning.png?v=5" title=":frowning:"/>
+</h3>
+<p>the only case specificity matter again if you write something like this:</p>
+<pre><code class="lang-auto">&lt;div class="class-a class-b"&gt;
+</code></pre>
+<p>but you do not need to because this is enough</p>
+<pre><code class="lang-auto">&lt;div class="class-a"&gt;
+</code></pre>
+<h4>note:</h4>
+<p>If :extend is increasing the specificity because is a pseudo selector I would prefer to use a property.</p>
+<pre><code class="lang-css">.class {
+  extend: eval(.class-b, .class-c);
+}
+</code></pre>
+<h3>long selector or multiple selector</h3>
+<pre><code class="lang-auto">.long selector #ciao .class-a:extend(.class-b) {}
+.class-a:extend(.long selector #ciao .class-b) {}
+.class-a:extend(.long selector #ciao .class-b, .long selector #ciao .class-c) {}
+/* but it's better if you use single selector */
+.class-a:extend(.class-b, .class-c) {}
+</code></pre>
+<h3>extend(.first, .second) order matter</h3>
+<p>the order you define your classes inside the extend() matter but that can be useful to decide which pattern need to overwritten without depending of code order or specificity</p>
+<pre><code class="lang-css">.class-b { color: tomato; }
+.class-c { width: 100px; }
+.class-a:extend(.class-b, .class-c) {
+  font-family: Arial;
+}
+
+output =&gt;
+{
+  color: tomato; 
+  width: 100px;
+  font-family: Arial;
+}
+</code></pre>
+<h3>inheritance of custom properties</h3>
+<p>you can inherit custom properties from the other classes</p>
+<pre><code class="lang-css">
+.class-a:extend(.class-b, .class-c) {
+  font-family: Arial;
+}
+.class-b { color: var(--b-color, red) }
+
+.class-a {
+  --color-b: tomato;
+}
+
+output =&gt;
+{
+  color: var(--b-color, red);
+  font-family: Arial;
+}
+</code></pre>
+<p>or you can overwrite it</p>
+<pre><code class="lang-auto">.class-a:extend(.class-b, .class-c) {
+  color: black;
+}
+.class-b { color: var(--b-color, red) }
+</code></pre>
+<p>it’s one clock in London so I hope some American is awake and can give me some feedback goodnight <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/> I will answer tomorrow(/today).</p>
+<p>Note:
+In Android platform you can define inheritance inside style, with the property parent: <a href="https://developer.android.com/guide/topics/ui/themes.html#DefiningStyles" rel="nofollow noopener">https://developer.android.com/guide/topics/ui/themes.html#DefiningStyles</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-03-02</div>
+          <div class="post_content">
+<p>I’m really glad that there’s someone who actually still wants to see this happen.</p>
+<p>While I do love the enthusiasm and the fact that you took the time to compose such a thorough answer, I’m not entirely sure about proposing a new syntax/implementation when we already have a pretty big chunk of the spec figured out (or at least laid out).</p>
+<p>I’ve been tweeting and looking for new advocates for the spec but so far I’ve found literally zero responses. Also, I’m not aware if this has already been discussed in the mailing list of the CSSWG, and if it hasn’t I have yet to do so.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-05-15</div>
+          <div class="post_content">
+<p>So, in order to update the status of this matter:</p>
+<p>I opened an <a href="https://github.com/w3c/csswg-drafts/issues/1047" rel="nofollow noopener">issue on GitHub</a> to see if there was a member of the CSSWG interested in championing the spec. <span class="mention">@fantasai</span> read this issue and assigned <span class="mention">@tabatkins</span> to it, but as he said: “Assigning [Tab] to this issue is the opposite of what’s happening. ^_^”</p>
+<p>I’m still not giving up, and over the next couple of days I will be emailing potential champions to see if they’re interested in the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1292_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ShaggyDude</div>
+          <div class="creation_date">2017-05-16</div>
+          <div class="post_content">
+<p>Not arguing which syntax is better but this needs to happen. This functionality is in pretty much every css preprocessor which kind of proves its usefullness.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2017-05-16</div>
+          <div class="post_content">
+<p>I’ve asked if we can re-use <code>::theme()</code>, only allowing the <code>[part]</code> attribute to be in CSS itself.</p>
+<pre><code class="lang-css">::theme(underline):focus {
+  background-image: linear-gradient( var(--color, blue) );
+  background-position: 0 100%;
+  background-size: 100% 1px;
+}
+
+.headline-link {
+  --color: rebeccapurple;
+
+  part: underline;
+}
+```
+
+This moves the apply-ness out of a css variable and into a selector, which I understood to be one of Tab’s complaints, which is also why I highlight it being used with `:focus`.</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-05-20</div>
+          <div class="post_content">
+<p>Yes I think is good we have a github issue and I agree we should look for alternatives.</p>
+<p>theme looks like a valid option to me. We are looking a solution for <span class="mention">@mixin</span>/<span class="mention">@extend</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1304_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jarodtaylor</div>
+          <div class="creation_date">2017-06-03</div>
+          <div class="post_content">
+<p><span class="mention">@apply</span> going bye bye makes me sadpanda.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-06-15</div>
+          <div class="post_content">
+<p>So, I’ve been exchanging a few emails with some members of the CSSWG. It’s pretty hard to find someone with the time and/or funds to work on this, and it seems that right now the best solution would be to champion the spec by ourselves.</p>
+<p>Thing is, I think we need to take a step back and think of our use cases (and the most common ones we can come up with), and maybe set some restrains with those as a starting point. I’m suggesting this as I believe it to be the best approach we could take in order to fix the caveats Tab found when working on the spec (explained in his blog post <a href="http://www.xanthir.com/b4o00" rel="nofollow noopener">Why I abandoned @apply</a>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-06-19</div>
+          <div class="post_content">
+<p>Right, <em>please</em> read and digest my blog post there. <code>@apply</code> ends up being far too complicated, and its actual use-cases can be better served by more specific mechanisms.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Oenonono</div>
+          <div class="creation_date">2017-08-31</div>
+          <div class="post_content">
+<p>Yeah, instead of <span class="mention">@apply</span> for the light DOM, maybe go with something like…</p>
+<p><a class="onebox" href="https://tabatkins.github.io/specs/css-extend-rule/" rel="nofollow noopener" target="_blank">https://tabatkins.github.io/specs/css-extend-rule/</a></p>
+<p>instead?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-09-04</div>
+          <div class="post_content">
+<p>Totally agree</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2017-09-11</div>
+          <div class="post_content">
+<p>To collect data, I’m informally asking Sass users on Twitter how they use mixins:</p>
+<blockquote>
+<p>Sass users, why do you love mixins? Could you share examples of what you think are the most common or most vital use cases for them?
+<a href="https://twitter.com/jon_neal/status/907074296551440385" rel="nofollow noopener">https://twitter.com/jon_neal/status/907074296551440385</a></p>
+</blockquote>
+<p>I’m also assembling some top Google results for mixin articles and listing out which existing or proposed web features would cover those use cases.</p>
+<p>As far as PostCSS users go, this about summarizes it (cssnext still lists apply as a “future” feature):</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="http://i.imgur.com/j1Tshc3.jpg" rel="nofollow noopener" title="distracted boyfriend meme; distraction is &amp;quot;The CSS @apply rule&amp;quot;, boyfriend is &amp;quot;PostCSS users&amp;quot;, girlfriend is &amp;quot;Editor of the CSS @apply Rule&amp;quot;"><img alt='distracted boyfriend meme; distraction is "The CSS @apply rule", boyfriend is "PostCSS users", girlfriend is "Editor of the CSS @apply Rule"' height="388" src="http://i.imgur.com/j1Tshc3.jpg" width="690"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">distracted boyfriend meme; distraction is &amp;quot;The CSS @apply rule&amp;quot;, boyfriend is &amp;quot;PostCSS users&amp;quot;, girlfriend is &amp;quot;Editor of the CSS @apply Rule&amp;quot;</span><span class="informations">960×540</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div></p>
+<p>^ if we wanted to make this more accurate, the distraction should be revealed to be a very poor choice, but I’m not clever enough to improve upon it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-09-11</div>
+          <div class="post_content">
+<p>Rather than post on Twitter, I’ll share my general thoughts here regarding Sass mixins.</p>
+<p>I personally have a relatively thorough set of mixins, ranging from simple responsiveness (defining multiple values in one line) to more complicated ones that write to multiple properties at once (a la <code>size</code>). One I’m quite fond of (though unrelated to this thread) is being able to define <code>border-radius</code> in the shorthand.</p>
+<p>I don’t use <span class="mention">@apply</span> a ton (which is similar to <span class="mention">@extend</span> with pseudo-objects in Sass), but I certainly see the application, without speaking to the feasibility of implementing such a feature single-pass. It certainly seems like it’s difficult to implement, but obviously I’d love to see it just as much as the next person.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Zambonifofex</div>
+          <div class="creation_date">2017-09-18</div>
+          <div class="post_content">
+<p>I think that an <code>@mixin</code> at-rule would make a lot more sense than <code>@extend</code>. Not only would it allow for arguments to be provided, but it also plays well with <a href="https://discourse.wicg.io/t/import-aliases-private/2356">my “import aliases” proposal</a>:</p>
+<pre><code class="lang-auto">@mixin newfeature(color; lengths; percent: 100%)
+{
+	-webkit-newfeature: var(color) var(lengths) var(percent);
+	-moz-newfeature: var(color) var(lengths) var(percent);
+	-ms-newfeature: var(color) var(lengths) var(percent);
+	newfeature: var(color) var(lengths) var(percent);
+}
+
+button
+{
+	@apply newfeature(#FFF; 12px, 1em, 3cm; 12%);
+}
+</code></pre>
+<p>Note:</p>
+<ul>
+<li>Mixins would be distinguishable from custom properties on <code>@apply</code> by their lack of <code>--</code> and their arguments list (which would be required even when there are no parameters/arguments.</li>
+<li>Parameters would be distinguishable from regular variables by their lack of <code>--</code>.</li>
+<li>One would be able to pass a list of comma-separated values as an argument because arguments and parameters are separated by semicolons and not commas.</li>
+<li>Defaulted values would use a colon and be required to be at the end of the parameters list.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2017-09-18</div>
+          <div class="post_content">
+<p>I’ve forked the spec for the extend rule and (hopefully) simplified it. With the new spec, arguments could rely on existing CSS Custom Properties. Also, this would put the weight of the rule (previously on the rule containing the custom property set) back to the selector.</p>
+<p>Here’s a demo of it in action (it is editable. Throw some variables in there to see how they would be managed):
+<a class="onebox" href="https://jonathantneal.github.io/postcss-extend-rule/" rel="nofollow noopener" target="_blank">https://jonathantneal.github.io/postcss-extend-rule/</a></p>
+<p>And here is the forked specification:
+<a class="onebox" href="https://jonathantneal.github.io/specs/css-extend-rule/" rel="nofollow noopener" target="_blank">https://jonathantneal.github.io/specs/css-extend-rule/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2925_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nicolasjengler</div>
+          <div class="creation_date">2017-09-24</div>
+          <div class="post_content">
+<p>Good to see the conversation is still going strong. I’m going through all of the resources here and will jump back in if I see I can help with something.</p>
+<p><span class="mention">@jonathantneal</span> I like your approach very much. This simplification could very well be what its needed to make <code>@extend</code> possible. Will take an in depth look to the repo over the next week! <img alt=":sunny:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/sunny.png?v=5" title=":sunny:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

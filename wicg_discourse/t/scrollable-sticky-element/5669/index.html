@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Scrollable sticky element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Scrollable sticky element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-10-28</div>
+          <div class="post_content">
+<p>I don’t have a solution for this problem yet, but I’ll describe the problem:</p>
+<p>When an element is made sticky (<code>position: sticky;</code>) it is pinned to its nearest scroll containing ancestor. However, if the sticky content is taller than the viewport of the scroll container, its excess content (what doesn’t fit within the viewport) is not visible until the end of the scroll container is reached.</p>
+<p>A feature that I’ve had to implement a few times now is <em>similar</em> to a sticky element except that in the case described above, the sticky element <strong>scrolls with the container</strong> until the opposite edge is reached (the bottom when scrolling down) and is dragged along until the end of the scroll container is reached <em>or</em> the scroll direction is changed. If the scroll direction changes, the sticky element stays in place (as if it were absolutely positioned in the place where the scroll direction changed) until an edge is reached.</p>
+<p>This pattern is sometimes used for document outline navigation kept to the side of a long document.</p>
+<p>It would be great if this behavior was able to be implemented in CSS rather than relying on JavaScript. Every JS implementation relies on listening to scroll events which causes problems. If the scroll handler fires too often, it can slow down the page significantly. If the scroll handler is debounced, the sticky element could appear to lag behind the scrollable content and may overshoot the edge of the scroll container and have to jump back into place once the handler fires.</p>
+<p>Maybe <code>sticky-behavior: scroll;</code> or something.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-10-31</div>
+          <div class="post_content">
+<p>Would this not mean that the top of the sticky element would not be visible? Why is it better that the top is not visible than the bottom? I feel the top of an element is usually more important than the bottom.</p>
+<p>If the sticky element scrolled immediately when the scroll direction changes, regardless of the direction, then that could be a solution for sticky elements that are taller than the viewport.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-11-02</div>
+          <div class="post_content">
+<p>Here’s an old <a href="http://jsfiddle.net/qm3KZ/26/" rel="noopener nofollow ugc">JSFiddle showing what I mean</a>. This is a JQuery plugin of an implementation I made in 2013. Note the purple
+box scrolls with the page until it’s edges are visible.</p>
+<p><img alt="Screen Shot 2021-11-02 at 12.09.24 PM" data-base62-sha1="gRggn75q1ZDHRlALSXHxMLGFUqt" height="316" src="//discourse.wicg.io/uploads/default/original/2X/7/76281aa40db4beb7dd8e03e78f74ba0037066241.png" width="538"/></p>
+<p>…after scrolling down…</p>
+<p><img alt="Screen Shot 2021-11-02 at 12.09.32 PM" data-base62-sha1="3vzNRxn0ZasfyAfu9JOwD6ThEli" height="314" src="//discourse.wicg.io/uploads/default/original/2X/1/18985205f7c8447fff5120a16ab571bf99a3d8b0.png" width="538"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3794_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Kaleidea</div>
+          <div class="creation_date">2021-11-05</div>
+          <div class="post_content">
+<p>I’m not sure this is what you’re looking for, but I hope it helps. This is how I used to do sticky table of contents in the sidebar, constrained to viewport height and scrolling if too long (forked your jsfiddle):
+<a class="onebox" href="http://jsfiddle.net/kf58mpxy/18/" rel="noopener nofollow ugc" target="_blank">http://jsfiddle.net/kf58mpxy/18/</a></p>
+<p>CSS only.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-11-07</div>
+          <div class="post_content">
+<p>Yes, then I understood correctly. So my question is, why is it more important that the bottom of the purple box is visible instead of the top? If the element is sticky, then its top is probably more important than its bottom. As a user, I would rather have the bottom cut off than the top.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-11-07</div>
+          <div class="post_content">
+<p>I’m sure in some cases the top is more important. But I’d like the ability to make a sticky element scrollable for cases where discoverability of the bottom of the element is important. Or cases where the scroll container is infinite and so the bottom would never be reached and then the off-screen portion of the sticky element would never be revealed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-11-08</div>
+          <div class="post_content">
+<p>What do you think of my idea of having the element scroll as soon as the user changes scroll direction? So when scrolling down, the sticky element would scroll to its bottom edge and then stay there, but if the user started scrolling up, the element would immediately start scrolling to its top edge.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3700_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nick_Gard</div>
+          <div class="creation_date">2021-11-08</div>
+          <div class="post_content">
+<p>Yes, the sticky element scrolling (becoming un-stuck) when changing scroll direction is the behavior I want.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-11-08</div>
+          <div class="post_content">
+<p>Ok, that sounds like a useful feature. (Sorry, I didn’t check the demo.) Browsers could even make it the default behavior.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2022-02-24</div>
+          <div class="post_content">
+<p>I ran a <a href="https://twitter.com/simevidas/status/1496440048312627203" rel="noopener nofollow ugc">little poll on Twitter</a>, where I used the terms lazy and eager scrolling to describe the different behaviors. Since there is interest for this feature, I suggest opening an issue in the <a href="https://github.com/w3c/csswg-drafts" rel="noopener nofollow ugc">w3c/csswg-drafts repo</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

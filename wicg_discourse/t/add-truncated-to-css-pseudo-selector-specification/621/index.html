@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Add :truncated to CSS pseudo selector specification</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Add :truncated to CSS pseudo selector specification</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/456_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MerlinMason</div>
+          <div class="creation_date">2014-09-11</div>
+          <div class="post_content">
+<p>When using text-overflow: ellipsis; it is impossible to determine in CSS whether text has been truncated or not. Although possible with Javascript it’s still non-trivial.</p>
+<p>A :truncated pseudo selector, especially when combined with :hover, would allow for a variety of UI interactions that would only be required under that condition.</p>
+<p>Considering the following example…</p>
+<pre><code>&lt;span data-tooltip="Dynamic string of text that may or may not get truncated"&gt;
+    Dynamic string of text that may or may not get truncated
+&lt;/span&gt;
+
+[data-tooltip]:truncated:hover::after {
+    content:attr(data-tooltip);
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/152_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">SimonSapin</div>
+          <div class="creation_date">2014-09-11</div>
+          <div class="post_content">
+<p>Whether or not text is truncated depends on layout, and layout depends on selector matching. Therefore, we unfortunately can not make selectors depend on whether the text is truncated without running into all kinds of circular definition issues. Consider, for example:</p>
+<pre><code class="lang-auto">&lt;style&gt;
+p { font-size: 20px; width: 200px }
+p:truncated { font-size: 10px }
+&lt;/style&gt;
+&lt;p&gt;This text is about 14em wide.
+</code></pre>
+<p>If the text is not truncated, 14em is 280px which is more than 200px so the text is truncated. If the text is truncated, 14em is 140px which is less than 200px so the text is not truncated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-09-11</div>
+          <div class="post_content">
+<p>Ah, the old circularity excuse ;). We should come up with an answer instead of using that. I’m not an expert, but e.g. saying that it setles after one circle would be fine for me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/456_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MerlinMason</div>
+          <div class="creation_date">2014-09-11</div>
+          <div class="post_content">
+<p>Ahh, interesting paradox!</p>
+<p>The problem you describe could also be created with the following though…</p>
+<pre><code>&lt;style&gt;
+    p { display:block; }
+    p:hover { display:none; }
+&lt;/style&gt;
+&lt;p&gt;Sad face&lt;/p&gt;
+</code></pre>
+<p>Demo here — <a href="http://jsfiddle.net/tLe19252/" rel="nofollow noopener">http://jsfiddle.net/tLe19252/</a></p>
+<p>I would argue that dismissing things because they <em>might</em> be used poorly isn’t a great approach.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2014-09-12</div>
+          <div class="post_content">
+<p>What’s the use case? What would you do with this pseudo-class? Let’s start from that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/456_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MerlinMason</div>
+          <div class="creation_date">2014-09-12</div>
+          <div class="post_content">
+<p>Well the initial problem that lead me to think of this was while creating a list of report titles. The design called for a fixed width and height of each list item, and the majority of titles fitted within that. However, for the edge cases where title would get truncated we wanted to reveal the full text in a tool tip on hover. It seems distracting and unnecessary to show a tooltip on each item, the user only needs them under a certain condition.</p>
+<p>As a work around we had to clone each element, set white-space:normal; and then compare the sizes, remove the clone and conditionally add a .is-truncated class. Clunky and expensive to say the least.</p>
+<p>We also have similar problems with large amounts of data in tables. Being able to detect where text is truncated would allow for a more progressive disclosure of content.</p>
+<p>In the future I can also see this becoming more useful if the webkit-line-clamp makes it into standards…</p>
+<pre><code>p { -webkit-line-clamp: 3; }
+.read-more { display: none; }
+p:truncated + .read-more { display: block; }</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-12</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="3" data-topic="621">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p>Ah, the old circularity excuse . We should come up with an answer instead of using that. I’m not an expert, but e.g. saying that it setles after one circle would be fine for me.</p>
+</blockquote>
+</aside>
+<p>Not an excuse, a reason.</p>
+<aside class="quote" data-full="true" data-post="4" data-topic="621">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/merlinmason/40/456_1.png" width="20"/> MerlinMason:</div>
+<blockquote>
+<p>Ahh, interesting paradox!</p>
+<p>The problem you describe could also be created with the following though…</p>
+<p>&lt;style&gt;
+p { display:block; }
+p:hover { display:none; }
+&lt;/style&gt;
+&lt;p&gt;Sad face&lt;/p&gt;</p>
+<p>Demo here — <a href="http://jsfiddle.net/tLe19252/">http://jsfiddle.net/tLe19252/</a></p>
+</blockquote>
+</aside>
+<p>Yes, this is circular, and it’s also <em>really frustrating to deal with</em> because of the unpredictable flickering.  (It’s one of only two areas where things are circular in CSS, the other being scrollbar generation for non-overlay scrollbars.)  We’d like to avoid adding more, as it requires special handling to break these loops (or just looks terrible, such as in Chrome, where your example flickers).</p>
+<blockquote>
+<p>I would argue that dismissing things because they might be used poorly isn’t a great approach.</p>
+</blockquote>
+<p>That’s not what was said. It’s not that it might be used poorly, it’s that if it <em>is</em> used in this way, there’s no correct answer as to what to do.  We can’t define CSS that only works in some situations; we have to have at least <em>some</em> answer for every situation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/456_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MerlinMason</div>
+          <div class="creation_date">2014-09-17</div>
+          <div class="post_content">
+<p>Thanks for the clarity, I understand what you’re saying.</p>
+<p>This is obviously a huge issue as :hover can be applied to all elements and potentially start infinite layout loops.</p>
+<p>I’m far from an expert in internal browser mechanics, but would it not make sense for CSS to define a way that browsers should handle these loop situations if they arise?</p>
+<aside class="quote" data-post="3" data-topic="621">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/domenic/40/75_1.png" width="20"/> domenic:</div>
+<blockquote>
+<p>e.g. saying that it setles after one circle would be fine for me.</p>
+</blockquote>
+</aside>
+<p>The alternative route is to say that you can only change values that don’t effect layout of the element itself. eg, color, box-shadow, and change values on other elements that won’t effect the layout of the truncated element eg, siblings or absolutely positioned pseudo elements / children. Although this feels like it’s starting to get unnecessarily complex.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-17</div>
+          <div class="post_content">
+<p>[quote=“MerlinMason, post:8, topic:621”]
+This is obviously a huge issue as :hover can be applied to all elements and potentially start infinite layout loops.[/quote]
+Yes, but importantly, :hover is limited by the speed at which you detect user interaction.  For example, you could “fix” it by only checking for :hover states on a mousemove event, so the :hover would trigger, then stay triggered even if the element was no longer under the mouse.  When the loop is instead triggered purely by internal processing, it can cycle much faster, and it’s much harder to break or slow loops by rate-limiting parts of the algorithm.</p>
+<p>Also, the :hover flicker is extremely annoying, so authors avoid doing it as soon as they encounter it.</p>
+<aside class="quote" data-post="8" data-topic="621">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/merlinmason/40/456_1.png" width="20"/> MerlinMason:</div>
+<blockquote>
+<p>I’m far from an expert in internal browser mechanics, but would it not make sense for CSS to define a way that browsers should handle these loop situations if they arise?</p>
+</blockquote>
+</aside>
+<p>Detecting loops is actually rather expensive; it’s much better to avoid making them possible in the first place.  We do allow for the possibility of loops in some cases (for example, <span class="mention">@counter-style</span> rules can depend on other <span class="mention">@counter-style</span> rules; a loop causes them to all break their dependencies), but finding and dealing with loops in layout is, as far as I can tell, too expensive to be worth doing.</p>
+<aside class="quote" data-post="8" data-topic="621">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/merlinmason/40/456_1.png" width="20"/> MerlinMason:</div>
+<blockquote>
+<p>The alternative route is to say that you can only change values that don’t effect layout of the element itself. eg, color, box-shadow, and change values on other elements that won’t effect the layout of the truncated element eg, siblings or absolutely positioned pseudo elements / children. Although this feels like it’s starting to get unnecessarily complex.</p>
+</blockquote>
+</aside>
+<p>More importantly, it doesn’t actually help. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/>  You can’t use the “just don’t use properties that would affect the selector” approach, because as soon as you add a second selector with a different set of properties, the two can communicate: in a rule with Selector 1, you can use a property that affects Selector 2, then in a rule with Selector 2 set up to respond to that, you can use a property that affects Selector 1, thus bypassing the protection and reintroducing the cycle.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1542_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sarimarton</div>
+          <div class="creation_date">2018-01-05</div>
+          <div class="post_content">
+<p>What if we restrict :truncated to be taken into account only when coupled with a :hover? Most of the use cases would be about making it possible to reveal truncated text on mouseover. The cycle issue is already handled by the :hover part. It’s simpler with a separate pseudo selector I guess.</p>
+<p>It would match only on</p>
+<ul>
+<li>:hover
+AND</li>
+<li>if the element is truncated without :hover</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2018-01-09</div>
+          <div class="post_content">
+<p>Wondering if :truncated could be added into the JS only part of the selector spec? I think there’s definitely a strong case for needing to find these elements and be able to do something with them and it feels natural as part of a selector.</p>
+<p>This keeps any loops out of CSS and in JS, a space where hopefully a developer is more aware of these sorts of issues. The sorts of interactions one might want to have with a truncated element are also more complex so you’d likely be wanting to be in JS anyway to handle them.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3102_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Trapfether</div>
+          <div class="creation_date">2020-09-23</div>
+          <div class="post_content">
+<p>Chaoaretasty’s reply would pretty much solve the circularity problem as far as the CSS Engine goes.</p>
+<p>Any circularity, would be required to jump through the JS Engine and back into the CSS Engine via web authored code. You could even extend some of the css event systems so that “:truncated” could spawn a catchable JS event for that element. again, any circularity would require the web author to catch that event, cause some singular css change that redoes layout, and that layout change changes the selector application for that element. This would dramatically slow any run away circular rules and give web authors a clear indication of something not working as expected.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3909_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shared_prophet</div>
+          <div class="creation_date">2022-06-21</div>
+          <div class="post_content">
+<p>What if, instead of having a selector to find truncated text, browses were directed to automatically show tooltips on hover with the full truncated text and then there was a selector to style/animate that tooltip?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

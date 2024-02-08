@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Text-content() CSS value akin to attr()</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Text-content() CSS value akin to attr()</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-09-15</div>
+          <div class="post_content">
+<p>As seen here:</p>
+<iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_ypgql" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/lbebber/embed/preview/ypgql?height=300&amp;slug-hash=ypgql&amp;default-tabs=css,result&amp;host=https://codepen.io&amp;embed-version=2" title="CSS Glitched Text" width="695"></iframe>
+<p>This CSS trick works by setting an attribute to the text content of the element, then using that value as the content of a :before.</p>
+<p>I’ve seen other similar CSS tricks that use the same pattern. It would be nice if these stylesheets could just reference their elements textContent with a value like <code>text-content()</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-19</div>
+          <div class="post_content">
+<p>It was last brought up <a href="http://lists.w3.org/Archives/Public/www-style/2013Oct/0617.html">in Oct 2013</a>, and there weren’t any objections. It makes sense, I think.  Just needs us to revive the Content spec, which I haven’t had time to do yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-09-26</div>
+          <div class="post_content">
+<p><a href="http://www.w3.org/TR/css3-gcpm/#funcdef-content">http://www.w3.org/TR/css3-gcpm/#funcdef-content</a> says this already exists, as <code>content(text)</code>? Is that what you mean by “the content spec”?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-29</div>
+          <div class="post_content">
+<p>Nah, I meant <a href="http://dev.w3.org/csswg/css-content/">http://dev.w3.org/csswg/css-content/</a>.  The <code>content()</code> function defined by GCPM is only for <code>string-set</code>, and neither are implemented anyway.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-09-29</div>
+          <div class="post_content">
+<p>Hmm… it seems like that spec only allows <code>contents</code> to be specified once (it’s functionally equivalent to the insert-point for all descendant elements). That wouldn’t allow for tricks like the one described above. It sounds like the <code>content()</code> function from GCPM is needed in css-content as a valid element of <code>content-list</code>, although that does have the unfortunate effect of making the same word applicable as both a property and function name (I’m not sure if this already happens in CSS, or if CSS preproccessing languages like Stylus would have an issue with it.)</p>
+<p>(<code>content()</code> and <code>contents</code> both being a thing is also a little weird, although the css-content spec already has <code>counter()</code> and <code>counters()</code>).</p>
+<p>That, or just forget the <code>content()</code> function and add <code>text-content</code> and <code>first-letter</code> values for <code>content-list</code>. (Ditching <code>content(before)</code> and <code>content(after)</code> because they’re incompatible with the css-content model, and, from what I can tell, they’re just hacks that, in GCPM terms, would be better served by creating a separate <code>string-set</code> to use with <code>::before</code> and reusing it where you would have used <code>content(before)</code>.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-10-02</div>
+          <div class="post_content">
+<p>Don’t worry about what the spec says right now - as the note indicates, the spec is currently abandoned and will need to be rewritten.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1828_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">heydonworks</div>
+          <div class="creation_date">2014-10-03</div>
+          <div class="post_content">
+<p>+1 for text-node based selectors. Like <span class="mention">@leaverou</span>, I’ve often found myself reaching for them.</p>
+<p>I imagined something constructed like the negation pseudo, so</p>
+<p><code>elem:text('hello') { }</code></p>
+<p>but it needs searches, like the attr selectors mentioned above:</p>
+<pre><code class="lang-auto">elem:text(*='hello') { }
+elem:text(^='hello') { }
+elem:text($='world') { }
+/* etc */
+</code></pre>
+<p>Perhaps the attr selector style would be better, but we’d have to avoid a text attribute clash ie. <code>text="bla"</code></p>
+<p>Maybe</p>
+<pre><code class="lang-auto">[:text="hello"]
+[:text$="world"]
+/* etc */
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2014-10-03</div>
+          <div class="post_content">
+<p>I have a feeling a text-content <em>selector</em> would be prohibitively expensive to compute. To fake it, and get a sense of how expensive this would be, set a JS mutation observer that sets the value of an attribute to text-content every time an element changes (up the entire tree), and add a few CSS rules selecting on that attribute. (It’s possible I’m wrong on this, but this test would prove its complexity either way.)</p>
+<p>I’m talking about text-content as a CSS <em>value</em>, for the <code>content</code> CSS attribute.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1828_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">heydonworks</div>
+          <div class="creation_date">2014-10-03</div>
+          <div class="post_content">
+<p>If you mean transferring the text node as a value of <code>content</code>, then that would be less expensive. There would be few applications for it, however.</p>
+<p>It would just mean being able to duplicate content as pseudo-content. Aside from for tricks like the one provided I see little value in this so far. Should probably remain the domain of javascript?</p>
+<p>Out of interest I wonder how inner HTML and encodings would be handled?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2014-10-03</div>
+          <div class="post_content">
+<p>This used to be in the spec, as :content(), but was removed for reasons I don’t remember. Perhaps <span class="mention">@tabatkins</span> can enlighten us on that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-10-14</div>
+          <div class="post_content">
+<p>It was too slow, especially since it could reach across element boundaries.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2014-10-28</div>
+          <div class="post_content">
+<p>Btw note that this would be very useful for doing pull quotes without duplicating text. That’s a pretty common use case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-10-28</div>
+          <div class="post_content">
+<p>You need to preserve formatting in that case, though.  (At least sometimes.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chenzx</div>
+          <div class="creation_date">2016-10-19</div>
+          <div class="post_content">
+<p>Hi, i just want to post a article titled as “Extend CSS Selector’s capacity to select element’s text content”, and i see this, great! CSS cannot directly select text content, since it’s not DOM nodes… Anyway, it can be poly-filled by use JavaScript code and Range API.</p>
+<p>But as a spec, i think the biggest problem to how to provide flexibility by a simple syntax. What i could imagine is to provide a inject a UDF(user defined function) into the CSS Selector, this will be the most flexible…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2017-01-01</div>
+          <div class="post_content">
+<p>Reading through this thread I was inspired by a number of different possibilities for how text could be manipulated with a CSS-like syntax!</p>
+<p>Currently CSS can:</p>
+<ul>
+<li>Set a pseudo-element’s <code>content</code> with text from an HTML attribute()</li>
+<li>Set a pseudo-element’s <code>content</code> with a text string from CSS</li>
+</ul>
+<p>And CSS cannot:</p>
+<ul>
+<li>Set an element’s <code>innerHTML</code> with text from an HTML attribute</li>
+<li>Set an element’s <code>innerHTML</code> with a text string from CSS</li>
+<li>Target an element based on a search of the text it contains.</li>
+</ul>
+<p>For those last three I have experimented with element queries and the possibility of evaluating JavaScript inside CSS (from the context of the scoped element) and here are some demos of those three ideas CSS currently cannot do:</p>
+<h2>Text from attribute as innerHTML</h2>
+<pre><code class="lang-auto">&lt;h2&gt;Text from attribute as innerHTML&lt;/h2&gt;
+&lt;div id=text data-text="This is &lt;strong&gt;HTML&lt;/strong&gt; text."&gt;&lt;/div&gt;
+
+&lt;style&gt;
+  @element '#text' {
+    eval('innerHTML = getAttribute("data-text")');
+  }
+&lt;/style&gt;
+
+&lt;script src=http://elementqueries.com/EQCSS.js&gt;&lt;/script&gt;
+</code></pre>
+<p>This example grabs the text content from the HTML attribute <code>data-text</code> on the scoped element <code>#text</code> and sets it as the <code>innerHTML</code> of the scoped element (itself).</p>
+<p>I’ve used a similar technique in the past to supply responsive truncated text excerpts of longer passages: <a href="http://codepen.io/tomhodgins/pen/KgKggX" rel="nofollow noopener">http://codepen.io/tomhodgins/pen/KgKggX</a></p>
+<pre><code class="lang-css">@element '[data-truncate]' {
+  $this:before {
+    content: 'eval("getAttribute('data-truncate').substring(0,scrollWidth/3)")…';
+  }
+}
+</code></pre>
+<h2>Text from CSS as innerHTML</h2>
+<pre><code class="lang-auto">&lt;h2&gt;Text from CSS as innerHTML&lt;/h2&gt;
+&lt;div id=from-CSS&gt;&lt;/div&gt;
+
+&lt;style&gt;
+  @element '#from-CSS' {
+    eval('innerHTML = "This is &lt;strong&gt;HTML&lt;/strong&gt; text."')
+  }
+&lt;/style&gt;
+
+&lt;script src=http://elementqueries.com/EQCSS.js&gt;&lt;/script&gt;
+</code></pre>
+<p>This example does a similar thing as the last example, except the text content is fully supplied from within the stylesheet. This would make it really easy to add responsive content, or to swap out content by language, etc.</p>
+<h2>Element Selected by its Text Content</h2>
+<pre><code class="lang-auto">&lt;h2&gt;Element Selected by its Text Content&lt;/h2&gt;
+&lt;div&gt;This element is highlighted because it contains the word: Rubber&lt;/div&gt;
+
+&lt;style&gt;
+  @element 'div' {
+    eval('(/rubber/i).test(innerHTML) ? "$this" : ""') {
+      background: yellow;
+    }
+  }
+&lt;/style&gt;
+
+&lt;script src=http://elementqueries.com/EQCSS.js&gt;&lt;/script&gt;
+</code></pre>
+<p>This one is really cool! I was wondering if there was a way you could target an element with a style based on its own text content. Now a few notes about this, you want to scope the element the closest to the content you’re searching. Since tags can contain other tags, if there’s any tag inside your <code>HTML</code> element and you write the rule for <code>@element 'html' {}</code> it will come back true. Likewise if you scoped the <code>*</code> wildcard selector, this rule would be true for every parent element containing an element that contained the test you were searching.</p>
+<p>My first attempt at doing this was formatted with <code>indexOf()</code> like this:</p>
+<pre><code class="lang-css">@element 'div' {
+  eval('innerHTML.indexOf("Rubber") !== -1 ? "$this" : ""') {
+    background: yellow;
+  }
+}
+</code></pre>
+<p>But the downside to <code>innerHTML.indexOf("Rubber") !== -1</code> was that I had to enter an exact string <code>Rubber</code>, and I would have to write a separate selector if I wanted to target <code>rubber</code> or <code>rUbBeR</code>. So instead I formatted the string I’m searching as a Regular Expression so I can use flags like <code>i</code> for a case insensitive search, and using <code>test()</code> to see if that regular expression matches anything in the <code>innerHTML</code>. If the result of the test is <code>true</code>, then the selector used will output <code>$this</code> (which inside of the scoped style, refers to <code>div</code> in this case) otherwise if it’s false, no selector text is output and our rule of <code>{ background: yellow }</code> applies to zero elements on the page.</p>
+<p>Here’s a Codepen demo of all 5 ideas on the same page: <a href="http://codepen.io/tomhodgins/pen/ggYzmY?editors=1000" rel="nofollow noopener">http://codepen.io/tomhodgins/pen/ggYzmY?editors=1000</a></p>
+<p>Just some fuel for the fire <img alt=":smiley:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smiley.png?v=5" title=":smiley:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2432_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Neverlands</div>
+          <div class="creation_date">2019-06-30</div>
+          <div class="post_content">
+<p>Hello, I have seen that this thread is a rather old thread but I have a similar situation. I would like to set a list class (".non-zero") to display:none if the innerHTML of a span (".bubble") contains 0.</p>
+<p>HTML</p>
+<pre><code>&lt;li class="tab non-zero"&gt;
+  &lt;span class="counter"&gt;&lt;span class="bubble"&gt;0&lt;/span&gt;&lt;/span&gt;
+&lt;/li&gt;
+</code></pre>
+<p>I tried it with this but it does not work:</p>
+<pre><code>&lt;li class="tab non-zero"&gt;
+&lt;style&gt;
+@element 'li' {
+  eval('/0/i.test(innerHTML) ? "$this" : ""') {
+    display: none !important;
+  }
+}
+&lt;/style&gt;
+     &lt;span class="counter"&gt;&lt;span class="bubble"&gt;0&lt;/span&gt;&lt;/span&gt;
+&lt;/li&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">strarsis</div>
+          <div class="creation_date">2020-07-30</div>
+          <div class="post_content">
+<p>Other use case: Style/select the text shadow differently, e.g. with a blend mode for a multiply text shadow.
+Being able to use the same text as <code>content</code> in a pseudo-element would allow for this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2196_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sollyucko</div>
+          <div class="creation_date">2021-05-12</div>
+          <div class="post_content">
+<p>Another use case is for sizing an element as if the text had a specific formatting (e.g. for avoiding navbar items shifting around when making text bold on hover). This works by adding an invisible <code>:after</code> pseudoelement with <code>content: attr(data-content)</code> and the target formatting.</p>
+<p>Currently, this requires duplicating the text in the content and an attribute, either manually or using JavaScript. However, a <code>text-content</code> function (with a way to target the current element) would avoid that.</p>
+<p>P.S. an extended version of the <code>element</code> function would probably also work in this case.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

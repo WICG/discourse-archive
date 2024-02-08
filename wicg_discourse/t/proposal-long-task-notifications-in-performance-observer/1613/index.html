@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Long Task notifications in Performance Observer</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Long Task notifications in Performance Observer</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p><strong>Problem description:</strong>
+certain tasks can take a long time (multiple frames), locking up the UI thread and blocking other critical tasks.
+To the user this is may manifest as delays in responding to input (tap, click, wheel), janks in animation or scrolling etc.
+See detailed problem description in the <a href="https://github.com/spanicker/longtasks" rel="nofollow noopener">explainer</a>
+Long tasks are a major source of bad user experiences on the web today.</p>
+<p><strong>Proposal</strong>
+We’d like to propose a performance API to enable applications to detect presence of such “long tasks” that monopolize the UI thread for extended periods of time and block critical tasks.</p>
+<p>The explainer is in this <a href="https://github.com/spanicker/longtasks" rel="nofollow noopener">Git repo</a> has more details.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1052_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PhilipTellis</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>If a long task is running and blocks the UI thread, won’t this also block any Performance Observer events from firing, or is this something that can be pushed off to a WebWorker?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>It is a non-goal to deliver the notification synchronously when the long task happens, instead they will be queued and delivered periodically (probably with the next begin-frame render cycle).
+Hope that clarifies the proposal?</p>
+<p>The proposal focuses on reporting-only, although as described the API does not preclude the host app from taking action on misbehaving nested iframes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>+1 to <span class="mention">@panicker</span>’s comment.</p>
+<p>Also, to expand that: the same statement is true for <em><strong>all</strong></em> PerformanceObserver notifications.</p>
+<blockquote>
+<p>“The performance timeline task queue is a low priority queue that, if possible, should be processed by the user agent during idle periods to minimize impact of performance monitoring code.” - <a href="https://w3c.github.io/performance-timeline/#the-performanceobserver-interface" rel="nofollow noopener">performance timeline</a></p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1052_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PhilipTellis</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>This may not be as useful since users tend to leave if a page locks up, and
+then it’s too late to beacon or do anything about.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-07-26</div>
+          <div class="post_content">
+<p>A completely unusable page that leads to user abandonment is the extreme case. This proposal intends to address a much broader problem space – for instance delays in interacting with the page right after load (time to interaction), delays in responding to clicks (eg. user interacting with a widget on the page which should update in response to click) , noticeable jank in animation or scrolling etc.
+I’ve clarified the text in the post.
+Also this is explained in more detail in the <a href="https://github.com/spanicker/longtasks" rel="nofollow noopener">explainer</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/966_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nic_Jansma</div>
+          <div class="creation_date">2016-08-02</div>
+          <div class="post_content">
+<p>I think this proposal is a fantastic idea and would definitely be something we (a RUM vendor) would be interested in capturing for our customers if available.  Attribution of potential performance issues seen in first- and third-party scripts is on the minds of a lot of our customers.</p>
+<p>The <code>name</code> attribution proposal seems reasonable.</p>
+<p>Assuming this probably wouldn’t be tracked proactively, but only “captured” when turned on via <code>PerformanceObserver</code>, correct?  Unlike ResourceTiming, which I would argue is <em>more</em> important to have everything captured even if no one is listening (up to 150 limit or everything before <code>onload</code>) to be able to generate complete picture of for a Waterfall (so a RUM script doesn’t need to be sync loaded in the HEAD), this seems like it should only be captured if the page is specifically requesting it, and long tasks that happened prior to it being turned on are just lost.</p>
+<p>While I think Philip’s note that a completely locked-up page might not be able to deliver these events is an important point, I think that’s an case extreme case – and maybe could be solved by something similar to Network Error Logging (“Page Freeze Logging”).</p>
+<p>The data we would get out of this proposal from all of the various little Long Tasks on a page will be very useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-08-03</div>
+          <div class="post_content">
+<p>Hey Nic,</p>
+<p>Thanks for the response.
+Yes this will only be captured when a PerformanceObserver is registered. We wouldn’t surface or hold on to long tasks that occurred prior to PerformanceObserver being registered.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-08-05</div>
+          <div class="post_content">
+<p>Here’s some preliminary data and a <a href="https://docs.google.com/document/d/1J0brr10eHRpk0F6tRaWzkgI3mHja3SOHR6fwHBGzGs0/edit#" rel="nofollow noopener">brief writeup</a> from surfacing Long Tasks on some popular sites:</p>
+<ul>
+<li><a href="https://docs.google.com/spreadsheets/d/1OopvhE2csHhXaAg_txsrCOnSM1ntDI4STDglu1G49VE/edit" rel="nofollow noopener">Mobile - Android nexus5</a></li>
+<li><a href="https://docs.google.com/spreadsheets/d/10ss8JuGiqVIvs9KDlzItSk024Rt4xS2ktaDCaJn3WQg/edit" rel="nofollow noopener">Desktop</a></li>
+</ul>
+<p>Main take-aways from this exercise:</p>
+<ul>
+<li>The API is very promising as an indicator of how performance-tuned the site is, and the user’s experience on it.</li>
+<li>The proposed API is not too difficult to implement (in Chrome)</li>
+<li>The heuristic of considering scripts-only provides very good (~90% coverage) for frame context attribution</li>
+</ul>
+<p>Comments and feedback are welcome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2016-08-17</div>
+          <div class="post_content">
+<p>FYI, blink intent to implement: <a href="https://groups.google.com/a/chromium.org/d/msg/blink-dev/A_sM-fu6u50/ao9mnO8SAQAJ" rel="nofollow noopener">https://groups.google.com/a/chromium.org/d/msg/blink-dev/A_sM-fu6u50/ao9mnO8SAQAJ</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/878_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">toddreifsteck</div>
+          <div class="creation_date">2016-08-24</div>
+          <div class="post_content">
+<p>Nic, would your product be likely to enable this early in the page lifecycle (in HEAD) or later after page load?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/966_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nic_Jansma</div>
+          <div class="creation_date">2016-08-25</div>
+          <div class="post_content">
+<p><span class="mention">@Todd</span> - We’d want to enable it as early in the page load process as possible to ensure we have a full picture.  Our script (boomerang.js) loads async, and we’d want to turn it on as soon as it’s loaded, but we’d also probably provide a snippet to our customers to turn it on in their HEAD so we can hand the data over to boomerang.js once it’s later loaded.</p>
+<p>We also might keep it running post-page-load depending on the scenario and what the customer wants to capture.  In the case of SPAs, it might make sense to turn it on/off during soft navigations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">panicker</div>
+          <div class="creation_date">2016-10-27</div>
+          <div class="post_content">
+<p>Long Tasks spec will be moved to WICG, we have ample agreement (from TPAC).
+[Consider this the Intent to Move]</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2016-10-27</div>
+          <div class="post_content">
+<p>Repo is now under <a href="https://github.com/WICG/longtasks">https://github.com/WICG/longtasks</a> !!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

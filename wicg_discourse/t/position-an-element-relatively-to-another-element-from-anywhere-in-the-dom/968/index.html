@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Position an element relatively to another element from anywhere in the DOM</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Position an element relatively to another element from anywhere in the DOM</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<h2>Problem -</h2>
+<p>I need to position a popup modal / tooltip / dialog relative to another element, perhaps the button that I clicked to trigger the popup or relative to a block of text that’s relevant to the popup’s information. <em>Something like this:</em></p>
+<p><img height="241" src="//discourse.wicg.io/uploads/default/original/1X/1a046b5a9331e4d5afd8fa7847efa0daf33275f3.gif" width="309"/> </p>
+<p>We want the positioned element relative to the target element at all times. Unfortunately, we really only have a couple of solutions and neither are <em>ideal</em> for this problem:</p>
+<p>``1. <strong>Make the dialog a sibling/ancestor:</strong>  As long as the dialog and target element are related, I can <code>position: relative;</code> a common parent and then <code>position: absolute;</code> the dialog. From there, I just need set the <code>top</code>, <code>left</code>, <code>right</code>, and <code>bottom</code> properties (or use <code>transform: translate()</code>) to set the desired position.</p>
+<p>Problems with this solution:</p>
+<ul>
+<li>
+<em>Not at all DRY:</em> If I have a list of items with buttons that need dialogs, I have to create as many dialogs (even if they say/accomplish the same thing) so that I can ensure they’re positioned correctly. I don’t want to add all those extra elements.</li>
+<li>
+<em>At the mercy of the parent:</em> Parent have an <code>overflow: hidden;</code> set? Good game bro… this solution’s a no go. <code>z-index</code> not right? Too bad.</li>
+</ul>
+<p>``2. <strong>Use JavaScript to calculate the position:</strong>  Just grab the offset of the target element, <code>position: absolute;</code> the dialog and start setting styles.</p>
+<p>Problems with this solution:</p>
+<ul>
+<li>
+<em>Violates SoC:</em> I have to rely on JavaScript to stylistically position my dialog to the relevant element. Gross.</li>
+<li>
+<em>No Guarantees:</em> Did the user resize the window? Guess I have to add an event handler to recalculate. Did the target element shift due to an animation or another event? Ugh, guess I can set some sort of callback(s) to deal with that. JavaScript turned off… oh well??</li>
+</ul>
+<h2>Suggested Solution -</h2>
+<p>We need to be able to visually associate one element (the <em>connected</em>) with another (the <em>target</em>), so why not extend the <code>position</code> property in CSS and allow us to pass in an element selector.</p>
+<pre><code>.connected {
+    position: element(#Target);
+    transform: translateY(-100%);
+}
+</code></pre>
+<blockquote>
+<p>The syntax was borrowed from <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/element" rel="nofollow noopener">Mozilla’s element() function for the <code>background-image</code> property</a></p>
+</blockquote>
+<p>When an element is elementally positioned, it’s X/Y page offset becomes identical to the target element’s. As the target shifts around the page due to various events, the connected element shifts with it.  From there, it can be offset from the target by using <code>top</code>, <code>left</code>, <code>right</code>, <code>bottom</code>, <code>transform: translate;</code> or a combination of all 5. The connected element would act as if it was contained within the target element so <code>right: 0</code>, <code>top: 0</code> would position the connected element in the top right corner of the connected element.</p>
+<p>For all children of the connected element, <code>position element()</code> would act like <code>position: relative</code>.</p>
+<p>With this solution, I can visually associate any element with any other, don’t need to duplicate elements, and I don’t need to rely on JavaScript for presentation.</p>
+<hr/>
+<p>Popup’s were just one use case, there are several others that I can list if we need them! I apologize for the wall text, please let me know if anything is unclear!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>I like this idea - it also provides an elegant way to stack elements directly on top of each other. All but the first can just use <code>position: element(#rootElem)</code>. Then you only need to move/animate the root element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>Nice use case! Someone could have a lot of fun with animations/transitions with minimal code doing this!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>It would also be useful if you could position it relatively within that element. Imagine you want some kind of tooltip in the bottom-right of a larger element. Perhaps you could do this:</p>
+<pre><code class="lang-auto">#toolTip {
+    position: element(#someLargerElement);
+    right: 0;
+    bottom: 0;
+}
+</code></pre>
+<p>This would be like <code>position: fixed</code> but relative to the given element’s area instead of the whole viewport. Alternatively your <code>transform</code> example can offset it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/663_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">BrianS198</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>Lovin’ it! Is there any idea on whether or not you’ll be able to leverage the same, underlying functionality that the element rule has?</p>
+<p>(<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/element" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/CSS/element</a>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>Yea, I see this acting as if it were contained within the element (whether or not it could be).  By leveraging the 4 directional properties and transform, I think we could cover many use cases.  Another thing that would need to be ironed out is, what all should be relative to the <span class="hashtag">#target</span> element?  If I specify <code>width: 100%;</code>, is that 100% of the connected element’s parent width or 100% of the <span class="hashtag">#target</span> element’s width?  My thought would be the former, but there are definitely other things we wouldn’t want to inherit (like the target’s parent’s overflow).  So maybe nothing at all and only the directional properties are impacted?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>My gut feeling is that implementers are going to reject this for the same we-can’t-have-things-that-subvert-the-DOM-hierarchy reasons as things like <code>::outside</code>.</p>
+<p>That said, if we <em>are</em> allowed to subvert the DOM like this, I’d like this to have a syntax like <code>position: outside-element(#example)</code> (where you can specify either <code>top</code> or <code>bottom</code> but not both) and/or a <code>position: absolute before-element(#example)</code> and <code>position: absolute after-element(#example)</code> (which would use the same rules for positioning the element as a pseudo-element).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-23</div>
+          <div class="post_content">
+<p>Nah, abspos already subverts that a good bit, so it’s not nearly as much of a stretch as <code>::outside</code>.  We might need to apply some restriction like “the target element must be in the same or a descendant containing block”, but that’s generally easy to work with.</p>
+<p>I do plan to pursue this in the Position spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<p>In the case where restrictions would need to apply, I’m just trying to wrap my head around this statement:</p>
+<aside class="quote no-group" data-full="true" data-post="8" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_2.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>We might need to apply some restriction like “the target element must be in the same or a descendant containing block”</p>
+</blockquote>
+</aside>
+<h2>Unrelated: would <em>NOT</em> work</h2>
+<p>Since <code>&lt;dialog&gt;</code> and <span class="hashtag">#target</span> are not related, the position does not apply.</p>
+<p><img height="118" src="//discourse.wicg.io/uploads/default/original/1X/3abb483ebe64f75888391c04074a80266fe1d677.gif" width="414"/> </p>
+<h2>Siblings: This would work</h2>
+<p>Since <code>&lt;dialog&gt;</code> and <span class="hashtag">#target</span> are siblings it works as expected</p>
+<p><img height="118" src="//discourse.wicg.io/uploads/default/original/1X/b8376b4e962a8b86ebe38bed0623bd3707087f66.gif" width="430"/> </p>
+<h2>Distant Relatives: would <em>NOT</em> work??</h2>
+<p>Since <code>&lt;dialog&gt;</code> and <span class="hashtag">#target</span> are not direct relatives, the position does not apply.</p>
+<p><img height="202" src="//discourse.wicg.io/uploads/default/original/1X/b053de8cb6b275b12a8c394bd7f821c389c3dab6.gif" width="430"/> </p>
+<p>Would these statements be accurate? If there are performance implications I completely understand, but the ideal would be for that all three of these situations work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<p>Assuming that what I said was accurate (that we could do element-based positioning if the target was in the same or a descendant containing block), then all three of your examples would work.  Here’s an example that wouldn’t work:</p>
+<pre><code class="lang-auto">&lt;body&gt;
+  &lt;div id='target'&gt;...&lt;/div&gt;
+  &lt;div style="position: relative;"&gt;
+    &lt;dialog style="position: element(#target);"&gt;...&lt;/dialog&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+</code></pre>
+<p>This would break because the dialog’s containing block is generated by its parent, and the target is not a descendant of that element.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-24</div>
+          <div class="post_content">
+<p>Perfect, got it. Wasn’t nearly as restricting as I was thinking. Thanks for clearing that up.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/656_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Pontus</div>
+          <div class="creation_date">2015-07-25</div>
+          <div class="post_content">
+<p>Really glad this got brought up, and I like your solution too. It addresses a problem I think most of us have faced many times. My only gripe is that it makes you either use inline styles or tie yourself to DOM ids in the CSS to be able to use it, which puts some limits on how dynamic it can be. That’s a hard thing to get around, though. One way to decouple it a bit and maintain SoC could be to allow something like:</p>
+<pre><code class="lang-auto">&lt;body&gt;
+  &lt;div id="target"&gt;&lt;/div&gt;
+  &lt;dialog class="attached" reference="target"&gt;&lt;/dialog&gt;
+  &lt;style&gt;
+    .attached {
+      position: reference;
+    }
+  &lt;/style&gt;
+&lt;/body&gt;
+</code></pre>
+<p>Just spitballing here to get the idea across. Could also use the attr() function with a custom attribute or something like that, potentially.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-26</div>
+          <div class="post_content">
+<p>I’m all for syntax reform (I just pulled a usable example from an existing feature), but I’m not sure I’m on board with your suggestion. I’ve always felt that there’s a little bit of an illusion when it comes to full SoC with our front-end code. Our JS and CSS files will always need to be somewhat aware of the DOM structure (either through tags, attributes or classes/ids) in order to operate on it.</p>
+<p>Your example relies on a <code>reference</code> attribute and an <code>attached</code> class to tie your two elements together. At first blush that may seem decoupled, but ultimately, to me, it feels less maintainable and verbose for the end user.  I have to set two values to accomplish the same thing I would be able to do with the former syntax in one value.</p>
+<p>If we were trying to convey semantic meaning behind this, I think utilizing an attribute would be a good idea. We could treat it like the <code>for</code> attribute and have it be a part of UA stylesheets or something.  But I see this as purely presentational, so I think a pure CSS solution is ideal here.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>What about changing <code>element()</code> to be something like <code>first-sibling()</code> or <code>first-ancestor()</code> (or I guess <code>first-descendant()</code>, though I thought lookahead CSS rules were a no-go), where it refers to the first element (along a search path relative to the element, within the rules Tab stated) matching a given CSS selector (not just ID selectors)?</p>
+<p>I imagine such an ancestor search could have perf problems, but there’s probably some way to sidestep that, eg. by using values with more constrained search paths (like maybe <code>previous</code> for the sibling element immediately before this one).</p>
+<p>Also, for that reason, I think the selector should be a second word of the property, with the first defining the relation <em>to</em> the selected element like <code>relative-to</code> (with other possible values, as I mentioned above, like <code>before</code> or <code>after</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>Based on what I’ve seen over at Bootstrap, supporting (or aiding implementation of) robust full-featured positioning of tooltip-ish elements is a tad more complicated, although this is certainly a step in the right direction.</p>
+<p>Some complications / use-cases to consider:</p>
+<p>(A) Say the tooltip is above the element. If the user scrolls down so that the element is at the very top of the screen, my tooltip is now partially/totally outside the viewport and not visible. I want my tooltip to “flip” to be below the element instead. Strawman syntax just to give some examples of what I’m talking about:</p>
+<ul>
+<li>
+<code>relative-placement: top;</code> = tooltip always goes above element, regardless of whether that puts it outside the viewport</li>
+<li>
+<code>relative-placement: auto(top, right, bottom);</code> = tooltip goes above element, unless that would put it outside of the viewport, otherwise the tooltip goes on the right side of the element, otherwise the tooltip goes below the element; if all of those placements are outside the viewport, then go above since <code>top</code> is first in the list. Authors are advised to include all available directions in their <code>auto</code> preference list.</li>
+</ul>
+<p>(B) Say the element is a <code>&lt;span&gt;</code> with multiple rendering boxes cut across two lines (example visual: <a href="http://imgur.com/ta68YjM.png" rel="nofollow noopener">http://imgur.com/ta68YjM.png</a>). Where does the tooltip get positioned? Most users feel that placing it over the empty space between the two boxes feels pretty weird, although that’s the easiest behavior to opt for.</p>
+<p>© You probably want <code>display:none</code> to propagate to any attached elements too?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/474_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cvrebert</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>It might be good to ping the <a href="http://tether.io" rel="nofollow noopener">Tether folks</a> and ask them what CSS feature(s) would make their lives easier. (Or to at least mine their docs for inspiration.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="14" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>What about changing element() to be something like first-sibling() or first-ancestor() (or I guess first-descendant(), though I thought lookahead CSS rules were a no-go), where it refers to the first element (along a search path relative to the element, within the rules Tab stated) matching a given CSS selector (not just ID selectors)?</p>
+<p>I imagine such an ancestor search could have perf problems, but there’s probably some way to sidestep that, eg. by using values with more constrained search paths (like maybe previous for the sibling element immediately before this one).</p>
+<p>Also, for that reason, I think the selector should be a second word of the property, with the first defining the relation to the selected element like relative-to (with other possible values, as I mentioned above, like before or after).</p>
+</blockquote>
+</aside>
+<p>So I’m generally in favor of giving the end-user as much flexibility as possible when it comes to features because they end up doing things the implementors could never imagine with them… and that’s great!  Allowing any CSS selector would give a lot more flexibility but it would also open it up to some issues and I don’t think the tradeoffs are worth it.</p>
+<p>By sticking with Id’s, we can select one element as fast as possible and we have built in guarantees that the element is unique (or else the document is invalid).  It also gives us a much simpler syntax than the one you’re proposing. Finally, if a user runs into issues using the property, there’s a single point of failure to look at… that element exists in the DOM or it does not.</p>
+<p>Using your proposed syntax, there’s no guarantee we’ll find only one element and each of these queries could/would be noticeably slower than using Id’s, even if we’re only using the first element returned by the selection.</p>
+<p>All that to say I’m favoring simplicity and speed over flexibility in this case.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="17" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/soluml/40/654_1.png" width="20"/> soluml:</div>
+<blockquote>
+<p>By sticking with Id’s, we can select one element as fast as possible and we have built in guarantees that the element is unique (or else the document is invalid).  It also gives us a much simpler syntax than the one you’re proposing.</p>
+</blockquote>
+</aside>
+<p>Yes, but a rule that only works once on the page is useless for anything but fixed UI elements and dialog boxes. Assigning the rule to a unique element means it’s completely incapable of working for any sort of repeatable component outside of Shadow DOM.</p>
+<aside class="quote" data-post="17" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/soluml/40/654_1.png" width="20"/> soluml:</div>
+<blockquote>
+<p>Finally, if a user runs into issues using the property, there’s a single point of failure to look at… that element exists in the DOM or it does not.</p>
+</blockquote>
+</aside>
+<p>This argument could be applied to <em>anything</em> that uses CSS selectors. It’s not a valid point.</p>
+<aside class="quote" data-post="17" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/soluml/40/654_1.png" width="20"/> soluml:</div>
+<blockquote>
+<p>Using your proposed syntax, there’s no guarantee we’ll find only one element and each of these queries could/would be noticeably slower than using Id’s, even if we’re only using the first element returned by the selection.</p>
+</blockquote>
+</aside>
+<p>Since I’ve never actually touched UA code for CSS engines, I leave tractable perf concerns to people like Tab who have some applicable experience in this domain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/654_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">soluml</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<p>Thanks for your response!</p>
+<aside class="quote" data-post="18" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>Yes, but a rule that only works once on the page is useless for anything but fixed UI elements and dialog boxes. Assigning the rule to a unique element means it’s completely incapable of working for any sort of repeatable component outside of Shadow DOM.</p>
+</blockquote>
+</aside>
+<p>I’m pretty sure I’m misunderstanding what it is exactly that you’re trying to accomplish with your syntax (over the original) so if you could provide an example that’d be great.</p>
+<p>As I read it, your solution ultimately only targets one element as well. If you factor JavaScript into the equation anything is possible with either solution.  I can trivially change classes and Id’s on any element thereby changing the rule to point to the element I need. If you’re not factoring JavaScript into the equation, then the DOM isn’t changing and either solution will target just the one element.</p>
+<p>The one exception to this (in your case) would be the ability to use pseudo classes, which would be a definite plus!</p>
+<aside class="quote" data-post="18" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>This argument could be applied to anything that uses CSS selectors. It’s not a valid point.</p>
+</blockquote>
+</aside>
+<p>Except that selectors don’t typically reside in property values. I think the additional clarity afforded to me by an Id here would be beneficial.</p>
+<aside class="quote" data-post="18" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/> stuartpb:</div>
+<blockquote>
+<p>Since I’ve never actually touched UA code for CSS engines, I leave tractable perf concerns to people like Tab who have some applicable experience in this domain.</p>
+</blockquote>
+</aside>
+<p>I haven’t touched UA code either, but I’m not asking you to take my word for it.  Just run some perf tests in your own browser using dev tools. I imagine the scoping of your functional syntax would help mitigate some of the issues, but you should be able to see get a general idea of how the selectors perform.</p>
+<p>To add to that, I feel like I worded my initial response poorly so let me try to better explain my point.  I’m not trying to say that only Id’s will perform adequately.  I’m just suggesting that the open-ended nature of your syntax invites performance considerations. By restricting the selectors to just Id’s, <em>we know</em> that it’ll work, because we have viable examples using the same syntax in existing browsers.</p>
+<p>I guess my big question for you is: Why would I want all the extra stuff in your syntax, when at the end of the day all I’m trying to target is one element? Id’s only return one element and that’s what I want… why make it more complicated?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="19" data-topic="968">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/soluml/40/654_1.png" width="20"/> soluml:</div>
+<blockquote>
+<p>I’m pretty sure I’m misunderstanding what it is exactly that you’re trying to accomplish with your syntax (over the original) so if you could provide an example that’d be great.</p>
+</blockquote>
+</aside>
+<p>HTML:</p>
+<pre><code class="lang-auto">&lt;div class="card"&gt;
+  &lt;img src="user-f00.png" class="avatar"&gt;&lt;div class="unread"&gt;16&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="card"&gt;
+  &lt;img src="user-ba2.png" class="avatar"&gt;&lt;div class="unread"&gt;23&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>CSS:</p>
+<pre><code class="lang-css">.unread {
+  position: relative-to first-sibling(.avatar);
+  top: 2px;
+  left: 2px;
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

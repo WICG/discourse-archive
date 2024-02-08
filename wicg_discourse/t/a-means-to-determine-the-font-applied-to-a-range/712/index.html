@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A means to determine the font applied to a range</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A means to determine the font applied to a range</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<h2>Use case</h2>
+<p>Given a range of text in the DOM,  what font(s) is being applied to that range?</p>
+<ul>
+<li>“Designer wants wider letter-spacing if Futura (1st font in stack) is displayed than if Century Gothic (2nd font) is displayed.” [1]</li>
+<li>To save requests/bandwidth, determine if a font is available on the user’s system before loading it.</li>
+</ul>
+<h2>Existing solutions</h2>
+<p>There are no exact solutions to this use case in the platform. Right now, developers are using either a canvas hack [2] or javascript hack [3].</p>
+<p>See also:</p>
+<ul>
+<li><a href="http://www.lalit.org/lab/javascript-css-font-detect/">http://www.lalit.org/lab/javascript-css-font-detect/</a></li>
+<li><a href="https://remysharp.com/2008/07/08/how-to-detect-if-a-font-is-installed-only-using-javascript">https://remysharp.com/2008/07/08/how-to-detect-if-a-font-is-installed-only-using-javascript</a></li>
+<li><a href="https://www.browserleaks.com/fonts">https://www.browserleaks.com/fonts</a></li>
+</ul>
+<h2>Limitations</h2>
+<h3>window.getComputedStyle(element)</h3>
+<p>Get computed style only returns you the font stack, so you can’t actually determine which font is being applied to an element (or a range of characters).</p>
+<h2>Security and privacy considerations</h2>
+<p>Fingerprinting:</p>
+<ul>
+<li><a href="https://www.browserleaks.com/canvas">https://www.browserleaks.com/canvas</a></li>
+</ul>
+<h2>Refs and acknowledgements</h2>
+<p>This proposal comes originally from Dave Newton.</p>
+<ul>
+<li>[1] <a href="https://twitter.com/newtron/status/540931079843373057">https://twitter.com/newtron/status/540931079843373057</a>
+</li>
+<li>[2] <a href="http://www.kirupa.com/html5/detect_whether_font_is_installed.htm">http://www.kirupa.com/html5/detect_whether_font_is_installed.htm</a>
+</li>
+<li>[3] <a href="http://www.samclarke.com/2013/06/javascript-is-font-available/">http://www.samclarke.com/2013/06/javascript-is-font-available/</a>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<p>As pointed out by Jake Archibald, these use cases are covered by the <a href="http://dev.w3.org/csswg/css-font-loading/#font-face-set-check">Font Loading API’s check()</a> function</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<p>So, obviously, before we close this, I’d like to see this working in Chrome and to make sure Dave’s case is fully met. I’ve not had a chance to try out the API yet.</p>
+<p>Anyone willing to code this up quickly?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alanstearns</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<p>The font loading APIs don’t address this - what’s needed is a way to find out which font in the font stack is actually being used to display the text. Which fonts are loaded isn’t sufficient - glyph fallback and font subsetting can complicate what font is being used where.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/321_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">newtron</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<p><a href="http://codepen.io/newtron/pen/LENqMd" rel="nofollow noopener">CodePen with solution for my primary use case</a>, based on feedback from Jake, Yoav, et al.</p>
+<p>While my original use case is more or less covered, I think <span class="mention">@alanstearns</span> is right: this could break pretty easily given glyph fallback and font subsetting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<p>That’s what the second argument to <code>check()</code> is for - you pass it a string of text you’re going to render, and it verifies the font stack <em>against that text</em>.  In this case, you’d pass in the textContent of the element you’re checking.</p>
+<p>But still, using <code>check()</code> for this requires you to break apart the <code>font-family</code> value for the text, and construct new strings using each family name and the style/weight/etc values on the text, and then check them in order.  That’s annoyingly non-trivial for something that sounds reasonable.</p>
+<p><span class="mention">@marcosc</span> Your second use-case is already handled by <code>@font-face</code> and <code>FontFace</code> - just use a <code>local()</code> source before the <code>url()</code> source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/443_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">hexalys</div>
+          <div class="creation_date">2014-12-15</div>
+          <div class="post_content">
+<p>I agree with Alan.
+<span class="mention">@newtron</span>’s solution looks like a third hack around this problem.</p>
+<p><span class="mention">@tabatkins</span> A remaining issue with <code>check()</code> is that it doesn’t address font substitution, and is therefore unreliable, especially on mobile, where many basic desktop fonts are heavily substituted.</p>
+<p>e.g. Jake’s <a href="http://jsbin.com/huyiwu/3/edit?js,console" rel="nofollow noopener">example</a> return <code>true</code> for helvetica. But Windows replaces all Helvetica text with Arial, so technically Helvetica should probably return false or something different like null. You still don’t know what font is being used.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2672_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alanstearns</div>
+          <div class="creation_date">2014-12-16</div>
+          <div class="post_content">
+<p>Strawman proposal: instead of font name strings, I’d like to see something that returned a font object which would contain the name <em>and</em> otherwise-inacessible font metrics information. The polyfill for drop caps needed the baseline and cap height metrics for the font being used to display the initial letter. It would be useful to get this from a Node and perhaps also a Range (giving the initial used font if there are multiple fonts used)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-12-18</div>
+          <div class="post_content">
+<p>The “name” of a local font is a difficult thing to determine - there are usually several of them.  But if that can be worked out, this is fine with me - I have an issue in the spec for finding some way to deal with local fonts.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

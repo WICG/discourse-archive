@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>PointerEvent offsetX/offsetY keeps changing sporadically when currentTarget changes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">PointerEvent offsetX/offsetY keeps changing sporadically when currentTarget changes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-02-17</div>
+          <div class="post_content">
+<p>I know it the behavior is as the spec defines, but it is awkward and strange.</p>
+<p>What I want to do is detect the position of a pointer within a parent object, but when the pointer enters child objects, the <code>event.offsetX</code> and <code>event.offsetY</code> values are relative to the new <code>currentTarget</code> instead of the event’s original target.</p>
+<p>This is honestly strange behavior when you think about it from an intuition/simplicity point of view.</p>
+<p>Now someone who wanted to simply track the position of the pointer within an object has to write some strange code and do math just to achieve that.</p>
+<p>Could there be some other way to specify that offsets should always be calculated relative to <code>event.target</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-02-17</div>
+          <div class="post_content">
+<p>For comparison, in the case of an element taking up the full width and height of the window, then we can just rely on <code>event.clientX</code> and <code>event.clientY</code> to achieve the desired effect. But when the element is not full-size of the window, then that’s where it gets complicated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2020-02-18</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="4236" data-username="trusktr">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_2.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>the <code>event.offsetX</code> and <code>event.offsetY</code> values are relative to the new <code>currentTarget</code> instead of the event’s original target</p>
+</blockquote>
+</aside>
+<p>the <code>event.target</code> IS the child object - nothing to do with <code>currentTarget</code> or “original target”. the events are fired on the child object, and bubble up to the parent object. this behavior is the same for mouse events etc as well.</p>
+<p>you have to either do the math yourself (i.e. check for each event you’re receiving whether or not the event.target is the actual parent element you’re interested in, and if not work out what the coordinates relative to that element are - ideally checking <code>clientX</code>/<code>clientY</code> and subtracting the offset of the parent element from those), or provided the child elements aren’t meant to be interactive, make them “transparent” to events (mouse events, pointer events) by using the CSS <code>pointer-events:none</code> rule (which, despite the name, has nothing to do with the JS pointer events spec)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-02-28</div>
+          <div class="post_content">
+<p>Hello Patrick! Exactly! I’m just mentioning that this is undesirable complexity.</p>
+<p>Sure, all information we need is there, and we can do calculations.</p>
+<p>Now, imagine someone new to the web. They write things to work on a canvas full screen in their very first application. Then the moment they decide instead to put the canvas as a child of a smaller area on the screen, it all falls apart in a very confusing way.</p>
+<p>Sure, as an experienced user of web technology, I know what needs to be done as far as those calculations.</p>
+<p>I’m just voicing that it is unnecessarily complex, when I’m willing to bet that most of the time the user just wants to observe mouse position on the element where the even listener is defined, and <em>not</em> on all the possible child elements in side the element that has the listener.</p>
+<p>I wish it was more intuitive, so that the web could be easier for anyone learning web technology, instead of making them have a more difficult time.</p>
+<p>Is it possible to make new APIs that are more intuitive?</p>
+<p>In Qt for example, one can set an “invisible plane” inside a QML element specifically for interaction events, and the mouse position (or touch position) events are relative to this one plane, not every now or future child of the ancestor. This makes it intuitive.</p>
+<p>I wonder, if someone who is just a regular web developer like me (not affiliated with any big companies or having any authoritative say in web standards) created a more intuitive API on top of the current confusing ones, do you think browser vendors might be willing to consider adopting something similar as a builtin API?</p>
+<p>Is there any precedence of libraries/tools made by people that never worked at web-influencing companies like Mozilla, Apple, Microsoft, or Google, who worked at little-known companies, whose libraries had an impact on web APIs?</p>
+<p>I’m wondering what it takes to have an impact. F.e. John Resig’s jQuery had an impact, but he also worked at Mozilla.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

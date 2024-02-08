@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Simple SVG markup</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Simple SVG markup</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<h1>Simple SVG markup</h1>
+<p>The <code>&lt;svg&gt;</code> markup required to display an external source is too verbose.</p>
+<pre><code class="lang-auto">&lt;svg viewBox="0 0 512 512"&gt;&lt;use xlink:href="path/to/image.svg#sprite"&gt;&lt;/use&gt;&lt;/svg&gt;
+</code></pre>
+<p>It should be simple.</p>
+<pre><code class="lang-auto">&lt;svg src="image.svg#sprite"&gt;&lt;/svg&gt;
+</code></pre>
+<p>Right now, developers must append a <code>&lt;use&gt;</code> element with an <code>xlink:href</code> attribute to an <code>&lt;svg&gt;</code> element to pull from an external source, be it a hash on the page or an external file.</p>
+<pre><code class="lang-auto">&lt;use xlink:href="path/to/image.svg"&gt;
+</code></pre>
+<pre><code class="lang-auto">&lt;use xlink:href="path/to/image.svg#sprite"&gt;
+</code></pre>
+<pre><code class="lang-auto">&lt;use xlink:href="#sprite"&gt;
+</code></pre>
+<p>I suggest the spec be updated so that developers may alternatively use a <code>src</code> attribute on the <code>&lt;svg&gt;</code> element to pull from an external source.</p>
+<pre><code class="lang-auto">&lt;svg src="path/to/image.svg"&gt;&lt;/svg&gt;
+</code></pre>
+<pre><code class="lang-auto">&lt;svg src="path/to/image.svg#sprite"&gt;&lt;/svg&gt;
+</code></pre>
+<pre><code class="lang-auto">&lt;svg src="#sprite"&gt;&lt;/svg&gt;
+</code></pre>
+<br/>
+<p>Secondly, right now, developers must specify the <code>viewBox</code> attribute when pulling from an external source that already has it.</p>
+<pre><code class="lang-auto">&lt;svg viewBox="0 0 512 512"&gt;&lt;use xlink:href="path/to/image.svg#sprite"&gt;&lt;/svg&gt;
+</code></pre>
+<p>This requires developers know the <code>viewBox</code> value for each SVG and add it to every <code>&lt;svg&gt;</code> element on the page. Typically, this means the attribute is found in the external source and then duplicated several times across the page.</p>
+<p>I suggest the spec be updated so that an <code>&lt;svg&gt;</code> element with a <code>src</code> attribute and no <code>viewBox</code> attribute inherit the <code>viewBox</code> value from its external source.</p>
+<pre><code class="lang-auto">&lt;svg src="path/to/image.svg#group"&gt;&lt;/svg&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/85_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zachleat</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>Can’t you use <code>&lt;img src="image.svg"&gt;</code> today? And <code>&lt;picture&gt;</code> is coming/already here which will provide an easy mechanism for non-svg fallbacks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>Great question. Right now, we can’t link to an individual <code>#sprite</code> or style SVGs added with <code>&lt;img&gt;</code> (or <code>&lt;picture&gt;</code>).</p>
+<p>I thought this was intentional and that <code>&lt;img&gt;</code> (and <code>&lt;picture&gt;</code>) are <em>rastered-like, iframe-like</em> ways of displaying images.</p>
+<p>Do you think it should work differently? For instance, should we be able to <code>&lt;img src="path/to/image.svg#sprite"&gt;</code> and style it with <code>fill: blue</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/85_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zachleat</div>
+          <div class="creation_date">2014-05-22</div>
+          <div class="post_content">
+<p>It would be nice to have <code>&lt;img&gt;</code> work in this way, for sure, but developer convenience probably isn’t the most pressing thing preventing this.</p>
+<blockquote>
+<p>Right now, we can’t link to an individual <span class="hashtag">#sprite</span></p>
+</blockquote>
+<p>My intuition would expect that linking to an individual <code>#sprite</code> should work. If you can link to a parent document, why not an element inside of it? Just like an iframe src can have an anchor url. Styling, however, is a different matter entirely.</p>
+<blockquote>
+<p>I thought this was intentional and that <code>&lt;img&gt;</code> (and ) are rastered-like, iframe-like ways of displaying images.</p>
+</blockquote>
+<p>I wouldn’t describe <code>&lt;img&gt;</code> or <code>&lt;picture&gt;</code> as limited to raster images.</p>
+<p>I guess I’m surprised to learn that SVG <code>&lt;use&gt;</code> works with external files. I filed this ticket awhile back because SVG <code>&lt;image&gt;</code> wasn’t reliable cross browser and a WebKit dev closed it as intentional: <a href="https://bugs.webkit.org/show_bug.cgi?id=63548" rel="nofollow noopener">https://bugs.webkit.org/show_bug.cgi?id=63548</a> Now I suspect that <code>&lt;use&gt;</code> only works with inline SVG.</p>
+<p>Thanks for answering my questions! Yes, it sounds like an addition to the <code>&lt;svg&gt;</code> syntax would be a welcome one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2774_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomByrer</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Great ideas!  How about a polyfil to demo how you want it to get done?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Replacing xlink:href with a simpler non-namespaced attributes is a no brainer and IMHO clearly an improvement.</p>
+<p>I wouldn’t add that to <code>&lt;svg&gt;</code> though. I would keep it on <code>&lt;use&gt;</code>. But in order to avoid having to have an <code>&lt;svg&gt;</code> wrapper, I’d love to see a solution that would enable most if not all SVG elements to appear without a root context, using some default, sensible viewport.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/12_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">erikdahlstrom</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="92">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathantneal/40/65_1.png" width="20"/> jonathantneal:</div>
+<blockquote>
+<p>Right now, we can’t link to an individual <span class="hashtag">#sprite</span> or style SVGs added with &lt;img&gt; (or &lt;picture&gt; ).</p>
+</blockquote>
+</aside>
+<p>See <a href="http://xn--dahlstrm-t4a.net/svg/structure/svgstack-usage.html">http://dahlström.net/svg/structure/svgstack-usage.html</a> (shows that you can reference individual “sprites” from a single svg file). You can also use &lt;iframe&gt; and &lt;object&gt; for something where you can properly interact with the contents, see <a href="http://xn--dahlstrm-t4a.net/svg/structure/svgstack-usage-iframe.html">http://dahlström.net/svg/structure/svgstack-usage-iframe.html</a> and <a href="http://xn--dahlstrm-t4a.net/svg/structure/svgstack-usage-object.html">http://dahlström.net/svg/structure/svgstack-usage-object.html</a>.</p>
+<p>For the second part, that you can’t style such images, it’s true that you can’t style the <em>contents</em> of an &lt;img&gt; that references an svg. This seems to be asking for &lt;iframe seamless&gt; or similar.</p>
+<p><strong>Update:</strong> The examples should work fine in IE11, Chrome 36, Firefox 32, Opera 12 (Presto) and Opera 23+. Support goes back further than that in some browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Firefox doesn’t seem to like your lovely internationalised domain for some reason. This works: <a href="http://www.xn--dahlstrm-t4a.net/svg/structure/svgstack-usage.html">http://www.dahlström.net/svg/structure/svgstack-usage.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/12_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">erikdahlstrom</div>
+          <div class="creation_date">2014-05-23</div>
+          <div class="post_content">
+<p>Thanks, I updated the link.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-02</div>
+          <div class="post_content">
+<p>Having <code>&lt;svg&gt;</code> react similar to <code>&lt;script&gt;</code> is a somewhat interesting approach. I still wouldn’t follow that road:</p>
+<ol>
+<li>With <code>xlink:href</code> -&gt; <code>href</code> the boilerplate code becomes much leaner.</li>
+<li>
+<code>&lt;img src=""&gt;</code> is already possible and serves a similar use case (apart from fine-tuning <code>viewBox</code>, …)</li>
+<li>There are other areas where SVG sprites are needed, like CSS. A solution needs to be cross-language usable, and the control of display should lie <em>within</em> the targeted SVG and be governed by the request URL.</li>
+</ol>
+<p>The <code>&lt;svg src=""&gt;</code> syntax has no advantage then<code>*</code>, and is less powerful w/ regard to <code>&lt;picture&gt;</code>.</p>
+<p><code>*</code> in HTML context, that is. Modifying <code>viewBox</code> in HTML docs is less useful than inside SVG graphics, since many such “<em>fill whole area</em>” use cases can be met with <code>width:100%; height:auto</code> or similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2014-06-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="92">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/boldewyn/40/1262_1.png" width="20"/> Boldewyn:</div>
+<blockquote>
+<p>With xlink:href -&gt; href the boilerplate code becomes much leaner.</p>
+</blockquote>
+</aside>
+<p>Yes! If nothing else, normalizing this property would be beneficial to developers.</p>
+<aside class="quote" data-post="10" data-topic="92">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/boldewyn/40/1262_1.png" width="20"/> Boldewyn:</div>
+<blockquote>
+<p>&lt;img src=""&gt; is already possible and serves a similar use case (apart from fine-tuning viewBox, …)</p>
+</blockquote>
+</aside>
+<p>Also, apart from honoring styles defined by the surrounding elements — e.g. the <code>fill</code> property. More on this, shortly.</p>
+<aside class="quote" data-post="10" data-topic="92">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/boldewyn/40/1262_1.png" width="20"/> Boldewyn:</div>
+<blockquote>
+<p>the control of display should lie within the targeted SVG</p>
+</blockquote>
+</aside>
+<p>With font glyphs, a vector sprite is often colored differently depending on its surrounding component, e.g. a dark background colors a light glyph, or a light background colors a dark glyph (using the <code>color</code> property), and all the colorized combinations in between. In these instances, the gylph’s styling is controlled by its surrounding elements rather than by the sprite itself. This is intuitive to me. It is also what the <code>fill</code> property does for us in CSS, currently. When we stick SVGs in an <code>&lt;img&gt;</code>, we lose the ability to use the <code>fill</code> property.</p>
+<p>Similar to my earlier question; do you find the above usage of <code>fill</code> to be intuitive? If you do, would you expect <code>&lt;img&gt;</code> to respond to it as well?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-03</div>
+          <div class="post_content">
+<p>On a SVG Open 2010 panel discussion Doug Schepers (et al.) mentioned the WG’s idea of <a href="http://www.w3.org/TR/SVGParamPrimer/">parametrized SVG</a>: Basically, the SVG image can, without scripting, access info from the URL (query params, iirc) and modify its appearance. Especially targeted at colors, that method could provide a middle ground. I have no idea, however, what’s the status of that proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>I wonder if the “inside” of a <code>&lt;img src="thing.svg"&gt;</code> could be reified as a shadow DOM of some sort? That seems very ambitious, but has a certain appeal. Implementer comments welcome.</p>
+<p>Failing that, perhaps a <a href="http://drafts.csswg.org/css-scoping/"><code>::shadow</code>- or <code>/deep/</code></a>-esque pseudo-element or combinator could be introduced, purely at the CSS level, to allow such styling to cascade when explicitly desired to do so?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pepelsbey</div>
+          <div class="creation_date">2014-06-08</div>
+          <div class="post_content">
+<p>You’re trying to invent a hack (with a number or exceptions for a typical behaviour) instead of insisting on implementation of SVG stacks mentioned by Eric.</p>
+<p>You can always style your icon using external styles:</p>
+<pre><code>&lt;?xml-stylesheet type="text/css" href="style.css"?&gt;
+&lt;svg xmlns="http://www.w3.org/2000/svg"&gt;
+    &lt;circle cx="40" cy="40" r="24"/&gt;
+&lt;/svg&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>Frankly, I don’t see how treating SVG in an <code>img</code> as anything other than a shadow DOM makes any sense <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/436_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feeela</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<p>I dislike that idea, because that is already implemented and working using the <code>img</code> tag. (As described and illustrated above.)</p>
+<p>If you really need to access the source of an SVG inside a website, you may still include it with a few characters more. Which didn’t even means more typing, as most people either use some sort of shortcut to generate markup (e.g. <a href="http://emmet.io/" rel="nofollow noopener">Emmet</a>) or let it generate via some specialized software (e.g. <a href="http://inkscape.org/" rel="nofollow noopener">Inkscape</a>)</p>
+<p>On the other hand I never saw a useful real-world example of editing SVG in the browser (by the means of CSS or JS) while simultaneously having the requirement to not have the SVG markup inside the main document. In most cases you will select a specific shape/layer via its ID or change the overall appearance of the whole graphic (for example rotating or color-shifting an icon).</p>
+<p>SVG was already trimmed down to be used in HTML and you probably</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<blockquote>
+<p>I never saw a useful real-world example of editing SVG in the browser
+(by the means of CSS or JS) while simultaneously having the requirement
+to not have the SVG markup inside the main document</p>
+</blockquote>
+<p>Real world: medium-sized website with a single SVG sprite for icons. That sprite is more than 100kb (we might brink it down to roughly 70kb with systematic use of SVGO). We could inline that sprite after the <code>&lt;body&gt;</code> in every single page, losing the (arguably conditional) benefits of the browser cache.</p>
+<p>Following your argument, why keep CSS and JS outside of the HTML document? We can always inline it and send users 1-2 MB documents for each page. Why keep raster images separated from the document? Base64 all the things. And so on and so forth. <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+<p>For the record, we’re using a SVG sprite with <code>&lt;svg&gt;&lt;use xlink:href="sprite.svg#symbol-id"&gt;&lt;/use&gt;&lt;/svg&gt;</code>, and a tiny JS polyfill for IE/Edge support. We’re able to style the main color, achieving feature-parity (on the HTML side) with icon fonts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-09-15</div>
+          <div class="post_content">
+<p>There’s a solution for your second problem, if it helps.</p>
+<blockquote>
+<p>Secondly, right now, developers must specify the <code>viewBox</code> attribute when pulling from an external source that already has it.</p>
+</blockquote>
+<p>If the referenced source is declared inside of a <code>&lt;symbol&gt;</code> element, the <code>viewBox</code> on the <code>&lt;symbol&gt;</code> is preserved and doesn’t need to be redeclared. <a href="https://css-tricks.com/svg-symbol-good-choice-icons/" rel="nofollow noopener">More info in this CSS-Tricks article.</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2015-10-02</div>
+          <div class="post_content">
+<p>For the record, I support the suggestion of a shorter syntax for <code>&lt;svg&gt;&lt;use xlink:href="…"&gt;&lt;/use&gt;&lt;/svg&gt;</code> that would do exactly the same thing but with markup that is less arcane for authors.</p>
+<p>And I do mean having <em>the exact same thing</em>. Suggestions to use <code>&lt;img&gt;</code> instead don’t take into account that we are using <code>&lt;svg&gt;&lt;use xlink:href="…"&gt;&lt;/use&gt;&lt;/svg&gt;</code> instead of <code>&lt;img src="…"&gt;</code> because it brings a different feature set.</p>
+<p>Would be an improvement:</p>
+<pre><code class="lang-auto">&lt;svg&gt;&lt;use href="…"&gt;&lt;/use&gt;&lt;/svg&gt;
+</code></pre>
+<p>Would be really cool:</p>
+<pre><code class="lang-auto">&lt;svg use="…"&gt;&lt;/svg&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

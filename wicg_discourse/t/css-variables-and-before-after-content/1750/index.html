@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS Variables and ::before/::after content</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS Variables and ::before/::after content</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-10-10</div>
+          <div class="post_content">
+<p>Currently, it seems the following is not possible:</p>
+<pre><code class="lang-css">.x {
+    --color: #3acfb6;
+    background-color: var(--color);
+}
+
+.x::after {
+    content: var(--color);
+}
+</code></pre>
+<p>The reason is it produces <code>content: #3acfb6</code> instead of <code>content: '#3acfb6'</code> — which makes sense.</p>
+<p>However it seems there is no way to <em>add</em> quotes or otherwise convert <code>--color</code> to string within <code>content:</code> definition. Something similar is provided by <code>attr()</code>, but not by <code>var()</code>, which seems unfortunate.</p>
+<p>I am not sure what would be the right solution here, but some way to do conversions would be very useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-10-10</div>
+          <div class="post_content">
+<p>Correct, there’s no way to convert between types of values like that.  What’s the use-case? This looks like it’s just a debugging aid?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-10-10</div>
+          <div class="post_content">
+<p>Now that I think of it, practical scenarios might be limited, though color showing color would also be useful in a color swatch (but you could argue <code>attr()</code> is a better choice for that). My specific case case was an educational figure on sizing where I wanted to both show the sizes and apply the sizes – which is kind of a debugging scenario.</p>
+<p>However I only just started using CSS vars, so not sure yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-10-11</div>
+          <div class="post_content">
+<p>I ran into this today as well. I had --width and --height variables for the size of a slide deck (for cases where you want to rehearse the exact resolution of the projector), and I wanted to display a box with these dimensions as well as text inside it (like 1024 × 768).</p>
+<p>I can see a lot of cases where authors want to use numerical variables for CSS values and print them out too, and not all are debugging. OTOH, if we add <code>concat()</code>, then that could handle converting to a string too. Perhaps it could even be called <code>string()</code> instead of <code>concat()</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-10-12</div>
+          <div class="post_content">
+<p>Can you actually demonstrate a use-case for that outside of debugging, slide decks, or other hyper-niche cases that don’t appear on real public sites?  I’m legitimately curious. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-10-13</div>
+          <div class="post_content">
+<p>Any time your variables are real, useful data and not CSS values (which is the recommended practice), there are cases where you want to do this. Off the top of my head: A slider that displays its value and uses it for styling, a bar chart that displays the values on each bar and uses them for the heights of the bars, a pie chart that displays values on each slice etc.
+But even the niches you mention, keep in mind that the union of enough niches is not niche anymore <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-10-13</div>
+          <div class="post_content">
+<p>Slider is invoking JS to do the update; cleaner and better in general for the JS to just update real text content with the value (in addition to setting a variable). Same for charts - the values shouldn’t be in CSS generated content, they should be on the actual page.  (And even then, the only way they’re possibly useful is if you’re doing a % and have your coordinate systems set up <em>just</em> right to use that % directly.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2016-10-14</div>
+          <div class="post_content">
+<p>Do we actually have a real and clear cut answer about whether data/content that is in the markup in the form of attributes and should be visually presented to the user is best handled by JS creating actual DOM nodes for it as opposed to using CSS Generated content?</p>
+<p>It doesn’t seem obviously wrong to me, but it doesn’t seem obviously right either.</p>
+<p>EDIT: never mind. I skimmed the thread too fast, and assumed we were talking about stuff pulled out of attr().</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-10-15</div>
+          <div class="post_content">
+<p>You’re saying a lot of shoulds here, but not backing any of them up with reasoning. People use generated content for these kinds of things since generated content existed. Is paving the cowpaths only useful as an argument when you like the cowpaths?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2016-10-17</div>
+          <div class="post_content">
+<p>Yeah, I’m saying these things <em>because they agree with every piece of accessibility advice ever published</em>.  Don’t put significant content in your ::before/etc., even if it’s “easier”. In this case it isn’t even easier - the functionality <em>doesn’t exist</em>, and you’re asking for it to be added with the only examples given being ones that directly go against common guidance. Or, in the first example of the slider, where just adding another line to your already-existing event handler (which obviously exists, since it’s required to update the property) is just as easy, works today, and has better accessibility.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-11-16</div>
+          <div class="post_content">
+<p>Such accessibility advice exists from before it was specified that screen readers should read generated content.</p>
+<p>Anyhow, here is a non-niche use case for you: Using variables in paths. Also, in SVG data URIs. Sure, that needs concatenation as well, but also conversion to string.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1458_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ondras</div>
+          <div class="creation_date">2017-10-04</div>
+          <div class="post_content">
+<p>For numerical values, this counter-based trick seems to work: <a href="https://jsfiddle.net/psuwgexq/" rel="nofollow noopener">https://jsfiddle.net/psuwgexq/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1694_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">please</div>
+          <div class="creation_date">2018-05-14</div>
+          <div class="post_content">
+<p>Hi there! Here is a use case I ran into today:</p>
+<p>I am trying to transition the color of dynamic text without painting the page. For this reason, I am not transitioning the color property of the element. Instead, I am transitioning the opacity of a pseudoelement that is overlaid on top of the element, to give the <em>appearance</em> that the text color has changed.</p>
+<p>Because the content is dynamic, it is less convenient to specify a CSS class for each item.</p>
+<p>The plan was to specify the value of a CSS Variable in JavaScript that is the content of the container. That way, the pseudoelement could reference that value as its content.</p>
+<p>It’d be pretty cool if this worked. Or, if someone else has another idea on how to transition text color without painting the page, I’d love to hear more.</p>
+<p>Thanks for reading!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1706_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">textmonster404</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<p>I don’t see a need for the <code>concat()</code> function. CSS concatenates strings if you put them next to each other. Example: <a href="https://codepen.io/textmonster404/pen/PeMmqO?editors=1100" rel="nofollow noopener">https://codepen.io/textmonster404/pen/PeMmqO?editors=1100</a>
+Your <code>string()</code> function is a really good idea though. We need some way to convert variable types.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1706_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">textmonster404</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<p>A really good idea would be a <code>convert()</code> function.</p>
+<pre><code class="lang-auto">.x::after {
+    content: convert(var(--color) string);
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2018-06-01</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="14" data-topic="1750">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/textmonster404/40/1706_1.png" width="20"/> textmonster404:</div>
+<blockquote>
+<p>CSS concatenates strings if you put them next to each other.</p>
+</blockquote>
+</aside>
+<p>Ha, I wish. That’s special to the <code>content</code> property. It doesn’t work anywhere else where strings are accepted.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

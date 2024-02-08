@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>User-gesture restrictions and async code</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">User-gesture restrictions and async code</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-08-04</div>
+          <div class="post_content">
+<p>Several browser APIs have the restriction that they only work with a user-gesture (e.g. a user input event like “click” or “touchend”). For example off the top of my head:</p>
+<ul>
+<li>window.open usually requires a user gesture otherwise the popup is blocked</li>
+<li>HTMLMediaElement.play requires a user gesture on mobile if it has an audio track</li>
+<li>in Safari, AudioContext remains blocked until a user gesture</li>
+<li>copying to the clipboard can only be done in a user gesture</li>
+</ul>
+<p>There are probably a couple others I forgot.</p>
+<p>This imposes a pretty tight restriction that you must use the given API synchronously with the event handler, or it is not allowed. This meshes badly with the fact modern web APIs are increasingly async-only. For example you cannot read a blob synchronously; you <em>must</em> use the asynchronous <code>FileReader</code> API. This is generally a good idea for performance, but becomes quite a problem if you need to do something async before making one of the restricted API calls.</p>
+<p>For example the following use cases cannot use the restricted APIs, even though they began with user gestures:</p>
+<ul>
+<li>user clicks a button, app processes some data asynchronously, then opens a popup window to display the result: popup window blocked</li>
+<li>user clicks a button, app makes a network request, upon success/failure plays a sound: playback blocked</li>
+<li>user presses Ctrl+C, app prepares some data to copy asynchronously, then copies to clipboard: copy blocked</li>
+</ul>
+<p>In every case the call could have succeeded if it did it immediately, e.g. it could play a sound upon pressing a button that makes a network request, but not upon the request completing, even if it is mere milliseconds later. In some cases it is almost impossible to resolve, e.g. if a blob needs to be converted to text before copying to clipboard, it is impossible to copy it to the clipboard.</p>
+<p>IMO this is unnecessarily restrictive and there is no reason to block such API calls if they come shorty after a user gesture. I can think of two ways to resolve this:</p>
+<ul>
+<li>browsers relax restrictions, perhaps based on a timer, e.g. API calls are allowed up to 5 seconds after a user gesture. However this kind of hard limit will still cause the same problem for anything which takes longer.</li>
+<li>add a new API.</li>
+</ul>
+<p>For the new API, user gesture events could perhaps provide a token that can be used to use restricted APIs later on. E.g.:</p>
+<pre><code class="lang-auto">mybutton.addEventListener("click", e =&gt;
+{
+	// get a token that proves we were in a user gesture
+	let token = e.postpone();
+	
+	doSomethingAsync().then(sound =&gt;
+	{
+		// outside user gesture, but using token allows
+		// restricted APIs until returning to event loop
+		token.use();
+		sound.play();
+	});
+});
+</code></pre>
+<p>This works like this:</p>
+<ol>
+<li>user-gesture events like “click” provide a <code>postpone()</code> method which returns a token. This token can be used to prove that we did previously have a real user gesture. (Obviously synthetic events will not provide this, or will not return a valid token.)</li>
+<li>the token can conveniently be preserved until later via closures.</li>
+<li>when some work completes, the token can then be used to unblock restricted APIs via its <code>use()</code> method. Tokens can only be used once. This effect only lasts until execution returns from JS. (Is that called a “tick”? Basically the effect is temporary and is only intended to allow immediately subsequent calls to work.)</li>
+<li>immediately after <code>use()</code>, restricted APIs like playing audio are allowed to work. They are blocked again as soon as execution returns to the browser. The browser may also impose restrictions on <code>use()</code>, e.g. it must be used within 30 seconds.</li>
+</ol>
+<p>This approach doesn’t require changing lots of APIs, and allows web apps to circumvent some of the more annoying restrictions for legitimate use cases.</p>
+<p>I don’t think this helps anyone who wants to abuse these APIs. For example if a page wants to open a popup window, or annoy a user with a loud sound, it will simply do it in the original user gesture. As far as I can think of, blocking these APIs shortly after the user gesture only impedes legitimate web apps.</p>
+<p>Sometimes there are crazy workarounds to these restrictions, e.g. open a popup window and leave it empty until the async data is processed, then update the window; or play an audio sound immediately that begins with silence, then seek to the sound start point when you want to play back the sound. This shows that in theory this API does not actually make much possible that was not possible before. However it does make it a lot more convenient to use certain web APIs for legitimate purposes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2017-06-15</div>
+          <div class="post_content">
+<p>Yeah this is definitely a big problem, thanks for raising it here!  In Chromium <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=696617" rel="nofollow noopener">we’re exploring</a> whether we can switch to a more <a href="https://docs.google.com/document/d/1erpl1yqJlc1pH0QvVVmi1s3WzqQLsEXTLLh6VuYp228/edit#" rel="nofollow noopener">permissive model</a> for “user activation”.  In that model things like audio, clipboard and window.open would be available at any time after a gesture.  In the case of window.open you’d need one gesture per pop-up (to prevent excessive pop-ups), but the pop-up could still happen arbitrarily later than the gesture.  If we could (eventually) get all modern browsers to follow a model like this, would that address all your concerns?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-06-15</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1640">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rickbyers/40/503_1.png" width="20"/> RickByers:</div>
+<blockquote>
+<p>In that model things like audio, clipboard and window.open would be available at any time after a gesture.</p>
+</blockquote>
+</aside>
+<p>That would be great! I always thought the current model didn’t make any sense - any app which wants to spam/annoy users would do so in the first user gesture, and blocking features after that only serves to impede legitimate use cases. So I think unblocking everything at the first gesture completely solves this. The extra limitation on popup windows is entirely reasonable and shouldn’t be a problem either. The same could be applied for invoking downloads too.</p>
+<p>It would be <em>even better</em> if add-to-homescreen/add-to-desktop PWAs didn’t even need the first user gesture. For some cases like a game with a title screen audio track, it would be great if it could play right away. I think it is reasonable to allow that if the user is sufficiently engaged to add the app to their device, and it means in this context web apps can get even closer to a native experience. IIRC Chrome has actually done this for one feature (I forget which, maybe it was playing audio after all), but it would be great if this could cover everything else too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2017-06-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1640">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>It would be even better if add-to-homescreen/add-to-desktop PWAs didn’t even need the first user gesture.</p>
+</blockquote>
+</aside>
+<p>Yes, that’s absolutely something we’re planning to do also.  Effectively tapping an icon you installed on your homescreen counts as the user signaling intent to interact with that site.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

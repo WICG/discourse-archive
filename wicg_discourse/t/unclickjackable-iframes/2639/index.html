@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Unclickjackable iframes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Unclickjackable iframes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1621_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ajedi32</div>
+          <div class="creation_date">2018-03-09</div>
+          <div class="post_content">
+<p>I’d like to discuss some potential new standards which would let sites allow their content to be embedded in iframes without exposing themselves to clickjacking attacks by the embedding page.</p>
+<p>Currently, whenever a site allows itself to be embedded in another site via an iframe (which is the default behavior if you don’t send any headers to prevent this), it risks exposing its users to clickjacking attacks.</p>
+<p>In case you’re unfamiliar with how clickjacking works, basically what happens is that an attacker embeds the site it is attacking in an iframe, then tricks the user into clicking something on that page (perhaps by making the iframe transparent and placing it over a button, or by moving the iframe at the last second right before the user clicks something else on the attacker’s page). For more information, you may refer to <a href="https://www.owasp.org/index.php/Clickjacking" rel="nofollow noopener">the OWASP Wiki page on clickjacking</a>.</p>
+<p>Currently, most sites protect themselves from this attack by either preventing themselves from being included in iframes entirely (via the <code>X-Frame-Options</code> header or <code>frame-ancestors</code> CSP directive) or by asking the user to confirm every action taken inside the frame (Twitter does this by opening a new window asking you to confirm your action when you click the “like” button next to an embedded Tweet).</p>
+<p>As these current solutions can be inconvenient for users and developers, I’d like to discuss a possible alternative. Could a new web standard be designed that would allow sites to be embedded in iframes without exposing them to clickjacking attacks?</p>
+<p>Here’s what I’m thinking: Imagine a hypothetical new CSP directive <code>safe-frame-ancestors</code> (or some other, better name) which would direct the user-agent to allow a page to be embedded in an iframe in a way that is resistant to clickjacking attacks. When these pages are embedded in an iframe, the user agent would ignore any user-initiated actions targeted at these frames unless the following conditions are met:</p>
+<ol>
+<li>The iframe is fully opaque</li>
+<li>The iframe is not obscured by any other elements on the page</li>
+<li>The iframe meets some minimum size requirements (perhaps specified by the embedded page via the HTTP header)</li>
+<li>Within the last x seconds (where x = &lt;normal human reaction time&gt;*2 or something like that), the iframe has not done any of the following:
+a. Violated any of the previous conditions listed above
+b. Changed its size
+c. Changed its position on the page (via any means available to scripts on the parent page, including script-initiated scrolling, CSS animations, DOM reflow, etc)
+d. Had its src modified by the parent page</li>
+</ol>
+<p>It might also be a good idea to provide embedded pages with some JavaScript APIs which allow it to query whether or not the above conditions are currently met. (So that they can change to indicate this visually, or perhaps manually enforce these restrictions via some other means.)</p>
+<p>Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">moonyowl</div>
+          <div class="creation_date">2018-10-18</div>
+          <div class="post_content">
+<ol>
+<li>X-Frame-Options is an inefficient mess.
+Instead of handling iframe behaviour at  browser level, we should include iframe nesting level into HTTP request and let the server to decide what to do.</li>
+<li>It should be impossible to make iframes transparent (except same-domain frames).</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

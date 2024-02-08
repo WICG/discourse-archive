@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Minor but Useful CSS Features</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Minor but Useful CSS Features</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1706_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">textmonster404</div>
+          <div class="creation_date">2018-05-25</div>
+          <div class="post_content">
+<p>I have a proposal for some minor tweaks in CSS that fixes problems that don’t come up often, but are really obnoxious when they do.</p>
+<p>The <code>attr()</code> tag can be useful in some situations. Example:
+<code>a::after {content:"(" attr(href) ")";font-style:oblique;}</code>
+This displays the content of the <code>href</code> attribute in parenthesis directly after the content of the anchor.</p>
+<p>However, there is no way (at least to my knowledge) to get the content of an attribute from the parent  of an element.
+Let’s say that I want the <code>attr()</code> function to return the value of the attribute of the <code>&lt;div&gt;</code> element.</p>
+<pre><code class="lang-auto">&lt;style&gt;p div span::after {content:attr(attribute) "";}&lt;/style&gt;
+&lt;p text-data-thing=" world!"&gt;&lt;div attribute=" there!"&gt;&lt;span&gt;Hello,&lt;/span&gt;&lt;/div&gt;&lt;/p&gt;
+</code></pre>
+<p>Nothing happens because it attempted to find the value of an attribute that doesn’t exist. (<code>span[attribute]</code>)
+I propose this syntax as a solution: <code>div span::after {content:attr($, attribute) "";}</code>
+And if I want to get the value of the <code>&lt;p&gt;</code> tag’s <code>text-data-thing</code> attribute:
+<code>div span::after {content:attr($$, text-data-thing) "";}</code></p>
+<p>Here are 4 other minor additions:</p>
+<ol>
+<li>Conditional Statement Pseudo Class</li>
+<li>Editing Attributes</li>
+<li>Editing Text Content of Tags</li>
+<li>Using <code>attr()</code> Function for more than editing <code>content:;</code> of Pseudo Elements</li>
+</ol>
+<pre><code class="lang-auto">&lt;input type="text" id="input" /&gt;
+&lt;div id="has3"&gt;Contains String "3"&lt;/div&gt;
+&lt;textarea id="txt"&gt;&lt;/textarea&gt;
+&lt;span id="changeColor" bg="lime"&gt;&lt;/span&gt;
+</code></pre>
+<p>CSS code:</p>
+<pre><code class="lang-auto">#has3:if(not #input[value*="3"] exists) {color:red;}
+#has3:if(#input[value*="3"] exists) {color:green;}
+#changeColor {content:property-value(#has3, color) "";}
+#changeColor {background-color:attr(bg);}
+@attribute-content #txt, "value" {content:attr(#input, value) "";}
+</code></pre>
+<p>What do you think should be in CSS or what would you change/add to my ideas?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="2803">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/textmonster404/40/1706_1.png" width="20"/> textmonster404:</div>
+<blockquote>
+<p>However, there is no way (at least to my knowledge) to get the content of an attribute from the parent of an element.</p>
+</blockquote>
+</aside>
+<p>I get the feeling this is the same reason we don’t have a parent selector. CSS works down the tree branches, it isn’t meant for a branch to work its way back up.</p>
+<aside class="quote no-group quote-modified" data-post="1" data-topic="2803">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/textmonster404/40/1706_1.png" width="20"/> textmonster404:</div>
+<blockquote>
+<ul>
+<li>Editing Attributes</li>
+<li>Editing Text Content of Tags</li>
+<li>Conditional Statement Pseudo Class</li>
+</ul>
+</blockquote>
+</aside>
+<p>Editing the DOM is a JavaScript function. CSS is about style, not modifying the DOM. The CSS creates a CSSOM which is combined with the DOM to create the Render Tree. Having these capabilities makes the process extremely more complex. Probably will never happen for these three points.</p>
+<aside class="quote no-group" data-post="1" data-topic="2803">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/textmonster404/40/1706_1.png" width="20"/> textmonster404:</div>
+<blockquote>
+<ul>
+<li>Using <code>attr()</code> Function for more than editing <code>content:;</code> of Pseudo Elements</li>
+</ul>
+</blockquote>
+</aside>
+<p>Possibly. But making changes like where attr can be used should be assessed on a case-by-case basis with solid real-world use-cases where it improves styling.</p>
+<p>Overall, I think you’re asking for CSS to do things it isn’t meant to do. Which if implemented would complicate the rendering flow to a pretty good degree. I also don’t see where we currently aren’t able to work around these issues with JavaScript or with well structured markup and good CSS if having some of these affects as CSS-only are that important to your application.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1706_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">textmonster404</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<p>I see where you are coming at.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1706_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">textmonster404</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<p>I think that a <code>depth</code> property would be cool.
+And a <code>vertex-radius</code> would also be useful for rounded 3d shapes.
+Imagine all of the wonky 3d text and image effects people would make.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1706_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">textmonster404</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<pre><code class="lang-auto">div.sphere {width:50px;height:50px;depth:50px;vertex-radius:50%;} 
+</code></pre>
+<p>True spheres are possible with this if it becomes a reality.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<p>For each specific feature you have an idea for, post a single discussion thread post. This keeps conversation for various ideas in their own space for easier conversation and discussion.</p>
+<p>Thank you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2018-05-26</div>
+          <div class="post_content">
+<p><a class="onebox" href="https://drafts.csswg.org/css-values-4/#attr-notation" rel="nofollow noopener" target="_blank">https://drafts.csswg.org/css-values-4/#attr-notation</a></p>
+<p><code>#changeColor {background-color: attr(bg color);}</code></p>
+<p>In other words, always check the latest drafts for whether they already cover your idea. This is actually an old one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/440_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jirkakosek</div>
+          <div class="creation_date">2018-06-01</div>
+          <div class="post_content">
+<p>This particular case can be already resolved in CSS using named strings:</p>
+<p><a class="onebox" href="https://www.w3.org/TR/css-content-3/#named-strings" target="_blank">https://www.w3.org/TR/css-content-3/#named-strings</a></p>
+<p>AFAIK browsers are not implementing this, but there is support for this
+in several non-browser CSS implementations.</p>
+<pre><code>			Jirka</code></pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

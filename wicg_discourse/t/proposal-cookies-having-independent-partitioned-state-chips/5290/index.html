@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Cookies Having Independent Partitioned State (CHIPS)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Cookies Having Independent Partitioned State (CHIPS)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3463_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dylancutler</div>
+          <div class="creation_date">2021-04-29</div>
+          <div class="post_content">
+<p>Below is a summary of the Cookies Having Independent Partitioned State (a.k.a. CHIPS) explainer: <a class="inline-onebox" href="https://github.com/DCtheTall/CHIPS" rel="noopener nofollow ugc">GitHub - DCtheTall/CHIPS: A proposal for a cookie attribute to partition cross-site cookies by top-level site</a>. If you are interested in learning more about this proposal, I recommend reading the entire proposal there.</p>
+<h1>A Problem</h1>
+<p>Major browsers have already begun to restrict cookies sent in cross-site contexts (i.e. third-party cookies) since these cookies have the potential to identify users and track their behavior across different top-level sites.</p>
+<p>However, not all cross-site cookies are used for cross-site tracking. There are several other use cases for cookies on the web which are related to a user’s activity within a single top-level site. Some examples include: third-party SaaS embeds like store locator services or customer support chat widgets and CDNs that use cookies for load balancing.</p>
+<p>In these cases, the cross-site requests are for sites who are owned by a different organization than the owner of the browser’s top-level site, so <a href="https://github.com/privacycg/first-party-sets" rel="noopener nofollow ugc">First-Party Sets</a> are not sufficient to meet these use cases.</p>
+<h1>A Proposal</h1>
+<p>We propose a new opt-in cookie attribute, <code>Partitioned</code>, which servers can use to indicate they’d wish to set a cross-site cookie which is partitioned by top-level site.</p>
+<p>This means that if a user is visiting <a href="http://example.com" rel="noopener nofollow ugc">example.com</a> and <a href="http://embed.saas.com" rel="noopener nofollow ugc">embed.saas.com</a> sets a cookie with the Partitioned attribute:</p>
+<pre>Set-Cookie: __Host-sid=a3e9f; Secure; HttpOnly; Path=/; <b>Partitioned;</b>
+</pre>
+<p>Then the resulting cookie would only be sent to <a href="http://embed.saas.com" rel="noopener nofollow ugc">embed.saas.com</a> when the browser’s top-level site is <a href="http://example.com" rel="noopener nofollow ugc">example.com</a>. In other words, if the user navigates to a different top-level site that makes cross-site requests to <a href="http://embed.saas.com" rel="noopener nofollow ugc">embed.saas.com</a>, those requests would not include the cookie set on <a href="http://example.com" rel="noopener nofollow ugc">example.com</a>.</p>
+<p>When major browsers no longer support unpartitioned third-party cookies, these <code>Partitioned</code> cookies would not be subject to the same cross-site cookie restrictions as unpartitioned third-party cookies. This would allow third parties to continue to use cookies without giving them the capability of storing cross-site identifiers on users’ machines.</p>
+<h2>Important takeaways from the explainer</h2>
+<ul>
+<li>Opt-in cookie attribute, <code>Partitioned</code>, instead of partitioning by default.</li>
+<li>Browsers must enforce that <code>Partitioned</code> cookies also adopt other semantics which help improve the security of cookies by requiring that in order to use <code>Partitioned</code>, a cookie must also use the <code>__Host-</code> prefix.</li>
+<li>Browsers must enforce limitations on the size of a third party’s cookie jar per-partition, but not across different partitions, in order to avoid leaking cross-site information to third parties.</li>
+</ul>
+<p>WDYT?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3464_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">erik-anderson</div>
+          <div class="creation_date">2021-04-29</div>
+          <div class="post_content">
+<p>I think this proposal makes a lot of sense.</p>
+<p>As your problem statement calls out, there are a variety of useful scenarios where cookies are used today. Cookies also have a useful property that don’t exist in other storage APIs: the ability to mark them HttpOnly (+Secure). I don’t personally believe it’s desirable to block them by default as Safari does today.</p>
+<p>If we work under the assumption that allowing cookies in a partitioned context without user interaction is reasonable (which, per the discussion in <a class="inline-onebox" href="https://github.com/privacycg/storage-access/issues/75" rel="noopener nofollow ugc">Let embedees optionally request access to partitioned cookies and storage · Issue #75 · privacycg/storage-access · GitHub</a> appears to be cross-browser consensus), in what situations should they be allowed to be set?</p>
+<ol>
+<li>Always, with them writing to partitioned cookie storage by default.</li>
+<li>If/when an explicit JavaScript call is made to unlock access (as described in the Storage Access API issue link).</li>
+<li>When they are explicitly marked as being desired in a partitioned context (as described in this proposal).</li>
+</ol>
+<p>The WebKit team has described trying the first approach years ago and running into unacceptable compatibility issues. It’s difficult to reason about if the things would be any different now, either for them or other browsers. Site authors sometimes gate logic on a UA detection, so the compat impact could be different between browsers as well.</p>
+<p>The second approach makes less sense to me if we don’t have a user interaction requirement-- it prevents the storage of cookies on the first request and forces a more async pattern that is likely more difficult for developers.</p>
+<p>The third approach, this proposal, strikes a reasonable balance of avoiding sites seeing cookies and assuming they are cross-site as they always were in the past and instead makes them explicitly mark them. In the process of doing that, they will likely go through at least one pass of testing to confirm it will work for them.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3518_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">krgovind</div>
+          <div class="creation_date">2021-05-17</div>
+          <div class="post_content">
+<p>Salesforce expressed support for this proposal here: <a class="inline-onebox" href="https://github.com/DCtheTall/CHIPS/issues/8" rel="noopener nofollow ugc">Very happy to see this proposal · Issue #8 · DCtheTall/CHIPS · GitHub</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/529_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">cwilso</div>
+          <div class="creation_date">2021-05-18</div>
+          <div class="post_content">
+<p>Given the interest, this has been adopted as an incubation into <a class="inline-onebox" href="https://github.com/WICG/CHIPS">GitHub - WICG/CHIPS: A proposal for a cookie attribute to partition cross-site cookies by top-level site</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal for a `Reload-If-Invalidated` header</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal for a `Reload-If-Invalidated` header</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3771_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">twifkak</div>
+          <div class="creation_date">2021-11-08</div>
+          <div class="post_content">
+<h1>
+<a class="anchor" href="#motivation-1" name="motivation-1"></a>Motivation</h1>
+<p>To allow content to be cached liberally for performance, for the 99% case, but revocable in the rare event of a strong need, like defacement or security vulnerability.</p>
+<p>Cache invalidation is a common feature that intermediaries provide for similar purposes, but it is unavailable to widely distributed caches like the browser’s HTTP cache, any service worker caches, and signed exchanges (which may be served from any HTTPS cache until expiry).</p>
+<h1>
+<a class="anchor" href="#proposal-2" name="proposal-2"></a>Proposal</h1>
+<p>If a cached response to a GET request contains both of:</p>
+<ul>
+<li><code>Reload-If-Invalidated: true</code></li>
+<li>
+<code>ETag</code> and/or <code>Last-Modified</code>
+</li>
+</ul>
+<p>then the browser sends a low-priority conditional request for the same URL along with a request header <code>Purpose: reload</code>. If the response completes and is not 304, then the browser reloads the resource using the new response.</p>
+<p>This would apply to main resources (asynchronously reloading the whole page) and to subresources. For some subresources (e.g. JS), that would necessitate reloading the whole page, while for others (e.g. images), perhaps they could be replaced in-document.</p>
+<h1>
+<a class="anchor" href="#difficulties-3" name="difficulties-3"></a>Difficulties</h1>
+<p>I imagine there’s lots of cases to work out, e.g.:</p>
+<ul>
+<li>Is <code>beforeunload</code> fired? What if a handler calls <code>preventDefault</code>?</li>
+<li>If the reload response arrives while the dialog is open for <code>location.href = prompt("where next?")</code>, which navigation takes precedent?</li>
+</ul>
+<p>Similarly for in-document replacement of images: If the reload response finishes before the original response, is an <code>error</code> event fired? etc.</p>
+<h1>
+<a class="anchor" href="#limitations-4" name="limitations-4"></a>Limitations</h1>
+<p>Because the reload could be a jarring experience to the user, it’s something that the server would want to do sparingly. That is, if the browser sends an <code>If-None-Match</code>, the server would probably want to 200 only if the etag matches a particularly bad version, e.g. not for a small typo fix. (Presumably an intermediary would send 200 only if the version was explicitly invalidated by its customer, and not if merely expired.)</p>
+<p>This differs from a normal conditional fetch, hence the <code>Purpose: reload</code>. I’m not wild about the developer ergonomics – it’s easy to ignore the <code>Purpose</code> header and accidentally reload too often. But at least sending <code>Reload-If-Invalidated</code> is a signal that you’ve made the requisite server changes. And I’m not wild about the alternatives I’d thought of (different HTTP verb, different URL, a special “yes, reload” response code).</p>
+<h1>
+<a class="anchor" href="#alternatives-considered-5" name="alternatives-considered-5"></a>Alternatives considered</h1>
+<h2>
+<a class="anchor" href="#signed-exchange-purge-proposals-6" name="signed-exchange-purge-proposals-6"></a>Signed exchange purge proposals</h2>
+<p>In the case of SXGs, there have been a <a href="https://github.com/WICG/webpackage/issues/376" rel="noopener nofollow ugc">couple</a> of <a href="https://www.ietf.org/archive/id/draft-thomson-wpack-content-origin-00.html" rel="noopener nofollow ugc">proposals</a>. This one differs in a few different ways, which I think help ease the DX of this feature:</p>
+<ul>
+<li>It’s not SXG-specific. This helps ensure it’s deployed correctly because it’ll be triggered in more scenarios.</li>
+<li>It’s optional (for the sake of backwards-compatibility with existing SXGs). This helps the site do a gradual rollout of the feature and monitor for issues.</li>
+<li>It fails open (for the sake of connection resilience). This enables the site to deploy without reducing its availability commitment.</li>
+</ul>
+<p>That said, it doesn’t preclude future development of other proposals, for which a different set of properties is wanted.</p>
+<h2>
+<a class="anchor" href="#scriptif-askoriginwhethertoreload-locationreload-7" name="scriptif-askoriginwhethertoreload-locationreload-7"></a><code>&lt;script&gt;if (askOriginWhetherToReload()) location.reload()</code>
+</h2>
+<p>A few of the disadvantages of a script tag:</p>
+<ul>
+<li>Doesn’t solve the security vulnerability use case; an XSS attack would be able to remove it.</li>
+<li>Often not able to be added by intermediaries; their customers are often OK with them adding HTTP headers but not HTML.</li>
+<li>Doesn’t work for non-HTML resources (e.g. image, PDF).</li>
+<li>The above naive implementation would be slow, resulting in two requests for the updated content. It might be possible to make a more efficient version using SW’s but it’d be difficult and add page weight.</li>
+<li>It would require maintenance to keep its behavior in sync with the web platform (e.g. if a new ETag-like header is added).</li>
+</ul>
+<h2>
+<a class="anchor" href="#do-nothing-recommend-short-max-age-8" name="do-nothing-recommend-short-max-age-8"></a>Do nothing; recommend short max-age</h2>
+<p>This would trade off the performance (and possibly serving cost) of the 99% pageview for the freshness of the rare pageview. For some uses, that decision might make sense, but I think the above proposal would be at least as useful, and hence worth adding as an option.</p>
+<h1>
+<a class="anchor" href="#wdyt-9" name="wdyt-9"></a>WDYT?</h1>
+<p>Does the motivation make sense to you? Is this feasible to specify and implement? Do the benefits outweigh the costs? Can you suggest improvements? Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2021-11-22</div>
+          <div class="post_content">
+<p>I initially missed this proposal, but I find it super interesting!</p>
+<p>It’s trying to use current caching building blocks to (almost) enable in-browser “hold-till-told” caching, which is something I’ve given some thought to in the past.</p>
+<p>A few questions/comments:</p>
+<ul>
+<li>IIUC, you’re expecting browsers to use resources from the cache as if they are valid and then reload them in the rare case they are not. Is that correct?</li>
+<li>How would reloads look like for subresources? It seems like some can simply reload the resource, while other would need to reload the entire page. That may give such subresources power they don’t currently have, so will need to be considered carefully.</li>
+<li>I think that reusing the current conditional request validators here may be confusing and cause issues. Specifically, I suspect that the part of “the server would want to do sparingly” will not happen with current server implementations and those new semantics bolted on the older concepts of validators and 304 responses. IMO, it’d be better to mint a new “Is this still valid” conditional request field, and have adapted servers respond to that specifically. Hopefully non-supporting-servers will not send “Reload-If-Invalidated” headers to begin with.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/996_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kornel</div>
+          <div class="creation_date">2021-11-22</div>
+          <div class="post_content">
+<p>This would be fantastic for images, which are relatively easy to reload.</p>
+<p>This feature seems like a logical extension of <code>stale-while-revalidate</code> behavior. I think it’d make sense to make it dependent on <code>stale-while-revalidate</code> instead of it itself instructing caches to use stale resources. Browsers should keep using existing caching rules to decide when to use stale responses, and when to revalidate, and this feature should only control what happens after revalidation, not the caching behavior.</p>
+<p>Max-age given in <code>stale-while-revalidate</code> serves an important purpose of avoiding using unreasonably old responses. Site author may decide that using yestarday’s response is probably fine, but a year-old response may be too jarring to even try.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3771_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">twifkak</div>
+          <div class="creation_date">2021-11-22</div>
+          <div class="post_content">
+<p>Thanks for the comments!</p>
+<aside class="quote no-group" data-post="2" data-topic="5685" data-username="yoavweiss">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/1710_2.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>IIUC, you’re expecting browsers to use resources from the cache as if they are valid and then reload them in the rare case they are not. Is that correct?</p>
+</blockquote>
+</aside>
+<p>Oops, I was ambiguous here. My proposal is that browsers would use resources from the cache <em>if</em> they are valid, not <em>as if</em>. This async reload would occur during <code>t=0..(max-age+s-w-r)</code>. That said, see my reply to <span class="mention">@kornel</span> below.</p>
+<p>It could be possible for the browser to do <em>as if</em>, but I guess that is equivalent to the origin saying <code>Reload-If-Invalidated: true\r\nCache-Control: max-age=2147483648,s-maxage=...</code>, so I’m thinking we might as well let the origin decide.</p>
+<aside class="quote no-group" data-post="2" data-topic="5685" data-username="yoavweiss">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/1710_2.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>That may give such subresources power they don’t currently have</p>
+</blockquote>
+</aside>
+<p>Good point; this seems critical. Potential mitigations (order of increasing flexibility):</p>
+<ul>
+<li>Any subresource can reload-in-place. Only same-origin subresources can reload the whole page.</li>
+<li>The <code>reload-if-invalidated</code> header value on the main resource is a list of origins that are allowed to reload.</li>
+<li>The <code>reload-if-invalidated</code> header value on the main resource is CSP-style mapping from capability (“reload in-place” or “reload entire page”) to source lists.</li>
+</ul>
+<p>Off-hand, CSP source lists could be useful for a big organization to have cross-departmental dependencies without that power. But perhaps a less flexible option is good enough for most.</p>
+<aside class="quote no-group" data-post="2" data-topic="5685" data-username="yoavweiss">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/1710_2.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<ul>
+<li>I think that reusing the current conditional request validators here may be confusing and cause issues.</li>
+</ul>
+</blockquote>
+</aside>
+<p>Yeah, on further thought, there’s three pieces to this:</p>
+<p><strong>Introduce a new <code>invalidation-token</code> response header instead of reusing <code>etag</code>/<code>last-modified</code>?</strong> This seems OK to me; it’s strictly more general. I was thinking most sites would reuse their etag for this value, as it’s an already well-tested version identifier, but I dunno:</p>
+<p>Maybe it’s not well-tested enough, because the cost of a false “modified” verdict is extra TTFB, whereas the cost of a false “invalidated” verdict would be a (likely user-visible) reload. However, it should be harder to return a false “invalidated”. e.g. If your server sends a random etag on every response, then <code>if-none-match</code> would ~always be true, but it’d ~never show up in your database of invalidated etags.</p>
+<p><strong>Introduce a new <code>if-token-invalidated</code> request header instead of reusing <code>if-none-match</code>/<code>if-modified</code>?</strong> This is also strictly more general, so it seems OK to me. However, it doesn’t address the “the server would want to do sparingly” case. Existing servers would ignore this new header and send 200 all of the time.</p>
+<p><strong>Make “do sparingly” the default:</strong> I’d guess a new status code <code>209 Invalidated</code> would be the easiest for people to implement using existing servers, but again I dunno.</p>
+<aside class="quote no-group" data-post="3" data-topic="5685" data-username="kornel">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/kornel/40/996_2.png" width="20"/> kornel:</div>
+<blockquote>
+<p>make it dependent on <code>stale-while-revalidate</code></p>
+</blockquote>
+</aside>
+<p>I like the idea of introducing a don’t-bother-reloading window (at <code>t=[0, max-age]</code>) when the resource is so new that it’s not worth the server traffic. (For SXG to work well with this, it would need to monkeypatch <a href="https://datatracker.ietf.org/doc/html/rfc7234#section-4.2.3" rel="noopener nofollow ugc"><code>date_value</code> in age computation</a> to prefer the signature’s <code>date</code> param for <a href="https://github.com/google/sxg-rs#:~:text=sxg%2Drs%20tries%20to%20ensure%20a%20static%20integrity%20value%20by%20stripping%20many%20noisy%20HTTP%20headers%20(like%20Date)%20for%20signed%20subresources" rel="noopener nofollow ugc">reasons</a>, but this seems feasible.)</p>
+<p>An even more flexible approach would be to decouple the end of the dont-reload window from <code>max-age</code> by introducing a new <code>reload-until</code> parameter. This allows you to gradate the cache entry from “use it” (0…<code>max-age</code>) to “use it but quietly refresh for next time” (…<code>stale-while-revalidate</code>) to “use it but maybe immediately reload” (…<code>reload-until</code>) to “don’t use it”.</p>
+<p>This flexibility might also be useful to differentiate the instructions you give to browsers (<code>reload-until</code>) to from those that also apply to public caches (<code>stale-while-revalidate</code>). That said, there’s <a href="https://tools.ietf.org/id/draft-cdn-control-header-00.xml" rel="noopener nofollow ugc">other ways</a> to do that, so <img alt=":man_shrugging:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/man_shrugging.png?v=10" title=":man_shrugging:"/>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2021-11-23</div>
+          <div class="post_content">
+<p>Thanks for pointing me at this <span class="mention">@yoavweiss</span>.</p>
+<p>When I think about invalidation protocols, I usually try to break it down into two steps:</p>
+<ol>
+<li>How to communicate an invalidation event</li>
+<li>How to target the invalidation at a chosen set of stored responses</li>
+</ol>
+<p>This proposal uses a background check to initiate invalidation, and then couples that with a page reload (AIUI). It might be worth thinking about decoupling those, to give greater flexibility. It might be good to think about alternative sources of invalidation events too, like POST and other state-changing requests, sWr (as mentioned), etc. I really like the async piggybacking here – it’s an <a href="https://www.usenix.org/legacy/publications/library/proceedings/usits97/full_papers/krishnamurthy/krishnamurthy.pdf">old idea</a> <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=10" title=":slight_smile:"/></p>
+<p>Then, AIUI it uses the browser’s page context to decide how widely to apply the invalidation/reload. That information is only available to the browser, though – not the server, and not to intermediaries. That’s why headers like <code>Surrogate-Key</code> and <code>Cache-Tag</code> have become prevalent from CDNs; one of these days we’ll get around to standardising that. Would that sort of approach be interesting to you?</p>
+<p>Beyond that, two observations:</p>
+<ol>
+<li>
+<p>One of the design goals for stale-while-revalidate was to create no extra requests, so that we don’t waste user’s bandwidth, increase server load, or create opportunity cost for performance. I’m not sure I completely understand how this will work in practice, but it seems like it’s going to create a new request for each cache access.</p>
+</li>
+<li>
+<p>How this will interact with caches that don’t understand the extension needs to be carefully thought through. You can’t expect every implementation to simultaneously update.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3771_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">twifkak</div>
+          <div class="creation_date">2021-11-23</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="5685" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>This proposal uses a background check to initiate invalidation, and then couples that with a page reload (AIUI). It might be worth thinking about decoupling those, to give greater flexibility.</p>
+</blockquote>
+</aside>
+<p>Interesting. Perhaps one way to decouple those would be a payload body in the <code>209 Invalidated</code> response suggesting a course of action. A few potential axes:</p>
+<ul>
+<li>whether to reload in-place (if possible), whole page, or just freshen for the future (swr)</li>
+<li>which browser cache tiers to target (SW cache, HTTP cache, etc.)</li>
+<li>other URLs to invalidate (URL pattern, <code>surrogate-key</code> / <code>cache-tag</code>, etc.)</li>
+</ul>
+<p>Are you primarily interested in the last one, or do you think it’s worth exposing knobs for all of them?</p>
+<p>These all seem like generalizations of the original concept, so they’re OK by me. I’m all for making sure the design allows for such parameterization (even if only reserved for future iteration).</p>
+<p>I guess the use case for one invalidation response to target multiple URLs in the browser is perceived latency. If the server knows that resources X &amp; Y are invalid, then informing the browser allows it to make those requests immediately upon a subsequent load, rather than async via <code>reload-if-invalidated</code>. Is that the use case you were thinking?</p>
+<aside class="quote no-group" data-post="5" data-topic="5685" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>it seems like it’s going to create a new request for each cache access</p>
+</blockquote>
+</aside>
+<p>Yep. The mitigations for this are that it requires opt-in from the server, and the async request has a <code>Purpose: reload</code> so the TLS termination proxy can throttle/ignore/isolate the requests as needed. But I’m open to other ways to invalidate distributed (and possibly obstinate) caches.</p>
+<aside class="quote no-group" data-post="5" data-topic="5685" data-username="mnot">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mnot/40/494_2.png" width="20"/> mnot:</div>
+<blockquote>
+<p>How this will interact with caches that don’t understand the extension</p>
+</blockquote>
+</aside>
+<p>Good point. My thought was that this specifies how browsers behave only. (I can’t think of what intermediaries could do differently than what’s specified by <code>s-maxage</code> and <code>s-w-r</code>.)</p>
+<p>If this feature encourages sites to increase their <code>max-age</code>, then browsers that don’t implement it would have staler responses than present. To that extent, it might make the most sense for an initial release to have a narrow set of targets, e.g.:</p>
+<ul>
+<li>SW, since it’s client-side programmable. Sites could use JS to increase their <code>max-age</code> only for supporting browsers. (I guess that calls for a feature detection API.)</li>
+<li>SXG, since it currently has one implementing engine and a backup means of revalidation (<code>&lt;script&gt;</code>).</li>
+</ul>
+<p>(Re: the HTTP cache: I guess it could be possible, if difficult, for a server to set a different <code>max-age</code> if the browser sent a <code>Sends-Reload-Requests</code> header. I’m not sure if the browser should, but I guess that decision &amp; design would best be folded into Client Hints, so probably best not to block an MVP of this proposal on that.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">9pfs1</div>
+          <div class="creation_date">2022-02-16</div>
+          <div class="post_content">
+<p>Will this be implemented anytime soon?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

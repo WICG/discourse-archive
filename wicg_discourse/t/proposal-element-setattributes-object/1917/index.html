@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Element#setAttributes(object)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Element#setAttributes(object)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>There is no way in vanilla JS to set multiple attributes on an element without writing each attribute to its own line. Writing them out as individual lines makes scanning the code more difficult to parse, as it appears less clearly grouped. There aren’t sneaky way around this either, like we can do with styles using <code>Object.assign(element.style, {})</code>.</p>
+<p>Therefore, I propose <code>setAttribute</code> be extended to support an object, or that a new method like <code>setAttributes</code> be created that allows developers to do this. I believe this would be a welcome and conservative improvement to the creation of DOM within JavaScript.</p>
+<p>I wrote a <strong>hopefill</strong> for such functionality earlier this year, which you can test @ <a href="https://github.com/jonathantneal/element-set-attribute-object" rel="nofollow noopener">https://github.com/jonathantneal/element-set-attribute-object</a></p>
+<p><em>FWIW, I would be happy to untie that script from the DOM, should its <strong>hopefill</strong> behavior inhibit any committees from considering it for inclusion.</em></p>
+<h3>Example usage</h3>
+<pre><code class="lang-auto">element.setAttribute({
+	id: 'nav-item-1',
+	class: 'nav-listitem',
+	ariaControls: 'nav-item-1-submenu',
+	ariaHaspopup: true,
+	ariaExpanded: false
+})
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>I love the <em>idea</em> of this, but have a few thoughts.</p>
+<ol>
+<li>
+<p>Can we not auto squat on a overloaded name?  If this took off and worked differently in some sense (maybe an undefined ultimately deletes the attr for example or there is some intelligence in boolean-izing or something) then this will be incompatible and a widely used thing will actually hold it back from getting the name you want.  W3C TAG is early drafting a doc about this now that I hope sees the light of day <a href="https://docs.google.com/document/d/1u9VgjkPFBgaZE_4xeNCqgF-YReedkTfgXn1WRwmdGFU/edit#">https://docs.google.com/document/d/1u9VgjkPFBgaZE_4xeNCqgF-YReedkTfgXn1WRwmdGFU/edit#</a>.</p>
+</li>
+<li>
+<p>minor bikeshed but doesn’t s/setAttribute/setAttributes or even mapAttributes() make more sense conceptually?</p>
+</li>
+<li>
+<p>This is the wrong venue for such a comment but adding more *fill terms that ultimately mean the same thing isn’t going to help add clarity IMO.  This means exactly prollyfill which has numerous uses in print, presentation, podcasts, even video. TAG doc currently refers to it as a speculative polyfill for reasons debated there.  Any debate/judgements there aside, I think it would be helpful to not add a third option if we can help it.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>It’d probably be better not to deal with camelCase at all, and provide attribute names as is by wrapping those with quotes instead.</p>
+<p>There was a similar <a href="https://lists.w3.org/Archives/Public/www-dom/2013OctDec/0096.html">proposal</a> made by me on 2013-11-22 at the <a href="mailto:www-dom@w3.org">www-dom@w3.org</a> mailing list.</p>
+<p>My proposal included two parts:</p>
+<ol>
+<li>extend the <code>createElement()</code> method with the second parameter that a map object of attributes could be provided with:</li>
+</ol>
+<pre><code class="lang-auto">var input = document.createElement('input', {
+    'type'     : 'email',
+    'name'     : 'foo',
+    'required' : ''
+});
+</code></pre>
+<ol start="2">
+<li>extend the <code>Element.setAttribute()</code> method for setting multiple attributes at once:</li>
+</ol>
+<pre><code class="lang-auto">element.setAttribute({
+    'id'     : 'foo',
+    'class'  : 'lorem ipsum dolor',
+    'data-i' : 42
+});
+</code></pre>
+<p>There is also a <a href="https://discourse.wicg.io/t/809">proposal</a> (2015-04-17) by Edwin Reynoso here on WICG similar to the <em>first part</em> of my proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>I think the key part of this proposal, as with the styles one, is to explain why this has to be built-in and not part of a library. IMO it doesn’t add any new capabilities, just syntax sugar, so could and should be a library.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>why this has to be built-in and not part of a library</p>
+</blockquote>
+</aside>
+<p>The pain of any library is that it’s a dependency while built-in features are available out of the box.</p>
+<p>There is nothing wrong with syntactic sugar, we have a bunch in JS already, it simplifies development and maintenance and makes code more readable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<aside class="quote" data-full="true" data-post="4" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>I think the key part of this proposal, as with the styles one, is to explain why this has to be built-in and not part of a library. IMO it doesn’t add any new capabilities, just syntax sugar, so could and should be a library.</p>
+</blockquote>
+</aside>
+<p>Thanks for looking at this, <span class="mention">@AshleyScirra</span>. I attempted to do as much, but please let me know how I might improve.</p>
+<aside class="quote" data-post="1" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathantneal/40/65_1.png" width="20"/> jonathantneal:</div>
+<blockquote>
+<p>Writing them out as individual lines makes scanning the code more difficult to parse, as it appears less clearly grouped. There aren’t sneaky way around this either, like we can do with styles using Object.assign(element.style, {}).</p>
+</blockquote>
+</aside>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>Thanks for looking at this, <span class="mention">@briankardell</span>. Please let me know if I can resolve each of your concerns.</p>
+<aside class="quote" data-post="2" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>Can we not auto squat on a overloaded name?</p>
+</blockquote>
+</aside>
+<p>Yes, I will update the polyfill to not squat <strong>any</strong> name. I’m deciding whether it’s better to make it an ES6 <code>export default</code>, or a CommonJS <code>module.exports</code>, or a <code>window.setAttributes</code> global. And then should I move or remove the feature test? Should the rest of the code remain IE8 compatible (like the for loop)?</p>
+<aside class="quote" data-post="2" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>minor bikeshed but doesn’t s/setAttribute/setAttributes or even mapAttributes() make more sense conceptually?</p>
+</blockquote>
+</aside>
+<p>Yes, I can defer to <code>setAttributes</code>, but it’s worth noting that you could theoretically set 0+ attributes with this method.</p>
+<aside class="quote" data-post="2" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/70_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>adding more *fill terms that ultimately mean the same thing isn’t going to help add clarity</p>
+</blockquote>
+</aside>
+<p>I will update the project use the term “speculative polyfill”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p>Obviously I’m in support of this, as it mimics my proposal. The only thing I have to say (as <span class="mention">@MT</span> did) is to quote the key instead of camelCase.</p>
+<p>I think a major thing to point out is that much of this can be done in jQuery by chaining <code>.attr('foo', 'bar')</code> or similar, but chaining can’t be done in vanilla JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2016-12-21</div>
+          <div class="post_content">
+<p><span class="mention">@jhpratt</span>, thanks for your support.</p>
+<aside class="quote" data-post="8" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>much of this can be done in jQuery by chaining .attr(‘foo’, ‘bar’) or similar, but chaining can’t be done in vanilla JS</p>
+</blockquote>
+</aside>
+<p>jQuery’s <code>attr</code> <a href="http://api.jquery.com/attr/#attr-attributes" rel="nofollow noopener">supports objects</a>, and I considered it a cowpath toward my proposal. The only difference now is that I defer to <span class="mention">@briankardell</span>’s suggestion that, in vanilla JS, it might be better not to overload <code>setAttribute</code> to handle both the <code>(attributeName, value)</code> and <code>(attributes)</code> usage.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>The pain of any library is that it’s a dependency while built-in features are available out of the box.</p>
+</blockquote>
+</aside>
+<p>You could use this argument to specify absolutely anything, including things which definitely ought to be in a library. I’m not convinced.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<p>Sure, but I could also take the extreme argument of saying you should have everything in a library, and nothing built in. I think the purpose of this community is to decide where the dividing line is.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-12-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jhpratt/40/1422_1.png" width="20"/> jhpratt:</div>
+<blockquote>
+<p>Sure, but I could also take the extreme argument of saying you should have everything in a library, and nothing built in.</p>
+</blockquote>
+</aside>
+<p>Actually I think that would be a good idea if it were possible. However it’s not always possible, because some things are not possible even by building a library on top of existing features. For example nobody can build a library to access the user’s contacts list on Android, because it is simply impossible. For that it is necessary to specify a built-in feature. In other words, in my opinion specifications should focus on making things possible that are currently impossible. Everything else is basically nice-to-haves which a library can provide without obliging browser vendors to support it forever.</p>
+<p>This is basically the <a href="https://github.com/extensibleweb/manifesto" rel="nofollow noopener">extensible web manifesto</a> - “the standards process should focus on adding new low-level capabilities to the web platform”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1917">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>I’m not convinced.</p>
+</blockquote>
+</aside>
+<p>We can live with that. <img alt=":wink:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/wink.png?v=5" title=":wink:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-12-23</div>
+          <div class="post_content">
+<p>You can ignore my feedback, but I’m sure browser developers will bring up a similar theme as you try to specify this, so I’m trying to help you address this now rather than later after even more work has been done on this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2017-01-02</div>
+          <div class="post_content">
+<p>Nuance matters, please see also <a href="http://bkardell.com/blog/Tao-Of-The-Extensible-Web.html">The Tao of the Extensible Web</a>.  “Focus” there is about prioritization of time and resources.  Many high level features of the Web were, historically, blazing entirely new paths only at a very high level and, in the process, it takes years of investment, often based on somewhat questionable speculation about what developers will like, understand or use that we often still get wrong.  When we get it wrong, it is all lost.  The EWM argues for a different path, including using libraries and speculative polyfills and - things like this, wicg and discourse and libraries to experiment and answer a lot of those questions in a manner more consistent with how most languages work.  So, you’re right, browsers shouldn’t jump on a lot of proposals but you could make a strong argument that things like this have been done by libraries and if we can get real data and a plan put together for precisely how it should work, with real uptake, then that situation could turn around very quickly.</p>
+<p>In any case, floating these kinds of ideas, providing answers and seeing what works in an effort to improve the platform is pretty much what WICG and discourse in particular is all about.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>Everything that can be polyfilled is technically syntactic sugar, yet we add it to the platform anyway, because the alternative is dependency hell.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-01-04</div>
+          <div class="post_content">
+<p>I really like this proposal, and yes, the cowpaths have been paved, since almost every DOM library includes something like this, there is a very clear need.
+I would also vote for overloading <code>setAttribute</code>. No need for a separate name, since it’s very easy to disambiguate between cases, and <code>setAttribute({})</code> today fails with an error, so it wouldn’t break any existing cases.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

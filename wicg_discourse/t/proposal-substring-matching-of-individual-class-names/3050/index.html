@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Substring Matching of Individual Class Names</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Substring Matching of Individual Class Names</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simlawr</div>
+          <div class="creation_date">2018-09-20</div>
+          <div class="post_content">
+<p><strong>Note:</strong> I’ve also posted this as <a href="https://github.com/w3c/csswg-drafts/issues/2984" rel="nofollow noopener">an issue</a> on <a href="https://github.com/w3c/csswg-drafts" rel="nofollow noopener">CSS Working Group drafts</a>.</p>
+<p>It’s currently possible to match substrings of attribute values, including the class attribute.</p>
+<p><a class="onebox" href="https://www.w3.org/TR/selectors-4/#attribute-substrings" target="_blank">https://www.w3.org/TR/selectors-4/#attribute-substrings</a></p>
+<p>It would also be useful to have the ability to match substrings of individual class names. Using the existing attribute selector syntax as a reference, this might look something like:</p>
+<pre><code class="lang-auto">.classname /* A standard class selector */
+
+.[^class] /* Matches any class name that begins with "class" */
+.[$name]  /* Matches any class name that ends with "name" */
+.[*ass]   /* Matches any class name that contains the substring "ass" */
+</code></pre>
+<p>Which would be compatible with the <a href="https://www.w3.org/TR/selectors-4/#attribute-case">Selectors Level 4 case-sensitivity</a> syntax:</p>
+<pre><code class="lang-auto">.[^classname i] 
+.[$classname i] 
+.[*classname i]
+</code></pre>
+<p>Also, it could be modified to support substring matching in ID selectors:</p>
+<pre><code class="lang-auto">#[^example]  #[^example i] 
+#[$example]  #[$example i] 
+#[*example]  #[*example i]
+</code></pre>
+<p>Such a selector would make it practical to use a naming convention whereby a <code>.Module</code> parent shares common styles with a <code>.SubModule</code> child because although this can be achieved by grouping the related classes, it becomes unwieldy as the number of children increases, for example:</p>
+<pre><code class="lang-auto">.Module, .SubModule, .AnotherModule, .YetAnotherModule {…}
+
+:matches(.Module, .SubModule, .AnotherModule, .YetAnotherModule).variant {…}
+</code></pre>
+<p>Whereas, this could be rewritten in a simpler form using a <em>substring matching</em> class selector, so that there is no need to manage lists of dependants and style sharing is automatic:</p>
+<pre><code class="lang-auto">.[$Module] {…}         /* Equivalent to .Module */
+.[$Module].variant {…} /* Equivalent to .Module.variant */
+
+.SubModule {…}         /* Inherits styles from .Module */
+.SubModule.variant {…} /* Inherits styles from .Module.variant */
+
+.ModuleUnrelated {…} /* Not matched as name begins not ends with "Module" */
+</code></pre>
+<p>The effect is <strong>static inheritance</strong> without the use of a preprocessor e.g. <code>@extend</code> in Sass and Stylus.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ruben</div>
+          <div class="creation_date">2018-09-20</div>
+          <div class="post_content">
+<p>Substring matching makes a lot of sense in contexts where there can only be one value, such as the contents of input fields. However, an element can have multiple classes, which means that you can also achieve hierarchical namespacing without substring matching of classes.</p>
+<p>E.g. instead of <code>class="module"</code> and <code>class="fooModule"</code>, you can have <code>class="module"</code> and <code>class="foo module"</code>. Now you can target both elements with the selector <code>.module</code>. And it’s more robust than substring matching, since you won’t accidentally match the wrong thing just because it contains the wrong trailing characters. And if you want to target specifically the module <code>foo</code>, you can still use the selector <code>.foo.module</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simlawr</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="2" data-topic="3050">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ruben/40/1172_1.png" width="20"/> Ruben:</div>
+<blockquote>
+<p>However, an element can have multiple classes, which means that you can also achieve hierarchical namespacing without substring matching of classes.</p>
+</blockquote>
+</aside>
+<p>True. There are, however, some advantages to the single class approach over the multi-class approach.</p>
+<ol>
+<li>Flattened selectors eliminate any potential specificity conflicts, for example:</li>
+</ol>
+<pre><code class="lang-auto">&lt;div class="card product"&gt;
+  &lt;div class="card-title"&gt;…&lt;/div&gt;
+  &lt;div class="card-body"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+
+.card {…} /* specificity: 0,0,1,0 */
+.card.product {…} /* specificity: 0,0,2,0 */
+.card.product .card-title {…} /* specificity: 0,0,3,0 */
+</code></pre>
+<p>Each selector ratchets up the specificity, which doesn’t happen with single classes:</p>
+<pre><code class="lang-auto">&lt;div class="ProductCard"&gt;
+  &lt;div class="ProductCard-title"&gt;…&lt;/div&gt;
+  &lt;div class="ProductCard-body"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+
+.[$Card] {…} /* specificity: 0,0,1,0 */
+.ProductCard {…} /* specificity: 0,0,1,0 */
+.ProductCard-title {…} /* specificity: 0,0,1,0 */
+</code></pre>
+<p>There is growing acceptance that needless specificity makes CSS difficult to maintain.</p>
+<ol start="2">
+<li>There is no risk of styles accidentally leaking out of a module, for example:</li>
+</ol>
+<pre><code class="lang-auto">&lt;div class="box one"&gt;
+  &lt;div class="box-body"&gt;
+    &lt;div class="box two"&gt;
+      &lt;div class="box-body"&gt;
+        …
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+.box.one .box-body {…} /* this will also match box two's body */
+</code></pre>
+<p>This cannot happen with single classes because each sub-module has a different namespace.</p>
+<p>A solution might be to use a child selector but this is sub-optimal, particularly when dealing with deeply nested children, selectors become increasingly complex and specificity rises:</p>
+<pre><code class="lang-auto">.box.one &gt; .box-body {…} /* this would only match box one's body */
+
+.box.one &gt; .box-body &gt; .box-something {…} /* ever more specificity! */
+</code></pre>
+<ol start="3">
+<li>Static inheritance is more robust than using multiple classes on an element (dynamic inheritance).</li>
+</ol>
+<p>There is always a risk of a <code>.product</code> sub-module becoming separated from it’s <code>.card</code> parent, or a child element from a different sub-module being accidentally included in another sub-module:</p>
+<pre><code class="lang-auto">&lt;div class="card product"&gt;
+  &lt;div class="card-name"&gt;…&lt;/div&gt;
+  &lt;div class="card-description"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="card user"&gt;
+  &lt;div class="card-name"&gt;…&lt;/div&gt;
+  &lt;div class="card-description"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>This cannot happen with single classes without fundamentally violating the naming convention:</p>
+<pre><code class="lang-auto">&lt;div class="ProductCard"&gt;
+  &lt;div class="ProductCard-name"&gt;…&lt;/div&gt;
+  &lt;div class="ProductCard-description"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="UserCard"&gt;
+  &lt;div class="UserCard-name"&gt;…&lt;/div&gt;
+  &lt;div class="ProductCard-description"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Don’t get me wrong, dynamic inheritance has a role to play, such as in applying context specific styles, but static inheritance without the use of a preprocessor, would be a valuable addition to CSS.</p>
+<ol start="4">
+<li>It’s more readable, though this is somewhat subjective.</li>
+</ol>
+<aside class="quote no-group" data-post="2" data-topic="3050">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ruben/40/1172_1.png" width="20"/> Ruben:</div>
+<blockquote>
+<p>And it’s more robust than substring matching, since you won’t accidentally match the wrong thing just because it contains the wrong trailing characters.</p>
+</blockquote>
+</aside>
+<p>Unintentional matching is possible with either a single (with substring matching) or multi-class approach. It’s not a failing of substring matching per se, rather the inherit global nature of CSS.</p>
+<p>A consistent naming convention, together with the discipline to follow it, is in my view, the only practical solution to mismatching. However, combining a substring matching selector with another selector e.g. <code>.foo.[^bar]</code> would also reduce the likelihood of a mismatch in certain circumstances.</p>
+<p>Finally, this is just one use case, there are likely other uses in addition to naming conventions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1818_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">briankardell</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="3050">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simlawr/40/2062_1.png" width="20"/> simlawr:</div>
+<blockquote>
+<p>There is growing acceptance that needless specificity makes CSS difficult to maintain.</p>
+</blockquote>
+</aside>
+<p>I think the phrasing of this this tricky… I think it’s safe enough to say that there is a growing acceptance that specificity alone isn’t enough.  However, that is why we also have proposals/standards already far along like shadow dom and a 0 specificity pseudo class.  Given that there are practices to avoid this and new specs tackling related issues, I’m unsure how compelling this particular data point is to me (personally) at this time.</p>
+<aside class="quote no-group" data-post="1" data-topic="3050">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simlawr/40/2062_1.png" width="20"/> simlawr:</div>
+<blockquote>
+<p>Also, it could be modified to support substring matching in ID selectors:</p>
+</blockquote>
+</aside>
+<p>You can do substring matching of ids currently via attribute selectors, it will just have a lower specificity than the hash oriented one.</p>
+<p>All this said though, and leaving aside how exactly it would be written or expressed - the platform does defines a DOMTokenList concept (an attribute containing N space separated values) and class really isn’t the only thing that uses it.  A number of aria attributes, for example, can also use that idea, and who knows what else finds that primitive idea useful.  It does seem like having a way to style on those universally with about the same level of power as attribute values could maybe be an interesting and useful feature…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2062_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simlawr</div>
+          <div class="creation_date">2018-09-21</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="3050">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/briankardell/40/1818_1.png" width="20"/> briankardell:</div>
+<blockquote>
+<p>You can do substring matching of ids currently via attribute selectors, it will just have a lower specificity than the hash oriented one.</p>
+</blockquote>
+</aside>
+<p>It would be a syntactic sugar. I accept that it has limited utility.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

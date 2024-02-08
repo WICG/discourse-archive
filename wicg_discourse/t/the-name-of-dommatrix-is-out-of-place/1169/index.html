@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>The name of DOMMatrix is out of place?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">The name of DOMMatrix is out of place?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<p>So, <code>DOMMatrix</code> (and the other geometry classes) are intended to be generic. So, then DOM seems out of place when, for example, using DOMMatrix in a WebGL application because there is no DOM inside a WebGL context.</p>
+<p>I think better names would be <code>TransformationMatrix</code>, <code>AffineMatrix</code>, <code>Matrix3D</code>, or similar.</p>
+<p>Calling it a DOMMatrix is like calling it a WebGLMatrix then using that to manipulate CSS transforms, which isn’t WebGL.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2015-10-29</div>
+          <div class="post_content">
+<p>It might be a technicality similar to <a href="https://developer.mozilla.org/en-US/docs/Web/API/DOMString" rel="nofollow noopener">DOMString</a>; implementation details specify it must be UTF-16, so runtimes that don’t internally represent strings that way must convert their strings to a DOMString first before interacting with DOM interfaces.</p>
+<p>And <a href="https://drafts.fxtf.org/geometry/Overview.html#dommatrix" rel="nofollow noopener">for the matrix</a>:</p>
+<pre><code class="lang-auto">interface DOMMatrix : DOMMatrixReadOnly {
+    [NewObject] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
+    [NewObject] static DOMMatrix fromString(DOMString transformList);
+    [NewObject] static DOMMatrix fromFloat32Array(Float32Array array32);
+    [NewObject] static DOMMatrix fromFloat64Array(Float64Array array64);
+/* And so on... */
+</code></pre>
+<p>Additionally, it looks like SVG2 will also use <code>DOMMatrix</code>, which might be another reason for the generic name.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-10-30</div>
+          <div class="post_content">
+<p><span class="mention">@Tigt</span> But I feel that DOMMatrix simply isn’t generic enough. It makes sense if you’re working with DOM, but not if it is being used inside Canvas 2D or WebGL contexts.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

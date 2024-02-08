@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Display an image at device’s physical resolution</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Display an image at device’s physical resolution</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-17</div>
+          <div class="post_content">
+<p>As a <a href="http://tanalin.com/en/blog/2015/05/dell-p2415q-review/" rel="nofollow noopener">4K-monitor</a> owner, I’m using OS-level scale of 200%, and I’ve encountered the need to guaranteedly display some raster images in web browser at their actual size without ANY scaling.</p>
+<p>By actual size, I mean exact mapping of each single image pixel to single physical display pixel (as opposed to CSS pixels that are affected by OS-level or browser-level scaling that does not allow to view image at full available physical clarity/definition/sharpness of the display and also usually results in blur as for raster images).</p>
+<p>Note that this has <strong>nothing</strong> to do with responsive images (displaying different images at predefined set of different pixel ratios in particular).</p>
+<p>#<span class="hashtag">#Usecases</span></p>
+<p>Some of usecases:</p>
+<ol>
+<li>
+<p><strong>Web-based image viewer.</strong> Most of popular desktop image-viewers (e.g. XnView) have ability to display an image at its actual size without any scaling (and blur as a consequence of scaling) (in XnView, via menu “View → Zoom → 100%”). Web-based viewer should have a straightforward way to do the same.</p>
+</li>
+<li>
+<p><strong>Display tests:</strong></p>
+<ul>
+<li>2.1. for <a href="http://www.techmind.org/lcd/#inversion" rel="nofollow noopener">crystal inversion</a>;</li>
+<li>2.2. for chroma subsampling (<a href="http://en.wikipedia.org/wiki/Chroma_subsampling" rel="nofollow noopener">1</a>, [2] (<a href="http://www.avsforum.com/forum/166-lcd-flat-panel-displays/1381724-official-4-4-4-chroma-subsampling-thread.html" rel="nofollow noopener">http://www.avsforum.com/forum/166-lcd-flat-panel-displays/1381724-official-4-4-4-chroma-subsampling-thread.html</a>), <a href="http://i4.minus.com/ibyJcwdIniHUEs.png" rel="nofollow noopener">3</a>).</li>
+</ul>
+</li>
+</ol>
+<p>#<span class="hashtag">#Syntax</span></p>
+<p>##<span class="hashtag">#Keyword</span> for size values</p>
+<p>On CSS level, this feature could be implemented as a new keyword like <code>physical</code> applicable to both <code>background-size</code> (for background images) and <code>width</code> / <code>height</code> properties (for <code>IMG</code> elements):</p>
+<pre><code>DIV {background-size: physical; }
+
+IMG {
+    width:  physical;
+    height: physical;
+}
+</code></pre>
+<p>Or just <code>IMG {size: physical}</code> with my <a href="//discourse.wicg.io/t/size-shorthand-for-width-height-properties/1160/1">proposal</a> on <code>width</code>/<code>height</code> shorthand.</p>
+<p>Instead of the <code>physical</code> keyword, we could use <code>real</code>, or <code>natural</code>, or <code>actual</code>, or anything else reasonable and clear enough (<code>physical</code> just looks most clear for me).</p>
+<p>##<span class="hashtag">#Property</span> for per-element pixel ratio</p>
+<p>Alternatively, we could have a CSS <em>property</em> like <code>pixel-ratio</code> which value would correspond to JS’s <code>window.devicePixelRatio</code> by default (for example, for scale of 200% in Windows, it would be equal to <code>2</code>) and could be set on per-element basis:</p>
+<pre><code>.example {pixel-ratio: 1; }
+/* The element's size and other px-defined properties
+   now depend on this local pixel ratio instead of global
+  (defined by OS- or browser-level scale) pixel ratio. */
+</code></pre>
+<p>#<span class="hashtag">#JS</span> drawbacks</p>
+<p>Currently, we are forced to use JavaScript to calculate/restore an approximate compensated (!) image size based on <code>window.devicePixelRatio</code>, but:</p>
+<ul>
+<li>
+<p>JavaScript does not work with JavaScript disabled;</p>
+</li>
+<li>
+<p>resulting physical size based on calculated CSS size may be wrong (and <em>is</em> wrong at least in Opera 29 and IE 11 e.g. at Windows-level scale of 186% according to my tests) due to rounding errors caused by nature of floating-point math;</p>
+</li>
+<li>
+<p>recalculating/restoring approximately something that browser already knows exactly looks at least somewhat unreasonable / suboptimal. We can do much better.</p>
+</li>
+</ul>
+<p>Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-10-18</div>
+          <div class="post_content">
+<p>The screen testing use cases sound fairly niche to me, so on their own, I personally wouldn’t think they constitute a strong case.</p>
+<p>I am more receptive to the photography / image viewer use case. But there as well, maybe things are a bit more subtle. If the image is very large, and you need to zoom in to inspect the details, you do want a level of zoom that doesn’t blur the details. But if the image already fits the intended viewing area at image-resolution:1dppx, then I am not sure that zooming it out is always desirable. Might depend on the application.</p>
+<p>If we should do it, the image-resolution property seems to be a good candidate for a per element property having this kind of switch:
+<a class="onebox" href="https://drafts.csswg.org/css-images-3/#propdef-image-resolution" target="_blank">https://drafts.csswg.org/css-images-3/#propdef-image-resolution</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-10-18</div>
+          <div class="post_content">
+<p>Why the “pure CSS” requirement? The HTML syntax for responsive images includes <code>srcset</code> with <code>x</code> descriptors which enable you to define the size of high resolution images on the page. Please correct me if I misunderstood your requirements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-18</div>
+          <div class="post_content">
+<p>Florian, do I understand correctly that the <code>image-resolution</code> property does not currently support what I’ve proposed? In general, I’m open to using e.g. this property if it would be extended to achieve the goal I’ve described. Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-18</div>
+          <div class="post_content">
+<p>Šime, my point is to <strong>guarantee</strong> that each image pixel will <strong>precisely</strong> correspond to exactly one physical pixel, so that there is no any blur.</p>
+<p>Note that my proposal is about displaying a same <strong>single</strong> image pixel-perfectly without blur; this has <strong>nothing</strong> to do with displaying different images at different pixel ratios.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">frivoal</div>
+          <div class="creation_date">2015-10-19</div>
+          <div class="post_content">
+<p><span class="mention">@MT</span> The image-resolution property lets you ask for 1 image pixel per CSS pixel, or 2, or 3 or any number you want, or a number specified in the image file.</p>
+<p>It does not let you ask for 1 image pixel per device pixel, which is what you ask.</p>
+<p>If we agreed that having this would be desirable (and I expected heated discussion about that), then it seems to me we could add a value (physical? no-adjust? hardware? etc) to image-resolution asking for 1 image pixel per device pixel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-10-21</div>
+          <div class="post_content">
+<p>As others said, ‘image-resolution’ is the property that controls what resolution images are displayed at.</p>
+<p>It defaults to specifying the ratio of image pixels to CSS px, as that’s all there’s real use-cases for, but the specific thing you want to do happens to have a convenient hack - set <code>image-resolution: 9999dppx snap;</code>.  The <code>9999dppx</code> says “put 10k image pixels in each CSS px” (thus, “multiple image pixels in each device pixel, as long as the screen resolution is less than 10000x”), then <code>snap</code> says “adjust that so each image pixel is an integer number of device pixels”. The closest such ratio is 1 image pixel to 1 device pixel, getting you the result you want.</p>
+<p>Dunno if this is implemented sufficiently to make the hack work, but it’s fine per-spec.  Like others have said, I’m not seeing any decent use-cases for doing this that would justify adding a non-hacky method.  Any time you have an integer ratio of image pixels and device pixels you won’t have any blur, so just saying <code>image-resolution: from-image snap;</code> should be fine.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-22</div>
+          <div class="post_content">
+<blockquote>
+<p>Dunno if this is implemented sufficiently to make the hack work, but it’s fine per-spec.</p>
+</blockquote>
+<p>Are you aware of whether any vendor has implemented the <code>image-resolution</code> property? It’s not listed on caniuse, not documented on MDN, and, according to my tests in browsers (Firefox, Opera, IE11, Edge), it has currently no effect neither prefixed, nor unprefixed, regardless of whether it’s applied to <code>IMG</code> elements or to elements with <code>background-image</code>.</p>
+<blockquote>
+<p>Like others have said, I’m not seeing any decent use-cases for doing this that would justify adding a non-hacky method.</p>
+</blockquote>
+<p>Sometimes you <a href="https://lists.w3.org/Archives/Public/www-style/2015Jan/0583.html">said</a> that having a hacky way is a reason to consider adding a nonhacky way to achieve the same. To be fair, “others” here are actually the other <em>one</em> — Florian (Šime seemed not to get the point at all), and he did not reject the idea in general.</p>
+<blockquote>
+<p>Any time you have an integer ratio of image pixels and device pixels you won’t have any blur, so just saying image-resolution: from-image snap; should be fine.</p>
+</blockquote>
+<p>This would probably be fine for preventing from blur, but the image would still be displayed several times larger (e.g. 4x larger at 200% OS-level scale) than needed. Preventing from blur is a <em>secondary</em> goal (even not a goal, but actually a <em>consequence</em> of having no scaling) in my proposal while the <em>primary</em> one is displaying an image without <em>any</em> scaling (regardless of with blur or not) — with one image pixel corresponding to exactly one physical pixel like it’s possible in desktop image viewers.</p>
+<p>Web-based image viewers are quite common today, so the proposed feature deserves a legitimate pure-CSS solution.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<blockquote>
+<p>Are you aware of whether any vendor has implemented the image-resolution property?</p>
+</blockquote>
+<p>I’m not sure anyone’s implemented it, as I said.</p>
+<blockquote>
+<p>Sometimes you said that having a hacky way is a reason to consider adding a nonhacky way to achieve the same.</p>
+</blockquote>
+<p>Context is different there.  There, it’s a situation where the group has wanted to do it and recognizes the valuable use-cases it allows, but it’s guaranteed to be slow, so it was less desirable to implement.  Seeing that it can be done hackily <em>anyway</em> shows that we won’t be losing anything by implementing it, just making the syntax a little more bearable.</p>
+<p>Here, tho, I’m not seeing decent use-cases.  The presence of a hacky solution thus actually <em>reduces</em> pressure to implement it, because it means that in the tiny corner cases that care about it, it’s already doable; we don’t need to burden the rest of the platform with a new feature.</p>
+<blockquote>
+<p>the primary one is displaying an image without any scaling (regardless of with blur or not)</p>
+</blockquote>
+<p>That’s what I’m saying is the weak use-case.  Aside from a corner-case involving building an image-viewer application on the web, this doesn’t seem to be useful.  I’m not even sure it’s useful for image-viewers - taking an image designed for 1x and displaying it on a 3x screen with this feature means it’ll be teensy, only 1/9th the size it was authored for.</p>
+<p>Maybe you just want to be able to display CSS images at their “intended” resolution? That’s what the <code>from-image</code> value is for.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-10-28</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Maybe you just want to be able to display CSS images at their “intended” resolution? That’s what the from-image value is for.</p>
+</blockquote>
+</aside>
+<p>I’m not sure how I could be more clear, but here is another take:</p>
+<p>If I’m viewing a 4K (3840×2160) image on a 4K monitor, I want to be able to see the <strong>entire</strong> image <strong>pixel-perfectly</strong>  instead of its 1/4 part with correspondingly lower clarity and the need for unreasonable scrolling. Pixel-perfectly means that physical pixel = image pixel <strong>regardless</strong> of OS-level or browser-level zoom settings and without dealing with zoomed CSS pixels at all.</p>
+<p>Does <code>from-image</code> allow to achieve that and doesn’t it deal with CSS pixels anyway? So if I have 200% OS-level scale, and use <code>image-resolution: from-image</code>, would the image be displayed with physical pixel = image pixel?</p>
+<aside class="quote" data-post="9" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>taking an image designed for 1x and displaying it on a 3x screen with this feature means it’ll be teensy, only 1/9th the size it was authored for.</p>
+</blockquote>
+</aside>
+<p>This surely makes some sense for a regular webpage context, but not for an image alone, and, all the more, not for an image-viewer web-application in particular. Try to consider the subject in terms of a desktop application instead of a web page.</p>
+<p>If I shot a photo, it is <strong>not</strong> authored for a context of a webpage at all, it is just a photo that I should be able to view at clarity that my display is <strong>physically capable of</strong> — and that’s what the corresponding mode of a desktop image viewer (e.g. XnView as I’ve described above) is intended for. Viewing image itself as a single self-contained entity has nothing to do with scaling UI in general and with scaling text and in-page images in particular.</p>
+<p>And please don’t forget, this is just one of multiple modes of an image viewer. So if a user has expressed an <strong>explicit wish</strong> to view an image at 100% scale by explicit switching to a corresponding mode in his image viewer, he should be able to do this just like it is possible in desktop image viewers.</p>
+<p>CSS-pixel abstraction should not hinder to use full physical resolution when needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Here, tho, I’m not seeing decent use-cases.</p>
+</blockquote>
+</aside>
+<p>To accept or reject a feature, shouldn’t the <em>majority</em> of the corresponding WG members <em>explicitly</em> express their opinion, not just one of members?</p>
+<p>This could be done via a publicly available official poll system like used in <a href="https://wiki.php.net/rfc/class_const_visibility#vote" rel="nofollow noopener">PHP development</a>, so that decisions could be much more impartial, transparent, substantive, and explicitly expressing the opinion of the majority.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>To accept or reject a feature, shouldn’t the majority of the corresponding WG members explicitly express their opinion, not just one of members?</p>
+</blockquote>
+</aside>
+<p>We don’t have a strict process of “rejecting” a feature here. What <span class="mention">@tabatkins</span> has said is that he doesn’t see widely applicable use cases here. Lack of interest from others may suggest that he has a point.</p>
+<p>Otherwise, it seems like what you are trying to do is achievable using JS and will be achievable using (slightly hacky) CSS in the future, once currently specced features would be implemented.</p>
+<p>Therefore, maybe the easiest route to prove demand for this feature is to create a JS library that achieves the effect you’re after, and show usage of that in the wild.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>Lack of interest from others may suggest that he has a point.</p>
+</blockquote>
+</aside>
+<p>A formal voting procedure would save us from <em>guessing</em> and would give us substantial data instead.</p>
+<aside class="quote" data-post="12" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/yoavweiss/40/99_1.png" width="20"/> yoavweiss:</div>
+<blockquote>
+<p>create a JS library that achieves the effect you’re after, and show usage of that in the wild.</p>
+</blockquote>
+</aside>
+<p>As I said, pixel-perfect (one image pixel exactly and <em>guaranteedly</em> corresponding to one physical pixel) result cannot be achieved via JS without native support for addressing physical pixels directly. This is not a pure CSS issue, the entire web platform in general lacks enough level of control.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<aside class="quote" data-post="13" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>As I said, pixel-perfect (one image pixel exactly and guaranteedly corresponding to one physical pixel) result cannot be achieved via JS without native support for addressing physical pixels directly.</p>
+</blockquote>
+</aside>
+<p>So the issue here is that we have no way to get the “physical pixels to CSS pixels” ratio without taking OS zoom into account?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-11-11</div>
+          <div class="post_content">
+<p>Please read the “JS drawbacks” section of my starting message.</p>
+<p>Even if we were able to get a floating-point pixel ratio, this could not guaranteedly save us from errors caused by the approximate nature of floating-point math, and, as a result, displaying e.g. 842px-wide image with a calculated width of 841px or 843px.</p>
+<p>We should have an explicit straightforward way to say to browser: “Display this image using physical pixels — with no scaling, no approximation, no rounding errors. Just directly map each single image pixel to exactly one physical pixel like desktop applications are able to”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>To accept or reject a feature, shouldn’t the majority of the corresponding WG members explicitly express their opinion, not just one of members?</p>
+</blockquote>
+</aside>
+<p>In general, no. The editors of the relevant specification are usually trusted to make such decisions, with other interested members chiming in when they wish. For contentious issues we do seek consensus from the entire WG, as the WG itself is technically the producer of the spec.</p>
+<p>Again, your use-case is already possible, via a slightly hacky syntax that nevertheless reliably achieves what you want.  You’re just asking for syntax that achieves your goal more directly.  I don’t see a strong need for it, not enough to justify new syntax, particularly since it’s possible in whatever rare cases you want it for.  This case is <em>almost always</em> a bad idea; virtually no use-cases for photo display on the web want this, and offering it as an explicit option suggests that it <em>is</em> useful for something and risks people using it inappropriately.  Just deal with the fact that your niche use-case happens to still be perfectly doable regardless?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-02</div>
+          <div class="post_content">
+<p>This was actually a sort of rhetorical question. It would be nice to see some feedback from <em>other</em> CSSWG people responsible to make decisions. Tab’s opinion is already quite clear (and thanks for the info about a possible hack involving <code>image-resolution</code>).</p>
+<blockquote>
+<p>The editors of the relevant specification are usually trusted to make such decisions, with other interested members chiming in when they wish.</p>
+</blockquote>
+<p>This is probably not quite an effective system in terms of objectiveness and, eventually, in terms of correspondence between what developers need and what spec editors do. Any single person may easily be wrong. Probability of this as for majority of people is much lower. And having a formal procedure to vote is a good way to involve all decision makers to make decisions — this works great, for example, for PHP.</p>
+<blockquote>
+<p>offering it as an explicit option suggests that it is useful</p>
+</blockquote>
+<p>It is.</p>
+<blockquote>
+<p>your niche use-case</p>
+</blockquote>
+<p>Viewing images in the web is a niche use-case, really? o_O</p>
+<blockquote>
+<p>risks people using it inappropriately</p>
+</blockquote>
+<p>Please note that “people” here means “developers”. Developers typically know what and why they do.</p>
+<p>Do you probably think that direct access to device resolution is unneeded or harmful for desktop applications as well, just because you believe platform developers always know better what is better for application developers? Or do you think that web developers are not as smart as desktop-app developers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-02</div>
+          <div class="post_content">
+<p>This is veering pretty quickly into hostility, but what the hey.</p>
+<aside class="quote" data-post="17" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>This was actually a sort of rhetorical question. It would be nice to see some feedback from other CSSWG people responsible to make decisions.</p>
+</blockquote>
+</aside>
+<p>I’m the person generally responsible to make decisions about the Images spec.  The group can override me, but we mostly operate under the benevolent dictator model.</p>
+<aside class="quote" data-post="17" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Viewing images in the web is a niche use-case, really? o_O</p>
+</blockquote>
+</aside>
+<p>This is a deliberate misreading of my statement.  Your <em>precise</em> use-case, that of viewing an image such that one image pixel maps to exactly one device pixel, without regard for the screen’s density, the image’s intended density, or the final layout size of the image, is niche.</p>
+<aside class="quote" data-post="17" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Please note that “people” here means “developers”. Developers typically know what and why they do.</p>
+<p>Do you probably think that direct access to device resolution is unneeded or harmful for desktop applications as well, just because you believe platform developers always know better what is better for application developers? Or do you think that web developers are not as smart as desktop-app developers?</p>
+</blockquote>
+</aside>
+<p>Devs (of which I am one) very commonly reach for tools without fully understanding how they should be used.  Giving people easy access to too-powerful tools risks them innocently misusing them, and is a disservice when you can instead hand them tools of the correct power and hide the high-power stuff behind nuisance walls.  You don’t need a jackhammer to pull up tile.</p>
+<p>When given easy access to device-pixel information, devs <em>often</em> mess up and accidentally write code that works well on their device and others with similar resolution, but is broken on lesser/greater resolutions.  This happens all the time, and you can find tons of examples by looking into the reasoning for introducing “device-independent pixels” or similar ideas in every platform - they’re always justified by “devs keep screwing up pixels and making things too small/big on some devices”.</p>
+<p>This is why we instead try to produce tools of the appropriate power level, such as the declarative <code>image-resolution</code> property, or the <code>&lt;picture&gt;</code> element.  These <em>use</em> the device pixel information, but directly expose only the minimum of power necessary to achieve useful ends.</p>
+<p>Giving people footguns would make me an irresponsible spec writer.  Denying people useful tools would also make me an irresponsible spec writer.  Exploding the language with a million niche tools would <em>also</em> make me an irresponsible spec writer.  My job is to find a good balance between all of these.  In this case, the tool you need already exists, it’s just (<em>very slightly</em>) inconvenient to use for your exact purpose.  That’s fine, because your use-case is satisfied, and it’s not common enough to justify growing the language to make it more convenient. (In my opinion.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2015-12-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="18" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>This is veering pretty quickly into hostility, but what the hey.</p>
+</blockquote>
+</aside>
+<p>Looks like you tend to see hostility whenever someone intends just to get a substantive answer.</p>
+<aside class="quote" data-post="18" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Your precise use-case, that of viewing an image such that one image pixel maps to exactly one device pixel, without regard for the screen’s density, the image’s intended density, or the final layout size of the image, is niche.</p>
+</blockquote>
+</aside>
+<p>As I said, this is a common standard feature of native image viewers. Web apps are currently trying to compete with native apps, but actually cannot since the web platform lacks the enough level of control.</p>
+<aside class="quote" data-post="18" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>devs often mess up and accidentally write code that works well on their device and others with similar resolution, but is broken on lesser/greater resolutions.</p>
+</blockquote>
+</aside>
+<p>So what makes native applications different from web applications in terms of access to device pixels?</p>
+<aside class="quote" data-post="18" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>the tool you need already exists, it’s just (very slightly) inconvenient to use for your exact purpose.</p>
+</blockquote>
+</aside>
+<p>For some reason, I’m almost sure that, once implemented, <code>image-resolution</code> will not work using your suggested hacky way, and, once bug-reported, there will be arguments that this is niche, so won’t fix. %)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-02</div>
+          <div class="post_content">
+<aside class="quote" data-post="19" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>So what makes native applications different from web applications in terms of access to device pixels?</p>
+</blockquote>
+</aside>
+<p>Nothing. As I said, <em>devs screw this up in native apps all the time</em>, leading to those native platforms to introduce device-independent lengths and recommend using them nearly-exclusively.</p>
+<p>The web has learned a lot about being careful about what level of power to expose, in what form, to developers, largely from the missteps of native platforms.</p>
+<aside class="quote" data-post="19" data-topic="1150">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>For some reason, I’m almost sure that, once implemented, image-resolution will not work using your suggested hacky way, and, once bug-reported, there will be arguments that this is niche, so won’t fix. %)</p>
+</blockquote>
+</aside>
+<p>lol ok</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Is there a standard way to check if a form submission is in progress?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Is there a standard way to check if a form submission is in progress?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-01-14</div>
+          <div class="post_content">
+<p>Google’s “<a href="https://web.dev/payment-and-address-form-best-practices/" rel="noopener nofollow ugc">Payment and address form best practices</a>” article suggests disabling submit buttons once they have been activated by the user. The idea is to prevent repeated form submissions if the user clicks/taps the submit button repeatedly in short succession.</p>
+<p>In order to do that, the web page needs to check if the form is currently being submitted:</p>
+<pre><code class="lang-auto">form.addEventListener('submit', (event) =&gt; {
+  if (/* form submission in progress */) {
+    event.preventDefault();
+  }
+}); 
+</code></pre>
+<p>Is there a standard way to do the <code>/* form submission in progress */</code> check? Is this check even needed, or can this pattern be implemented in a different, better way?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2692_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Sam_Dutton</div>
+          <div class="creation_date">2021-01-15</div>
+          <div class="post_content">
+<p>Hi Šime</p>
+<p>The sequence I was envisaging in that article is something like this:</p>
+<ol>
+<li>User taps/clicks submit button.</li>
+<li>Button is disabled (by setting the <code>disabled</code> attribute, say) and UI may be updated in other ways to confirm that action is in progress.</li>
+<li>Form submit handler does something (e.g. makes request to server).</li>
+<li>Depending on the response from the server (or a timeout or whatever) UI is updated, e.g. the user is taken to an order confirmation page, or shown how to change something problematic in the form (in which case the submit button would be enabled).</li>
+</ol>
+<p>In don’t think this approach needs <code>(/* form submission in progress */)</code>, but I may be missing something.</p>
+<p>Sam</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-01-16</div>
+          <div class="post_content">
+<p>Yup, that approach makes sense.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

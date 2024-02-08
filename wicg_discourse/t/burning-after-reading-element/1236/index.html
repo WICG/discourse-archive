@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Burning-After-Reading Element</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Burning-After-Reading Element</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/848_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wenyu_dong</div>
+          <div class="creation_date">2015-12-15</div>
+          <div class="post_content">
+<p>Burning-After-Reading Element <br/></p>
+<p>Author:
+DONG Wenyu, Chinamobile <br/></p>
+<p>1, Requirements <br/>
+In services like social web, e-commerce or web-based messaging, people need browsers to make sure that some specific sensitive data will be destroyed after being presented for a period of time and cannot be recovered by the recipient users. Such data are called to be Burning-After-Reading. Obviously Burning-After-Reading data shall not be downloaded, stored or forwarded. Exemplar cases can be sharing private photos between intimate friends, copyright protection, and sharing bank accounts or other certificates in e-commerce. <br/></p>
+<p>Burning-After-Reading requires native support of browsers, and shall not rely on JavaScript since JavaScript can be manually disabled. <br/></p>
+<p>2, Procedure <br/>
+It requires two phases to fetch a Burning-After-Reading element. <br/>
+(1)	Phase 1: Metadata Declaration <br/>
+To prevent feeding non-applicable browsers with Burning-After-Reading elements, web servers shall place metadata in the original HTML instead of Burning-After-Reading contents. <br/></p>
+<p>(2)	Phase 2: Fetching Burning-After-Reading elements <br/>
+Browser gets metadata of Burning-After-Reading elements. <br/>
+a)	If the browser supports Burning-After-Reading, by analyzing the metadata, it can derive the real URI of the Burning-After-Reading elements, issue a subsequent HTTP request which will succeed in the verification process by the web server, and fetch, present and then destroy the Burning-After-Reading elements. <br/>
+b)	Otherwise, the browser cannot derive the URI, or the URI is incorrect and will fail in the verification process by the web server. Thus the browser cannot get the desired Burning-After-Reading elements <br/></p>
+<p>3, Specification <br/>
+(1)	Metadata <br/>
+A new element is introduced as metadata of Burning-After-Reading. <br/>
+&lt; Burning-After-ReadingMeta  URIBase=”xxxx”  version= “yyy”  challenge=”zzz” /&gt; <br/>
+URIBase: URI base of the Burning-After-Reading element. <br/>
+Version: relating to policies to fetch Burning-After-Reading elements. For example
+<br/>
+Version…Policies <br/>
+1.0…Simplified Burning-After-Reading. Fully rely on the browser’s willingness and cooperation to achieve Burning-After-Reading, no challenge-response required.  <br/>
+2.0…Testified Burning-After-Reading (solution XXX). Ensure the browser’s capability to support Burning-After-Reading by employing challenge-response (solution XXX)   <br/>
+3.0…Testified Burning-After-Reading (solution YYY). Ensure the browser’s capability to support Burning-After-Reading by employing challenge-response (solution YYY)   <br/>
+Challenge: challenge parameters <br/></p>
+<p>&lt;  Burning-After-ReadingMeta&gt; shall support attributes like ‘hidden’ to make it invisible. <br/></p>
+<p>(2)	Subsequent HTTP request <br/>
+The browser derives the real URI with necessary results for challenging, from the version and challenging parameters. The browser issues a subsequent HTTP request like: <br/>
+http://…/derived-uri?BARResp=derivedresp <br/>
+BAFResp: the results as response to the challenging, which will be used by the web server to testify. <br/> <br/></p>
+<p>(3)	Burning-After-Reading elements <br/>
+A new element is introduced to represent Burning-After-Reading contents. For example, <br/>
+&lt; Burning-After-Reading disptime=”xxx”  &gt; <br/>
+&lt; DIV&gt;……&lt; /DIV&gt; <br/>
+&lt; / Burning-After-Reading &gt; <br/>
+disptime: the time period of displaying before the content is destroyed. <br/></p>
+<p>It is recommended that &lt; Burning-After-Reading&gt; shall be only accessible by the browser itself, and shall not be accessible by JavaScript exploring the DOM tree. <br/></p>
+<p>4, Use cases <br/>
+(1)	Simplified Burning-After-Reading <br/>
+The simplified Burning-After-Reading policy does not require challenging-response procedure. So relevant fields are optional. <br/>
+a)	Original HTML:  <br/>
+&lt; !—when version=1.0, challenge can be neglected. This element is invisible --&gt; <br/>
+&lt; Burning-After-ReadingMeta  URIBase=”xxxx”  version= “1.0”  hidden=”true”/&gt; <br/>
+b)	Subsequent HTTP request:  <br/>
+In this case, no response result is required. <br/>
+c)	http://…/derived-uri <br/>
+d)	Burning-After-Reading content: <br/>
+&lt; !--  destroy after 10 sec of displaying --&gt; <br/>
+&lt; Burning-After-Reading  disptime=”10” &gt; <br/>
+&lt; DIV&gt;……&lt; /DIV&gt; <br/>
+&lt; /Burning-After-Reading&gt; <br/>
+<br/>
+(2)	Testified Burning-After-Reading <br/>
+The testified Burning-After-Reading policy requires challenging-response procedure. <br/>
+a)	Original HTML:  <br/>
+&lt; !—when version=2.0, challenge can be neglected. This element is invisible --&gt; <br/>
+&lt; Burning-After-ReadingMeta URIBase=”xxxx” version= “2.0” challenge=”abcdefg1234567”    hidden=”true”/&gt; <br/>
+Note: “abcdefg1234567” is the mock example of challenge parameter. <br/> <br/></p>
+<p>b)	Subsequent HTTP request:  <br/>
+In this case, the response result is required. <br/>
+http://…/ derived-uri?BARResp=7654321gfedcba <br/>
+Note: “7654321gfedcba” is the mock example of response result. <br/> <br/></p>
+<p>c)	Burning-After-Reading content: <br/>
+&lt; !--  destroy after 10 sec of displaying --&gt; <br/>
+&lt; Burning-After-Reading  disptime=”10” &gt; <br/>
+&lt; DIV&gt;……&lt; /DIV&gt; <br/>
+&lt; /Burning-After-Reading&gt; <br/>
+<br/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-16</div>
+          <div class="post_content">
+<p>This is DRM, and effectively impossible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/848_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wenyu_dong</div>
+          <div class="creation_date">2015-12-17</div>
+          <div class="post_content">
+<p>hi, how is the WEB’s general philosophy about DRM ?  ignore DRM at all ?  or where can i find some clues? thank you</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-12-17</div>
+          <div class="post_content">
+<p>DRM is impossible (without removing the concept of computer ownership entirely).  The <em>attempts</em> at it that exist in the web platform are limited to decoding video, which customers demand on pain of switching browsers, and which there is no other alternative.  In other words, it’s <em>extremely</em> high-value for browsers to support, despite the high costs, plus browsers don’t actually care whether the DRM is broken or not - they just care that they’ve implemented it well enough that videos play.</p>
+<p>Implementing DRM for a low-value feature that doesn’t work even on native apps (see all the Snapchat-capturing tools), and for which there is the expectation that it’s actually secure and unbreakable, is exceedingly unlikely.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/690_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">npdoty</div>
+          <div class="creation_date">2015-12-19</div>
+          <div class="post_content">
+<p>I agree that a DRM solution here is both implausible and undesirable. But what about the simpler notion of indicating ephemerality in a way that isn’t guaranteed? I think there are privacy advantages to such a feature (like in Snapchat) even when everyone accepts that it’s possible to take screenshots.</p>
+<p>That said, I think site developers could build ephemeral messaging in specific applications/websites using JavaScript. Are there any use cases where it would make sense for it to be a specific element and have the browser do the ephemeral disposing?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2016-01-01</div>
+          <div class="post_content">
+<p>the timing for any such proposed disposing needs to be adjustable, as per <a href="http://www.w3.org/TR/2008/REC-WCAG20-20081211/#time-limits-required-behaviors">http://www.w3.org/TR/2008/REC-WCAG20-20081211/#time-limits-required-behaviors</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

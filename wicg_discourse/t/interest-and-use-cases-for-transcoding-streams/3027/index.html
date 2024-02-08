@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Interest and use cases for transcoding streams</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Interest and use cases for transcoding streams</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/611_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">inexorabletash</div>
+          <div class="creation_date">2018-09-10</div>
+          <div class="post_content">
+<p>The notion of exposing transcoders that are supported by browsers (as part of the network stack, etc) to script has come up frequently:</p>
+<ul>
+<li><a href="https://discourse.wicg.io/t/need-for-gzip-deflate-api/1237">gzip/deflate</a></li>
+<li><a href="https://discourse.wicg.io/t/a-zip-api-in-the-browser/14/27">zip</a></li>
+<li><a href="https://discourse.wicg.io/t/base64-with-textencoder-textdecoder/1307">base64</a></li>
+</ul>
+<p>… and gets discussion elsewhere too, such as <a href="https://twitter.com/hichaelmart/status/1038784946486341634" rel="nofollow noopener">this twitter thread</a> with some implementers/standards folks weighing in.</p>
+<p>Now that we have some precedent with <a href="https://encoding.spec.whatwg.org/#interface-textdecoderstream">TextDecoderStream</a>/<a href="https://encoding.spec.whatwg.org/#interface-textencoderstream">TextEncoderStream</a> it’s worth collecting the set of such additional transcoding streams for which there has been demand, and look at whether there’s a generic API that could provide these, or if some require separate APIs but we can at least identify commonalities.</p>
+<p>Share your use cases here!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2018-09-11</div>
+          <div class="post_content">
+<p>This one isn’t easy, but: Image decoding.</p>
+<p>A streaming decoder would yield:</p>
+<ul>
+<li>A portion of an image (eg, the first n rows).</li>
+<li>A scan of an image, for formats like JPEG that perform multiple scans.</li>
+<li>A frame of an image, for GIF &amp; APNG.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/705_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jake_Archibald</div>
+          <div class="creation_date">2018-09-11</div>
+          <div class="post_content">
+<p>There’s also <a href="https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest">https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest</a>. Maybe the method could just accept a stream? Although, I’m not sure if it’s better for a function to accept a readable stream, or provide a writable endpoint. In the latter case you’d have to figure out how to expose the result.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/583_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinthomson</div>
+          <div class="creation_date">2018-09-12</div>
+          <div class="post_content">
+<p>Encrypting/decrypting (AES-GCM for example) might be a better example of stream-in, stream-out.  Hashes just take a stream in.</p>
+<p>The image example makes me think that it’s a poor fit for this.  Maybe you could select from bytes-in-region-out, bytes-in-scan-out, or bytes-in-frame-out, but that is tricky.</p>
+<p>How much value is there in a unified API as oppose to having functions in the form <code>stream&lt;byte&gt; encrypt(stream&lt;byte&gt; in)</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2018-09-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="4" data-topic="3027">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/martinthomson/40/583_1.png" width="20"/> martinthomson:</div>
+<blockquote>
+<p>How much value is there in a unified API as oppose to having functions in the form <code>stream&lt;byte&gt; encrypt(stream&lt;byte&gt; in)</code> ?</p>
+</blockquote>
+</aside>
+<p>The transform stream API is better for web developers because it is an established pattern that is expected to work. It would be unfortunate if you used one pattern for text encoding and another for byte encrypting. It also makes it clear to web developers that such a transformation is stateful, whereas <code>encrypt()</code> would be holding the state implicitly through a closure.</p>
+<p>The transform stream API is better for spec authors and implementers, because it automatically takes care of backpressure for you. Having to implement the proper queue-size-tracking there yourself is somewhat nightmareish.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-09-24</div>
+          <div class="post_content">
+<p>A few use-cases I had in mind for gzip/brotli streaming compression:</p>
+<ul>
+<li>Compression of uploaded payload - today analytics providers <a href="https://nicj.net/compressing-resourcetiming/">ship</a> non-negligible code in order to compress the data they gather and upload to their servers. Native compression support in the browser would mean they can ship less code and (probably) compress their data faster.</li>
+<li>Custom delta compression schemes - Having support for SW based compression streams <em>with custom dictionaries</em> can enable developers to role their own delta compression schemes, using previously cached versions of the content as dictionaries.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

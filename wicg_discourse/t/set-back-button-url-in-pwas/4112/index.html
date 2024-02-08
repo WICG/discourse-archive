@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Set back button URL in PWAs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Set back button URL in PWAs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2019-11-23</div>
+          <div class="post_content">
+<p>PWAs have their own back button (in html) and navigation, It is often different from history, and represents a hierarchical structure of content.</p>
+<p>It would greatly improve the UX if we could set the OS back button on mobile (and maybe the browser back button on desktop) to the same value as the inner website navigation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-11-25</div>
+          <div class="post_content">
+<p>You can, using <code>history.pushState()</code> and handling the <code>popstate</code> event as a back button press.</p>
+<p>(IMO this API is messy and hard to get right though - what would be much easier for PWAs is just an <code>onback</code> callback that fires when back is pressed.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2019-11-25</div>
+          <div class="post_content">
+<p>I know about that, but it is really a mess, complex and with many caveats. Settings the back url in a hierarchical navigation would be extremely easy and error proof.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-11-25</div>
+          <div class="post_content">
+<p>Do you think a simple <code>onback</code> callback would help in your case as well?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2019-11-25</div>
+          <div class="post_content">
+<p>Yes, it would be perfect if it allows you to decide the destination URL. Basically I want to sync the behavior of my custom back button (in the PWA top nav) with the OS navigation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2019-11-26</div>
+          <div class="post_content">
+<p>Custom back buttons are an absolute anti-pattern. Their only tolerable function is <code>history.back()</code>.</p>
+<p>That being said, when you say “hierarchical structure of content”, it sounds as if you really mean an app-static <em>previous</em> item as in <code>rel=prev</code> or <em>parent</em> as in <code>rel=up</code> and not a use-dynamic <em>back</em> state.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-11-26</div>
+          <div class="post_content">
+<p>Users expect the ‘back’ button to be able to close <code>&lt;dialog&gt;</code> elements and other similar app-like functionality in web apps. To me that seems to be a reasonable way to meet user expectations, not an anti-pattern. However we have to put up with the messy history API to do that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2019-11-26</div>
+          <div class="post_content">
+<p>They’re not an anti-pattern, it’s what an average user expects. A user doesn’t expect that clicking the back arrow inside the HTML or the back arrow provided by the mobile OS gives him different results.</p>
+<p>Think to apps like Whatsapp or Gmail: you expect that back always beings you to the global listing of emails / conversations if you are on a specific one. And that is indeed what happens:</p>
+<ol>
+<li>Open Whatsapp</li>
+<li>Open a conversation in Whatsapp</li>
+<li>Click the top bar of the conversation to see Details about the group</li>
+<li>Click the back arrow inside the app</li>
+<li>You are now in the conversation: if you click “back” on the OS you don’t go to the Details!! You go to the Whatsapp home (point 1)</li>
+</ol>
+<p>So this is the proof that it is not an anti-pattern, and that it is widely used in native apps.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2019-11-27</div>
+          <div class="post_content">
+<p>Users do expect that any <em>back</em> button takes them “back”, indeed. What exactly they consider “back” may differ (usually their previous view, i. e. the appʼs previous state, which may involve “closing” active dialogs) and it may differ from the authorʼs idea of “back”. Users are always confused if there are two back buttons (or any other duplicate control) and they are even more confused if those work differently. So, Iʼm in total agreement with:</p>
+<blockquote>
+<p>A user doesn’t expect that clicking the back arrow inside the HTML or the back arrow provided by the mobile OS gives him different results.</p>
+</blockquote>
+<p>and the way to fix this is either not providing any “back arrow inside the HTML” or making its only ever action <a href="https://html.spec.whatwg.org/multipage/history.html#the-history-interface"><code>history.back()</code></a>. Thatʼs simply the other way around from:</p>
+<blockquote>
+<p>It would greatly improve the UX if we could set the OS back button (…) to the same value as the inner website navigation.</p>
+</blockquote>
+<p>As has been said, if you cannot be RESTful for some reason, there is already an API (<code>pushState()</code>, <code>replaceState()</code>) to add PWA views or states to the browser history – actually there are two, the other being <code>window.location</code>.</p>
+<p>If you are actually talking about previous / next relationships, like I mentioned, then you are really asking for new browser UI controls (which I would support). Opera and early Firefox used to support <code>rel</code> link relations that way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2019-11-27</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="4112">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/crissov/40/1990_2.png" width="20"/> Crissov:</div>
+<blockquote>
+<p>Users are always confused if there are two back buttons</p>
+</blockquote>
+</aside>
+<p>That is the correct way to build PWAs: they must always show a back button and it does not represent history… If you are still not sure please read this:</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="16" src="https://www.smashingmagazine.com/images/favicon/favicon.png" width="16"/>
+<a href="https://www.smashingmagazine.com/2017/11/designing-for-a-browserless-web/" rel="nofollow noopener" target="_blank" title="03:23PM - 27 November 2017">Smashing Magazine – 27 Nov 17</a>
+</header>
+<article class="onebox-body">
+<div class="aspect-image" style="--aspect-ratio:114/79;"><img class="thumbnail" src="https://cloud.netlifyusercontent.com/assets/344dbf88-fdf9-42bb-adb4-46f01eedd629/01df0ce9-10e1-45b9-8502-d39d5740a63c/5-designing-for-a-browserless-web-800w-opt.png"/></div>
+<h3><a href="https://www.smashingmagazine.com/2017/11/designing-for-a-browserless-web/" rel="nofollow noopener" target="_blank">Designing For A Browserless Web — Smashing Magazine</a></h3>
+<p>Users couldn’t care less about whether a technology is native, an installed web app or a website. What makes users engage and makes shoppers convert is really the experience itself. In this article, Mitch takes a closer look at PWAs on Android...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>So, saying that the back button in a PWA should always trigger back is wrong.</p>
+<p>Example:</p>
+<ol>
+<li>User visits category A</li>
+<li>User visits item I</li>
+<li>User visits a view to edit item I</li>
+<li>User is now redirected to item I</li>
+<li>The back button in the PWA points to category A, not to edit, as it would happen in any native app</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2019-12-02</div>
+          <div class="post_content">
+<p>We may actually have a whole bunch of “back” actions, which must be coordinated and should not mismatch:</p>
+<ul>
+<li>system button (hardware or software)</li>
+<li>browser button</li>
+<li>in-app button</li>
+<li>swipe gesture (or keyboard shortcut, like Alt+Left-Arrow, Backspace or Ctrl/Cmd+B)</li>
+</ul>
+<p>From the article, emphasis added:</p>
+<blockquote>
+<p>Some might argue that because Android provides a back button through the device itself, then there is no need to replace the browser’s back functionality. In fact, <strong>the two interactions do different things</strong>. Most apps continue to offer a back button in the header as an <strong>“up” action</strong>, to <a href="https://developer.android.com/design/patterns/navigation.html" rel="nofollow noopener">navigate within the hierarchical relationship between pages</a>. The system’s back functionality might close a modal window or navigate to a different app entirely.</p>
+</blockquote>
+<p>You are indeed talking about <a href="http://microformats.org/wiki/existing-rel-values#dropped" rel="nofollow noopener"><code>rel</code> hierarchies</a>, which are still underdeveloped in <a href="https://html.spec.whatwg.org/multipage/links.html#linkTypes">HTML</a> (whereof <code>prev</code> does not really apply here), despite <a href="https://www.w3.org/TR/relations.html">early attempts for standardization</a>, which explicitly reserved <code>back</code> for browser history. So please use a different, unambiguous term, e. g. <code>return</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2020-05-31</div>
+          <div class="post_content">
+<p>After some months of observation of real people using <a href="https://buonmenu.com" rel="nofollow noopener">our PWA</a> I can say with confidence that, for non-tech users, having an in-app navigation (with hierarchy) different from the native back button is really confusing.</p>
+<p>It would be extremely useful and simple for an app to <strong>manage the back event directly</strong>, for example, in order to build a hierarchical navigation.</p>
+<p>The browser history API is difficult to use for hierarchical navigation, it’s not meant for that.</p>
+<p>If we want to use the same patterns of native apps inside PWAs browsers should add support for this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-05-21</div>
+          <div class="post_content">
+<p>It’s really frustrating that we cannot match the back button in the app with the browser back button.</p>
+<p>This is especially useful when you have a hierarchical / folder navigation.</p>
+<p>You don’t want the back button of the browser to go back in history to an edit screen for example… You just want to go back / up in the hierarchy. <strong>That is what a user expects</strong> and this is not currently possible on the web.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3315_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">easrng</div>
+          <div class="creation_date">2021-06-02</div>
+          <div class="post_content">
+<p>What about when a user is linked into your app from somewhere else? The back button should go back there, not to another page in your app.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-06-03</div>
+          <div class="post_content">
+<p>It’s not a big deal… <strong>It’s already the same for native apps</strong> and if we want to move the web forward we need the same capabilities (otherwise the user experience for native apps will be always superior for the average user).</p>
+<p>For example:</p>
+<ol>
+<li>Open a link to a Whatsapp number</li>
+<li>The chat is displayed</li>
+<li>If you click Back, you go to the Whatsapp home, not to the page containing the link</li>
+</ol>
+<p>However <strong>this is not a problem for the average user</strong> because if you click again Back then you go back to the original page containing the link.</p>
+<p><strong>If you really want more control you can, for example, allow the web app to set the back URL only to a URL that has already been visited</strong>, otherwise you simply ignore the back URL suggestion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-06-03</div>
+          <div class="post_content">
+<p>This is a possible implementation:</p>
+<pre><code class="lang-auto">window.ongoback = function() {
+  // find the previous URL based on app logic, navigation or hierarchy
+  // and return the hint to the browser
+  var back = "/back/to/this/page"
+  return back;
+};
+</code></pre>
+<p>Then the browser goes back in the history up to that page (if it’s not found then the browser can ignore the hint).This would be extremely simple, powerful and secure (even more than the current history api).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3315_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">easrng</div>
+          <div class="creation_date">2021-06-04</div>
+          <div class="post_content">
+<p>Why not just use <code>history.replaceState</code> to overwrite history items you don’t want rather than adding a way to skip over them?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-06-04</div>
+          <div class="post_content">
+<p>That is made to solve different use cases.</p>
+<p>If you are curious about what I mean when I say “hierarchical navigation” based on app logic, you can try to create a (free) menu with our app: <a href="https://buonmenu.com" rel="noopener nofollow ugc">https://buonmenu.com</a> When you are inside the admin area you will see that the  “hierarchical navigation” (menus → categories → items → edit) is a concept not easily manageable using the history api.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-06-06</div>
+          <div class="post_content">
+<p>You can also browse native apps like Instagram and you will notice that the OS back button always match the in-app back button!</p>
+<p>In these native apps the back button does not match the navigation history! Instead, it matches the navigation hierarchy (e.g. think to that as a back in a breadcrumb navigation).</p>
+<p>As I explained above we could achieve the same for the web and greatly improve the UX for web apps, without any security concern. So why not give this option to developers and UX designers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-06-09</div>
+          <div class="post_content">
+<p>Reading posts like the following (with 500k+ views) make me think that the browser back button, in the current state, is something legacy that causes several issues to modern apps:</p>
+<aside class="onebox stackexchange">
+<header class="source">
+<a href="https://stackoverflow.com/questions/12381563/how-can-i-stop-the-browser-back-button-using-javascript" rel="noopener nofollow ugc" target="_blank">stackoverflow.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://stackoverflow.com/users/1656134/sawant-akshay" rel="noopener nofollow ugc" target="_blank">
+<img alt="Sawant Akshay" class="thumbnail onebox-avatar" height="60" src="https://www.gravatar.com/avatar/92be5296715c294c69b2c0d81f9dc672?s=128&amp;d=identicon&amp;r=PG" width="60"/>
+</a>
+<h4>
+<a href="https://stackoverflow.com/questions/12381563/how-can-i-stop-the-browser-back-button-using-javascript" rel="noopener nofollow ugc" target="_blank">How can I stop the browser back button using JavaScript?</a>
+</h4>
+<div class="tags">
+<strong>javascript, browser</strong>
+</div>
+<div class="date">
+  asked by
+  
+  <a href="https://stackoverflow.com/users/1656134/sawant-akshay" rel="noopener nofollow ugc" target="_blank">
+    Sawant Akshay
+  </a>
+  on <a href="https://stackoverflow.com/questions/12381563/how-can-i-stop-the-browser-back-button-using-javascript" rel="noopener nofollow ugc" target="_blank">05:09AM - 12 Sep 12 UTC</a>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox stackexchange">
+<header class="source">
+<a href="https://stackoverflow.com/questions/43043113/how-to-force-reloading-a-page-when-using-browser-back-button" rel="noopener nofollow ugc" target="_blank">stackoverflow.com</a>
+</header>
+<article class="onebox-body">
+<a href="https://stackoverflow.com/users/6314749/john-doeherskij" rel="noopener nofollow ugc" target="_blank">
+<img alt="John Doeherskij" class="thumbnail onebox-avatar" height="60" src="https://www.gravatar.com/avatar/53bc1c43c09a5170ce76be219f21f383?s=128&amp;d=identicon&amp;r=PG&amp;f=1" width="60"/>
+</a>
+<h4>
+<a href="https://stackoverflow.com/questions/43043113/how-to-force-reloading-a-page-when-using-browser-back-button" rel="noopener nofollow ugc" target="_blank">How to force reloading a page when using browser back button?</a>
+</h4>
+<div class="tags">
+<strong>javascript, jquery, browser, browser-cache</strong>
+</div>
+<div class="date">
+  asked by
+  
+  <a href="https://stackoverflow.com/users/6314749/john-doeherskij" rel="noopener nofollow ugc" target="_blank">
+    John Doeherskij
+  </a>
+  on <a href="https://stackoverflow.com/questions/43043113/how-to-force-reloading-a-page-when-using-browser-back-button" rel="noopener nofollow ugc" target="_blank">09:48AM - 27 Mar 17 UTC</a>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p><a href="https://discourse.wicg.io/t/set-back-button-url-in-pwas/4112/16">My proposal</a> would solve all these use cases with simplicity, interoperability and security.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

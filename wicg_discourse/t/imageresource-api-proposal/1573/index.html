@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>ImageResource API proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">ImageResource API proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">acterhd</div>
+          <div class="creation_date">2016-06-30</div>
+          <div class="post_content">
+<p>Hello. I thinking about browser API for custom images.</p>
+<ul>
+<li>
+<p>Creating image without delay and latency</p>
+</li>
+<li>
+<p>Creating custom frame-by-frame animation</p>
+</li>
+<li>
+<p>Usage of ImageData objects, from canvas</p>
+</li>
+<li>
+<p>Using as image resources, for example <code>&lt;img&gt;</code> tag, or CSS content</p>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code class="lang-auto">//Main class
+class ImageResource {
+  constructor(){
+    this.isAnimation = false;
+  }
+  setImageData(data&lt;ImageData&gt;){}
+  getImageData(){}
+  getAnimationFrame(index){}
+  setAnimationFrame(index, frame&lt;ImageResourceFrame&gt;){}
+  toImageURL(){}
+  get width(){}
+  get height(){}
+}
+
+//For animation
+class ImageResourceFrame(){
+  constructor(){
+     this.offsetX = 0;
+     this.offsetY = 0;
+  }
+  getImageData(){}
+  setImageData(data&lt;ImageData&gt;){}
+  get width(){}
+  get height(){}
+}
+
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-06-30</div>
+          <div class="post_content">
+<p>How is this different from just using an array of ImageData? You can also display an ImageData in an image element if you convert it to a blob first.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">acterhd</div>
+          <div class="creation_date">2016-06-30</div>
+          <div class="post_content">
+<p>Directly won’t work
+<iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_qNmaEN" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/acterhd/embed/preview/qNmaEN?height=300&amp;slug-hash=qNmaEN&amp;default-tabs=js,result&amp;host=https://codepen.io&amp;embed-version=2" title="" width="695"></iframe></p>
+<p>Should be visible second rectangle</p>
+<p>I tried all: ImageBitmap, ImageData, Blob, etc. raw image data can’t be shown.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-06-30</div>
+          <div class="post_content">
+<p>Try putting the ImageData in a canvas and calling canvas.toBlob(). Then you can create a URL to that blob and display it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">acterhd</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>I think better low level API…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Why? You need to provide a set of compelling use cases as to why this is better than the existing solutions for anyone to consider it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">acterhd</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>I have few examples:</p>
+<ul>
+<li>
+<p>Custom CSS background image animation. With ImageResource possible stream animation from canvas to CSS.</p>
+</li>
+<li>
+<p>Custom animated images, that decompiled from APNG/WebP or any other by JavaScript.</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-07-02</div>
+          <div class="post_content">
+<p>Using canvas in CSS is supported by CSS4 element(), but AFAIK no browsers support it yet. For custom animated images TBH I think there’s too much overlap with ImageData or ImageBitmap for this to be worthwhile, especially since if you can use a canvas in CSS, you could just animate with that.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

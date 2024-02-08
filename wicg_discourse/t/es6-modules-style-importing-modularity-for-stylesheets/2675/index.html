@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>ES6 Modules-style importing modularity for stylesheets</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">ES6 Modules-style importing modularity for stylesheets</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brettz9</div>
+          <div class="creation_date">2018-03-27</div>
+          <div class="post_content">
+<p>The following proposal is meant to address limitations with JavaScript modules that depend on CSS stylesheets such that they are prevented from acting in a fully modular yet performant manner. The web needs modular widgets. With more widgets becoming JavaScript based, in my view, there is not so much of a need for HTML imports (especially if one expresses one’s HTML within JavaScript) as there is for stylesheet imports within the language that can rule them all: JavaScript.</p>
+<p>I’d like to see a standard means to indicate stylesheet dependencies within individual JavaScript widget-building files such that these imports are statically analyzable for immediate asynchronous downloading of stylesheets but which blocks HTML rendering (and JavaScript execution) until all such imports occur.</p>
+<p>Ideally, these could be interspersed with ES6 Module imports such that:</p>
+<pre><code>// module-1.js
+importStylesheet 'stylesheet1.css';
+import m2 from 'module-2.js';
+importStylesheet 'stylesheet3.css';
+
+// module-2.js
+importStylesheet 'stylesheet2.css';
+</code></pre>
+<p>…would load the stylesheets in any order but apply them in the cascading order:</p>
+<ul>
+<li>stylesheet1.css</li>
+<li>stylesheet2.css</li>
+<li>stylesheet3.css</li>
+</ul>
+<p>Tools like Rollup could strip out these stylesheet importing references to either build a single external CSS file or possibly insert a style tag dynamically with the contents at the beginning of the module, but even without bundling, performance benefits would be there, and web widgets (at least JavaScript-based ones) could finally become fully modular as with ES6 Modules. There’d also be no need for a proliferation of non-standard import directives meant to fill this gap.</p>
+<p>(An optional standard for dynamic, parallel (or at least parallelizable-through-promises) run-time stylesheet importing (analogous to the <code>import()</code> proposal) would be nice too, without the extra hassle of a <code>fetch</code>-based solution, and while not having all of the benefits of static loading, it would allow for more choice among widget users about whether to apply stylesheets or not.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-03-27</div>
+          <div class="post_content">
+<p>My proposal for <a href="https://github.com/AshleyScirra/import-as-and-html-modules" rel="nofollow noopener">“import as”</a> covers programmable import statements, which includes the ability to import and apply stylesheets.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1765_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">isiahmeadows</div>
+          <div class="creation_date">2018-04-03</div>
+          <div class="post_content">
+<p>There’s also <a href="https://github.com/css-modules/css-modules" rel="nofollow noopener">CSS modules</a>, which accomplish much the same that’s being proposed here, just a little more extension-aware. (It requires a <code>.css</code> extension, although that’s extensible via tooling.)</p>
+<p>I don’t think that aims to become a web spec, though.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2019-12-05</div>
+          <div class="post_content">
+<p>Me too.</p>
+<p>I was porting my custom elements from Polymer 1 to Custom Elements 1, and I found that have to create a <code>&lt;style&gt;my css rules here&lt;/style&gt;</code> element in the shadow root, instead of being able to create a<code> &lt;link rel="stylesheet" href="my.css"&gt;</code> , because the href resolves against the HTML page that is using the custom element, not against the module that creates the shadow root.  The modules themselves resolve against the path of the main module.  There should be some way to ship CSS files with a component and load them by reference instead of having to copy the CSS into the JS.  I don’t even own the CSS, it comes from a dependency, so it becomes a build time issue I’m sure I will regret.</p>
+<p>I believe this issue is also covered by this <a href="https://css-tricks.com/encapsulating-style-and-structure-with-shadow-dom/#article-header-id-4" rel="nofollow noopener">article</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

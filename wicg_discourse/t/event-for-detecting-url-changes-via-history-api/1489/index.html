@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Event for detecting URL changes via History API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Event for detecting URL changes via History API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/980_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robertknight</div>
+          <div class="creation_date">2016-05-10</div>
+          <div class="post_content">
+<p>The History API currently provides a popstate event for detecting navigations via browser controls in a single-page application but I’m not aware of a clean way to listen for changes to the URL as a result of uses of <code>history.{pushState|replaceState}</code>.</p>
+<p>My use case is for reacting to URL changes in a 3rd-party widget embedded in a page which displays content related to the current URL, specifically the <a href="https://github.com/hypothesis/h" rel="nofollow noopener">Hypothesis</a> tool for annotating web pages. Some additional use cases described at <a href="http://stackoverflow.com/q/4570093/434243" rel="nofollow noopener">http://stackoverflow.com/q/4570093/434243</a> include browser extensions. In both cases the top-level document may not be aware of the 3rd-pary widget so it has not been architected to push changes to it (eg. via an attribute on the widget or calling some function on a controller provided by the widget).</p>
+<p>Perhaps this could take the form of a <code>locationchange</code> event which is fired whenever the URL changes for any reason or a <code>pushstate</code> event which is triggered only when <code>history.replaceState</code> or <code>history.pushState</code> are used. Thoughts?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1035_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">majidvp</div>
+          <div class="creation_date">2016-05-30</div>
+          <div class="post_content">
+<blockquote>
+<p>Perhaps this could take the form of a locationchange event which is fired whenever the URL changes for any reason or a pushstate event which is triggered only when history.replaceState or history.pushState are used. Thoughts?</p>
+</blockquote>
+<p>I think what you want is a <code>StateChanged</code> event which behaves similar to <code>PopState</code> event but for all backward, forward, an in-place modifications of the history state stack. This can be useful when you want to observer URL changes but also in a more general case of observing any page state modifications. It may even be better to have a state mutation observer instead of an event.</p>
+<p>As pointed out in the <a href="http://stackoverflow.com/a/25673946" rel="nofollow noopener">linked stack overflow discussion</a>, this may be achieved by monkey-patching the history object. I am not sure if this is possible on all browsers and for it to work the monkey patching should occur before the page has a chance to hold a private reference to the history object.</p>
+<blockquote>
+<p>My use case is for reacting to URL changes in a 3rd-party widget embedded in a page which displays content related to the current URL, specifically the Hypothesis tool for annotating web pages. Some additional use cases described at <a href="http://stackoverflow.com/q/4570093/4342431" rel="nofollow noopener">http://stackoverflow.com/q/4570093/4342431</a> include browser extensions.</p>
+</blockquote>
+<p>FWIW, this is anecdotal but some popular routing libraries provide a similar hook (e.g., ReactRouter has <a href="https://github.com/reactjs/react-router/blob/master/docs/API.md#onupdate" rel="nofollow noopener"><code>onUpdate</code></a>)  which also indicate that there is some need for it.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

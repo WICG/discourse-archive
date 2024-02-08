@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Viewport Height Client Hint Proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Viewport Height Client Hint Proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tbansal</div>
+          <div class="creation_date">2020-11-02</div>
+          <div class="post_content">
+<p>Currently, <a href="https://wicg.github.io/responsive-image-client-hints/" rel="noopener nofollow ugc">Responsive Image Client Hints</a> provide a way for origins to obtain the viewport’s width. However, no such attribute exists for viewport height. We’ve observed that to optimize the loading of content that appears in viewport, it is essential for the origins to adapt HTML response based on viewport height. Current methods of doing that include content-negotiation through the User-Agent string, but that is sub-optimal as it’s indirect, and doesn’t cover all platforms.</p>
+<p>We’d like to propose adding a new attribute “viewport-height” (similar to existing <em>viewport-width</em>). Similar to other client hints, origins would be able to register the opt-in for viewport-height client-hint via <em>Accept-CH</em> header, and receive the attribute value as part of HTTP request headers. This would enable origins to e.g., inline all the content that’s expected to appear in the viewport, or avoid lazy-loading it.</p>
+<p>Even if the above mechanism is an optimization, using Client Hints would enable to benefit from Client Hints Reliability and have that information available on the very-first load.</p>
+<p>Thoughts on the above? Would the hint be useful for other forms of content-negotiation? (e.g. for height-bound images)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-11-02</div>
+          <div class="post_content">
+<p>/cc <span class="mention">@eeeps</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2020-11-25</div>
+          <div class="post_content">
+<p>I think that this would be a good addition to the Responsive Images Client Hints spec.</p>
+<p>For height-bound image optimization, I guess you’d really want a <code>CH-Height</code> hint + something like <a href="https://github.com/ResponsiveImagesCG/picture-element/issues/86#issuecomment-31541690" rel="noopener nofollow ugc">the two-dimensional <code>sizes</code> syntax</a> outlined by <span class="mention">@tabatkins</span> back in 2014.</p>
+<p>But the same use cases that motivate <code>CH-Viewport-Width</code> for images carry over to <code>CH-Viewport-Height</code>:</p>
+<ul>
+<li>a backup in cases where there is no <code>CH-Height</code> (allowing servers to do what browsers do when doing <code>srcset</code>+<code>w</code> selection when no <code>sizes</code> is present: default to <code>100vw</code> as a backup).</li>
+<li>server-side automated <a href="http://usecases.responsiveimages.org/#art-direction" rel="noopener nofollow ugc">art direction</a> (ensuring that, e.g., the whole product is always visible above the fold by serving a visibly-different image on wide+short viewports).</li>
+</ul>
+<p>Looking beyond images, on navigation requests – dynamically inlining “above-the-fold” styles, or figuring out which images need a <code>lazyload</code> attribute or not, seem like exciting possibilities. I’m also imagining dynamically subsetting fonts for <a href="https://rwt.io/typography-tips/progressive-font-enrichment-reinventing-web-font-performance" rel="noopener nofollow ugc">later patching</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

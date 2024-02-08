@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>More-specfic MIME types for images</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">More-specfic MIME types for images</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2018-06-20</div>
+          <div class="post_content">
+<p>Since 2011, Chromium has advertised <code>Accept: image/webp</code>. And while that <code>Accept</code> header has stayed constant, the WebP bitstream has <a href="https://chromium.googlesource.com/webm/libwebp/+/master/NEWS" rel="nofollow noopener">evolved considerably</a>; not all Chromiums support all WebPs.</p>
+<p>This has caused <a href="https://cloudinary.com" rel="nofollow noopener">Cloudinary</a> a few problems. Currently, we must UA-sniff for Chromium 32+ in order to determine whether or not to send clients animated WebPs, instead of animated GIFs. And, frankly, we’re not doing enough to ensure that we’re only sending other sorts of WebPs to end users who can actually decode them – instead, we end up advising customers who experience compatibility problems with, for example, lossless WebPs, not to use the Cloudinary features which generate them.</p>
+<p>The problem, here – varied bitstreams that all fall under the same nominal MIME type/subtype – has been addressed in the world of video with the <a href="https://tools.ietf.org/html/rfc6381" rel="nofollow noopener"><code>codecs</code> and <code>profiles</code>  parameters</a>. Recently, Mozilla even started <a href="https://hacks.mozilla.org/2017/11/dash-playback-of-av1-video/" rel="nofollow noopener">adding specific AV1 encoder commit hashes to the codecs parameter</a>, nailing down advertised support very specifically in order to keep up with the quickly-evolving format.</p>
+<p>Could browsers start doing something similar for images?</p>
+<p>WebP’s bitstream is not formally spec’d, and though the format is <a href="https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/dBQxRrKYlIM" rel="nofollow noopener">far more stable than it used to be</a>, it’s changed quite a bit over the years – and there are no guarantees that it won’t change again. Servers and clients could start tacking codec versions onto WebP MIME types to advertise what they’ve encoded or what they’re decoding with, e.g., <code>image/webp;codecs=libwebp.0.4.4</code>.</p>
+<p>Pros of this approach:</p>
+<ul>
+<li>in theory, it wouldn’t break anything, as non-<code>codecs</code>-aware sofware should ignore the parameter and treat <code>image/webp;codecs=libwebp.0.4.4</code> the same as plain old <code>image/webp</code>.</li>
+<li>It would allow clients and servers to precicely advertise and understand each others’ level of WebP support.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>It’s possible that in practice, this change could break some software which relies on exactly-matching MIME type strings?</li>
+<li>Could get complicated if there are ever alternative WebP libraries (like, e.g., libjpeg, mozjpeg, and jpeg-turbo).</li>
+<li>More fingerprinting data for evil trackers?</li>
+</ul>
+<p>Harder/worse-seeming alternatives:</p>
+<ul>
+<li>something with the <code>profiles</code> parameter, focused around (finalized!) features, rather than codec versions? <code>image/webp;profiles=lossless,animated</code>?</li>
+<li>A versioned WebP bitstream (!) and some new parameter for bitstream versions, e.g. <code>image/webp;version=1.0</code>
+</li>
+</ul>
+<p>I’ll note finally that while the lack of a way to differentiate between different flavors of a given MIME type is a particular problem for WebP right now, it’s not <em>just</em> a WebP problem; maybe a general mechanism could enable, say, <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=669501#c8" rel="nofollow noopener">smooth airthmatically-coded JPEG rollouts</a>.</p>
+<p>—<br/>
+Eric Portis<br/>
+Cloudinary</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2018-06-20</div>
+          <div class="post_content">
+<p>I’ve filed a Chromium bug about this issue here: <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=854824" rel="nofollow noopener">https://bugs.chromium.org/p/chromium/issues/detail?id=854824</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-06-23</div>
+          <div class="post_content">
+<p>I think the standard procedure is that the IANA proposal for the MIME subtype is that the format should specify its own parameters. Unfortunately, it looks like <a href="https://groups.google.com/a/webmproject.org/d/msg/webp-discuss/FAaCCW5E__w/LPMeI-fy4MEJ" rel="nofollow noopener"><code>.webp</code> was never registered</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/494_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mnot</div>
+          <div class="creation_date">2018-06-25</div>
+          <div class="post_content">
+<p>Tying a format to a specific implementation doesn’t seem great either; it smells like UA sniffing.</p>
+<p>The cleanest way to do this is using a new media type; e.g., <code>image/webp2' or</code>image/webp-animated` – especially if these formats aren’t compatible with some existing implementations, it needs to be easy to distinguish them and express preferences about each.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2018-06-26</div>
+          <div class="post_content">
+<p>To address the current situation with WebP – this would be great. New UAs could then <code>Accept: image/webp2,image/webp</code> (or whatever) and only add differentiation for smart new UAs and servers, without breaking any existing things.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

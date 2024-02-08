@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Exposing and preserving unrecognized properties on element inline-styles</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Exposing and preserving unrecognized properties on element inline-styles</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-31</div>
+          <div class="post_content">
+<p>Right now, when a user sets the style on an element via <code>element.style.someProperty = 'some-value'</code>, the browser rewrites that element’s <code>style</code> attribute by a method that only serializes out the properties that the browser recognizes. (I think I might have discovered this in another thread on here, but I can’t remember where.)</p>
+<p>In the absence of a more robust CSS access model in the DOM (which still looks to be a far ways off, even with the Houdini WG working on it), having a place to store experimental CSS properties to be used by an element is very useful, eg. <a href="https://github.com/jquery/PEP/issues/151" rel="nofollow noopener">the way the Pointer Events Polyfill is currently considering polyfilling the behavior of the <code>touch-action</code> property</a>.</p>
+<p>I propose specifying a new model of the <code>style</code> attribute (or its prototype / interface, especially if it would raise the bar for the return value of <code>getComputedStyle</code>), making it effectively work like the <code>dataset</code> property when it comes to portions that are syntactically valid but specify unrecognized property names or values (accepting any string and returning any unrecognized values as the unrecognized string, making them available as camel-cased properties on <code>style</code>, then re-serializing them out when setting the string value of the attribute).</p>
+<p>I’m aware there might be some limitations to how extensible this property may be (ie. it’s not possible to let <code>element.style.border = 'wing-a-ding cheese whiz'</code> change the type of <code>element.style.border</code> from <code>'object'</code> to <code>'string'</code>), but I think, for the sake of polyfillability, it’s worth specifying <em>around</em> those limitations, rather than just throwing up our hands and keeping it un-extensible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-07-31</div>
+          <div class="post_content">
+<p>That thread I posted had <a href="https://github.com/jquery/PEP/issues/151#issuecomment-125274822" rel="nofollow noopener">a comment</a> that notes it’s possible to work around the disappearance of properties by attaching a mutation listener, so that may be useful to create a polyfill for this kind of inline-style preservation (having it as a standard / globally-polyfilled behavior would make it so every <em>other</em> polyfill wouldn’t need to attach its <em>own</em> mutation observer).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

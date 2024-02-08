@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Native CBOR or MessagePack support</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Native CBOR or MessagePack support</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adamzr</div>
+          <div class="creation_date">2017-02-14</div>
+          <div class="post_content">
+<p><a href="http://cbor.io/" rel="nofollow noopener">CBOR</a> and <a href="http://msgpack.org/" rel="nofollow noopener">MessagePack</a> are both binary equivalents to JSON. They use the same data structure as JSON, so they are fully compatible with JSON, but because they are binary the formats are smaller and faster to compress and decompress. The main reason not to use them is because browsers have native support for deserializing JSON (i.e. <code>JSON.parse</code>). This code is native to the browser and highly optimized. To deserialize CBOR or MessagePack you have to use JavaScript libraries which are not as efficient as native code.</p>
+<p>So, my proposal is to add full support for CBOR and/or MessagePack at the native browser level. You would have <code>CBOR.encode</code> and <code>CBOR.decode</code> methods (or <code>msgpack.decode</code> and <code>msgpack.encode</code>) just as we have <code>JSON.stringify</code> and <code>JSON.parse</code>.</p>
+<p>I think that this would provide a significant improvement in transmission and encoding/decoding speed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1817_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">root</div>
+          <div class="creation_date">2017-02-15</div>
+          <div class="post_content">
+<p>I’m not entirely sure about MessagePack (I haven’t read up on it and haven’t used it personally), but CBOR can have some interesting interoperability issues.</p>
+<p>One of the problems I’ve noticed while working with CBOR is that it allows integer keys (which can be more efficient) in objects, but it’s unclear how this should be treated in JavaScript. For usecase, we needed support for integer keys due to interoperability with the backend code (and to save space), but that doesn’t work for everyone. (If MessagePack is anything like CBOR, it will have similar issues)</p>
+<p>CBOR also allows explicit precision for float types, which has a risk of lossy conversion.</p>
+<p>This could mean subsetting features to find the most interoperable common denominator, which could be problematic as CBOR at least has already been published as a RFC.</p>
+<p>Related discussion:
+<aside class="onebox githubcommit">
+<header class="source">
+<a href="https://github.com/oddconcepts/cbor-js/commit/57b53ab2f99235b1bf7e5785cdf19850671474d1" rel="nofollow noopener" target="_blank">github.com/oddconcepts/cbor-js</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Commit">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M10.86 7c-.45-1.72-2-3-3.86-3-1.86 0-3.41 1.28-3.86 3H0v2h3.14c.45 1.72 2 3 3.86 3 1.86 0 3.41-1.28 3.86-3H14V7h-3.14zM7 10.2c-1.22 0-2.2-.98-2.2-2.2 0-1.22.98-2.2 2.2-2.2 1.22 0 2.2.98 2.2 2.2 0 1.22-.98 2.2-2.2 2.2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/oddconcepts/cbor-js/commit/57b53ab2f99235b1bf7e5785cdf19850671474d1" rel="nofollow noopener" target="_blank">Make integer keys actually serialize as integer keys.</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        committed <span class="discourse-local-date" data-date="2016-01-02" data-format="ll" data-time="07:36:40" data-timezone="UTC">07:36AM - 02 Jan 16 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/cynthia" rel="nofollow noopener" target="_blank">
+<img alt="cynthia" class="onebox-avatar-inline" height="20" src="https://avatars1.githubusercontent.com/u/43924?v=4" width="20"/>
+          cynthia
+        </a>
+</div>
+<div class="lines" title="changed 1 files with 3 additions and 0 deletions">
+<a href="https://github.com/oddconcepts/cbor-js/commit/57b53ab2f99235b1bf7e5785cdf19850671474d1" rel="nofollow noopener" target="_blank">
+<span class="added">+3</span>
+<span class="removed">-0</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<pre class="github-content" style="white-space: normal;">Object.keys() always returns a array of USVStrings which makes
+the serialization serialize integer keys as string keys. This has
+interoperability problems with other...</pre>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<aside class="onebox githubpullrequest">
+<header class="source">
+<a href="https://github.com/paroga/cbor-js/pull/8" rel="nofollow noopener" target="_blank">github.com/paroga/cbor-js</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Pull Request">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 12 16" width="60"><path d="M11 11.28V5c-.03-.78-.34-1.47-.94-2.06C9.46 2.35 8.78 2.03 8 2H7V0L4 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 10 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zM4 3c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v6.56A1.993 1.993 0 0 0 2 15a1.993 1.993 0 0 0 1-3.72V4.72c.59-.34 1-.98 1-1.72zm-.8 10c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/paroga/cbor-js/pull/8" rel="nofollow noopener" target="_blank">Performance improvements, integer key bug fix, and "functional" keyless serialization support</a>
+</h4>
+<div class="branches">
+<code>paroga:master</code> ← <code>oddconcepts:master</code>
+</div>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2016-01-03" data-format="ll" data-time="06:46:11" data-timezone="UTC">06:46AM - 03 Jan 16 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/cynthia" rel="nofollow noopener" target="_blank">
+<img alt="cynthia" class="onebox-avatar-inline" height="20" src="https://avatars1.githubusercontent.com/u/43924?v=4" width="20"/>
+          cynthia
+        </a>
+</div>
+<div class="lines" title="15 commits changed 6 files with 74 additions and 44 deletions">
+<a href="https://github.com/paroga/cbor-js/pull/8/files" rel="nofollow noopener" target="_blank">
+<span class="added">+74</span>
+<span class="removed">-44</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1222_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adamzr</div>
+          <div class="creation_date">2017-02-17</div>
+          <div class="post_content">
+<p>The <a href="https://tools.ietf.org/html/rfc7049#section-3.7" rel="nofollow noopener">CBOR RFC spec</a> says:</p>
+<blockquote>
+<p>In applications that need to interwork with JSON-based applications, keys probably should be limited to UTF-8 strings only; otherwise, there has to be a specified mapping from the other CBOR types to Unicode characters, and this often leads to implementation errors.</p>
+</blockquote>
+<p>I think that choosing the interoperable common denominator is already explicitly allowed by the CBOR spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2986_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">FGasper</div>
+          <div class="creation_date">2022-03-23</div>
+          <div class="post_content">
+<p>(I’m reviving this topic since it’s all I can find on this idea. Since CBOR is now <a href="https://www.rfc-editor.org/info/std94" rel="noopener nofollow ugc">an official Internet Standard</a> it would, IMO, be sensible for browsers to expose it natively.)</p>
+<p>Non-string keys can be handled by deserializing CBOR maps/objects to JavaScript Map objects rather than POOs. (IMO JSON.parse() would more ideally have been implemented that way, but of course Map postdates native JSON.)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

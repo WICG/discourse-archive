@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>WebMediaContainers Proposal</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">WebMediaContainers Proposal</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-21</div>
+          <div class="post_content">
+<p>API that allows web applications to write, read, edit, extract, and merge audio and video to and from a media container.</p>
+<p><code>MediaRecorder</code> provides the capability to write real-time captured audio and video to a media container.</p>
+<p>However <code>MediaRecorder</code> does not provide a means to write non-real-time audio and video to a media container.</p>
+<p><a href="https://discourse.wicg.io/t/webcodecs-proposal/3662">WebCodecs</a> proposal while having similar use cases, including</p>
+<blockquote>
+<ul>
+<li>Media file editing and transcoding</li>
+</ul>
+</blockquote>
+<p>is not presently focused on development and standardization of writing the media output by that API to a media container <a href="https://github.com/WICG/web-codecs/issues/24" rel="nofollow noopener">API for containers? #24</a>.</p>
+<p>This propsal is very simple: an API focused on writing, reading, editing, extracting, muxing, merging and audio, video, subtitles, captions to and from a media container, both in real-time and post-production.</p>
+<p>The proposal intends to specify WebMediaContainers API separate but concurrent to WebCodecs API, for the purpose of the two proposals to be developed at approximately the same rate, for the goal of interopability with while simultaneously capable of interaction with audio, video, text tracks APIs other than WebCodecs.</p>
+<p><a href="https://github.com/guest271314/WebMediaContainers/blob/master/Explainer.md" rel="nofollow noopener">Explainer</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2282_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">pthatcher</div>
+          <div class="creation_date">2019-09-23</div>
+          <div class="post_content">
+<p>Can you give some examples of what the API would look like?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-24</div>
+          <div class="post_content">
+<p>Yes</p>
+<pre><code>videoWriter.addVideoFrame(videoFrame[i] /* image, Blob, etc. */, frameDuration /* , width, height */);
+videoWiter.addAudioFrame(audioFrame[i] /* Float32Array, ArrayBuffer, etc. */, frameDuration, sampleRate, numberOfChannels);
+// Matroska or WebM file
+// completely FOSS where possible
+// use openh264 if preferred or required
+const file = await videoWriter.compile(); // file.mkv or file.webm or if required file.mp4
+</code></pre>
+<p><a href="https://plnkr.co/edit/Inb676?p=info" rel="nofollow noopener">https://plnkr.co/edit/Inb676?p=info</a> (store potentially variable video frames in an array, calculate frame duration, write a WebM file)</p>
+<p>and/or</p>
+<p><a href="https://plnkr.co/edit/ThXd9MKYvEYq2kKyh8oc?p=preview" rel="nofollow noopener">https://plnkr.co/edit/ThXd9MKYvEYq2kKyh8oc?p=preview</a> (write to frames to a WebM file without storing input images in an array)</p>
+<p>Unfortunately that implementation <a href="https://github.com/thenickdude/webm-writer-js" rel="nofollow noopener">https://github.com/thenickdude/webm-writer-js</a> does not support audio <a href="https://github.com/thenickdude/webm-writer-js/issues/1#issuecomment-533941846" rel="nofollow noopener">https://github.com/thenickdude/webm-writer-js/issues/1#issuecomment-533941846</a> nor does <a href="https://github.com/GoogleChromeLabs" rel="nofollow noopener">https://github.com/GoogleChromeLabs</a> (<a href="https://github.com/GoogleChromeLabs/webm-wasm/issues/12" rel="nofollow noopener">https://github.com/GoogleChromeLabs/webm-wasm/issues/12</a>), though this one does <a href="https://github.com/tseylerd/Webm-writer" rel="nofollow noopener">https://github.com/tseylerd/Webm-writer</a>. Have been trying to encode audio using <a href="https://github.com/higuma/ogg-vorbis-encoder-js" rel="nofollow noopener">https://github.com/higuma/ogg-vorbis-encoder-js</a>, however the browser (Chromium) invariably crashes (am currently at version 15 of testing).</p>
+<p>The concept is very simple. Begin with a WebM writer that is independent of the browser implementation. Meaning the code is the same whether using Chromium or Firefox, which currently have, in some cases, wildly varying implementations of <code>MediaStreamTrack</code>, <code>MediaRecorder</code> and particularly <code>MediaSource</code> and HTML <code>&lt;video&gt;</code> element, where Chromium enforces an arbitrary output relevant to video frames at the <code>&lt;video&gt;</code> element.</p>
+<p>A variable resolution video recorded at Chromium (deliberately) does not output variable resolution frames at HTML <code>&lt;video&gt;</code> element, though the same video does output variable resolution at Mozilla Forefox and Nightly implementation of HTML <code>&lt;video&gt;</code> element. Chromium crashes the tab when the resolution of the video track changes when <code>HTMLVideoElement.captureStream()</code> is called on the element. That is not acceptable and the technology currently exists to enable developers to avoid using <code>MediaRecorder</code> altogether since the implementations vary to such an extent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2280_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">guest271314</div>
+          <div class="creation_date">2019-09-24</div>
+          <div class="post_content">
+<p><span class="mention">@pthatcher</span> Created repository <a href="https://github.com/guest271314/WebMediaContainers" rel="nofollow noopener">https://github.com/guest271314/WebMediaContainers</a> and used language that already posted in this proposal and the comments at WebCodecs proposal in Explainer. It is expected that the repository and Explainer will be edited.</p>
+<p>Your input is very welcome. Kindly consider and suggest edits where necessary. The goal of the proposal is for absolute clarity in specification, and <em>actual</em> input and output by implementers.</p>
+<p>Am at the front-end, testing what the source code of browsers actually output</p>
+<blockquote>
+<p>von Braun believed in testing. I cannot emphasize that term enough. Test, test, test. Test to the point it breaks. - <em>Ed Buckbee, NASA Public Affairs Officer</em></p>
+</blockquote>
+<p>(<a href="https://github.com/guest271314/MediaFragmentRecorder/tree/chromium_crashes" rel="nofollow noopener">https://github.com/guest271314/MediaFragmentRecorder/tree/chromium_crashes</a>)</p>
+<p>Know exactly how the API should (and should not) function after testing numerous means of creating video using existing APIs over and over again at <a href="https://github.com/guest271314/MediaFragmentRecorder/branches" rel="nofollow noopener">https://github.com/guest271314/MediaFragmentRecorder/branches</a> and reading the source code of Chromium and Mozilla browsers to determine what the capabilities of the code is. The proposal is possible using the current source code, generally, in the “media” directory of the code already implemented at the browsers, e.g., <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=891705" rel="nofollow noopener">[MediaEncoder] Implement WebM 1.0 container writer</a>. The only necessity would be to expose the decoders, encoders, muxers, and media container writers to the developer.</p>
+<p>The basic concept is very simple.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

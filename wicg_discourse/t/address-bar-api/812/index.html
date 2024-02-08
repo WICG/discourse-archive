@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Address Bar API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Address Bar API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/573_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dannote</div>
+          <div class="creation_date">2015-04-18</div>
+          <div class="post_content">
+<p>It would be really great if there was an API for browser’s address bar adding <code>window.onadressbarchange</code> and <code>window.onadressbarenter</code> events and allowing to put custom search suggestions specific for the opened site.
+That could be something like the following:</p>
+<pre><code>[
+    ConstructorTemplate=Event
+] interface AddressbarEvent : UIEvent {
+    [InitializedByEventConstructor] readonly attribute DOMString text;
+    
+     void initAddressbarEvent([Default=Undefined] optional DOMString type, 
+                                       [Default=Undefined] optional boolean canBubble, 
+                                       [Default=Undefined] optional boolean cancelable, 
+                                       [Default=Undefined] optional DOMWindow view, 
+                                       [Default=Undefined] DOMString text);
+};
+</code></pre>
+<p>And used like that:</p>
+<pre><code>window.addEventListener('addressbarchange', function(event) {
+   switch (event.text.charAt(0)) {
+      case 's':
+         return ["search", "save"];
+      case 'e':
+         return "edit";
+   }
+});
+
+window.addEventListener('addressbarenter', function(event) {
+   switch (event.text) {
+      case "save":
+         save();
+         return true;
+      case "edit":
+         edit();
+         return true;
+      default:
+         return false;
+   }
+});
+</code></pre>
+<p>Maybe there should be a special meta tag defining a keyword which must be used as prefix.</p>
+<p>This feature in future will allow to remove search bars from top of the pages on sites like Google and Facebook, providing a simpler and cleaner look.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-05-15</div>
+          <div class="post_content">
+<p>I think this has merit however I see the following potential problems:</p>
+<ul>
+<li>Privacy - They might be going to a different website so if your able to access what they are typing you might be able to track what they are googling or websites they are visiting, one box with multiple purposes has this issue</li>
+<li>Built in behaviours - How would this compete with built in behaviours, take for example Safari on iOS one of the built in behaviours is to be able to search the current page.</li>
+</ul>
+<p>I think out of the two, privacy is the biggest concern so if this can be resolved I think this could be really useful</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-05-15</div>
+          <div class="post_content">
+<p>Check if input is a URL with different origin before returning input to api?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1193_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edward_J</div>
+          <div class="creation_date">2016-07-22</div>
+          <div class="post_content">
+<p><strong>This conversation is old and and the proposal is unnecessary</strong>. Website search bars can already be simple and “clean”, websites being able to know what the user is typing in the page address bar would cause privacy issues like <em>jonthanfielding</em> stated and the address bar shouldn’t be the place for using search engines when on a website as they are available from the website so should be used on it. The only other use of search bars in the address bar is using the browser’s capability to discover available search engines for a website typed into the address space (when not necessarily on that website) and allow the user to type a search query to be sent directly to the results page and the page displayed, such as in Google Chrome below.<br/>
+<div class="lightbox-wrapper"><a class="lightbox" data-download-href="//discourse.wicg.io/uploads/default/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0" href="//discourse.wicg.io/uploads/default/original/2X/e/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0.png" title="Pasted image"><img data-small-upload="//discourse.wicg.io/uploads/default/optimized/2X/e/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0_2_10x10.png" height="273" src="//discourse.wicg.io/uploads/default/optimized/2X/e/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0_2_690x273.png" srcset="//discourse.wicg.io/uploads/default/optimized/2X/e/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0_2_690x273.png, //discourse.wicg.io/uploads/default/original/2X/e/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0.png 1.5x, //discourse.wicg.io/uploads/default/original/2X/e/ec6416b9b3fe6b6e18f3078dd12f4db62d80e6e0.png 2x" width="690"/><div class="meta">
+<svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename">Pasted image</span><span class="informations">882×349 42.7 KB</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg>
+</div></a></div></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

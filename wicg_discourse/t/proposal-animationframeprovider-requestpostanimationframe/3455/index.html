@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] AnimationFrameProvider.requestPostAnimationFrame</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] AnimationFrameProvider.requestPostAnimationFrame</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-03-25</div>
+          <div class="post_content">
+<p>AnimationFrameProvider.requestPostAnimationFrame will act as a bookend to AnimationFrameProvider.requestAnimationFrame.</p>
+<p><a href="https://github.com/szager-chromium/requestPostAnimationFrame/blob/master/explainer.md" rel="nofollow noopener">Explainer</a></p>
+<p>This has been a frequently requested feature by web developers that want finer controls for scheduling javascript around rendering deadlines.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tobias_buschor</div>
+          <div class="creation_date">2019-04-02</div>
+          <div class="post_content">
+<p>Question:
+Does this mean that getBoundingClientRect etc. comes with no cost because the browser has just drawn the dimensions?
+That would be great!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-02</div>
+          <div class="post_content">
+<p>Is this a better or worse place for canvas apps drawing at 60FPS to make their calls compared to the normal requestAnimationFrame?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-04-15</div>
+          <div class="post_content">
+<p>Yes, that’s correct, although you should keep in mind that you can only get the results <em>after</em> the object has already been displayed. So it may not work for driving layout; you may get a frame of bad pixels.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-04-15</div>
+          <div class="post_content">
+<p>Potentially yes; a lot depends on the structure of your application. But in general, the advantage of drawing to the canvas from requestPostAnimationFrame is that you get the maximum possible runway for doing that work before the next frame deadline. So, for example, if your canvas code takes 8ms to run, then running it from requestPostAnimationFrame gives you the greatest possibility of not exceeding the rendering deadline.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-04-26</div>
+          <div class="post_content">
+<p>The was <a href="https://docs.google.com/document/d/1rOTuXXZc5vUNzAiLDdb8L3ujUeklUJnBZp3tLbsKiLY/edit#heading=h.3f2eiiylrk3e" rel="nofollow noopener">discussed</a> at the WebPerfWG and got positive feedback from all browser vendors. The resolution was to explicitly move this repo to the WICG so that other vendors can provide feedback.</p>
+<p>Let’s do this!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-04-27</div>
+          <div class="post_content">
+<p>I’m curious what the implication of rendering in rPAF has for input event latency. It sounds like rPAF gives more time to meet rendering deadlines, but when are input events delivered? I’ve heard of “rAF aligned input events” which deliver input events just before rAF, but rendering in rPAF means rendering just before input events are delivered. This sounds like it means the app just <em>misses</em> input events, and therefore gets an unnecessary extra frame of input delay.</p>
+<p>It would be nice if we could figure out an approach that uses rPAF for most rendering runway <em>and</em> has the lowest possible input latency.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-05-02</div>
+          <div class="post_content">
+<p>The repo now lives on <a href="https://github.com/WICG/requestPostAnimationFrame" rel="nofollow noopener">https://github.com/WICG/requestPostAnimationFrame</a></p>
+<p>Happy incubation!!!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2019-08-10</div>
+          <div class="post_content">
+<p>Oh I asked 3 years ago for this and it was declined…</p>
+<p>Two thoughts on this:</p>
+<ul>
+<li>maybe call it <code>requestLayoutFlushed</code>(FF already has a function called <code>promiseLayoutFlushed</code> which gives you the same but also includes a promise) or <code>requestLayoutCalculated</code>/<code>requestLayoutDone</code>/<code>requestAfterLayout</code> or something. some people hate the old name <code>requestAnimationFrame</code> and we shouldn’t built on top of it</li>
+<li>make sure that as soon as DOM or CSSOM is changed inside of <code>requestPostAnimationFrame</code> a warning is printed in the dev console</li>
+</ul>
+<p>Maybe also consider a new method called <code>requestBeforeLayout</code> that is basically the same as <code>requestAnimationFrame</code> but is now run right after <code>requestAnimationFrame</code> and has the same save guard warning. As soon as someone is reading style/layout a console warning should come.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="3455">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>It would be nice if we could figure out an approach that uses rPAF for most rendering runway <em>and</em> has the lowest possible input latency.</p>
+</blockquote>
+</aside>
+<p>The motivation behind this API is to provide finer control of the scheduling of javascript, so that developers have the power to make the kinds of decisions you’re describing.</p>
+<p>Because input events are unpredictable, it probably doesn’t make sense to postpone necessary rendering work on the off chance that an input event will arrive. In the worst case (i.e., input event arrives right after rPAF does some heavy lifting), your code will have done some unnecessary rendering work that gets invalidated before it’s ever displayed. In the best case, you will have smooth rendering and animations because you always get the rendering work done with time to spare.</p>
+<p>If you were trying to optimize for both smooth rendering and prompt response to input, you might use an idiom like this:</p>
+<pre><code class="lang-auto">function runLoop() {
+  requestPostAnimationFrame(() =&gt; {
+    // Get a head start on essential rendering work
+    doEarlyRenderingWork();
+    requestAnimationFrame(() =&gt; {
+      // Last-minute adjustments for late-arriving events
+      doLateRenderingWork();
+      // Re-schedule for every frame.
+      runLoop();
+    });
+  });
+}
+
+element.addEventListener('click', evt =&gt; {
+  if (requiresHeavyLifting(evt)) {
+    // Rather than risk missing a rendering deadline and
+    // janking, postpone handling the input event until
+    // the next frame.
+    queueEarlyRenderingWork(evt);
+  } else {
+    // Respond to the event in the current frame
+    queueLateRenderingWork(evt);
+  }
+});
+</code></pre>
+<p>Ideally, if an input event must be handled ASAP, and the event will cause a visual update, then the page would be structured such that the visual response will be limited to compositor-driven effects that won’t invalidate layout (transform, opacity, z-index). Those kinds of changes can be applied during rAF without missing a rendering deadline. Where that’s not possible, then the developer must pick their poison: respond to the input event a frame late, or risk janking the display.</p>
+<p>rAF-aligned input events are the continuous-type events that tend to arrive in streams (e.g. mousemove). In chromium, those events are not delivered as they arrive; instead, they are merged and delivered just prior to running rAF handlers. For these events, it is all the more important to use compositor-driven effects, since there is little runway for doing long-running work prior to rendering.</p>
+<p>Hope that helps.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">szager</div>
+          <div class="creation_date">2019-08-12</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="3455">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/afarkas/40/2520_2.png" width="20"/> aFarkas:</div>
+<blockquote>
+<ul>
+<li>
+<p>maybe call it <code>requestLayoutFlushed</code> (FF already has a function called <code>promiseLayoutFlushed</code> which gives you the same but also includes a promise) or <code>requestLayoutCalculated</code> / <code>requestLayoutDone</code> / <code>requestAfterLayout</code> or something. some people hate the old name <code>requestAnimationFrame</code> and we shouldn’t built on top of it</p>
+</li>
+<li>
+<p>make sure that as soon as DOM or CSSOM is changed inside of <code>requestPostAnimationFrame</code> a warning is printed in the dev console</p>
+</li>
+</ul>
+</blockquote>
+</aside>
+<p>The first priority in designing new web API’s is to respect existing conventions. It’s certainly true that requestAnimationFrame is not universally loved, but since it exists, I’m obliged to stick to it.</p>
+<p>The console warning is a good suggestion, and we’re considering doing something along those lines in chromium; but it’s beyond the scope of a standards discussion.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

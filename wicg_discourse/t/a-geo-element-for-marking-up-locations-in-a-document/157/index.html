@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>A &lt;geo&gt; element for marking up locations in a document</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">A &lt;geo&gt; element for marking up locations in a document</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/10_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">karl</div>
+          <div class="creation_date">2014-06-04</div>
+          <div class="post_content">
+<p>We have already the <code>&lt;time&gt;</code> element which is quite useful. We could have a <code>&lt;geo&gt;</code> element. for marking places.</p>
+<pre><code>&lt;p&gt;&lt;q cite="urn:isbn:978-0684824994"&gt;If you are lucky enough to have lived in &lt;geo geolocation="48.856667, 2.350929"&gt;Paris&lt;/geo&gt; as a young man, then wherever you go for the rest of your life, it stays with you, for Paris is a moveable feast.&lt;/q&gt; once said Ernest Hemingway in &lt;cite&gt;A Moveable Feast.&lt;/cite&gt;&lt;/p&gt;
+</code></pre>
+<p>The <a href="http://www.w3.org/TR/html5/text-level-semantics.html#datetime-value">model of values</a> could be declined through similar constructs than the time element.</p>
+<pre><code>&lt;geo geolocation="48.856667, 2.350929"&gt;Paris&lt;/geo&gt;
+&lt;geo&gt;48.856667, 2.350929&lt;/geo&gt;
+</code></pre>
+<p>The browser would create a <a href="http://www.w3.org/TR/geolocation-API/#coordinates">Coordinates object</a>.</p>
+<h2>Why it could be useful?</h2>
+<p>It could enable application where you might want to show a map widget for localizing a place you are mentioning in a text, such as an hotel page.</p>
+<p>You might want to be able to automatically extract geodata from a document without relying on complicated heuristic or ambiguities, such as Paris in France or Paris in Texas.</p>
+<p>As I’m pretty sure this is not a new proposal, there are certainly plenty of discussions already on W3C mailing-lists to dig out.</p>
+<h2>Some references</h2>
+<ul>
+<li>
+<a href="http://www.w3.org/TR/html5/text-level-semantics.html#datetime-value">datetime values</a> for time element in HTML.</li>
+<li><a href="http://www.w3.org/TR/geolocation-API/#position">geolocation API data format</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-05</div>
+          <div class="post_content">
+<p>I like it. Maybe also an attribute to indicate precision, and possibly elevation?</p>
+<p>Do you want to put together and extension spec?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2014-06-05</div>
+          <div class="post_content">
+<p>Great idea!
+Would it not make sense for the spec to match directly with the geolocation API format?</p>
+<pre><code>&lt;geo&gt;&lt;position timestamp="Thu Jun 05 2014 10:42:15"&gt;&lt;coordinates latitude="123" longitude="234" altitude="345" accuracy="456" altitudeAccuracy="567" heading="678" speed=""&gt;thing with geo attributes&lt;/coordinates&gt;&lt;/position&gt;&lt;/geo&gt;
+</code></pre>
+<p>The <code>&lt;geo&gt;</code> specification should use the same types as the interfaces defined in the Geo API spec and the same rules for which attributes are required and optional.</p>
+<p>Ideally this would mean that the DOM objects would also have the same type as objects returned through interacting with the Geo API.</p>
+<p>One could extend this to offer locations that are not defined by coordinates.
+Bad example:</p>
+<pre><code>&lt;geo&gt;&lt;place country="FR" city="Paris"&gt;Paris&lt;/place&gt;&lt;/geo&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1671_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robin</div>
+          <div class="creation_date">2014-06-05</div>
+          <div class="post_content">
+<p>That markup looks way too complicated to me. Do you have use cases that justify the extra complexity? I think that capturing information in the same manner that <code>&lt;time&gt;</code> does is certainly useful in terms of what can be repurposed from it, but elements stacked three levels down seems overkill, as do speed, timestamp, etc.!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2014-06-05</div>
+          <div class="post_content">
+<p>Speed, heading etc are all optional attributes of the Coordinates object (per Geo API spec which <span class="mention">@karl</span> references).</p>
+<p>Comparison to the <code>&lt;time&gt;</code> element is not fair in as much as time is a very specific thing. Geo is not, hence my suggestion of a <code>&lt;coordinates&gt;</code> element.</p>
+<p>One could define an optional attribute of the <code>&lt;geo&gt;</code> tag called coordinates with specific parsing rules but I would argue that parsing rules that dictate a strict input format make things more complex than a well structured set of tags and attributes.</p>
+<p>Consider also that co-ordinates are often expressed in various formats that can be ambiguous due to minor errors.</p>
+<p>If I write an ECMAScript lib to work with these objects wouldn’t it be ideal if the DOM object I get from a <code>&lt;coordinates&gt;</code> tag has the same structure as the object I get when I interrogate the Geo API?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1832_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Shane</div>
+          <div class="creation_date">2014-06-05</div>
+          <div class="post_content">
+<p>I am a big fan of having some kind of geo element for semantics. I also like the idea of mapping to the Geolocation API, but that does look like overkill markup for very little gain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2358_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ahopebailie</div>
+          <div class="creation_date">2014-06-06</div>
+          <div class="post_content">
+<p>A specification should allow for both forms. Simple (for simplicity) and complex for those that require the precision. Bear in mind that most markup is rendered by some application not hand coded so complex markup that is still human-readable shouldn’t be discarded purely on that basis.</p>
+<p>A suggestion:</p>
+<pre><code>&lt;geo coordinates="123, 234, 345"&gt;A place&lt;/geo&gt; 
+</code></pre>
+<p>should be equivalent to</p>
+<pre><code>&lt;geo&gt;&lt;coordinates latitude="123" longitude="234" altitude="345"&gt;A place&lt;/coordinates&gt;&lt;/geo&gt;
+</code></pre>
+<p>Adding a time dimension converts a place to a position.</p>
+<pre><code>&lt;geo coordinates="123, 234, 345" timestamp="Thu Jun 05 2014 10:42:15"&gt;A position&lt;/geo&gt; 
+</code></pre>
+<p>should be equivalent to</p>
+<pre><code>&lt;geo&gt;&lt;position timestamp="Thu Jun 05 2014 10:42:15"&gt;&lt;coordinates latitude="" longitude="" altitude="345"&gt;A position&lt;/coordinates&gt;&lt;position&gt;&lt;/geo&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/9_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brucel</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>I’m not a fan of bikeshedding, but I’d really like to call this element &lt;place&gt;, so I can corner the market in t-shirts saying "if you’ve got the  &lt;time&gt;, I’ve got the  &lt;place&gt;. kthxbai.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>We’ve started a CG to discuss the idea of adding a  element + map media type for use by html: <a href="http://www.w3.org/community/maps4html/">http://www.w3.org/community/maps4html/</a></p>
+<p>Would be interested in having participation there.  The project is just getting started.</p>
+<p>What do you think?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>Just use <code>&lt;address&gt;</code> or <code>&lt;address type=geo&gt;</code>. The current definition of <code>address</code> in HTML5 is nonsense (and hence people will use it “correctly” - as in a street address) and could just be redefined. In any case, this seems like something better suited for a Web Component that could automatically hook itself up to the geolocation API and some kind of map widget.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1820_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">domenic</div>
+          <div class="creation_date">2014-06-11</div>
+          <div class="post_content">
+<p>Indeed, nothing like this has a realistic chance of making it into browsers. Web components are perfect for this use case. If a ton of people start using this (way more than are currently using e.g. <code>&lt;time&gt;</code>, which is widely regarded as a mistake) then maybe it’ll get baked in, assuming browser vendors have nothing else to work on.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p>I’m much in favor of <span class="mention">@marcosc</span>’s idea of re-defining <code>&lt;address&gt;</code>. My discontent with the current definition of <code>&lt;address&gt;</code> dates back to <a href="http://lists.w3.org/Archives/Public/www-html/2006Apr/0002.html">the dark XHTML 2 ages</a>.</p>
+<p>Or put another way, what about this definition:</p>
+<blockquote>
+<p>If <code>&lt;address&gt;</code> contains an attribute <code>geo</code> (or <code>location</code>, …), it represents a physical location. Otherwise it represents any contact information. <em>(The part about the information in <code>&lt;address&gt;</code> being related to the closest content element is omitted.)</em></p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/148_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nettsentrisk</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p><a href="http://schema.org/GeoCoordinates" rel="nofollow noopener">schema.org provides a way</a> of marking this up, although it’s a bit more verbose than what’s being proposed here. I’d probably lean for a more generic type such as <code>&lt;place&gt;</code> with geocoordinates as an attribute. Then again, I’m not sure there is a strong enough reason to put this into the HTML spec, when it can be solved via microdata.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1862_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">codepo8</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p>But then it also needs an &lt;inclination&gt;</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">PeterR</div>
+          <div class="creation_date">2014-06-12</div>
+          <div class="post_content">
+<p>I hear you.  At least that’s not a “that’s impossible!”.   Thanks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1951_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Maksym_Kozlenko</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>Since not all geographical objects represent single point. Should  tag use <a href="http://en.wikipedia.org/wiki/Well-known_text" rel="nofollow noopener">Well-known text</a> instead? So it could be line or polygon?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/288_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">edent</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>Could I make a small suggestion?  As we move towards the <a href="https://en.wikipedia.org/wiki/Interplanetary_Internet" rel="nofollow noopener">Interplanetary Internet</a>, would it not make sense to also include an (optional) celestial object parameter?</p>
+<p>E.g.</p>
+<p><code>See where the &lt;geo celestial="mars" latitude="123" longitude="345"&gt;Mars Rover landed&lt;/geo&gt;</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1262_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Boldewyn</div>
+          <div class="creation_date">2014-06-13</div>
+          <div class="post_content">
+<p>I was thinking of the same. For one, the ISS is connected to the Internet. Let’s stay <a href="http://en.wikipedia.org/wiki/Galactic_coordinate_system" rel="nofollow noopener">future-proof</a>! On the other hand, naming the element <code>&lt;geo&gt;</code> would then be a not-so-clever idea. <code>&lt;space&gt;</code> it’s then.</p>
+<pre><code>&lt;space galactic-coords="..." /&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/436_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feeela</div>
+          <div class="creation_date">2014-06-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="157">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ahopebailie/40/113_1.png" width="20"/> ahopebailie:</div>
+<blockquote>
+<p>A specification should allow for both forms.</p>
+</blockquote>
+</aside>
+<p><strong>TL;DR:</strong> There are already some XML based markup languages to store geo-informations. Please don’t invent another one. The better way would be to embed one of the existing solutions into HTML, as it is done with SVG and MathML.</p>
+<p>…</p>
+<p>The complex markup form is already covered when <a href="http://en.wikipedia.org/wiki/Kml" rel="nofollow noopener">using KML</a> embedded directly into HTML. This is already a specification and you can use it since years. Of course you will need additional scripts to get the information out of the DOM – but on the other hand KML is already widely used for GEO location information interchange.</p>
+<p>KML is currently already in use by many applications, most well known maybe are Google Earth and <a href="https://developers.google.com/maps/documentation/javascript/examples/layer-kml" rel="nofollow noopener">the Google Maps API</a>, but also some OpenSource project like <a href="http://dev.openlayers.org/apidocs/files/OpenLayers/Format/KML-js.html" rel="nofollow noopener">OpenLayers do support KML</a>.</p>
+<p>There is also the<a href="http://en.wikipedia.org/wiki/Geography_Markup_Language" rel="nofollow noopener">Geography Markup Language</a>, but I don’t know of any real world usage examples of this one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alwillis</div>
+          <div class="creation_date">2014-06-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="13" data-topic="157">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/nettsentrisk/40/148_1.png" width="20"/> Nettsentrisk:</div>
+<blockquote>
+<p><a href="http://schema.org" rel="nofollow noopener">schema.org</a> provides a way</p>
+</blockquote>
+</aside>
+<p>Since HTML5 already has an extension capability built-in (Microdata), it makes sense to use it. As <span class="mention">@Nettsentrisk</span> mentioned, <a href="http://schema.org/GeoCoordinates" rel="nofollow noopener">schema.org</a> (the collaborative effort of Google, Microsoft, Yahoo and Yandex to create a shared vocabulary) already has GeoCoordinates markup that is already being used and indexed by Google and the rest of the search providers. This works <em>in production</em>, today.</p>
+<p>HTML5 has built-in support for <a href="http://html5doctor.com/microdata/" rel="nofollow noopener">Microdata</a> which gives you the ability to add GeoCoordinates to an HTML5 document; you can also use RDFa Lite for newbies, RDFa for more features or JSON-LD if you want the new hotness.</p>
+<p>The issue with another HTML5 tag is you can’t express the relationship between things only using that tag. Expressing relationships (“we want to visit that resort located on this island at these coordinates”) is becoming increasingly important; <a href="http://schema.org" rel="nofollow noopener">schema.org</a> vocabulary was created to solve this precise problem.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Cross-Origin-Embedder-Policy</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Cross-Origin-Embedder-Policy</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2020-03-02</div>
+          <div class="post_content">
+<p><strong>Cross-Origin-Embedder-Policy</strong></p>
+<p><strong>Explainer</strong>: <a href="https://docs.google.com/document/d/1zDlfvfTJ_9e8Jdc8ehuV4zMEu9ySMCiTGMS9y0GU92k/edit">https://docs.google.com/document/d/1zDlfvfTJ_9e8Jdc8ehuV4zMEu9ySMCiTGMS9y0GU92k/edit</a></p>
+<p><strong>Spec</strong>: <a href="https://mikewest.github.io/corpp/">https://mikewest.github.io/corpp/</a> (monkey patching HTML and Fetch; intended to be folded back into those specifications)</p>
+<p>The same-origin policy’s restrictions against direct access to another origin’s resources is, unfortunately, insufficient in the face of speculative execution attacks like Spectre. Merely <em>loading</em> another origins’ resource may be enough to bring its content into a memory space which may be probed by an attacker, even if the browser would otherwise prevent access to the resource through explicit channels.</p>
+<p>Given this context, user agents are rethinking the threat model under which they operate (e.g. <a href="https://mikewest.github.io/corpp/#biblio-chromium-post-spectre-rethink">[chromium-post-spectre-rethink]</a>). It would be unfortunate indeed to prevent the web platform from legitimately using APIs like  <code>SharedArrayBuffer</code>  that accidentally improve attackers’ ability to exploit speculation attacks, but at the same time, many user agents have agreed that it seems unreasonable to enable those APIs without additional mitigation.</p>
+<p><code>Cross-Origin-Embedder-Policy</code> tackles one piece of the broader problem by giving developers the ability to require an explicit opt-in from any resource which would be embedded in a given context. User agents can make that requirement a precondition for some APIs that might otherwise leak data about cross-origin resources, which goes some way towards ensuring that any leakage is voluntary, not accidental.</p>
+<p>To that end, the proposal does three things:</p>
+<ol>
+<li>
+<p>It introduces a new  <code>cross-origin</code>  value for the <a href="https://fetch.spec.whatwg.org/#http-cross-origin-resource-policy"> <code>Cross-Origin-Resource-Policy</code> </a> HTTP response header, which constitutes an explicit declaration that a given resource may be embedded in cross-origin contexts.</p>
+</li>
+<li>
+<p>It introduces a new  <code>Cross-Origin-Embedder-Policy</code>  header which shifts the default behavior for resources loaded in a given context to an opt-in model, in which cross-origin responses must either assert a <a href="https://fetch.spec.whatwg.org/#http-cross-origin-resource-policy"> <code>Cross-Origin-Resource-Policy</code> </a> header which allows the embedding, or pass a <a href="https://fetch.spec.whatwg.org/#concept-cors-check">CORS check</a>.</p>
+</li>
+<li>
+<p>It extends <a href="https://fetch.spec.whatwg.org/#http-cross-origin-resource-policy"> <code>Cross-Origin-Resource-Policy</code> </a> to handle some <a href="https://fetch.spec.whatwg.org/#navigation-request">navigation requests</a> in order to deal reasonably with  <code>iframe</code>  embeddings and  <code>window.open()</code> .</p>
+</li>
+</ol>
+<p>Together, these would allow a user agent to gate access to interesting APIs on a top-level context opting-into <code>Cross-Origin-Embedder-Policy</code>, which in turn gives servers the ability to inspect incoming requests and make reasonable decisions about when to allow an embedding.</p>
+<hr/>
+<p>This mechanism is implemented behind a flag in both Chrome and Firefox. An intent to ship is out for the former, and the latter has announced their intent to do the same via <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/Planned_changes">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/Planned_changes</a>. I hope that level of interest justifies adopting the monkey-patch spec into WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-03-02</div>
+          <div class="post_content">
+<p>Given the support from Mozilla, seems safe to move this to WICG for further incubation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2020-03-20</div>
+          <div class="post_content">
+<p>Repo now lives at <a href="https://github.com/WICG/cross-origin-embedder-policy">https://github.com/WICG/cross-origin-embedder-policy</a></p>
+<p>Enjoy!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

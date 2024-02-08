@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>What’s the standard approach for un-hiding elements and applying CSS transitions to them?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">What’s the standard approach for un-hiding elements and applying CSS transitions to them?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-03-05</div>
+          <div class="post_content">
+<p>Example:</p>
+<p>A slide-in menu that is initially hidden (HTML <code>hidden</code> attribute). When I want to show the menu, I remove the <code>hidden</code> attribute and add a CSS class to the element that is supposed to trigger the transition.</p>
+<pre><code class="lang-auto">el.hidden = false;
+el.classList.add('slide-in');
+</code></pre>
+<p>But the transition doesn’t run. The browser just renders the finished state.</p>
+<p>In order to make the transition work, I need to trigger a reflow (I think that’s what it’s called).</p>
+<pre><code class="lang-auto">el.hidden = false;
+el.scrollTop; // force reflow
+el.classList.add('slide-in');
+</code></pre>
+<p>Now it works. Demo: <a href="https://codepen.io/simevidas/pen/eXdrOp?editors=0010" rel="nofollow noopener">https://codepen.io/simevidas/pen/eXdrOp?editors=0010</a>.</p>
+<p>While accessing the element’s <code>scrollTop</code> (or similar) property works, it seems like a hack. Is there a standard approach (API or pattern) for making this type of thing work?</p>
+<hr/>
+<p><strong>Edit:</strong> I remembered the Web Animations API. Maybe if I triggered the CSS transition via this API, the forced reflow would not be necessary. I need to test this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2019-03-06</div>
+          <div class="post_content">
+<p><a href="https://www.youtube.com/watch?v=cCOL7MC4Pl0&amp;t=19m45s" rel="nofollow noopener"><code>requestAnimationFrame</code>…kinda</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2019-03-06</div>
+          <div class="post_content">
+<p><img alt=":joy:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/joy.png?v=6" title=":joy:"/> it summarized my experience pretty well: double <code>requestAnimationFrame</code> to make it work, the force reflow hack, and finally the Web Animation API.</p>
+<p>I still need to test if the API works in this case, and if it’s a good alternative .</p>
+<hr/>
+<p><strong>Edit:</strong> It seems that this issue doesn’t occur if I use CSS animations or the Web Animations API.</p>
+<p>Demo using CSS animations: <a href="https://codepen.io/simevidas/pen/pYPMeK" rel="nofollow noopener">https://codepen.io/simevidas/pen/pYPMeK</a></p>
+<p>Demo using Web Animations API: <a href="https://codepen.io/simevidas/pen/oVWKBg?editors=0010" rel="nofollow noopener">https://codepen.io/simevidas/pen/oVWKBg?editors=0010</a></p>
+<pre><code class="lang-auto">el.hidden = false;
+el.animate({ transform: 'translateX(0)' }, aOptions);
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2019-03-10</div>
+          <div class="post_content">
+<p>Right. CSS transitions require a before-change style and after-change style to transition between. CSS animations and Web animations don’t.</p>
+<p>In order to capture a before-change style you need to trigger a “style change event”. What triggers that is left undefined in the spec. Forcing a reflow will do it although technically you only need to cause <em>style</em> to be updated which you can do by querying <code>getComputedStyle(el).&lt;some style property&gt;</code>.</p>
+<p>(Querying <code>left</code> is probably not going to make a difference, because <code>getComputedStyle()</code> returns the <em>used value</em> for <code>left</code>, but for other properties like <code>opacity</code> where <code>getComputedStyle()</code> returns the <em>computed value</em>, UAs can flush style without flushing layout.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2019-03-10</div>
+          <div class="post_content">
+<p>Regarding <code>requestAnimationFrame()</code>, that will work too because the UA is required to update styles on each animation frame triggering a style change event.</p>
+<p>You shouldn’t need <em>two</em> <code>requestAnimationFrame()</code> callbacks, however, unless your first call to <code>requestAnimationFrame()</code> queues an rAF callback that runs before the next time the UA updates style (which will depend on where in the event loop you call <code>requestAnimationFrame()</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2019-04-17</div>
+          <div class="post_content">
+<p>The <a href="https://github.com/WICG/inert" rel="nofollow noopener"><code>inert</code></a> attribute is being <a href="https://github.com/whatwg/html/pull/4288" rel="nofollow noopener">added back</a> to the WHATWG spec and is described as:</p>
+<blockquote>
+<p>[…] the user agent must act as if the node was absent for the purposes of targeting user interaction events, may ignore the node for the purposes of text search user interfaces (commonly known as “find in page”), and may prevent the user from selecting text in that node.</p>
+</blockquote>
+<p>The element then no longer needs to be <code>hidden</code> / <code>display: none;</code>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

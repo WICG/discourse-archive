@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Render bold text as stable width</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Render bold text as stable width</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2610_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ferdy_Christant</div>
+          <div class="creation_date">2020-01-27</div>
+          <div class="post_content">
+<p>I know this is not the web’s most important problem, yet it’s still something that annoys me greatly, so throwing the idea out here.</p>
+<p><strong>Problem description</strong><br/>
+When you have a horizontal navigation menu of which the items are of a variable width, when you change one of the link texts to be bold, this horizontally shifts the items coming after it. This horizontal shift looks cheap and unstable. The reason for the shift is bold text taking up more width, and as a result, the variable width parent element grows.</p>
+<p><strong>Current solutions</strong><br/>
+There’s several solutions/hacks currently in use by developers to work around this problem:</p>
+<ul>
+<li>
+<p>Giving items a fixed width (the only non-hack yet design-wise not great and often not possible due to CMS or translations)</p>
+</li>
+<li>
+<p>Tinkering with negative letter-spacing for bold items (very unprecise technique that is highly dependent on the font and possibly even rendering alghoritms. It also changes the look of the text itself)</p>
+</li>
+<li>
+<p>Using a 1px text shadow (looks terrible, this is not the same as real bold rendering)</p>
+</li>
+<li>
+<p>Reserving space for bold using a pseudo element (highly dependent on layout and not possible when pseudo element is already in use for another purpose)</p>
+</li>
+</ul>
+<p>None of these solutions are very satisfactory, yet it is a pretty common problem.</p>
+<p><strong>Proposal</strong><br/>
+The proposal would be to have a way to change font-weight (perhaps even other font styling methods) in such a way that it will render as true bold (therefore the width of the text itself does grow), yet to not grow the size of the parent container, if that parent container width is dynamic.</p>
+<pre><code>a:hover {
+   font-weight: bold !stable
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2334_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">liamquin</div>
+          <div class="creation_date">2020-01-27</div>
+          <div class="post_content">
+<blockquote>
+<p><strong>Proposal</strong><br/>
+The proposal would be to have a way to change font-weight (perhaps
+even other font styling methods) in such a way that it will render as
+true bold (therefore the width of the text itself does grow), yet to
+not grow the size of the parent container, if that parent container
+width is dynamic.</p>
+</blockquote>
+<p>So this could result in truncation of content, or a scrollbar in the
+menu…which is neither very accessible nor very acceptable.</p>
+<p>If you are using JavaScript you can record the initial (formatted)
+width e.g. in an attribute and set that on hover/focus/active. But then
+you have to deal with overflow and potentially differnet linebreaking.</p>
+<p>Or set the size based on a bold font (e.g. in a temporary element not
+inserted into the DOM, so text readers don’t find it) so you know
+there’s room.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2610_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ferdy_Christant</div>
+          <div class="creation_date">2020-01-27</div>
+          <div class="post_content">
+<p>I should have been more clear in the description of the use case. Typically, such horizontal menus have left and right padding on them that would allow the inner text to grow slightly without it overflowing. Even on a longish text (which is rare in a horizontal menu), rendering the text in bold at best adds 6 pixels to the width of the container. Those 6 pixels could have been used on the inside, given there’s plenty of padding. It’s very common to have 20px of padding on each side, so taking 3px from each side is not a problem.</p>
+<p>It basically similar behavior to box-model: grow on the inside, not the outside.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

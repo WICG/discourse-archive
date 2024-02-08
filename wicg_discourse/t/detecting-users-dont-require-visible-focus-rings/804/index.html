@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Detecting users don&rsquo;t require visible focus rings</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Detecting users don&rsquo;t require visible focus rings</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/570_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Takenspc</div>
+          <div class="creation_date">2015-04-14</div>
+          <div class="post_content">
+<p>It is useful that CSS selectors have the ability to detect users don’t require visible focus rings.</p>
+<pre><code class="lang-auto">:focus {
+outline: 5px solid;
+}
+
+:focus:-visual-focus-ring-is-not-required {
+outline:none;
+}
+</code></pre>
+<h2>Motivation</h2>
+<p>Native applications on the several platforms don’t draw focus rings until  the users press the keyboard or use voice control software and etc. So users who use pointing devices mainly rarely see the focus rings. On the mobile, especially, majority of users use the touch screens and rarely see the focus rings.</p>
+<p>On the other hand, web pages draw focus rings more frequently as major browsers move the focus to buttons and links by clicking. Recently, Google Chrome changed its behavior: moving the focus by clicking on a link (issue 388666).</p>
+<p>So uses who use pointing devices mainly see the focus rings by just tapping the screen or so. Though there are some workarounds to hide unintended focus rings (described below), it is useful the CSS selectors have the ability to detect users don’t require visible focus rings.</p>
+<h2>Proposal</h2>
+<p>Adding <code>-visual-focus-ring-is-not-required</code> pseudo class (this name is tentative) to the CSS Selectors.</p>
+<pre><code class="lang-auto">:focus {
+outline: 5px solid;
+}
+
+:focus:-visual-focus-ring-is-not-required {
+outline:none;
+}
+</code></pre>
+<p><code>:-visual-focus-ring-is-not-required</code> matches</p>
+<ul>
+<li>Users haven’t use keyboard or related input devices for navigation and</li>
+<li>Accessibility services are not working and</li>
+<li>User Agent preferences allow <code>:-visual-focus-ring-is-not-required</code> in content</li>
+</ul>
+<h2>Current workarounds</h2>
+<h3><code>outline:none</code></h3>
+<p>Some websites use <code>outline:none</code> . This harms the keyboard or other input devices users. <a href="http://outlinenone.com/" rel="nofollow noopener">Don’t use it</a>.</p>
+<h3>ChromeOS</h3>
+<p>ChromeOS uses <a href="https://chromium.googlesource.com/chromium/src/+/master/ui/webui/resources/js/cr/ui/focus_outline_manager.js" rel="nofollow noopener">the JavaScript to watch users keyboard input and maange the focus ring visibility</a>. ChromeOS draw focus ring if users have pressed the keyboard and encourage developers use JavaScript. For example, in issue 305356</p>
+<blockquote>
+<p>Web authors need to use something like [1] to distinguish mouse-focus and keyboard-focus.</p>
+</blockquote>
+<p>I think it is too much that every website or applications use JavaScript to hide focus ring.</p>
+<h3>Mozilla</h3>
+<p>Firefox OS has disabled outlines by default (bug 1132728) as Firefox OS doesn’t support keyboard.</p>
+<p>We can’t do this as other platforms support keyboard.</p>
+<p>Mozilla has <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-focusring" rel="nofollow noopener">:-moz-focusring pseudo-class</a> that matches an element “if the element is currently focused AND the user-agent has focus ring drawing enabled” (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=418521" rel="nofollow noopener">bug 418521</a>).</p>
+<p><code>-moz-focusring</code> is intend to be used in the User Agent style sheets and the approach of <code>-moz-focusring</code> cannot apply the web content. Because it will break backward compatibility.</p>
+<p>Let’s consider following example:</p>
+<pre><code class="lang-auto">:focus {
+/* unsupported browsers don't render the focus ring! */
+outline:none;
+}
+
+:-moz-focusring {
+/* only supported browsers render the focus ring */
+outline:5px solid;
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/570_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Takenspc</div>
+          <div class="creation_date">2015-04-14</div>
+          <div class="post_content">
+<p>This post is follow up post that includes links to related pages (I removed the links from the previous post as I can include 5 links in a post).</p>
+<aside class="quote" data-post="1" data-topic="804">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/takenspc/40/570_1.png" width="20"/> Takenspc:</div>
+<blockquote>
+<p>Recently, Google Chrome changed its behavior: moving the focus by clicking on a link (issue 388666).</p>
+</blockquote>
+</aside>
+<ul>
+<li><a href="https://code.google.com/p/chromium/issues/detail?id=388666" rel="nofollow noopener">Issue 388666 Focus anchor (A) elements on mousedown</a></li>
+</ul>
+<aside class="quote" data-post="1" data-topic="804">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/takenspc/40/570_1.png" width="20"/> Takenspc:</div>
+<blockquote>
+<p>For example, in issue 305356</p>
+</blockquote>
+</aside>
+<ul>
+<li><a href="https://code.google.com/p/chromium/issues/detail?id=305356" rel="nofollow noopener">Issue 305356 - Focus outline appears after clicking a styled button</a></li>
+</ul>
+<aside class="quote" data-post="1" data-topic="804">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/takenspc/40/570_1.png" width="20"/> Takenspc:</div>
+<blockquote>
+<p>Firefox OS has disabled outlines by default (bug 1132728) as Firefox OS doesn’t support keyboard.</p>
+</blockquote>
+</aside>
+<ul>
+<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1132728" rel="nofollow noopener">bug 1132728 – Various elements (mainly buttons) get dotted outlines after tapping them on b2g</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-04-14</div>
+          <div class="post_content">
+<p>No opinion yet on whether this is useful or not, but handling “are you capable of drawing focus rings” is best done through a MQ, not a specialized pseudo-class variant.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-14</div>
+          <div class="post_content">
+<p>It seems to me this would cover it:</p>
+<pre><code class="lang-auto">@media (pointer: coarse) and (hover: none) {
+}
+</code></pre>
+<p><span class="mention">@Takenspc</span> that doesn’t check if “accessibility services are not working” but I think this case covers it, what do you think?</p>
+<p>Certainly I have never heard the feature called focus rings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-04-15</div>
+          <div class="post_content">
+<p>No, this is about keyboard access, not pointers.  The “focus ring” is the default dotted outline or gray/blue glow around the currently focused element.  It’s necessary for keyboard navigation, so you can tell where you are in the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-15</div>
+          <div class="post_content">
+<p>Yeah I got that, I should have been more clear the code I think should have been:</p>
+<pre><code class="lang-auto">:focus {
+  outline: 5px solid;
+}
+
+@media (pointer: coarse) and (hover: none) {
+  :focus {
+    outline: none;
+  }
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2015-04-16</div>
+          <div class="post_content">
+<p>I know this is a discussion about a standard CSS solution, but in terms of a practical JavaScript-based approach that can be used today, how about:</p>
+<ol>
+<li>During page initialization, dynamically inject a <code>:focus { outline:none }</code> style sheet and bind a “keydown” handler.</li>
+<li>Using the handler, if a TAB press is detected, revert the styles injected in step 1.</li>
+</ol>
+<p>Please let me know if this is a bad approach <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/> . I’m curious if this sort of TAB detection is performed in the wild to conditionally toggle focus rings, or what other techniques are used.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2015-04-16</div>
+          <div class="post_content">
+<p>As a front-end developer who does websites for many clients, this is definitely a problem that comes up on most projects, and something that I need a good solution for.</p>
+<p>Currently our team best practices mandate that we duplicate most <code>:hover</code> styles with <code>:focus</code>, for instance:</p>
+<pre><code class="lang-css">.CoolBtn {
+  color: white;
+  background-color: #555;
+}
+.CoolBtn:hover, .CoolBtn:focus {
+  background-color: green;
+  outline: none;
+}
+</code></pre>
+<p>When we have visible focus styles, we may also hide the default outline, for a cleaner look.</p>
+<p>Issues arise for links-that-behave-as-button (e.g. progressively enhanced links) and <code>&lt;button&gt;</code>, and other focusable elements that can be clicked or pushed and that will retain the focus after they’re clicked:</p>
+<ol>
+<li>A button that was clicked to perform an action can stay in a visual state (the one used for both <code>:hover</code> and <code>:focus</code>) that suggests it is “pressed” or “activated”. That can be puzzling for end users.</li>
+<li>Other leftover <code>:focus</code> styles do not pose such usability challenges, but can still be visually jarring, and clients often ask that they be removed, which leads to the tentation of using <code>outline:none</code> all over the place and never designing focus styles for keyboard navigation (I’ve NEVER had a client who cared about it, unless they specifically had to pass an accessibility certification).</li>
+</ol>
+<p>Current solutions include:</p>
+<ul>
+<li>Implementing designs with visible focus styles, and only removing some of them in CSS when the client actually complains about it.</li>
+<li>Using JS to move the focus from the clicked button (or buttonified link) to another element in the page, when the button is clicked. (For instance moving the focus to the form element for a navbar button that reveals a search form.)</li>
+<li>Using JS to add a class to an element when it’s clicked, and remove it when it loses focus.</li>
+</ul>
+<p>My current code for that last solution (not including the CSS part) is, with jQuery:</p>
+<pre><code class="lang-auto">$('.CoolBtn').on('click mousedown focusout', function(event){
+    var btn = $(event.currentTarget);
+    var t = event.type;
+    if (['mousedown', 'click'].indexOf(t) + 1) {
+        btn.addClass('noFocus');
+    } else if (t === 'focusout') {
+        btn.removeClass('noFocus');
+    }
+});
+</code></pre>
+<p>(Hasn’t been tested enough on touch devices, for the record.)</p>
+<p>Possible native solutions I’d like to see:</p>
+<ol>
+<li>Changing or clarifying specs so that “activation” of an UI element does not give it <code>:focus</code> (only <code>:active</code> styles applied, no leftover <code>:focus</code>).</li>
+<li>Or adding an alternative to <code>:focus</code> that describes focus gained through keyboard navigation or use of assistive technology.</li>
+<li>Or adding a pseudoclass with a behavior similar to my JS solution above (though it might need to be more specific), which could then be used independently or in selectors such as <code>:focus:not(:that-kind-of-focus) {…}</code>.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2015-04-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="804">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Please let me know if this is a bad approach</p>
+</blockquote>
+</aside>
+<p>It is.</p>
+<ul>
+<li>Use of keyboard navigation doesn’t preclude other kinds of interaction. (Users might use the Tab key to navigate locally, for instance between form controls, then keep using mouse clicks, taps, etc.)</li>
+<li>Not all “focusing” navigation will use the Tab key anyway. Opera used to have a mode for 2-dimensional keyboard navigation using the arrow keys, and other keys dedicated to one-dimensional keyboard nav (like Q and W or something like that).</li>
+</ul>
+<p>A similarly bad solution that is sometimes floated around is adding a class on the body the first time a mousemove is detected.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/469_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">saji</div>
+          <div class="creation_date">2015-04-16</div>
+          <div class="post_content">
+<p>I’ve been using this only for a while now, but it seems to work fine across all browsers:</p>
+<pre><code class="lang-css">:focus
+{
+    /* normalized default styles for all browsers */
+    outline: currentColor dotted thin;
+    /* on webkit and blink use focus ring;
+       style of “auto” hides it, when using mouse or touch */
+    outline: -webkit-focus-ring-color auto 5px;
+    /*
+    if one don't like webkit's ring, use this instead:
+    @supports (outline-color: -webkit-focus-ring-color)
+    {
+        :focus { outline-style: auto; }
+    }
+    */
+}
+/* don't use outline on mozilla browsers, if it's not needed */
+:focus:not(:-moz-focusring)
+{
+    outline: none;
+}
+</code></pre>
+<p>… but I’d rather see something like <code>:-visual-focus-ring-is-not-required</code> standarized, instead of opposite <code>:-moz-focusring</code> as later encourages bad practise (giving <code>:focus</code> no outline and only adding it for browsers that support the selector).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

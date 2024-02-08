@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Auto-sizing text to fit container</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Auto-sizing text to fit container</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p>I would be interested in having a CSS feature that would allow font to be sized relative to it’s container size.</p>
+<h4>Reasoning</h4>
+<p>There is quite a lot of interest in this:</p>
+<ul>
+<li>
+<a href="https://github.com/davatron5000/FitText.js" rel="nofollow noopener">FitText.js</a>, GitHub, 1,196 forks / 5,422 stars</li>
+<li>
+<a href="https://github.com/simplefocus/FlowType.JS" rel="nofollow noopener">FlowType.JS</a>, GitHub, 432 forks / 3,810 stars</li>
+<li>
+<a href="http://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container" rel="nofollow noopener">Font scaling based on width of container</a>, StackOverflow, 147 points / 72 stars</li>
+</ul>
+<p>While <code>vw</code> and <code>vh</code> can provide a certain workaround, relying on viewport size would not be sufficient for a relatively complex page.</p>
+<p>Another thing is precision. Basic <a href="https://vimeo.com/channels/kinetictypography" rel="nofollow noopener">Kinetic Typography</a> could be done with standard CSS animations if the text can be positioned precisely, taking exact vertical space (from top pixel of the text to bottom pixel).</p>
+<h4>Specification</h4>
+<p>This is a very rough description of an idea – I am pretty sure there are quite a lot of problems with it.
+But here is the basic thing:</p>
+<pre><code class="lang-auto">font-size: fit-width | fit-height | fit-height-precise;
+</code></pre>
+<p><code>fit-height-precise</code> would be ascent-to-descent (if I understand font terminology correctly) – basically from top pixel to bottom pixel.</p>
+<h4>Problems</h4>
+<ul>
+<li>
+<p><em>How does this work with multiline text?</em><br/>
+Not quite sure at the moment – any feedback?<br/>
+One option is an additional constraint that would describe preferred line length.</p>
+</li>
+<li>
+<p><em>How does this work with text-overflow?</em><br/>
+Overflow would have to be ignored if this is set.</p>
+</li>
+<li>
+<p><em>How does this work when calculating the container size?</em><br/>
+Setting this property makes container ignore its text content when calculating it’s size.</p>
+</li>
+<li>
+<p><em>How does it work when there are other elements in the container?</em><br/>
+Not quite sure, but we could ignore the property in that case.</p>
+</li>
+<li>
+<p><em>Shouldn’t we support percentage sizes relative to the container instead of 100% fit?</em><br/>
+I would say it’s not worth it – it’s always possible to wrap in another element or use padding instead.</p>
+</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-10</div>
+          <div class="post_content">
+<p>Having written the current text-sizing logic for <a href="https://github.com/tmcw/big" rel="nofollow noopener">big.js</a>, I can tell you that handling this for word-wrapped content is a computationally-complex <a href="https://en.wikipedia.org/wiki/Packing_problems" rel="nofollow noopener">packing problem</a>, solveable by only brute force (although the search space could probably be reduced significantly with better text metric APIs). As such, I believe the multi-line case should remain a problem solvable by only JS (on the other hand, I think Flexbox has a similar sizing mode regarding wrapping content, so maybe this isn’t as intractable as I think).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/785_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kizu</div>
+          <div class="creation_date">2017-08-02</div>
+          <div class="post_content">
+<p>This is a thing I’ve wanted for ages, and it doesn’t make sense why there is no plain CSS solution up to date.</p>
+<p>The last time I thought about it (it was today) I came up with that it should be a new value for <code>text-overflow</code> property, like <code>text-overflow: scale</code>, alongside with two new properties <code>min-font-size</code> and <code>max-font-size</code>, both of which would allow us to control things for the most use-cases .</p>
+<p>Issues that should be solved:</p>
+<ol>
+<li>Whenever there is a multiline text and only one line overflows, should the font-size of the whole text be scaled, or only the one for the line that overflows? The best would be to have a way to do both, and the easiest would be to scale everything.</li>
+<li>Should only font-size be scaled, or both font-size and line-height? What about font-weight and other possible properties of the font? I’d say that for the start we should be able to allow both line-height scaling and no line-height scaling, possibly by different values?</li>
+</ol>
+<p>Most of the use-cases are already solved in JS in a number of ways (for example, <a href="https://github.com/rikschennink/fitty" rel="nofollow noopener">https://github.com/rikschennink/fitty</a>), and performance or complexity shouldn’t be valid reasons not to implement it in CSS. That’s a thing that developers need really often and it just should be in CSS, one way or another. Performance shouldn’t be worse than that of the JS tools already provide (and it should be on developers to use it properly), and any complexity issues should be fixed by having compromises that would allow the most use cases to be achievable (and for the more complex ones not to be, at least at first).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-08-02</div>
+          <div class="post_content">
+<p>We already do this for (background) images, using <code>contain</code>, so I imagine something similar could certainly be done with <code>font-size</code>. It definitely has use cases ─ I don’t think that’s even in question.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/961_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">kevinmarks</div>
+          <div class="creation_date">2017-08-02</div>
+          <div class="post_content">
+<p>You can do it with SVG, but you might not like it: <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/lengthAdjust" rel="nofollow noopener">https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/lengthAdjust</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-08-02</div>
+          <div class="post_content">
+<p>Sure, but what if the text can be any number of values? The vast majority of people won’t want to edit SVGs on the fly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1730_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">seventhirtythree</div>
+          <div class="creation_date">2018-06-25</div>
+          <div class="post_content">
+<p>I am liking this solution so far
+<iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_GpGevp" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/aknip/embed/preview/GpGevp?height=300&amp;slug-hash=GpGevp&amp;default-tabs=css,result&amp;host=https://codepen.io&amp;embed-version=2" title="FlexText - Responsive font size based on container DIV size" width="695"></iframe></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Emil_Noren</div>
+          <div class="creation_date">2018-11-14</div>
+          <div class="post_content">
+<p>This would be an incredibly useful feature, though I would also include minimum and maximum size parameters. It would be particularly great to have it for user-generated text that has to fit within a small fixed size container where scrolling is unacceptable. Normally you’d use ellipsis and present the full text some other way, but it would be neat to be able to just shrink the font slightly to fit.</p>
+<p>The computational complexity doesn’t seem bad at all since you can use binary search to find the optimal fit, as long as the precision is within reason. If only integers are allowed, then finding the best fit between 6px and 70px (an obviously ridiculous scenario) would only take a maximum of 6 iterations. Adding subpixel precision down to 0.25px would only add another 2 iterations. Additionally, any iteration can be cut short if the total width of all remaining characters is greater than the remaining horizontal space (treating all rows as a single one), which quickly eliminates any sizes that would be far too large. You can also use previous knowledge to optimize the search, for example if 27px was optimal for a previous text and you add another word to that text, then you know that the new solution is less than or equal to 27px. If the added word is a small fraction of the whole text you also know that the font change will be small, so you can linear search down from 27px. There are many other tricks that can be used to even further speed up the algorithm, but clearly it’s nothing too expensive, especially considering that it would likely only be used for shorter text content (making each iteration very quick).</p>
+<p>The main issue I have with JS solutions is the initial page load. The first layout won’t happen until the first stylesheet or inline CSS has been parsed, but it won’t wait for your JS file to download and execute (unless you don’t defer, which has its own downsides). So if you style things by JS on page load you may see a flash of incorrectly styled content. The only solution is to inline the JS, not really something you want to do unless it’s extremely lightweight. It’s also inefficient since with JS you don’t have access to certain information about font and layout behavior (which can differ by browser), so answering a question like “would this text overflow at 11px?” can be very difficult. This can make it either slow to compute, inaccurate or inflexible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2019-07-31</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="8" data-topic="1053">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/e/82dd89/40.png" width="20"/> Emil_Noren:</div>
+<blockquote>
+<p>The computational complexity doesn’t seem bad at all since you can use binary search to find the optimal fit, as long as the precision is within reason. If only integers are allowed, then finding the best fit between 6px and 70px (an obviously ridiculous scenario) would only take a maximum of 6 iterations.</p>
+</blockquote>
+</aside>
+<p><a href="https://discourse.wicg.io/t/auto-sizing-text-to-fit-container/1053/2">As I noted in 2015</a>, for wrapping text, it’s not quite that simple - due to the ways line breaks can change the kerning/ligatures of words (such as a hyphenated word requiring more total width when split across two lines), text that fits at a large font size can end up <em>not</em> fitting when applying the natural line-breaking flow of a <em>smaller</em> font size, meaning that the search space is non-binary.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1601_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">collimarco</div>
+          <div class="creation_date">2021-01-23</div>
+          <div class="post_content">
+<p>+1 I would love to see this feature</p>
+<p>(I was going to create a new proposal then I found this post)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

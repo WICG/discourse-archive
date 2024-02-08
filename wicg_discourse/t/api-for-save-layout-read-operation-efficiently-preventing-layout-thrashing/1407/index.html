@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>API for save layout read operation (efficiently preventing layout thrashing)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">API for save layout read operation (efficiently preventing layout thrashing)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-03-23</div>
+          <div class="post_content">
+<p>I was send from a <a href="https://github.com/w3c/requestidlecallback/issues/37" rel="nofollow noopener">rIC issue</a>.</p>
+<p>Currently it is impossible to know whether the layout was invalidated and a read operation would force a layout.</p>
+<p>While it is possible to write your own code in a way to fully avoid layout thrashing. In the real world this becomes quite impossible as soon as third party libraries and services are included in a page.</p>
+<p>The currently nearest API that gets in the requested direction is the <code>requestIdleCallback</code> API. As seen above this API can’t guarantee that the callback is invoked, when the layout does not need recalculations.</p>
+<p>I would like to see either a method/getter to check whether layout is currently dirty:</p>
+<pre><code class="lang-auto">window.isSaveToRead();
+</code></pre>
+<p>Or maybe better a callback method similar to rIC or rAF:</p>
+<pre><code class="lang-auto">window.requestReadCallback(()=&gt;{
+    //do some read operations
+});
+</code></pre>
+<p>This callback function could be invoked in the same frame if layout is currently not invalidated or if it is, will be invoked right after frame commit before any other tasks (callbacks and event listeners) are run.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

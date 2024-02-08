@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal to advertise UA automation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal to advertise UA automation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1054_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shekyan</div>
+          <div class="creation_date">2017-01-19</div>
+          <div class="post_content">
+<p>Hi,</p>
+<p>I’d like to discuss benefits of advertising user agent automation. I started the topic at webappsec (<a href="https://lists.w3.org/Archives/Public/public-webappsec/2017Jan/0004.html">https://lists.w3.org/Archives/Public/public-webappsec/2017Jan/0004.html</a>), but this mailing list seems to be more suitable for the topic.</p>
+<p>The idea is to attach an HTTP request header to navigation requests that are initiated by automation tools, by which I mean headless browsers, web driver driven browsers, etc.</p>
+<p>The benefit for the webste operator is to have a choice in responding to such requests differently. For example, do not serve ads, suggest using API scraping rather that loading heavy resources, send through failed CAPTCHA route, etc.</p>
+<p>This approach intersects with robots.txt a little, but none of modern UA automation tools honor robots.txt, and implementing the advertising flag seems to be relatively easy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-20</div>
+          <div class="post_content">
+<p>I’d like to hear more information on the actual use-cases proposed and try to understand how they don’t detriment the web.</p>
+<ul>
+<li>
+<em>Do not serve ads</em>
+<ul>
+<li>If this were implemented by the header, then anyone could just build an extension to add the header to all their requests to avoid getting ads. Essentially, using the header as an ad-blocker where supported. That hurts sites needing to generate revenue to support their business and also doesn’t help the businesses that would implement it. I don’t see a benefit coming from this point.</li>
+</ul>
+</li>
+<li>
+<em>suggest using API scraping rather that loading heavy resources</em>
+<ul>
+<li>How would this “suggestion” work exactly?</li>
+<li>Also remember headless mode is not necessarily web scraping usage. There could be accessibility tools built for people that take advantage of it. You wouldn’t want to “suggest” they use APIs to get data when the tools are built to interpret page content.</li>
+</ul>
+</li>
+<li>
+<em>send through failed CAPTCHA route</em>
+<ul>
+<li>This ends up in the same boat as not serving ads. If a site developers builds in a way that one header bypasses security and authorization mechanisms, then all someone wanting to attack that site would need to do is send the header. Whether or not it is accurate as to what is happening. This once again, detriments sites over helping them.</li>
+</ul>
+</li>
+</ul>
+<p>Before advocating vendors add in such a header we should have solid examples of how it would be applied in the real world; providing benefits to end-users and without opening detrimental affects to web authors. I can’t think of a scenario where the web author would know better than the end user what they want or need by using a headless browser.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1054_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shekyan</div>
+          <div class="creation_date">2017-01-23</div>
+          <div class="post_content">
+<p>copying from <a href="https://lists.w3.org/Archives/Public/public-wicg/2017Jan/0004.html:">https://lists.w3.org/Archives/Public/public-wicg/2017Jan/0004.html:</a>
+From: Nottingham, Mark <a href="mailto:mnotting@akamai.com">mnotting@akamai.com</a>
+Hi,</p>
+<p>I didn’t see the thread on discourse, so I’ll respond here.</p>
+<p>One thing to keep in mind is that sites which actually do send difference content will need to also send a Vary header if the content is cacheable; otherwise, a cache on the same path could serve “headless” content to a browser, or vice versa. E.g., if a reverse proxy or CDN is being used.</p>
+<p>On its own that’s not a huge deal, but it will inflate the size of responses a bit; Vary needs to be sent on <em>all</em> responses for a resource that it applies to, including the “default” ones (i.e., responses to requests that don’t have this header).</p>
+<p>Aside from that, I wonder how many headless agents will actually use this, since their typical use is to get whatever the browser does, or as close to it as possible.</p>
+<h2>Cheers,</h2>
+<p>Mark Nottingham    <a href="mailto:mnot@akamai.com">mnot@akamai.com</a> <a href="https://www.mnot.net/" rel="nofollow noopener">https://www.mnot.net/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/697_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ato</div>
+          <div class="creation_date">2017-01-23</div>
+          <div class="post_content">
+<p>Hi, I’m one of the authors of the <a href="https://w3c.github.io/webdriver/webdriver-spec.html">WebDriver standard</a>, and if browsers are under automation they are required to populate the <a href="https://html.spec.whatwg.org/#navigator"><code>Navigator</code> object</a> with a boolean attribute <code>navigator.webdriver</code> so that content JS can take appropriate measures.</p>
+<p>Adding a header to <em>each</em> HTTP request made whilst the browser is under automation immediately strikes me as a bit heavy weight and would require existing implementations to integrate at a deeper level with the network stack, since HTTP requests are not usually explicitly made by the tools.</p>
+<p>WebDriver tries to emulate user interaction, and HTTP requests are only implicitly initiated through synthesising trusted click events, keyboard input, &amp;c.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1054_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shekyan</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<blockquote>
+<p>I’d like to hear more information on the actual use-cases proposed and try to understand how they don’t detriment the web.</p>
+</blockquote>
+<p>Folks have opportunities to hide javascript object properties that some automation tools expose, change user-agent string, randomize timing between user events  to hide presence of automation. Nothings stops them from doing the opposite: expose fake objects properties or change user-agent string to phantomJS. So the header doesn’t add any extra possibilities, but rather makes things more convenient for both sides.</p>
+<p>The presence or absence of this header should not be interpreted on its own, but rather as one part of a solution to address automation detection.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1054_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">shekyan</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<p>That’s a handy option, although would require for a website a roundtrip to read that flag, while a header would deliver it in initial request.</p>
+<p>I agree that exposing the flag to each request is heavy, and is can make things go out of website operator’s control, as resources hosted by third parties would get knowledge that they should not necessarily have. That is why I believe this flag should be exposed only on <a href="https://fetch.spec.whatwg.org/#navigation-request">navigation requests</a>.</p>
+<p>Do you happen to know the feature support timeline for <code>navigator.webdriver</code>, as I checked stable Firefox, Chrome and Safari, and none of them exposes the property yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<aside class="quote" data-post="5" data-topic="1962">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/shekyan/40/1054_1.png" width="20"/> shekyan:</div>
+<blockquote>
+<p>Folks have opportunities to hide javascript object properties that some automation tools expose, change user-agent string, randomize timing between user events  to hide presence of automation. Nothings stops them from doing the opposite: expose fake objects properties or change user-agent string to phantomJS. So the header doesn’t add any extra possibilities, but rather makes things more convenient for both sides.</p>
+</blockquote>
+</aside>
+<p>What would prevent these same folks from modifying headless browser binaries to not include said header?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<p>So, if it is just one possible part, assuming it is even accurate, then why add it at all? It is an extra header on every request that may or may not get used. And even if it is used, could be used to detriment web experiences. So far there hasn’t been one solid example of how sites can utilize this effectively without running the risk of hindering users or themselves.</p>
+<p>Use cases rule pushing things forward. If we don’t have any solid ones then there won’t ever be a reason to persuade vendors to implement anything that is requested.  Let’s focus on use cases first, implementation details second.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/697_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ato</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<p>Let’s be clear that the security model here is different to that of browser content. You can modify <em>any</em> user agent to disable security measures if you have access to the browser binary, not limited to whether a WebDriver-controlled browser sends a specific header.</p>
+<p>I can see a potential use case that websites want to prevent remote controlled browsers from crawling their website, but giving them a header is comparable to UA string sniffing, which websites already do to gate certain browsers from accessing content. Dedicated users spoof the UA string to circumvent this, both for pleasure and automation.</p>
+<p>Giving a UA under automation a header would ensure the UA string remained unchanged, potentially letting websites trigger an ‘automation mode setting’ but still trigger the UA sniffing behaviour.</p>
+<p>In any case, I’m not sure this is desirable to give websites <em>another</em> mechanism for sniffing the client, potentially fragmenting the web further. On the other side, because it’s impossible to prevent a user modifying the UA, maybe an automation header would be useful if only for convenience.</p>
+<p>However, the use cases listed here so far are not convincing: If sending automation tools could avoid CAPTCHAs and ads by sending a header, what would prevent users from modifying their own browsers to do the same? I think the only safe option for triggering ‘test mode’ behaviour on your website is to spin it up an instrumented version in a controlled test environment.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/697_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ato</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<blockquote>
+<p>Do you happen to know the feature support timeline for navigator.webdriver, as I checked stable Firefox, Chrome and Safari, and none of them exposes the property yet.</p>
+</blockquote>
+<p>Firefox is the only implementation of the W3C WebDriver I know of, but we haven’t implemented the <code>navigator.webdriver</code> fingerprint yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-01-25</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1962">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ato/40/697_1.png" width="20"/> ato:</div>
+<blockquote>
+<p>On the other side, because it’s impossible to prevent a user modifying the UA, maybe an automation header would be useful if only for convenience.</p>
+</blockquote>
+</aside>
+<p>This is exactly why we should be focusing on <strong>use cases</strong> over the implementation details. Currently, the only primary quasi-valid use case is “recommending API usage over scraping”. However, that has numerous short-comings and only leads site developers into a false sense of control.</p>
+<aside class="quote" data-post="9" data-topic="1962">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ato/40/697_1.png" width="20"/> ato:</div>
+<blockquote>
+<p>You can modify any user agent to disable security measures if you have access to the browser binary</p>
+</blockquote>
+</aside>
+<p>Even without access to the browser binary, extensions in Chrome and FF at least are capable of doing this for anything on the network layer. So adding something to modifier the headers is quite trivial.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

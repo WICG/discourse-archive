@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Default Grid Columns, Rows, and Areas</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Default Grid Columns, Rows, and Areas</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2019-03-06</div>
+          <div class="post_content">
+<p>I’ve run into some scenarios where it would be convenient for parent nodes using <code>display: grid</code> to be able to control the <a href="https://www.w3.org/TR/css-grid-1/#grid-placement-property">grid placement properties</a> of their child grid items.</p>
+<p>As a simplified example, the <code>main</code> element of a page might have the following CSS:</p>
+<pre><code class="lang-auto">main {
+  display: grid;
+  grid-template-columns: [wide-start] 1fr [normal-start] 500px [normal-end] 1fr [wide-end];
+}
+</code></pre>
+<p>Child elements would then have <code>grid-column: normal</code> to be centered on the page. For elements that should stretch full-width, <code>grid-column: wide</code> could then be used:</p>
+<pre><code class="lang-auto">p {
+  grid-column: normal;
+}
+pre {
+  grid-column: wide;
+}
+</code></pre>
+<p>If specific elements are used, this will quickly become difficult to maintain as each new element needs to be added to the list:</p>
+<pre><code class="lang-auto">div,
+dl,
+ol,
+p,
+ul,
+... {
+  grid-column: normal;
+}
+
+pre {
+  grid-column: wide
+}
+</code></pre>
+<p>Clearly this already has a simple solution, use a child selector with a universal selector:</p>
+<pre><code class="lang-auto">main &gt; * {
+  grid-column: normal;
+}
+
+pre {
+  grid-column: wide;
+}
+</code></pre>
+<p><strong>So what’s the problem?</strong></p>
+<p>The problem comes up once you start building with large amounts of components. Ideally with component code each component can be kept in isolation from each other, so they can be added and removed as a unit without causing breaking changes elsewhere in a site.</p>
+<p>If we instead have an example of:</p>
+<p><sub>Sass</sub></p>
+<pre><code class="lang-auto">.Page {
+  display: grid;
+  grid-template-columns: [wide-start] 1fr [normal-start] 500px [normal-end] 1fr [wide-end];
+
+  &gt; * {
+    grid-column: normal;
+  }
+}
+
+...
+
+.Code {
+  grid-column: wide;
+}
+</code></pre>
+<p>The cascade starts to become a problem for child elements.</p>
+<p>If I’ve imported my components in say, alphabetical order:</p>
+<pre><code class="lang-auto">@import 'Code';
+...
+@import 'Page';
+</code></pre>
+<p><code>.Page&gt;*</code> will always override <code>.Code</code> due to the cascade.</p>
+<p>Now certainly this example is easily fixed by switching the source order of the two components, but in large-projects with potentially hundreds of components, this becomes harder to see the inter-component dependencies.</p>
+<p>With recursively nestable components, it may not even be possible to properly reorder the components without splitting them across multiple files, or increasing specificity:</p>
+<pre><code class="lang-auto">:root .Code { //blegh
+  grid-column: wide;
+}
+</code></pre>
+<p>Instead, I think there’s a simple solution to this that already has some precedent in CSS grid:</p>
+<p>I think we should introduce separate rules for the grid parent nodes to manage the same functionality so that the defaults can be specified but then the child nodes can override the behavior explicitly.</p>
+<p>We’ve already got this with <code>align-self</code>/<code>align-items</code> and <code>justify-self</code>/<code>justify-items</code>.</p>
+<p>I think it would be helpful to have something along the lines of <code>grid-column-items</code>, <code>grid-items-column</code>, or <code>default-grid-column</code> (the name doesn’t matter all that much, let’s not bikeshed).</p>
+<p>Having a matched property for each of:</p>
+<ul>
+<li><code>grid-row-start</code></li>
+<li><code>grid-row-end</code></li>
+<li><code>grid-column-start</code></li>
+<li><code>grid-column-end</code></li>
+<li><code>grid-row</code></li>
+<li><code>grid-column</code></li>
+<li><code>grid-area</code></li>
+</ul>
+<p>Would help solve this problem easily:</p>
+<pre><code class="lang-auto">pre {
+  grid-column: normal;
+}
+
+main {
+  display: grid;
+  grid-items-column: normal;
+  grid-template-columns: [wide-start] 1fr [normal-start] 500px [normal-end] 1fr [wide-end];
+}
+</code></pre>
+<h2>Anonymous Grid Item Placement</h2>
+<p>Introducing default grid placement for child nodes also opens us up to being able to specify placement for anonymous grid items as well.</p>
+<p><a href="https://stackoverflow.com/a/49312449/497418" rel="nofollow noopener">I was surprised when I found out most of a year ago that plain text nodes have no way of being placed within a grid currently</a>.</p>
+<p>Having default grid placement managed from grid parents opens up the ability to place pieces of text without needing to introduce additional, potentially unsemantic, wrapper elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/620_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">zzzzbov</div>
+          <div class="creation_date">2019-06-04</div>
+          <div class="post_content">
+<p>I have moved this discussion to the <a href="https://github.com/w3c/csswg-drafts/issues/4002" rel="nofollow noopener">CSSWG repo</a>. Any replies should be posted there.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

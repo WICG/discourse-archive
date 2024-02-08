@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>getUserMedia captions/accessibility</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">getUserMedia captions/accessibility</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/731_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">powrsurg</div>
+          <div class="creation_date">2015-09-02</div>
+          <div class="post_content">
+<p>The getUserMedia function is a wonderful tool that capturing audio and video from the user’s device. For A-level compliance with WCAG 2.0 requires captions or transcripts for the audio.</p>
+<p>Currently creating accessible applications that use getUserMedia require a secondary entry for the user to either upload a WebVTT file, or to manually enter the text for a transcript during creation time (or creating the captions/transcripts after the fact). This creates an extra burden on the application and leads to less development of accessible tools. If it was somehow possible to upgrade getUserMedia to additionally output a best-guessed transcript or webVTT file then it will better facilitate the creation of more accessible applications that can serve the needs of more users.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/72_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dontcallmedom</div>
+          <div class="creation_date">2015-09-02</div>
+          <div class="post_content">
+<p>If I get this right, this would require having universal and reliable speech recognition in browsers, and that is probably beyond what can be reasonably expected today.</p>
+<p>There are on-line services that do best-guess attempts at captioning videos, so the current fallback would be to see if these services offer APIs for that, and have the captured video be uploaded there for transcription.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/731_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">powrsurg</div>
+          <div class="creation_date">2015-09-02</div>
+          <div class="post_content">
+<p>That was the belief that I had originally, but then it occurred to me: why would calling out the operating systems native speech to text functionality be more unreachable then accessing the camera or microphone? One should be able to check for things programmatically (like we check for access to the microphone or the camera) so we would have to use those where applicable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/657_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">nemzes</div>
+          <div class="creation_date">2015-09-02</div>
+          <div class="post_content">
+<p>Would it make more sense to change/augment the <a href="https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html">SpeechRecognition interface</a> to accept an audio stream instead of just accepting input from the microphone? You could then pipe the video/audio content through to it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/57_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LJWatson</div>
+          <div class="creation_date">2015-09-02</div>
+          <div class="post_content">
+<p>It might be possible to use the platform audio capture and
+speech recognition capability.</p>
+<p>The other thing that would need to happen is conversion of the
+speech recognition output to an appropriate time-stamped format (such as Web
+VTT). In the absence of platform level mechanisms for creating time-stamped
+formats, this would presumably need to happen at the browser level?</p>
+<p>Time-stamps formats is another consideration. Web VTT is the
+accepted HTML5 format, but is there a use case for producing other caption
+formats in this scenario? QT (Quicktime), SAMI/SMI (Windows Media), SCC (ios
+amongst other things) and others for example…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaals</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1095">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/dontcallmedom/40/72_1.png" width="20"/> dontcallmedom:</div>
+<blockquote>
+<p>If I get this right, this would require having universal and reliable speech recognition in browsers</p>
+</blockquote>
+</aside>
+<p>I don’t think that’s true. Occasional, unreliable speech reco is <em>often</em> better than nothing for accessibility.</p>
+<p>And it doesn’t have to be in the browser itself. There are a number of speech-to-text engines around in browsers, OS, and online. Having a simple way to pipe the audio to one of those and get a text feed back, that gets attached to the audio, seems like a useful thing. Although being able to determine where it gets piped is a privacy and security issue, the mechanics seem pretty straightforward - the question is where in the pipeline any buffering / re-synch should take place.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

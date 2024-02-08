@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: API for devs to allow DOM to be safely suspended when tab is innactive</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: API for devs to allow DOM to be safely suspended when tab is innactive</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dylang</div>
+          <div class="creation_date">2015-08-05</div>
+          <div class="post_content">
+<hr/>
+<p><strong>Update Aug 6, 2015: Not necessary, alternate solutions provided in comments.</strong></p>
+<hr/>
+<blockquote>
+<p>If a DOM changes, and nobody is looking at it, does it use memory and power?</p>
+</blockquote>
+<p><em>My assumptions are yes. This proposal is for people like me who regularly have 20+ tabs open.</em></p>
+<h1>Problem</h1>
+<p>We keep a lot of tabs open that we don’t need to be active all of the time. Some of these tabs can be using a lot of memory and/or power.</p>
+<p>For example right now you might have tabs open for gmail, some Google docs, Facebook, medium, a bunch of articles you’ve been waiting for the right time read, some Github projects that look interesting, etc.</p>
+<p>In the near future you might have tabs with asm.js-based games and applications running in them.</p>
+<p>You have them open because you want to get back to them <em>eventually</em>, or you want the notifications, but you don’t necessarily need <em>the whole web page running</em> while they are in the background.</p>
+<h1>Proposal</h1>
+<p>There is some new API introduced to browsers that, when used, it tells browsers:</p>
+<ol>
+<li>This page allows for the DOM to be suspended.</li>
+<li>What Javascript to run when the DOM is going to be suspended because it has been an inactive tab for some amount of time.</li>
+<li>What to Javascript to run when the user returns to the tab and the page DOM is returned to life.</li>
+</ol>
+<h2>Example API</h2>
+<p><em>Note: Not a suggestion of what the API should look like, just an example to help with understanding. The actual API might need to be more like a service worker.</em></p>
+<pre><code class="lang-auto">// keep checking for new email, post notifications when email comes in
+window.onsuspend = fn;  
+
+// update DOM with changes since it was suspended
+window.onreanimate = fn;
+</code></pre>
+<h2>Backwards compatibility</h2>
+<p>Browsers without this feature will ignore this and always have a DOM rendering.</p>
+<h2>Shim concept</h2>
+<ol>
+<li>Listen for user interaction on the body.</li>
+<li>On some timeout with no interaction, save <code>body.innerHTML</code> to a variable.</li>
+<li>Set <code>body.innerHTML</code> to <code>null</code> (or whatever the best way is to remove free up memory by removing DOM nodes and their listeners.)</li>
+<li>Call <code>window.onsuspend</code>
+</li>
+<li>When user interaction on the body starts happening again, set <code>body.innerHTML</code> to the value from the above variable.</li>
+<li>Call <code>window.onreanimate</code>.</li>
+</ol>
+<h1>Downsides</h1>
+<p>The <code>reanimate</code> function might need to bring back all of the listeners from before the DOM was destroyed and update the DOM with any state changes that happened during its suspension. This can be relatively straightforward with frameworks like <code>React</code> or <code>Angular</code>, but is possibly too much work in a pure <code>jQuery</code> environment.</p>
+<p>Iframes might be difficult or impossible to handle correctly. Ideally an ad displayed before suspension will be the same ad in the same state after suspension, but this might not be feasible. This might have to be a compromise of this feature.</p>
+<h1>Real-world examples</h1>
+<p>I don’t know of any real examples of this feature.</p>
+<h1>Memory and Power usage of inactive tabs today</h1>
+<p>I recognize that, as part of this proposal, one should provide a table of memory and power usage of inactive tabs for popular sites today, covering various browsers, to show potential for improvement. I could use help with this, as I’m not sure how to measure power usage on a per-tab basis.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/636_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Edwin_Reynoso</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>I would sort of like this, but I’m more doubting its going to happen. With <a href="http://thenextweb.com/google/2015/07/30/chrome-might-soon-save-memory-by-auto-discarding-your-least-interesting-tabs/" rel="nofollow noopener">this</a> is happening. Also there are extensions like: OneTab, and The Great Suspender.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>Are you aware of the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/User_experience/Using_the_Page_Visibility_API" rel="nofollow noopener">Page Visibility API</a>? It already has good browser support and sounds like it mostly does what you want. It fires events when the page goes in to the background or comes back to the foreground. It’s up to the JS handlers to stop any heavy processing and resume it in these events. In addition to that most browsers limit timers and rAF callbacks to once a second to reduce the activity of background tabs. One real world use case is we build a HTML5 game engine which pauses and resumes the game as the page goes in to the background, so it is not using up CPU processing the game when it’s not needed.</p>
+<p>If you wanted to, you could code your visible/invisible event handlers to completely clear the page of DOM elements, but I’m not sure this is a good idea. You will trash all your event handlers, JS state, and so on. I think it is better to leave everything in memory, and if it’s not used and the system is low on memory, the OS will page it out to disk.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>Yeah, this is a UA behavior, not a page behavior. As the TNW article <span class="mention">@Edwin_Reynoso</span> posted points out, Chrome OS has done this for a while (I know my 2GB ram Chromebook has done this since I first bought it).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/409_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dylang</div>
+          <div class="creation_date">2015-08-06</div>
+          <div class="post_content">
+<p>Thank you for the insightful feedback <span class="mention">@Edwin_Reynoso</span>, <span class="mention">@AshleyScirra</span>, and <span class="mention">@stuartpb</span>!</p>
+<p>I appreciate the detailed responses, links, and examples for why this is not necessary.</p>
+<p>I am happy to drop this, thanks again!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

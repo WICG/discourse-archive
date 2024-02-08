@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Http should send Javascript On and the Version in Gets, Posts, Etc</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Http should send Javascript On and the Version in Gets, Posts, Etc</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">adligo</div>
+          <div class="creation_date">2016-11-01</div>
+          <div class="post_content">
+<p>Hi All,</p>
+<p>I have encountered a issue with web design that appears to be part of the http specification.
+I believe that the version of ECMA (Javascript) and if it is on or off should be included with the http request header when sent to a server.  It might fit well into this RFC;</p>
+<p><a href="https://www.ietf.org/id/draft-ietf-httpbis-client-hints-02.txt" rel="nofollow noopener">https://www.ietf.org/id/draft-ietf-httpbis-client-hints-02.txt</a></p>
+<p>Perhaps a new section between 7 &amp; 8 as follows;</p>
+<ol start="8">
+<li>The ECMA script (Javascript) Client Hint</li>
+</ol>
+<p>The “ECMA” request header field is a number or text that
+indicates the client’s current ECMA implementation version.  A blank ECMA
+hint would indicate that ECMA script is currently turned off.</p>
+<pre><code> ECMA = Text [32 ASCII characters]
+</code></pre>
+<p>If ECMA occurs in a message more than once, the last value
+should be used to override other occurrences.
+Examples;</p>
+<pre><code> #1 ECMA script is turned off
+ ECMA:
+
+ #2 ECMA script is on the Next version
+ ECMA: Next
+
+ #3 ECMA script is on version 5.1
+ ECMA: 5.1
+</code></pre>
+<p>The basic thing that I am trying to do is determine if Javascript can be used to assemble a html page or if it should be done server side if Javascript is turned off.  Currently I can do this by assuming javascript is on and then redirecting from the browser when it is off using something like;
+</p>
+<p>When javascript is on I can assemble (and cache most of the repeated parts of the page).
+i.e. profile these pages in Chrome and check the speed and cacheing;
+<a class="onebox" href="http://mokshayoga.com/tt/tuition.html" rel="nofollow noopener" target="_blank">http://mokshayoga.com/tt/tuition.html</a>
+then
+<a class="onebox" href="http://mokshayoga.com/tt/index.html" rel="nofollow noopener" target="_blank">http://mokshayoga.com/tt/index.html</a></p>
+<p>Vs.
+<a class="onebox" href="https://www.mokshayoga.com/chicago-yoga-policies.html" rel="nofollow noopener" target="_blank">https://www.mokshayoga.com/chicago-yoga-policies.html</a>
+then
+<a class="onebox" href="https://www.mokshayoga.com/chicago-yoga-events.html" rel="nofollow noopener" target="_blank">https://www.mokshayoga.com/chicago-yoga-events.html</a></p>
+<h2>Cheers,</h2>
+<p>Scott Morgan</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alvestrand</div>
+          <div class="creation_date">2016-11-01</div>
+          <div class="post_content">
+<p>Nit: “ECMA” is a bad name, because ECMA does much more than Javascript. If you want ECMAscript, say ECMAscript.</p>
+<p>I’m skeptical, though - Is there anything that makes life easier than</p>
+<p>&lt;a href=“nonjs-url” onclick=“navigateTo(js-url)”&gt;</p>
+<p>would give you, in return for the increased fingerprint and passive-monitoring capabilities that it offers?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2016-11-30</div>
+          <div class="post_content">
+<p>A way to solve the exact proposed problem without anything additional added is to <em>always</em> be prepared to render things server-side. Using javascript when you send requests add the <code>accepts</code> (iirc) request header and set it to whatever you expect back <code>application/json</code> or <code>partial-html</code> if you only want to return a part of a view to inject into the current page. Then on the server you just see whether the client is expecting some specific form of response and do that, defaulting to returning a redirect or a full page response as-needed.</p>
+<p>I don’t see the case for needing another header here. The proposed problem is perfectly solvable with everything we have available right now.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

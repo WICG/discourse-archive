@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Migrate some high-entropy HTTP request headers to Client Hints</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Migrate some high-entropy HTTP request headers to Client Hints</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2018-11-05</div>
+          <div class="post_content">
+<h1>A Problem</h1>
+<p>HTTP request headers expose quite a bit of information about users by default, even over plaintext. It would be better if this information was a) opt-in, b) locked to secure transport, and c) delegated by the first-party to specific third-parties. Client Hints, conviniently enough, provides exactly this infrastructure.</p>
+<h1>Some Proposals</h1>
+<p><code>User-Agent</code> and <code>Accept-Language</code> headers seem like particularly low-hanging fruit:</p>
+<ul>
+<li>
+<a href="https://github.com/mikewest/ua-client-hints">https://github.com/mikewest/ua-client-hints</a> suggests that we split <code>User-Agent</code> into <code>UA</code>, <code>UA-Platform</code>, <code>UA-Arch</code>, and <code>UA-Model</code> Client Hints.</li>
+<li>
+<a href="https://github.com/mikewest/lang-client-hint">https://github.com/mikewest/lang-client-hint</a> suggests that we turn <code>Accept-Language</code> into a <code>Lang</code> Client Hint.</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-11-06</div>
+          <div class="post_content">
+<p>Generally I think this idea is reasonable.  Three issues:</p>
+<h2>1. Not granular enough?</h2>
+<p>I’d say if we are trying to make the data more granular, why not finish the job and make the values singular, ie. <code>UA-Brand: Chrome</code> and <code>UA-Version: 189</code> rather than <code>UA: Chrome 189</code>.</p>
+<h2>2. Intentionally incorrect tokens</h2>
+<p>Yes to <code>UA-Engine</code> of course (and <code>UA-Engine-Version</code>), otherwise chaos will continue to reign in embedded-browser-land.  But nevertheless we should expect copious lying.  The danger of the proposed approach is that whereas with the <code>User-Agent</code> string, we could mostly treat it as a unique key into a table of UA builds containing the genuine metadata, this mechanism will likely produce an increase in the number of cases where two or more different browsers submit exactly the same UA-related metadata and are therefore indistinguishable (unless we take the craziness up a notch and try to distinguish them based on variations in what they do with the <code>Accept</code> header or how they format <code>Accept-Language</code> or something)</p>
+<p>What may be the only way to prevent this is to send a header with a verifiable build signature that can’t be replicated by other browsers.  I don’t know how you’d do this but cleverer people might.</p>
+<h2>3. The CH opt-in</h2>
+<blockquote>
+<p>User agents will attach the  <code>UA</code>  header to every secure outgoing request by default, with a value that includes only the major version (e.g. " <code>Chrome 69</code> "). Servers can opt-into receiving more detailed version information in the  <code>UA</code>  header, along with the other available Client Hints, by delivering an  <code>Accept-CH</code>  header or  <code>Accept-CH-Lifetime</code>  header in the usual way.</p>
+</blockquote>
+<p>So, I had though that the weirdness (IMHO!) of CH being opt-in but not subject to user consent was a lost battle.  This suggests that the debate is still worth having, because the idea that <code>UA</code> is a client hint but somehow escapes the opt-in and gets sent anyway, but all others require the <code>Accept-CH</code> thing betrays how arbitrary this design decision is.  There’s no privacy benefit, there’s no security/fingerprinting benefit, other new request headers like <code>Sec-Metadata</code> have not followed this pattern, there’s significant developer toil, and an incentive to bad practices.</p>
+<p>I’ve previously suggested that this design encourages developers to start any user session with a redirect to capture full CH data before producing a page.  The more CHs we add, the stronger that incentive becomes.</p>
+<p>PS. As usual, absurdly well-written explainer which I can understand even before I’ve had any coffee.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2018-11-06</div>
+          <div class="post_content">
+<p>Thanks! In the spirit of your first point, I’m going to split your three issues into somewhat more than three things to talk about. <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/></p>
+<blockquote>
+<p><code>UA-Brand</code> and <code>UA-Version</code></p>
+</blockquote>
+<p>We could certainly split <code>UA</code> into <code>UA-Version</code> and <code>UA-Brand</code>. That would be consistent with splitting the rest of the detail out into distinct headers. That said, I see “Chrome 41” and “Chrome 73” as being actually <em>different browsers</em> in a deep way. It’s not clear to me that either the branding or version information would be meaningful on its own.</p>
+<blockquote>
+<p>Yes to <code>UA-Engine</code></p>
+</blockquote>
+<p>Advertising the engine for browsers whose brand is otherwise ambiguous is probably a good idea. I’m not sure I prefer it to advertising the variant as part of the branding (e.g. the status quo’s <code>CriOS</code> as opposed to <code>Chrome</code>). Do you have a reason for preferring the separate header?</p>
+<p>One might be that every iOS browser will use the same engine for reasons, so advertising <code>WKWebView</code> or something as the underlying engine might set expectations appropriately. One response to that is that Chrome’s <code>WKWebView</code> has all sorts of things injected into it to enable APIs that WebKit doesn’t (yet?) support, so that Chrome’s WebView is actually quite distinct from Edge’s, which is yet again distinct from Firefox’s. It seems reasonable to me to reflect that in the branding.</p>
+<blockquote>
+<p>Copious lying.</p>
+</blockquote>
+<ol>
+<li>
+<p>I tend to believe the folks who have told me that it’s hopelessly naive to expect browser vendors not to lie about their nature if developers gate access to features based on user agent information advertised in the request. In my mind, the question is how to support these white lies without destroying the usefulness of the mechanism in the process.</p>
+</li>
+<li>
+<p>Why is lying bad? In particular, the <a href="https://github.com/mikewest/ua-client-hints/blob/master/README.md#should-the-ua-string-be-a-set">explainer’s GREASE-like suggestion</a> to turn <code>UA</code> into a set with intentional lies is pretty appealing. It forces developers to parse the whole <code>UA</code> string, and gives smaller players the ability to talk about themselves in one part of the string, while advertising themselves as someone else for purposes of compatibility.</p>
+</li>
+</ol>
+<p>If there was a magic wand I could wave over the internet that made <span class="hashtag">#1</span> above untrue, I would (perhaps developers will be overtaken by an aesthetic desire for clean UA string? And will start doing pure feature detection rather than relying on unique keys into a table of UA builds containing the genuine metadata?). I think it’s unlikely, given historical precedent.</p>
+<blockquote>
+<p>because the idea that  <code>UA</code>  is a client hint but somehow escapes the opt-in and gets sent anyway</p>
+</blockquote>
+<p>A pedantic nit: it partially escapes the opt-in, insofar as the major version is exposed by default, and the minor version only after <code>Accept-CH: UA</code>. But the point stands.</p>
+<blockquote>
+<p>There’s no privacy benefit, there’s no security/fingerprinting benefit [to the opt-in]</p>
+</blockquote>
+<p>I disagree!</p>
+<ol>
+<li>
+<p>As the explainer notes, browsers can make decisions about when to respect the site’s request. For example, browsers that categorize the world into “Boo!” and “Yay!” via some heuristic or other can deny additional detail to the former and grant it to the latter.</p>
+</li>
+<li>
+<p>As the explainer doesn’t note, but ought to, the public nature of the opt-in makes data collection visible to researchers, regulators, and users who care. Rather than broadcasting entropy to every site indiscriminately, we’ll get some collective insight into the entities who actually want to collect it, and the entities with whom they choose to share that detail.</p>
+</li>
+</ol>
+<blockquote>
+<p>new request headers like  <code>Sec-Metadata</code>  have not followed this pattern</p>
+</blockquote>
+<p>The guy who wrote that spec probably had good reasons for not following the pattern. He might, for instance, have thought that the requests which are interesting from a security perspective are all third-party (e.g. <code>evil.com</code> poking at a CSRF vulnerability in <code>bank.com</code>, or executing cross-site search attacks against <code>bing.com</code>), and that attackers would be sincerely unlikely to delegate helpful metadata collection to their victims via <code>Feature-Policy</code>.</p>
+<blockquote>
+<p>I’ve previously suggested that this design encourages developers to start any user session with a redirect to capture full CH data before producing a page.</p>
+</blockquote>
+<p>That’s a thing that could happen. It has minor perf impacts. But since we’d ideally redirect through the apex of a registrable domain anyway to set <code>Strict-Transport-Security</code> headers with <code>includeSubdomains</code>, it’s not clear that it’s actually not best practice?</p>
+<p>Thanks again for your feedback!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-11-06</div>
+          <div class="post_content">
+<blockquote>
+<p>I see “Chrome 41” and “Chrome 73” as being actually  <em>different browsers</em>  in a deep way. It’s not clear to me that either the branding or version information would be meaningful on its own.</p>
+</blockquote>
+<p><a href="http://polyfill.io" rel="nofollow noopener">polyfill.io</a> makes an assumption, for the purposes of not having a ludicrously large compat table, that once a browser ships a feature, support generally continues to exist in subsequent versions.  That’s a patterns that generally true.  And there are lots of other tools and technologies that segment browsers in terms such as “Chrome &gt;= 50” or whatever.</p>
+<blockquote>
+<p>Do you have a reason for preferring the separate [UA-Engine] header?</p>
+</blockquote>
+<p>“Normal” developers probably don’t want to spend the time maintaining a lookup table of all possible embedded browser names.  I get that the multiple-token approach you also suggested might work, but it will depend a lot on a consistent approach to reporting.  This might be resolved through more detailed definition of what the tokens should represent.</p>
+<blockquote>
+<p>it’s not clear that it’s [redirect on first request] actually not best practice?</p>
+</blockquote>
+<p>Interesting!  I haven’t seen anyone try to defend that pattern yet.  HSTS explicitly includes a mechanism to preload the directive so that the redirect on first ever visit is avoided, and goes to some effort to do this - with browser implementors having to upload opt-ins when they encounter HSTS headers with preload, maintain a gigantic preload list, distribute it to all active installs of their browser… that’s a lot of effort to avoid one redirect.  I appreciate that there’s a security reason for this as well as a perf one, but if it succeeds in removing the need for that first redirect in most cases, it seems a shame that we’re building up the case for reintroducing it.</p>
+<p>How’s Origin-Policy doing?  Is there a solution there?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2018-11-06</div>
+          <div class="post_content">
+<blockquote>
+<p><a href="http://polyfill.io/">polyfill.io</a> makes an assumption, for the purposes of not having a ludicrously large compat table, that once a browser ships a feature, support generally continues to exist in subsequent versions.</p>
+</blockquote>
+<p>I’ve personally made this assumption false on a number of occasions. Sorry, <code>&lt;isindex&gt;</code>. I intend to continue making it false in the future (I’m looking at you, <code>document.domain</code>).</p>
+<blockquote>
+<p>That’s a patterns that generally true. And there are lots of other tools and technologies that segment browsers in terms such as “Chrome &gt;= 50” or whatever.</p>
+</blockquote>
+<p>I don’t think this answers my underlying claim that “Browser X” is different than “Browser Y”. It might be the case that “Browser 10” is the same as “Browser 13” along some axis that you care about. It might also be that “Browser 13” dropped support for your favourite element, or changed its MIME type handling in ways you find interesting.</p>
+<blockquote>
+<p>HSTS explicitly includes a mechanism to preload the directive so that the redirect on first ever visit is avoided, and goes to some effort to do this - with browser implementors having to upload opt-ins when they encounter HSTS headers with preload, maintain a gigantic preload list, distribute it to all active installs of their browser… that’s a lot of effort to avoid one redirect.</p>
+</blockquote>
+<p>The reason that the HSTS preload list exists is not the perf impact of one redirect, but the window of opportunity that redirect creates. That is, if <code>https://exciting.site</code> is preloaded, then it’s literally impossible for an attacker to cause a user to visit the site via plaintext, which they could intercept, modify, etc. So when you visit your boring relative’s house, you can be sure that you’re actually seeing <code>https://exciting.site/</code>'s login page, even though that relative is far too uncool to have visited it before.</p>
+<p>In the absence of the preload list, network attackers can grab the initial request you make (because literally no one ever types <code>https://</code> in the address bar, and browsers still default to <code>http://</code> (though I expect that to change)).</p>
+<p>I’d also note that for HSTS, we accept it on basically any subresource response, so it’s quite possible to request an image from your apex (which I think is what Dropbox was doing, when last I checked). Once <a href="https://github.com/WICG/feature-policy/issues/129">https://github.com/WICG/feature-policy/issues/129</a> lands, that won’t be the case for Client Hints. So maybe HSTS is a bad example.</p>
+<blockquote>
+<p>How’s Origin-Policy doing? Is there a solution there?</p>
+</blockquote>
+<p>Spec is woefully out of date. Chrome has a partial implementation behind a flag. I hear positive rumblings from Mozilla. It’s a solution of sorts, but doesn’t address the redirect issue you’re raising, as you only get the policy after touching the origin once to learn that you need to go get it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2018-11-29</div>
+          <div class="post_content">
+<p>I sketched these headers out in a little more detail in <a href="https://tools.ietf.org/html/draft-west-ua-client-hints">https://tools.ietf.org/html/draft-west-ua-client-hints</a> and <a href="https://tools.ietf.org/html/draft-west-lang-client-hint">https://tools.ietf.org/html/draft-west-lang-client-hint</a>. Feedback would be most welcome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-12-05</div>
+          <div class="post_content">
+<p>I do love a nice IETF draft.  So annoying when people make webpages more than 80 characters wide.</p>
+<p>The Lang CH not being sent on first request really brings this whole opt-in issue to a head for me.  <span class="mention">@mikewest</span> you’ve argued in this thread that an initial redirect bounce to collect CH data is OK.  I’ve heard others (possibly <span class="mention">@igrigorik</span>?) say that CH was not designed for adapting HTML page responses, which is why having it kick in in time for subresource loading is sufficient.</p>
+<p>So, categorically, language prefs are main-resource territory, and I can’t exactly render a page in one language and then switch suddenly into another language on a second navigation!  How do you propose to solve this?  If the answer is that we continue to use Accept-Language if CH is not available, then since changing the language experience unprompted is jarring, I don’t see how you’d ever justify switching to a different data source (unless it would give you the same result, and then what’s the point).</p>
+<p>This leads us back to performing a redirect before rendering any content.  Smart developers would presumably do this only for browsers, since they would assume that there might be ranking penalties from search engines if they exhibit a redirect response before rendering a page.  It also probably means an additional cookie to prevent a redirect loop for browsers that don’t support CH.</p>
+<p>I don’t have a clever answer to this problem, and in QUICland, perhaps a redirect isn’t such a terrible thing. But it would be nice to make this pattern easier to implement, perhaps by making it possible to detect CH support on first request?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2018-12-05</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="3132">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>The Lang CH not being sent on first request really brings this whole opt-in issue to a head for me.</p>
+</blockquote>
+</aside>
+<p>If we agree that we should reduce the passive fingerprinting surface we expose to the web by default, I’d suggest that we ought to prefer a route that sends as little data as possible until the site explicitly asks for more. That seems like a pretty good fit for the Client Hints infrastructure, regardless of its original intentions. I recognize that that makes main-frame content negotiation marginally more difficult in exactly the way you’re suggesting here. Given the number of sites with infrastructure complex enough to serve multi-language content (and the fact that my anecdata are full of IP-based language selection rather than <code>Accept-Language</code>-based selection…), an extra redirect seems like a fine tradeoff.</p>
+<p>I’d also note that for many of these sites, a redirect happens even in the status quo in order to segregate content based on URL as opposed to figuring out the correct incantation of <code>Vary</code> to make things work correctly (both domain-based segregation, as in <code>google.de</code> and <code>de.wikipedia.org</code>, or path-based a la <code>https://www.lufthansa.com/de/de/homepage</code>).</p>
+<aside class="quote no-group" data-post="7" data-topic="3132">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>If the answer is that we continue to use Accept-Language if CH is not available</p>
+</blockquote>
+</aside>
+<p>Perhaps it wasn’t clear, but my intent with this new header is to deprecate and remove <code>Accept-Language</code> entirely.</p>
+<aside class="quote no-group" data-post="7" data-topic="3132">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>It also probably means an additional cookie to prevent a redirect loop for browsers that don’t support CH.</p>
+</blockquote>
+</aside>
+<p>This is a good point I hadn’t considered. I don’t think it requires a cookie, however, as the redirect endpoint can be distinct from the original URL (e.g. append <code>?asked-for-language=1</code> or something similarly visible in the subsequent request).</p>
+<p>The spec doc should probably include some reasonable pattern to make that sort of thing clear to developers.</p>
+<p>(Also, I’d like to get rid of cookies. I might have mentioned that? <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/> )</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1793_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">igrigorik</div>
+          <div class="creation_date">2018-12-05</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="7" data-topic="3132">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/triblondon/40/1297_1.png" width="20"/> triblondon:</div>
+<blockquote>
+<p>I’ve heard others (possibly <span class="mention">@igrigorik</span>?) say that CH was not designed for adapting HTML page responses, which is why having it kick in in time for subresource loading is sufficient.</p>
+</blockquote>
+</aside>
+<p>To the contrary, our recent work on Accept-CH-Lifetime is specifically designed to enable delivery of hints on navigation responses.</p>
+<aside class="quote no-group" data-post="8" data-topic="3132">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mikewest/40/438_1.png" width="20"/> mikewest:</div>
+<blockquote>
+<p>If we agree that we should reduce the passive fingerprinting surface we expose to the web by default, I’d suggest that we ought to prefer a route that sends as little data as possible until the site explicitly asks for more. That seems like a pretty good fit for the Client Hints infrastructure, regardless of its original intentions.</p>
+</blockquote>
+</aside>
+<p>That’s exactly how we arrived at current design. The constraints are that we don’t want to incur overhead of sending every hint on every request (performance), and want to constrain passive fingerprinting by requiring that the origin explicitly requests the data it needs. As a result, <em>if</em> the user has never visited an origin before, their first navigation does not carry any hints, however the response to that navigation can request the list of hints and set a policy for how long that preference should be persisted. With that in place, hints are delivered on all subsequent navigations and subresource request, with extra bits for 3P delegation.</p>
+<p>p.s. effectively, this is the same progressive enhancement mechanics as ServiceWorker…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1297_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">triblondon</div>
+          <div class="creation_date">2018-12-06</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="9" data-topic="3132">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/igrigorik/40/1793_1.png" width="20"/> igrigorik:</div>
+<blockquote>
+<p>To the contrary, our recent work on Accept-CH-Lifetime is specifically designed to enable delivery of hints on navigation responses.</p>
+</blockquote>
+</aside>
+<p>Apologies for misrepresenting you.</p>
+<p>All my concerns here relate to a first navigation, before we’ve seen an <code>Accept-CH-Lifetime</code> response header.  So if this means a new best practice of serving a redirect in this situation, you’re writing off an RTT… which surprises me given the extreme focus this community has had on reducing RTTs in recent years.</p>
+<p>I get that some of this concern might relate to advanced use cases / developers only, and many people do do language selection based on GeoIP (we even facilitate some of that kind of pattern usage at Fastly, though we don’t encourage it!).</p>
+<p>I’m not trying to flog a dead horse, I understand that there’s no majority for sending the data without opt-in.  So that leaves me with two points:</p>
+<ul>
+<li>There is potential developer confusion over best practice as it relates to this first exchange, and it would be great if participants in this process that have access to devrel teams use them to help communicate the new normal.</li>
+<li>Where there’s an incentive for developers to exhibit different behaviour depending on the type of user agent making the request, it is an anti-pattern to leave them with no option but to lean on the UA header for that, so it would be nice if it were possible to detect support for client hints.</li>
+</ul>
+<p>The service worker thing is a great point.  More and more it feels like the first request for a page is an ‘install’ request, and that the actual content is likely to follow in a subsequent exchange, after various dependencies have been resolved - even for conventional ‘document’-like content such as news stories.  If the web is shifting to that model then the design for CH makes a lot more sense to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2018-12-06</div>
+          <div class="post_content">
+<p>FWIW, I would love to figure out a solution that enables Client-Hints for the very-first-page-load case, <em>without exposing users to passive fingerprinting</em>. At the same time, I think such a solution, if we’d come up with one(*), can be additive to the current CH infrastructure.</p>
+<p>(*) I have a couple of ideas, which everyone hate: a) a DNS flag which indicates server opt-in b) a “preload list” (similar to HSTS preload). I think we need to continue to explore that space, but don’t think it’s a blocker. Opinions welcome! <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=6" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-01-31</div>
+          <div class="post_content">
+<p>Due to interest in that proposal here, at a <a href="https://docs.google.com/presentation/d/1OvB-6LK61EHJSpm0SBAUjKhrX27C3l7u-hZIw7ePhLc/edit?usp=sharing" rel="nofollow noopener">TPAC breakout session</a> as well as on a related <a href="https://lists.w3.org/Archives/Public/ietf-http-wg/2018OctDec/0176.html">HTTPWG thread</a>, the repos have now been adopted as part of the WICG org, and live at
+<a href="https://github.com/WICG/lang-client-hint" rel="nofollow noopener">https://github.com/WICG/lang-client-hint</a> and <a href="https://github.com/WICG/ua-client-hints" rel="nofollow noopener">https://github.com/WICG/ua-client-hints</a>.
+Let’s kill some entropy!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2019-02-01</div>
+          <div class="post_content">
+<p>For record keeping purposes, Mozilla folks weighted in a bit in this thread:
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/mozilla/standards-positions/issues/79#issuecomment-456355238" rel="nofollow noopener" target="_blank">github.com/mozilla/standards-positions</a>
+</header>
+<article class="onebox-body">
+<a href="https://github.com/Jxck" rel="nofollow noopener">
+<img class="thumbnail onebox-avatar" height="60" src="https://avatars1.githubusercontent.com/u/322289?v=2&amp;s=96" width="60"/>
+</a>
+<h4><a href="https://github.com/mozilla/standards-positions/issues/79#issuecomment-456355238" rel="nofollow noopener" target="_blank">Issue: RFP: Client Hints</a></h4>
+<div class="date" style="margin-top:10px;">
+<div class="user" style="margin-top:10px;">
+	opened by <a href="https://github.com/Jxck" rel="nofollow noopener" target="_blank">Jxck</a>
+	on <a href="https://github.com/mozilla/standards-positions/issues/79#issuecomment-456355238" rel="nofollow noopener" target="_blank">2018-04-03</a>
+</div>
+<div class="user">
+	closed by <a href="https://github.com/adamroach" rel="nofollow noopener" target="_blank">adamroach</a>
+	on <a href="https://github.com/mozilla/standards-positions/issues/79#issuecomment-456355238" rel="nofollow noopener" target="_blank">2018-12-14</a>
+</div>
+</div>
+<pre class="content" style="white-space: pre-wrap;">Request for Mozilla Position on an Emerging Web Specification
+Specification Title: Client Hints
+Specification or proposal URL: https://tools.ietf.org/html/draft-ietf-httpbis-client-hints
+Caniuse.com URL (optional): https://caniuse.com/#feat=client-hints-dpr-width-viewport
+Bugzilla URL (optional):...</pre>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">ietf</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2019-02-01</div>
+          <div class="post_content">
+<p>I’m hoping for more feedback from David in particular on the TAG review (<a href="https://github.com/w3ctag/design-reviews/issues/320" rel="nofollow noopener">https://github.com/w3ctag/design-reviews/issues/320</a>). I believe it’s scheduled for discussion on Tuesday.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

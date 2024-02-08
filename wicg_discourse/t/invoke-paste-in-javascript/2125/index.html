@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Invoke paste in JavaScript</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Invoke paste in JavaScript</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-04-18</div>
+          <div class="post_content">
+<p>We recently launched a game development PWA at <a href="https://editor.construct.net" rel="nofollow noopener">https://editor.construct.net</a>.</p>
+<p>Like any productivity software, it has clipboard features. Users can cut, copy and paste app-specific content.</p>
+<p>However, there’s no way for JS to do a paste. So in our own (DOM-implemented) context menus, we can provide cut and copy options, but not a paste option. Users find this odd (example: <a href="https://github.com/Scirra/Construct-3-bugs/issues/96" rel="nofollow noopener">https://github.com/Scirra/Construct-3-bugs/issues/96</a>) and it’s a strange quirk of using browser-based software.</p>
+<p>Can something like <code>document.execCommand("paste")</code> be standardised?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>Given that AJAX exists, my intuition tells me this is a major security risk. Hopefully others can refute this, but it just seems too “invasive” to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>It is not a privacy concern if it is put behind a permission prompt. And adding this as a web api would actually be less invasive than requiring installing an extension. (See <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard#Reading_from_the_clipboard" rel="nofollow noopener">https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard#Reading_from_the_clipboard</a>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>However, this should probably wait for the async clipboard api instead of using execCommand.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>Even if it is behind a permission prompt this could be too valuable of an API to obtain secrets from. For example, password managers that use the clipboard or software looking for secret key pastes and copying the data to send out.</p>
+<p>While a permission prompt would handle initial acceptance, it doesn’t provide any context as to when it is being used elsewhere and why. Users also shouldn’t need to be asked every time an API gets used. Probably best this not be introduced.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>Could APIs like this not be reserved for “add to homescreen/desktop” apps running in “standalone” mode? That ought to mitigate some of the drive-by information stealing concerns, and a serious productivity app where users will want to be able to paste is relatively likely to be running in that context.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>APIs shouldn’t be restricted to the context in which the browser is displaying the site or app. Standalone modes are a UX enhancement for things a user often visits. That shouldn’t then provide extra APIs. It may lead to developers gaming users into forcing those modes for their malicious applications.</p>
+<p>An “auto-paste” API is simply a massive privacy and security issue. Extremely too powerful with no proper way to mitigate the pitfalls without a confirmation every time it gets used (which defeats the point and annoys users.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2017-04-19</div>
+          <div class="post_content">
+<p>A single persistent permission prompt for web pasting would not be worse than the existing prompt to install an extension. Adding a web paste api would even be a security improvement since extensions can access the clipboard contents in the background whenever they want to, whereas a web api should probably be restricted to the foreground.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2017-04-20</div>
+          <div class="post_content">
+<p>Yeah, if you tell users to install an extension you can give yourself powers to snoop on their clipboard even on other websites.</p>
+<p>I brought up the “add to homescreen” aspect because Chrome is already making some modifications to web APIs in this mode - for example lifting the “touch to play” restriction on media. So there is in fact precedence for web APIs to work differently in alternative modes like that.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

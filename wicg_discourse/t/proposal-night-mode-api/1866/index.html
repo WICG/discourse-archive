@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Night Mode API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Night Mode API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LiuBoJie</div>
+          <div class="creation_date">2016-11-29</div>
+          <div class="post_content">
+<p>**Problems:**As mobile devices become more and more popular for people to access the Internet, browsing under poor light condition happens more frequently in our daily life. However, CSS of most websites were designed for well lit environment, like dark text with white background. The contrast leads to uncomfortable experience for user to surf the Internet under such circumstance.</p>
+<p><strong>Proposal:</strong> Here is to propose a solution which provides a way in which web page can be notified of light conditions from browser and change its CSS accordingly. More details please refer to the <a href="https://github.com/joshua-liubojie/night-mode-api/blob/master/README.md" rel="nofollow noopener">explainer doc</a>. The following is selectively extracted from the explainer.</p>
+<p><strong>API</strong>
+Here is to propose a solution which builds connection between web page and browser side. Browser notifies page of “colormodechanged” event when user switches day/night mode in the UI of browser. Then page side calls the registered event listener to perform changes of style by its own CSS and JS.</p>
+<ul>
+<li>The ColorModeChangedEvent IDL:
+Noted that the attribute “colortheme” is defined either “normal” or “night” by browser side.</li>
+</ul>
+<pre><code class="lang-javascript">[Constructor(DOMString theme)]
+interface ColorModeChangedEvent : Event {
+    readonly attribute DOMString colortheme;
+};
+</code></pre>
+<ul>
+<li>Due to some browsers have implemented browser-side night mode as mentioned above. Web page has to define a special &lt;meta&gt; to inform browser whether it is using the Night Mode API or not:</li>
+</ul>
+<pre><code class="lang-javascript">&lt;meta name=”x5-colormode” content=”x5-nightmode”&gt;
+</code></pre>
+<ul>
+<li>(optional) If web page wants to query current “colortheme”:</li>
+</ul>
+<pre><code class="lang-javascript">window.colortheme
+</code></pre>
+<ul>
+<li>(optional) In case browser takes time in recalculating style, repainting, etc. after the listener was run. A new pseudo-class could be added on some elements and browser would first select the styles in pseudo-class in night mode and performs a quick refreshing. However, the pseudo-class needs to be supported by browser engine.</li>
+</ul>
+<pre><code class="lang-javascript">:-x5-colormode-night
+</code></pre>
+<p><strong>Usage</strong>
+The following is a simple example using Night Mode API. It works in QQBrowser for Android. There is an apk provided in github.</p>
+<pre><code class="lang-auto">&lt;html&gt;
+&lt;head&gt;
+	&lt;meta name="x5-colormode" content="x5-nightmode"/&gt;
+	&lt;script&gt;
+	window.addEventListener('colormodechanged', function (evt) {
+		if (evt.colortheme === 'night') {
+			document.documentElement.className += "G-night"
+		} else if (evt.colortheme === 'normal') {
+			document.documentElement.className -= "G-night"
+		}
+	});
+	&lt;/script&gt;
+	&lt;style&gt;
+		.G-night {background-color:yellow;font:black;}
+		.G-night:-x5-colormode-night {background-color:white;font:red;}
+	&lt;/style&gt;
+&lt;/head&gt;
+&lt;body class="G-night"&gt;
+	Hello World!
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1115_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jpdevries</div>
+          <div class="creation_date">2016-12-01</div>
+          <div class="post_content">
+<p>What does this offer that the HTML5 Ambient Light API doesn’t? Seems like it is a meta tag at the expense of granular control over how much light is detected.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LiuBoJie</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>It looks mostly the same, as you said. The HTML5 Ambient Light API provides a solution for poor-light browsing. Moreover, the Night Mode API, should be called “Color Mode API” more exactly, can notify pages of different color modes. But I am not sure whether it is useful or not. As for the meta tag. It is a choice for pages to or not to validate the Night Mode API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1091_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nexii</div>
+          <div class="creation_date">2016-12-06</div>
+          <div class="post_content">
+<p>Wouldn’t a <code>@media</code> condition be able to express this better? (Not to mention designed to be able to express different viewing conditions and/or modes)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LiuBoJie</div>
+          <div class="creation_date">2016-12-16</div>
+          <div class="post_content">
+<p>In my opinion, the switch between different modes is more a user action than a browser action invoked automatically.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/840_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tomhodgins</div>
+          <div class="creation_date">2017-01-09</div>
+          <div class="post_content">
+<p>I’ve experimented with the idea of grabbing the hour based on the user’s clock setting, and then either flipping the colors of the site between black-on-white for ‘day’ mode and white-on-black for ‘night mode’. Here’s the first example:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="http://i.imgur.com/Il1NtH1.png" rel="nofollow noopener" title=""><img alt="" height="500" src="http://i.imgur.com/Il1NtH1.png" width="500"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename"></span><span class="informations">1000×1000</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div></p>
+<pre><code class="lang-auto">&lt;style&gt;
+  @element 'html' {
+    $this {
+      color: eval('sunny ? "black" : "white" ');
+      background: eval('sunny ? "white" : "black" ');
+    }
+  }
+&lt;/style&gt;
+
+&lt;script&gt;
+  var hour = new Date().getHours()
+  var sunny = (7 &lt; hour &amp;&amp; hour &lt; 19)  
+&lt;/script&gt;
+</code></pre>
+<p>And to further the idea of time-based color themes, I also used JavaScript to ask the user’s set time to fake the same kind of blue-light-killing orange overlay like Flux or Night Shift, to create a night mode for websites.  The EQCSS for that is here:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="http://i.imgur.com/HxaDBD9.png" rel="nofollow noopener" title=""><img alt="" height="500" src="http://i.imgur.com/HxaDBD9.png" width="500"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename"></span><span class="informations">1000×1000</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div>
+<div class="lightbox-wrapper"><a class="lightbox" href="http://i.imgur.com/hMVpJcV.gif" rel="nofollow noopener" title=""><img alt="" height="500" src="http://i.imgur.com/hMVpJcV.gif" width="500"/><div class="meta"><svg aria-hidden="true" class="fa d-icon d-icon-far-image svg-icon"><use xlink:href="#far-image"></use></svg><span class="filename"></span><span class="informations">800×800</span><svg aria-hidden="true" class="fa d-icon d-icon-discourse-expand svg-icon"><use xlink:href="#discourse-expand"></use></svg></div></a></div></p>
+<pre><code class="lang-auto">&lt;style&gt;
+  @element 'html' {
+    :root:before {
+      content: '';
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,175,0,eval('amount / 20'));
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  }
+&lt;/style&gt;
+
+&lt;script&gt;
+  var hour = new Date().getHours()
+  var night = (hour &lt; 7 || 20 &lt; hour)
+  var amount = night ? (20&lt;hour ? hour%20 : hour+4) : 0
+&lt;/script&gt;
+</code></pre>
+<p>And a live demo is here: <a href="http://codepen.io/tomhodgins/pen/VPwGPG" rel="nofollow noopener">http://codepen.io/tomhodgins/pen/VPwGPG</a></p>
+<p>Could a setting for a style like this be something that a user sets on the website, rather than there being a ‘night mode’ event for turning night mode on?</p>
+<p>I imagine a website like Reddit where people have accounts, and are expected to spend a long time reading could add a time-based night mode for users and allow them to enable or disable this feature for their own account across all devices.</p>
+<p>It’s a little different than what you’re proposing here, but I’m curious about this feature and what would make it useful. Is there already a standardized way to tell is night mode is on in Android or iOS natively for app development and this mimics that in the browser as well? If night mode is set at the device level, what style changes would you want to make to websites to help when night mode was activated?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">LiuBoJie</div>
+          <div class="creation_date">2017-01-17</div>
+          <div class="post_content">
+<p>I think time-based implementation is inspiring and provides more real-time presentation for users. As for the questions, I try to answer it based on my limited knowledge.</p>
+<p>I am not sure if the time setting is provided by webpage or browser. If is by webpage, every website with night mode feature would do extra coding for setting logic and UI design in exchange of cross platform benefit. Is there a way to integrate your idea with my proposal? Let browser inform webpage of ‘night mode’ event with the timing, then webpage do the changes and record current mode into personal account. As a result, webpage wouldn’t bother to the setting things.</p>
+<p>As far as I know, only ‘Night Shift’ on iOS provides relative function. And it only changes the overall color of screen.
+In addition, some browser vendor’s night mode can be found <a href="https://github.com/joshua-liubojie/night-mode-api/blob/master/README.md" rel="nofollow noopener">here</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

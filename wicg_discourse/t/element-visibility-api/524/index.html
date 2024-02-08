@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Element visibility API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Element visibility API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-07-09</div>
+          <div class="post_content">
+<p>I feel that it would be useful to have an element visibility API – basically browser providing current visibility of the element (not considering screen or parent boundaries, only things like display:none on element or parent) and an event when visibility changes.</p>
+<p>Use case:<br/>
+Lazy initialization with JavaScript. For example, currently if an element is not visible due to its parent, there is no good way to find out when to do the initial sizing. And if it is a web component that might be used in multiple contexts, it is not easily possible to prepare for all possible ways parent visibility can change.</p>
+<p>Is it something that has an existing spec in progress?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-07-09</div>
+          <div class="post_content">
+<p><span class="mention">@ashmind</span> <a href="https://developer.mozilla.org/en/docs/Web/API/MutationObserver" rel="nofollow noopener">MutationObservers</a> should solve all these use cases here. You can solve the lazy init issue with <a href="http://updates.html5rocks.com/2012/02/Detect-DOM-changes-with-Mutation-Observers" rel="nofollow noopener">addedNodes</a>.</p>
+<p>You would be able to check quite easily for visibility changes from an <a href="http://www.w3.org/TR/dom/#concept-attribute">attribute perspective also</a> with the type=attribute functionality.</p>
+<p>Browser support is <a href="http://caniuse.com/mutationobserver" rel="nofollow noopener">pretty good</a> and there is a shim in <a href="http://www.polymer-project.org/" rel="nofollow noopener">Polymer</a> and <a href="https://github.com/megawac/MutationObserver.js/tree/master" rel="nofollow noopener">others available too</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-07-09</div>
+          <div class="post_content">
+<p>I actually tried to implement visiblechange as a <a href="https://gist.github.com/ashmind/2403709aedfadfa0f326" rel="nofollow noopener">jQuery plugin</a>, and while I was able to use mutation observers in supporting browsers, it was less clear what changes to look for.</p>
+<p>I looked at style/class changes, but it is not enough. For example, <code>.x + .y</code> might change style if class on preceding element is changed, which is impossible to consider in advance in general case, without parsing selectors and building a dependency map.</p>
+<p>Consider a reusable component. It might be put into a collapsed page of an accordion, or in a hidden tab of a tab strip. Or maybe just in collapsed <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code>. In all of those cases node addition events do not help, and attribute changes might be wildly different.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-07-09</div>
+          <div class="post_content">
+<p>Yeah I think you could only do it by using a mutation observer on the body and listen for all changes and step through all elements etc… nastiness.</p>
+<p>Visibility is kinda something jQuery invented though and doesn’t really fix checking for when its positioned off the page or many other things like <code>opacity</code>.</p>
+<p>Knowing what you had to implement quite well and how difficult the issue is it certainly would be a good addition to mutation observers. I would be pretty interested in <code>visibleInViewport</code> style attribute and event or similar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/92_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">josh</div>
+          <div class="creation_date">2014-07-09</div>
+          <div class="post_content">
+<p>Yeah, the mutation observer limitations are frustrating.</p>
+<pre><code class="lang-css">.foo:hover { display: block}
+.foo:first-child { display: block}
+.foo:enabled{ display: block}
+form.foo:valid { display: block}
+</code></pre>
+<p>All these would be tricky to know when to evaluate the visibility check.</p>
+<p>Re-querying the entire document on every mutation record doesn’t scale.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2014-07-10</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="524">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonathank/40/582_1.png" width="20"/> jonathank:</div>
+<blockquote>
+<p>Visibility is kinda something jQuery invented though and doesn’t really fix checking for when its positioned off the page or many other things like opacity.</p>
+</blockquote>
+</aside>
+<p>I considered off-page, but I thought it can be out of scope for a visibility specification. Main reasons: you can still do sizing while element is off-screen due to scrolling since it has size, and for lazy load in scroll scenario you would normally want to preload content just before element scrolls into view, not after (and there are some events for that). Also it introduces complexity around ‘partially visible’ – if a single pixel of an element is visible, does that mean that it is visible?</p>
+<p>It is definitely a valid point though, and something to consider.</p>
+<p>As for opacity, it might be a fair case to support <code>opacity: 0</code> as not visible, though see 1 below.</p>
+<p>The problems I see with potential specification:</p>
+<ol>
+<li>
+<em>Hidden</em> vs <em>collapsed</em> – since I am mostly interested in sizing, I would like to see those differently, or even care about collapsed only (e.g. if it is hidden by <code>visibility: hidden</code>, you may still need to load lazy content if it affects sizing). Having a property that returns string/object (<code>"hidden"/"collapsed"</code>?), or having multiple properties might be an answer, but I have no idea whether this fits current DOM APIs (can’t think of a similar example).</li>
+<li>Naming – there is a tab visibility API with its visibilitychanged event, there is CSS <code>visibility</code>. It would be nice to have a name that can’t be confused with those. <code>visibleInViewport</code> is good, but only works if there is no distinction between off-screen and not-in-layout (<code>display: none</code>), and this distinction is important for me as per 1.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2014-07-10</div>
+          <div class="post_content">
+<p>Its almost as if you want to be able to add some kind of repaint event but only checking for a very specific subset of repaints that impact the visibility.</p>
+<p>The point I was making about jQuery having invented visibility was mostly around each developer is likely to expect different functionality somewhat. For me I would like to know when something disappears from the screen which could be if it is fully obscured also (Mostly I am thinking of layered tabs perhaps or when a modal is covering certain elements below it - an interface would be able to turn off updates potentially to that part of the screen).</p>
+<p>Thinking about it further I actually would suggest extending the <code>document.visibilityState</code> and related event <code>visibilitychange</code> to elements too with the same API.
+New keywords could be added like: <code>outsideViewport</code> and <code>collapsed</code> or the event could fire at all ‘hidden’ related changes and developers have to query an attribute on the event perhaps to discover the specific reason why the element is no longer visible in the callback</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2009_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">wilhelm</div>
+          <div class="creation_date">2014-07-14</div>
+          <div class="post_content">
+<p>Getting this specified would be wonderful. The issue lies in the no man’s land between DOM and CSS, so noone has taken ownership of it yet. The WebDriver editors have grudgingly made a rudimentary specification here, but will be happy to hand it off to someone else:</p>
+<p><a href="https://dvcs.w3.org/hg/webdriver/raw-file/default/webdriver-spec.html#reading-element-state">https://dvcs.w3.org/hg/webdriver/raw-file/default/webdriver-spec.html#reading-element-state</a> (see isSelected)</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

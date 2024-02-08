@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[idea] Make EventTarget API re-usable on non-DOM elements</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[idea] Make EventTarget API re-usable on non-DOM elements</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-06-27</div>
+          <div class="post_content">
+<p>If we are to encourage the web to have useful patterns, we should make those patterns re-usable. Currently, people always make a new event pattern because the existing event pattern (in browsers) is always limited only to DOM elements, and not all JavaScript code is tied strictly to DOM (in the browser, we’re not even talking about Node).</p>
+<p>For example, the following doesn’t work, but it should:</p>
+<pre><code class="lang-auto">class Foo extends window.EventTarget {
+    constructor() {
+        super()
+        console.log(this)
+    }
+}
+
+new Foo
+</code></pre>
+<p>It throws an error:</p>
+<pre><code class="lang-auto">Uncaught TypeError: Illegal constructor
+</code></pre>
+<p>It would be great to be able to use <code>.addEventListener()</code> et al with other things beside just DOM elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2016-06-27</div>
+          <div class="post_content">
+<p>I think this is a good idea. Right now everyone’s reinventing the wheel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brettz9</div>
+          <div class="creation_date">2016-06-29</div>
+          <div class="post_content">
+<p>While I like this idea, as an FYI, some folks have made some libraries to let you do this with the same API as EventTarget. My latest fork/branch at <a href="https://github.com/brettz9/eventdispatcher.js/tree/early-late-listeners" rel="nofollow noopener">https://github.com/brettz9/eventdispatcher.js/tree/early-late-listeners</a> (besides adding <code>hasEventListener</code>) also aims to add <code>addEarlyEventListener</code> and <code>addLateEventListener</code> and <code>addDefaultEventListener</code> (work not yet finished), to allow internal code to ensure their events fire before or after the standard methods (and such that a default can be added or prevented). (My fork also adds support for on* type handlers, and in the spec’d execution order.) Other custom methods might be added to allow obtaining a child or parent so that capturing/bubbling and stopping of propagation or preventing default behaviors could be implemented in a familiar way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3385_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">anssik</div>
+          <div class="creation_date">2016-07-06</div>
+          <div class="post_content">
+<p>You may find the discussion we had in the context of the <a href="https://w3c.github.io/sensors/">Generic Sensor API</a> weighting in various options (<code>EventTarget</code>, <code>Observable</code>, <code>EventEmitter</code>) interesting:</p>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/w3c/sensors/issues/21" target="_blank">github.com/w3c/sensors</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/w3c/sensors/issues/21" target="_blank">Dependency on [DOM] due to inheriting from EventTarget</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2015-05-28" data-format="ll" data-time="07:46:02" data-timezone="UTC">07:46AM - 28 May 15 UTC</span>
+</div>
+<div class="date">
+          closed <span class="discourse-local-date" data-date="2015-09-23" data-format="ll" data-time="16:01:30" data-timezone="UTC">04:01PM - 23 Sep 15 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/tobie" target="_blank">
+<img alt="tobie" class="onebox-avatar-inline" height="20" src="https://avatars3.githubusercontent.com/u/3392?v=4" width="20"/>
+          tobie
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">Inheriting from EventTarget (and relying on the event system) adds a huge dependency on the Generic Sensor API which makes it...</p>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">proposed-resolution</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>Rather long discussion, but a good read IMO.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-07-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1567">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_1.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>Currently, people always make a new event pattern because the existing event pattern (in browsers) is always limited only to DOM elements, and not all JavaScript code is tied strictly to DOM (in the browser, we’re not even talking about Node).</p>
+</blockquote>
+</aside>
+<p>This isn’t true - <code>EventTarget</code> is used on lots of things that aren’t DOM elements.  Here’s the current list of interfaces that implement <code>EventTarget</code> in blink (most of which do not implement <code>Node</code>):</p>
+<p><code>FileReader IDBRequest IDBDatabase IDBTransaction Node TestInterfaceEventTarget TestInterfaceGarbageCollected Animation FontFaceSet MediaQueryList MessagePort Node FileReader VisualViewport Window AudioTrackList TextTrack TextTrackCue TextTrackList VideoTrackList ApplicationCache EventSource Performance WorkerPerformance SharedWorker Worker WorkerGlobalScope XMLHttpRequestEventTarget BatteryManager BluetoothDevice BluetoothRemoteGATTCharacteristic BroadcastChannel CompositorWorker MediaKeySession FileWriter IDBDatabase IDBRequest IDBTransaction MediaRecorder MediaSource SourceBuffer SourceBufferList MediaDevices MediaStream MediaStreamTrack NetworkInformation Notification PaymentRequest RTCDTMFSender RTCDataChannel RTCPeerConnection PermissionStatus PresentationAvailability PresentationConnection PresentationReceiver PresentationRequest RemotePlayback RemotePlaybackAvailability ScreenOrientation Sensor ServiceWorker ServiceWorkerContainer ServiceWorkerRegistration SpeechRecognition SpeechSynthesis SpeechSynthesisUtterance AudioContext AudioNode MIDIAccess MIDIPort WebSocket USB</code></p>
+<p>But I agree with the larger issue here - the only objects that can take advantage of the DOM event machinery are built-in ones.  Not very extensible-web friendly (forces you to create a dummy <code>Node</code> instance or something to use the same machinery).   WebIDL doesn’t even have the language for this, but I think work in Houdini is helping (the specs describe the JS interface directly).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/960_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">brettz9</div>
+          <div class="creation_date">2016-07-13</div>
+          <div class="post_content">
+<p>The initial release is now ready on that branch (I’ve made a PR to the original repo I forked, but if I don’t hear back, I might publish to my own repo). Support exists now for capturing, bubbling, <code>stopPropagation</code>, <code>preventDefault</code>, <code>once</code>, <code>defaultPrevented</code>, <code>passive</code>, etc., with a polyfill Event class as well (given that the readonly nature of events makes it necessary to create our own events so we can set our own target, currentTarget, etc.).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2016-07-27</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1567">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/trusktr/40/498_1.png" width="20"/> trusktr:</div>
+<blockquote>
+<p>It would be great to be able to use .addEventListener() et al with other things beside just DOM elements.</p>
+</blockquote>
+</aside>
+<p>Definitely agree. I’ve started a <a href="https://github.com/mkay581/listen-js" rel="nofollow noopener">repo in attempt to allow this functionality</a>, but its very bare minimum at the moment.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

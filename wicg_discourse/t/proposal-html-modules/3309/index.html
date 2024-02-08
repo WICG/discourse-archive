@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] HTML Modules</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] HTML Modules</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2179_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dandclark</div>
+          <div class="creation_date">2019-01-15</div>
+          <div class="post_content">
+<p>With ES6 Script Modules, there is currently no good way to access declarative HTML content from a module.  For example, if I’m defining a custom element in a script module, how do I set up the element’s shadow tree?  Currently I’d be required to build it though means like setting an innerHTML string or constructing it bit-by-bit with document.createElement()/appendChild() etc.  Ideally though, I’d like to just write HTML and get access to it from my script module, in a way that the HTML and the script module can be bundled together.</p>
+<p>My colleagues on the Microsoft Edge team and I have developed a proposal for HTML Modules, an extension of ES6 Script Modules that allows for access to declarative HTML content from within a script module.  With HTML Modules, one can simply import the DOM content from an HTML file using the existing ES6 Module syntax:
+<code>import {element} from "./myElement.html";</code></p>
+<p>Please see our <a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/master/HTMLModules/explainer.md" rel="nofollow noopener">explainer doc</a> with the details.</p>
+<p>Any feedback is appreciated!</p>
+<p>There was previous discussion of this proposal on this <a href="https://github.com/w3c/webcomponents/issues/645#issuecomment-427205519" rel="nofollow noopener">GitHub issue thread</a> and at <a href="https://www.w3.org/2018/10/26-WebPlat-minutes.html#item20">TPAC 2018</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-01-16</div>
+          <div class="post_content">
+<blockquote>
+<p>In order for script in an HTML Module to access the module’s own HTML content, we introduce a new  <code>import.meta.document</code>  property that refers to the HTML Module document. We limit this to  <strong>inline module scripts only</strong></p>
+</blockquote>
+<p>Am I right that pages using a CSP must then allow ‘unsafe-inline’ for scripts for this to work? If so I am skeptical of specifying features that require relaxing security restrictions to use.</p>
+<p>As an MVP, why not only support importing plain HTML documents? i.e. only this feature:</p>
+<pre><code class="lang-auto">import importedDoc from "import.html"
+</code></pre>
+<p>Why would anyone prefer to write an inline script using <code>import.meta.document</code> to just writing that code using <code>importedDoc</code> beneath the import?</p>
+<p>Why would anyone prefer to import more scripts through a HTML module than just importing from the JS module?</p>
+<p>Why would anyone prefer to export things from a HTML module than just exporting from the JS module?</p>
+<p>If you only support importing the document, you can do everything using the existing JS infrastructure - and it would considerably simplify the feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2019-01-16</div>
+          <div class="post_content">
+<p>While we could do a MVP of content-only imports, many of the scenarios we read about that used HTML Imports wanted to have some opportunities for custom setup or processing that would require script execution–the feature seemed a little too limited without allowing any script to run.</p>
+<p>Also, there’s the aspect of packaging all the content together–since HTML is a natural carrier of inline CSS and JavaScript, it makes sense to be able to bring all that content together.</p>
+<p>I’m not sure about whether ‘unsafe-inline’ is needed for HTML modules. I suppose your preference is to not need to use unsafe-inline. Since inline scripts in HTML modules aren’t actually run ‘in-line’ then perhaps they don’t apply?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-01-17</div>
+          <div class="post_content">
+<p>An MVP could easily be extended in future to cover things like inline scripts, <code>import.meta.document</code> etc. Shipping an MVP would not close off any of these options. On the other hand shipping the full-blown feature will make it very hard to backtrack in future if it turns out to be the wrong direction, due to backwards compatibility concerns. So I think the value of shipping an MVP is to reduce the risk that we get this wrong again. It already happened to HTML imports, which are currently in the long and difficult process of being phased out. So I think it would be wise to take this one step at a time.</p>
+<blockquote>
+<p>the feature seemed a little too limited without allowing any script to run</p>
+</blockquote>
+<p>This doesn’t prevent using script at all. Basically anything you could do by importing a HTML module with an inline script, you can also do by importing a script module that itself imports a HTML module. This is pretty much transparent to the importer, it just means things are shuffled around internally.</p>
+<blockquote>
+<p>I’m not sure about whether ‘unsafe-inline’ is needed for HTML modules.</p>
+</blockquote>
+<p>I think we should get a clear answer on this before proceeding. I don’t feel I know enough about this to say for sure either way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2179_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dandclark</div>
+          <div class="creation_date">2019-01-25</div>
+          <div class="post_content">
+<p>Thanks AshleyScirra for raising the point about <code>unsafe-inline</code>.  After discussed discussing this and other CSP considerations at some length with other Edge folks I’ve posted our thoughts so far as a <a href="https://github.com/w3c/webappsec/issues/544" rel="nofollow noopener">new issue</a> on the WebAppSec working group.  Feedback or confirmation from the experts there should help inform us on how to proceed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Jan_Miksovsky</div>
+          <div class="creation_date">2019-01-30</div>
+          <div class="post_content">
+<p>We’re excited to see this proposal moving forward; many thanks for everyone’s work on this.</p>
+<p>Overall, this seems like the general shape of the modules proposal would fit our needs nicely. We only have minor comments, mostly related to the way the Explainer’s examples portray what you may expect to be common usage.</p>
+<ol>
+<li>
+<p>Is it necessary to wrap the module contents in &lt;html&gt; and &lt;body&gt;? (The html5Element.html example shows this, but the inline examples in the Explainer do not.) I’d believe it if you said html and body were necessary, but the inline Explainer examples without those elements seem so much cleaner.</p>
+</li>
+<li>
+<p>There’s no reason to define a &lt;head&gt;, is there?</p>
+</li>
+<li>
+<p>The HTML5Element example would encourage people to define a custom element registration function, when it seems simpler and more flexible to just export the element class. The class can then be used in lots of ways, e.g., registered via custom element registries someday.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2179_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dandclark</div>
+          <div class="creation_date">2019-02-07</div>
+          <div class="post_content">
+<p>Hi Jan,</p>
+<p>You’re right that the HTML5Element example can be simplified.  There’s no need to specify <code>&lt;html&gt;</code>, <code>&lt;body&gt;</code>, or <code>&lt;head&gt;</code>; the HTML5 parser will inject these automatically per normal HTML5 parsing rules.  I also like the idea of exporting the custom element class directly.</p>
+<p>I updated our <a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/tree/master/HTMLModules/demo" rel="nofollow noopener">example</a> to follow all these points.  Thanks for the feedback!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2019-02-12</div>
+          <div class="post_content">
+<p>Thanks for the support folks! We’re intending to open a new repo for HTML modules in the <a href="https://github.com/wicg" rel="nofollow noopener">WICG github organization</a> shortly, where we’ll have a dedicated issue tracker to continue the discussion as this feature incubates.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1159_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">matthewp</div>
+          <div class="creation_date">2019-02-13</div>
+          <div class="post_content">
+<p>I just noticed the repo was created <a href="https://github.com/WICG/html-modules" rel="nofollow noopener">here</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-02-13</div>
+          <div class="post_content">
+<p>Yeah, I created the repo but didn’t want to announce it before it gets populated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2019-07-08</div>
+          <div class="post_content">
+<p>Update: discussions of this proposal (existing related and new issues) have moved to <a href="https://github.com/w3c/webcomponents" rel="nofollow noopener">w3c/webcomponents</a> and/or the <a href="https://github.com/whatwg/html/pull/4505" rel="nofollow noopener">open PR against whatwg/html</a>. The current direction is to take a staged approach to try to first stand up <a href="https://github.com/whatwg/html/pull/4407" rel="nofollow noopener">JSON modules</a> (as they are leaf-nodes in a module graph), then work out <a href="https://github.com/w3c/webcomponents/issues/759" rel="nofollow noopener">CSS modules</a>, and then return to HTML modules with what we’ve learned once those other module types are available.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Native Overlays</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Native Overlays</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>Continuing the discussion from <a href="//discourse.wicg.io/t/making-option-a-first-class-citizen-and-other-select-tweaks/1049">Making &lt;option&gt; a first-class citizen (and other &lt;select&gt; tweaks)</a>:</p>
+<aside class="quote" data-post="1" data-topic="1049">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/stuartpb/40/606_1.png" width="20"/><a href="//discourse.wicg.io/t/making-option-a-first-class-citizen-and-other-select-tweaks/1049/1">Making &lt;option&gt; a first-class citizen (and other &lt;select&gt; tweaks)</a>
+</div>
+<blockquote>
+<p>This could be polyfilled with a script that replaces &lt;select&gt; on a page with a custom element (in the traditional mocked-UI sense, not necessarily in the Web Components sense). The one thing only UAs can do is present the &lt;select&gt; elements in a frame that extends beyond the viewport (this is a significant issue for Chrome Extension popups).</p>
+</blockquote>
+</aside>
+<p>I think it would be a <em>great</em> solution if UAs introduced a new “ephemeral element”, with special instantiation methods similar to (or maybe as an extension of) <code>&lt;dialog&gt;</code>, which may be positioned anywhere relative to the page <em>or</em> client (for page positioning, possibly specified <a href="//discourse.wicg.io/t/position-an-element-relatively-to-another-element-from-anywhere-in-the-dom/968">relative to another element</a>), which is rendered to a separate surface which may extend <strong>beyond</strong> the client frame.</p>
+<p>This would then be usable for implementing certain classes of controls, like tooltips and dropdown menus, which are currently restricted to a small subset of behaviors by the UA, in an extensible fashion.</p>
+<p>When creating/displaying these elements, authors must be prepared that the element will be destroyed/hidden in may circumstances outside their control (such as when the window is minimized or when the page loses visibility, ie. the tab is inactive). Authors can (where “the same place” is a UA-determined property subject to accessibility adjustments), or when the element is clicked.</p>
+<p>Having the UA implement these UI-hiding behaviors, on top of making it simpler to implement the normal behaviors of menus and tooltips, makes it safer to let these elements exist outside the page context, because it’s ensured that they’re not going to accidentally forget to hide themselves in circumstances where they’re irrelevant.</p>
+<p>The display of these elements can and should be subject to various restrictions, such as not being able to cross the <em>top</em> client boundary, or even come close to it (to avoid spoofing of browser controls). Similarly, a restriction may be implemented on certain classes of display that these elements may <em>not</em> be hideable (or moved or resized) by the page <em>when a pointer is hovering over them</em> (so as to avoid <a href="http://lh5.ggpht.com/_svkOK09JKoQ/TJGL66_EIvI/AAAAAAAABZ0/B5LxbwPZvJw/s1600/Lucy%20CB%20Football.jpg" rel="nofollow noopener">the “pulled football” problem</a> where a hit-target moves as the user is about to click on it).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>There is precisely 0% chance of browsers allowing arbitrary web content to be displayed outside of the page frame.  It will never, <em>ever</em> happen.  It’s a <strong>huge</strong> security risk.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>What if it has to be anchored within the page frame and has size restrictions (on top of the other position, interaction, and focus restrictions I noted above)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>We still use “can jump out of the frame” as an explicit indicator that this is trusted UI coming from the browser, not page UI.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>Yeah - but that notion of “trusted UI” is pliable. You can still coerce users to click <code>&lt;select&gt;</code> elements or display tooltips that will pop up out of the browser, cover up large portions of the screen, and appear to be something else (<em>especially</em> with Unicode characters that make it easier to imitate native UI constructs). It is, within certain bounds, an acceptable tradeoff that we already make.</p>
+<p>I feel that the average user is more likely to say “this goes away when I move my mouse, it’s just a fancy tooltip” (especially if we restrict tooltip-like elements to only be capable of using tooltip-like positions and transitions) than “oh my goodness, something happened outside the browser frame, it must be trusted content”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p> is crazy limited, and you can’t reproduce native UI to anything approaching believable fidelity.  It’s not a risk vector that will justify opening up more risk.</p>
+<p>Same with tooltips - a text-filled yellow bordered rectangle clearly emanating from the user’s cursor position is not sufficiently risky to justify extending the risk vector.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2015-08-13</div>
+          <div class="post_content">
+<p>Fine, then make the tooltip aspect of this a <code>&lt;tooltip&gt;</code> element that <a href="//discourse.wicg.io/t/performance-privacy-restriction-modules/743">is subject to rules limiting its content styling</a>. The same could go for styling <a href="//discourse.wicg.io/t/making-option-a-first-class-citizen-and-other-select-tweaks/1049">within an extended definition of <code>&lt;option&gt;</code> / <code>&lt;select&gt;</code> dropdown content</a>, and another similar element for (context) menus. Let’s figure out what we <em>can</em> permit rather than focusing on what we <em>mustn’t</em>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

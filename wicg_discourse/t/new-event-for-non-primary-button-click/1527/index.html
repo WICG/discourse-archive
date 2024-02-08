@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>New event for non-primary button click</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">New event for non-primary button click</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2016-05-24</div>
+          <div class="post_content">
+<h2>Problem</h2>
+<p>In attempting to remove the click event for non-primary buttons in Chrome as per UI Event Spec it was discovered there is no way for the developers to prevent opening a new tab when the user middle clicks on a link. The default middle click action of “Open new tab” is not formally documented.</p>
+<p>Traditionally Chrome and some of the other vendors like Safari and Edge have fired the click event for all buttons (including non-primary). This poses a number of issues with pages executing click event handlers as traditionally javascript hasn’t examined the button field. Likewise other vendors have followed different approaches here. Mozilla dispatches the click event only to the document level nodes.</p>
+<p>It is believe that for interoperability and legacy purposes the best approach is to fire the click event only for the primary button and that is reflected in the current UI Events Spec. However some applications may wish to override the default behavior of the UA. Specifically it is desirable to have an event for the middle button and explicitly define the default behavior.</p>
+<h2>Incomplete Solution</h2>
+<p>By listening to the mousedown/up events and saving the target in a global variable, it is possible for javascript to dispatch an untrusted click event with the correct button value to the desired target. However this workaround doesn’t seem to work robustly for example when facing stopimmediatepropagation API as other listeners might interfere with these listeners.</p>
+<h2>Proposal</h2>
+<p>Introduce a MouseEvent of type “<strong>auxclick</strong>” (other suggestions are welcome) which is fired for all non-primary buttons. This event is not only dispatched for middle button but also covers click for other buttons. It should be targeted at the node (i.e. common ancestor of mousedown and mouseup targets) and bubble as the click event does.</p>
+<p>Click events are special in terms of allowing untrusted default action behavior for legacy purposes. It is believe that untrusted auxclick events should be are treated purely as untrusted and must not run the default action behavior.</p>
+<p>Since we are changing the type from <strong>click</strong> to <strong>auxclick</strong> but keeping all other semantics the same, we believe only minor changes to applications that are currently using this behavior would be required.</p>
+<h2>Use Cases</h2>
+<p>Some of the use cases were mentioned briefly in the problem specification. But beyond listening to the auxclick event and capability to prevent opening a new tab or recording the metrics for opening the links in the new tab, this new event enables developers to also do actions on click for other buttons and expands the number of ways developers can expect the actions of their users.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2016-05-24</div>
+          <div class="post_content">
+<p><span class="mention">@dtapuska</span>, <span class="mention">@RickByers</span>, <span class="mention">@teddink</span>, <span class="mention">@jacobrossi</span>, <span class="mention">@travisleithead</span>, <span class="mention">@garykac</span></p>
+<p>Following our discussion, here is the discourse for the new event.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-05-25</div>
+          <div class="post_content">
+<p>Thanks Navid.  I agree this is a good idea - we can’t make Chrome conform to the UI Events spec without giving web developers some way to preserve their existing behavior here.  While niche, an <code>auxclick</code> event for the rare scenarios where you really do want to override the default non-primary click action sounds like the right solution to me.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1515_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">dtapuska</div>
+          <div class="creation_date">2016-05-31</div>
+          <div class="post_content">
+<p>I agree with this approach it balances the problems with authors listening to the click event but not handling buttons correctly; yet allowing authors not to lose out on events they have today.</p>
+<p>It should be noted that <a href="https://www.w3.org/TR/uievents/#event-type-dblclick">dblclick</a> is dispatched only to the primary button so this approach doesn’t seem out of left field.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Timbojones</div>
+          <div class="creation_date">2016-07-05</div>
+          <div class="post_content">
+<p>What exactly is a use case for disabling the default “open in new tab” middle click behavior? It seems to me that the only door this opens is for rogue developers to break the web and user expectations, or to continue the legacy of bad design which held that the web designer should be able to control the browser window size. The user should be in full control of their experience wrt number of tabs and size of window.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1000_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">NavidZ</div>
+          <div class="creation_date">2016-07-06</div>
+          <div class="post_content">
+<p>Regarding the behavior of preventing the new tab being opened by the browser there are a lot of legit use cases. There are a lot of them in Chrome pages. I can also imagine a modern website that are more and more like PWAs wanting to be able to control more and more of these actions. Aside from that a page that is written by the developer should decide how it wants to handle the clicks of any button on a link or any other element. So I don’t see much of an abuse there. Also users can always go ahead and close the page/tab if a page is misbehaving without affecting any other page/tab. If we just remove click event for middle button then that existing functionality will be removed and all those legit use cases will have no way of doing that.</p>
+<p>We have put up this community draft spec for the “auxclick” event which will be hopefull pursue in Chrome.
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/WICG/auxclick" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars3.githubusercontent.com/u/13145324?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/WICG/auxclick" rel="nofollow noopener" target="_blank">WICG/auxclick</a></h3>
+<p>Description for non-primary button click event. Contribute to WICG/auxclick development by creating an account on GitHub.</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-07-15</div>
+          <div class="post_content">
+<p>Note that many of the best use cases present a similar (open in new tab) user experience but have customized it in some way.  Eg. instead of clicking on a <code>&lt;a&gt;</code> tag, the app is doing something more complex involving a <code>window.open</code>.  So the goal is not necessarily to permit developers to disable the “open in new tab” behavior, but to give them the hooks such that they can opt-in to ensuring their app really behaves as the user expects.</p>
+<p>Pragmatically, this new event is precisely the mechanism by which we fix the problem of sites accidentally overriding the behavior in browsers like Chrome today which don’t follow the spec (fire <code>click</code> for non-primary buttons).  We can’t break the 99% of cases which are failing to consider non-primary buttons any differently without providing an alternative for the 1% which really are providing a better user experience for middle click (eg. clicks on things that don’t have a default behavior).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-09-08</div>
+          <div class="post_content">
+<p>This API is now <a href="https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/R8OehqGJzt0" rel="nofollow noopener">shipping in Chrome</a>.  Is anyone else interested in potentially implementing this API?  If so we should move the repo to the WICG organization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">smaug</div>
+          <div class="creation_date">2016-09-08</div>
+          <div class="post_content">
+<p>auxclick sounds good to me. It doesn’t let pages to do anything more bad than what they are already doing.
+However, to get more feedback, it might be best to try to get auxclick to UIEvents. Like, is there already UIEvents spec bug about this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-09-08</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1527">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/s/ecc23a/40.png" width="20"/> smaug:</div>
+<blockquote>
+<p>auxclick sounds good to me. It doesn’t let pages to do anything more bad than what they are already doing.</p>
+</blockquote>
+</aside>
+<p>Thanks!</p>
+<aside class="quote" data-post="9" data-topic="1527">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/s/ecc23a/40.png" width="20"/> smaug:</div>
+<blockquote>
+<p>However, to get more feedback, it might be best to try to get auxclick to UIEvents. Like, is there already UIEvents spec bug about this?</p>
+</blockquote>
+</aside>
+<p>There <a href="https://github.com/w3c/uievents/issues/107" rel="nofollow noopener">is now</a>.  Sorry, although we did discuss this with the UI Events editor (<span class="mention">@garykac</span>) we definitely should have filed an issue earlier to increase visibility.</p>
+<p>IMHO this is still a bit of an experiment - we don’t yet know if we can succeed in eating the web compat impact of changing Chrome not to fire <code>click</code> for the middle mouse button.  I’ve encouraged the UI Events folks not to consider adding auxclick until after we’ve found out if changing Chrome to match the spec around <code>click</code> will have acceptable web compat impact.  But if others disagree and want to see it added to UI Events working drafts sooner, I wouldn’t object.  Otherwise (or in the interim) I propose we move the repo to the WICG organization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-09-08</div>
+          <div class="post_content">
+<p>By the way, I should add that although this has now landed in Chrome Canary, we have plenty of time to make changes if there is feedback.  Chrome 55 is scheduled to branch early October - so it’s easy to make changes before then.  And then we’ve got until last November or so to make changes before it hits stable.  So please file any feedback you have <a href="https://github.com/NavidZ/auxclick/issues" rel="nofollow noopener">in GitHub</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2016-09-09</div>
+          <div class="post_content">
+<p>This sounds good to me too. My preference would be to spin this up as a WICG due to the experimental nature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2016-09-12</div>
+          <div class="post_content">
+<p>Ok, done.  The repo is now at <a href="https://github.com/WICG/auxclick" rel="nofollow noopener">https://github.com/WICG/auxclick</a>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

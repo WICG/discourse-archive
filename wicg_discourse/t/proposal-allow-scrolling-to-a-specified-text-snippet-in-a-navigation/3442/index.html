@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Allow scrolling to a specified text snippet in a navigation</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Allow scrolling to a specified text snippet in a navigation</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2019-03-20</div>
+          <div class="post_content">
+<p>Current specifications and implementations allow a URL to specify a target in the <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-fragid">URL fragment</a>. If the navigated to resource has:</p>
+<ul>
+<li>an element with an id matching the fragment</li>
+<li>a link with with a name attribute that matches the fragment</li>
+</ul>
+<p>that element will be the CSS target. The UA will scroll the targeted element into view when the resource is loaded. This allows linking to specific parts of a resource. For example, the Wikipedia entry on “Cat” is very long and broad. However, each subsection is marked with an id so users and resources can link directly to a subsection, for example: <a href="https://en.wikipedia.org/wiki/Cat#Behavior" rel="nofollow noopener">Cat Behavior</a>.</p>
+<p>However, this relies on a page author predicting all the parts of a resource users may find interesting and marking it up with ids. This limitation makes it difficult to use fragments to link to arbitrary content. For example, take the page: <a href="https://www.gutenberg.org/files/2147/2147-h/2147-h.htm" rel="nofollow noopener">https://www.gutenberg.org/files/2147/2147-h/2147-h.htm</a>. Suppose a user or resource wants to link to the paragraph (e.g. to cite a quote) that starts with:</p>
+<blockquote>
+<p>“It became necessary, at last, that I should arouse both master and valet to the expediency of removing the treasure.”</p>
+</blockquote>
+<p>The referring page would have to link to “THE GOLD-BUG” section and tell the user to scroll down or use their browser’s find-in-page function.</p>
+<p>I’d like to propose extending the URL fragment for HTML documents to allow specifying a text snippet as the target. In this case, we could encode the above quote directly in the URL fragment and the user agent would scroll directly to the specified text, possibly highlighting it to the user.</p>
+<p>I have an explainer in my personal <a href="https://github.com/bokand/ScrollToTextFragment" rel="nofollow noopener">GitHub repo</a> that has more details and a proposed solution.</p>
+<p>Would anyone else be interested in discussing and iterating on this proposal in the WICG?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-03-20</div>
+          <div class="post_content">
+<p>As a user and someone that find themselves linking to other documents quite often, I really like that proposal! Would be very handy!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2019-03-20</div>
+          <div class="post_content">
+<p>It might be useful, here are some of the major open questions about the proposal:</p>
+<ul>
+<li>How does this interact with single-page apps that use the fragment for routing? e.g. how could we specify a text fragment on a page like: <code>http://example.org/#!splashPage</code> (note, this isn’t unique to this proposal, the same issue exists for id-based fragments)</li>
+<li>Selecting long, DOM-fragmented quotes: sometimes the text to select may be very long. Ideally we’d provide some convenient syntax to keep URLs manageable. Additionally, the desired quote may appear continuous on the page but be contained in separate elements, e.g. <code>&lt;p&gt;paragraph 1&lt;/p&gt;&lt;p&gt;paragraph 2&lt;/p&gt;</code>. We should provide a way to select the text like this irrespective of it’s underlying DOM structure.</li>
+<li>Allow selecting multiple quotes. We may wish to highlight an entire row or column in a table, or two paragraphs separated by an image.</li>
+</ul>
+<p>These and others are discussed in detail in our GitHub <a href="https://github.com/bokand/ScrollToTextFragment/issues/" rel="nofollow noopener">repo issues</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-03-22</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="3442">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/bokan/40/916_2.png" width="20"/> bokan:</div>
+<blockquote>
+<p>I’d like to propose extending the URL fragment for HTML documents to allow specifying a text snippet as the target.</p>
+</blockquote>
+</aside>
+<p>I like the idea but what if the text snippet on the target page changes? Not only would the link on the referrering page be broken, but the referrering page wouldnt even know about it to update. And if it does update it, the text snippet can be changed again. Then another broken link.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2019-03-22</div>
+          <div class="post_content">
+<blockquote>
+<p>I like the idea but what if the text snippet on the target page changes? Not only would the link on the referrering page be broken, but the referrering page wouldnt even know about it to update. And if it does update it, the text snippet can be changed again. Then another broken link.</p>
+</blockquote>
+<p>The fallback behavior would be that the page loads unscrolled which doesn’t seem any worse than what would happen today when you can’t link to a text snippet</p>
+<p>Additionally, the UA could potentially indicate to the user that it couldn’t find the specified text to make it clear the page might be stale.</p>
+<p>I’d also point out the same issue exists with element-id based fragments but they work well in practice. More so, if a link points to a page whose content has changed so that the content of the page is no longer relevant to the link, I’d say that’s an existing problem that exists regardless of whether a fragment is specified at all. Having an indication as mentioned above would actually improve this scenario since the user could at least tell that the page has changed since the link was created.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/440_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jirkakosek</div>
+          <div class="creation_date">2019-03-22</div>
+          <div class="post_content">
+<p>It seems that you want to reinvent XPointer – something that never got
+much interest from browser vendors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/954_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AaronGustafson</div>
+          <div class="creation_date">2019-03-22</div>
+          <div class="post_content">
+<p>This is something the IndieWeb community has tackled with <a href="https://indieweb.org/fragmention" rel="nofollow noopener">fragmentations</a>. I have an explainer I wrote a few years back as well. Let me dust it off and see if it needs updating and then I’ll post it. Given my schedule it’ll be the tail end of next week at the earliest. But yes!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mkay581</div>
+          <div class="creation_date">2019-03-23</div>
+          <div class="post_content">
+<p>Yeah the same issues exist with URL fragments that are associated with anchor element IDs. And yes, its a problem regardless of this proposal, but at least when a developer uses an anchor ID (<a>&lt;/&gt;) to make their content linkable, they are deliberate in doing so and are aware they are using an identifier that can be linked to, which should probably never change.</a></p>
+<p>This proposal, on the other hand, actually is encouraging anchor linking to text, which is even <em>more likely</em> to change and result in broken links. Of course, I’m not saying this proposal should fix broken anchor fragment links but it shouldnt facilitate an opportunity to make a bad problem even worse, if that makes sense.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2237_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">feliperias</div>
+          <div class="creation_date">2019-03-23</div>
+          <div class="post_content">
+<p>It is a good idea. However, since this seems to overlap with ongoing standardisation efforts, maybe it would be better to engage directly with those?</p>
+<p><a class="onebox" href="https://www.w3.org/TR/selectors-states/#TextQuoteSelector_def" target="_blank">https://www.w3.org/TR/selectors-states/#TextQuoteSelector_def</a>
+<a class="onebox" href="https://www.w3.org/TR/annotation-html/#web-annotation-based-citation-urls" target="_blank">https://www.w3.org/TR/annotation-html/#web-annotation-based-citation-urls</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/24_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ivan</div>
+          <div class="creation_date">2019-03-23</div>
+          <div class="post_content">
+<p>This has been (and is still being) discussed in <a href="https://github.com/bokand/ScrollToTextFragment/issues/4" rel="nofollow noopener">issue 10</a> of the aforementioned <a href="https://github.com/bokand/ScrollToTextFragment" rel="nofollow noopener">GitHub repo</a>.</p>
+<p>However, just to make the situation clear: there is no “ongoing standardization effort” on this. There is a set of standards on <a href="https://www.w3.org/TR/annotation-model/">Web Annotation</a> which does include a <a href="https://www.w3.org/TR/annotation-model/#selectors">selector model</a> related to annotations. The Web Annotation model does <em>not</em> define a fragment URL approach, and the corresponding Working Group has been closed a while ago.</p>
+<p>The <a href="https://www.w3.org/TR/selectors-states/">document you quote</a>, that <em>does</em> include a fragment URL proposal has been published by the Working Group <em>as a Note</em>, and has not been touched since its publication in early 2017. I think one possible question is: <em>should there be a standardization effort</em>, possibly along the lines of that note? (I do not have an answer to this question.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/916_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bokan</div>
+          <div class="creation_date">2019-07-23</div>
+          <div class="post_content">
+<p>I think there’s enough interest. I’d like to move the repo into the WICG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-07-23</div>
+          <div class="post_content">
+<p>Sounds good. Let’s do this!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2019-07-23</div>
+          <div class="post_content">
+<p>And the repo is now live at <a href="https://github.com/WICG/ScrollToTextFragment" rel="nofollow noopener">https://github.com/WICG/ScrollToTextFragment</a></p>
+<p>Happy incubating!!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-06-09</div>
+          <div class="post_content">
+<p><span class="mention">@yoavweiss</span> <span class="mention">@mkay581</span> <span class="mention">@bokan</span> <span class="mention">@bokan</span> <span class="mention">@AaronGustafson</span> <span class="mention">@AaronGustafson</span> <span class="mention">@feliperias</span> <span class="mention">@ivan</span> Hi all!  How are you all? Is it possible to have an http api to find snippet of text specified in a navigation?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">raphaellouis</div>
+          <div class="creation_date">2022-06-09</div>
+          <div class="post_content">
+<h4>
+<a class="anchor" href="#h-1-context-of-doubtopening-arguments-1" name="h-1-context-of-doubtopening-arguments-1"></a>1. Context of doubt/Opening arguments</h4>
+<h5>
+<a class="anchor" href="#h-1-what-is-http-2" name="h-1-what-is-http-2"></a>1. What is HTTP?</h5>
+<ul>
+<li>
+<strong>HTTP</strong> (HyperText Transfer Protocol) is the underlying protocol of the World Wide Web. Developed by Tim Berners-Lee and his team between 1989-1991, HTTP has gone through many changes that have helped maintain its simplicity while shaping its flexibility. Keep reading to learn how HTTP evolved from a protocol designed to exchange files in a semitrusted laboratory environment into a modern internet maze that carries images and videos in high resolution and 3D.</li>
+</ul>
+<h5>
+<a class="anchor" href="#h-2-what-is-web-scraping-3" name="h-2-what-is-web-scraping-3"></a>2. What is Web Scraping?</h5>
+<ul>
+<li>“<a href="https://parsehub.com/" rel="noopener nofollow ugc">Web scraping</a> refers to the <strong>extraction of data from a website</strong>. This information is collected and then exported into a format that is more useful for the user. Be it a spreadsheet or an API.”</li>
+</ul>
+<h5>
+<a class="anchor" href="#h-21-what-are-common-web-scraping-issues-4" name="h-21-what-are-common-web-scraping-issues-4"></a>2.1. What are common web scraping issues?</h5>
+<ul>
+<li>
+<strong>Issue 1 - Bots</strong>: Websites are free to choose whether they will allow web scrapers bots or not on their websites for data scraping purpose. There are websites that actually do not allow automated web scraping. This is mainly because, at most times these bots scrape data with the intention of gaining competitive advantage and drain the server resources of the website they are scraping from, thus adversely affecting site performance.</li>
+<li>
+<strong>Issue 2 - Captchas</strong>: The main purpose of captchas are to separate humans from bots by displaying logical problems that humans find easy to solve but making it difficult on the bots. So, their basic job is to keep spam away. In presence of captcha, basic scraping scripts will tend to fail, but with new advancements, there are generally measures to subsist these captchas, in an ethical manner.</li>
+<li>
+<strong>Issue 4 - Frequent structural changes</strong>: In order to keep up with the advancements in UI/UX and to add more features, websites undergo regular structural changes. The web scrapers are specifically written with respect to the code elements of the webpage at the point of setup, so, frequent changes complicates the codes, giving scrapers some sort of a hard time. Though every structural change will not affect the web scraper setup, but as any sort of change may result in data loss, it is recommended to keep a tab on the changes.</li>
+<li>
+<strong>Issue 5 - Getting Banned</strong>: If a web scraper bot sends multiple parallel requests per second or unnaturally high no of requests, there’s a good chance that you will cross the thin line of ethical and unethical scrapping and get flagged and ultimately banned. If the web scraper is smart and has sufficient resources, they can carefully handle these kind of counter measures and make sure they stay at the right side of the law and still achieve what they want.</li>
+<li>
+<strong>Issue 6 -  Real time data scraping</strong>: Real time data scraping can be of paramount importance to businesses as it supports immediate decision making. With the always fluctuating stock prices to the ever changing product prices in eCommerce, this can lead to huge capital gains for a business. But deciding what’s important and what’s not in real time is a challenge. Also, acquiring large data sets in real time is an overhead too. These real time web scrapers use a Rest API to monitor all dynamic data available in the public domain and scrape data in “nearly real time” but attaining the “holy grail” still remains a challenge. There is a thin line between data collection and causing damage to the web by careless data scraping. As web scraping is a such an insightful tool and with the immense effect it has on businesses, web scraping should be done with responsibility. With a little respect we can keep a good thing going.</li>
+</ul>
+<h5>
+<a class="anchor" href="#h-3-conceptexample-uris-get-5" name="h-3-conceptexample-uris-get-5"></a>3. Concept\Example URIs: get</h5>
+<pre><code class="lang-auto">HTTP GET https://example.com#:~:text=prefix-,startText,endText,-suffix
+HTTP GET https://example.com#:~:text=prefix-,startText,endText,-suffix/users?size=20&amp;page=5
+HTTP GET https://example.com#:~:text=prefix-,startText,endText,-suffix/users/123
+HTTP GEThttps://example.com#:~:text=prefix-,startText,endText,-suffix/users/123/address
+</code></pre>
+<h5>
+<a class="anchor" href="#h-31-sample-6" name="h-31-sample-6"></a>3.1 Sample:</h5>
+<ul>
+<li>get: <code>https://en.wikipedia.org/w/index.php?title=Cat&amp;oldid=916388819#:~:text=Claws-,Like%20almost,the%20Felidae%2C,-cats</code>
+</li>
+<li>
+<em>return:</em> ‘Like almost all members of the Felidae’</li>
+</ul>
+<h5>
+<a class="anchor" href="#h-4-context-7" name="h-4-context-7"></a>4. Context</h5>
+<ul>
+<li>
+<strong>4.1</strong> I would like to find parts of the text by http. With an open api to find part of the text implemented in several companies/sites - web in general this could allow a better targeting to extract data in a suitable way whether for people, companies, analysts and/or data scientists.</li>
+<li>
+<strong>4.2</strong> I believe this can make it easier to implement open-data in a friendly way on most sites.</li>
+<li>
+<strong>4.3</strong> I argue this, because many times we want to do the web scraping of a page or more pages. And the problem that occurs is in most of these pages there is a lot of impediment like Captcha, restriction of the number of page requests, elements that change with the dom - document object model.</li>
+<li>
+<strong>4.4</strong> If there are specific text calls within the context of http requests - companies could set better control on the number of page requests within the data extraction. Currently, this is a problem and it is very difficult to see what is being seen or extracted from the pages.</li>
+<li>
+<strong>4.5</strong> A common problem when scraping a page is that you have to have a css or js or html rule to find the part of the text you want to fetch.</li>
+<li>
+<strong>4.6</strong> The <strong>Web Platform Incubator Community Group</strong> (WICG) provides a lightweight venue for proposing and discussing new web platform features.</li>
+<li>
+<strong>4.7</strong> I would like to find parts of the text within the context of http calls. I believe that this would be a viable and interesting resource, it would solve many problems of making an algorithm for web scraping. A good part of the common problems with web scraping is the fact that Captchas, Bots, Banned etc. A good and partial solution is to openly define the number of requests of the page to do web scripting - extracting data from one or more pages within a site.</li>
+</ul>
+<h4>
+<a class="anchor" href="#h-5-notes-8" name="h-5-notes-8"></a>5. Notes</h4>
+<ol>
+<li>What I’m proposing is to use the existing proposal of specified-text-snippet-in-a-navigation in context of http request for data extraction</li>
+<li>What I’m proposing could be wrong or good, so I want to know everyone’s opinion.</li>
+<li>There is an evolution of the web and especially of http technology, I would like to know if this evolution would be related or could be related to data extraction - today it is very common to think about science and data analysis - I would like to know if there is any interest in this regard</li>
+<li>The links I put here are bibliographic references and do not promote any company, product, service</li>
+</ol>
+<h4>
+<a class="anchor" href="#h-6-references-9" name="h-6-references-9"></a>6. References</h4>
+<ul>
+<li><a class="inline-onebox" href="https://www.deepcrawl.com/knowledge/guides/fix-failed-website-crawls/" rel="noopener nofollow ugc">How to Fix Your Failed Website Crawls - Deepcrawl</a></li>
+<li><a href="https://www.semrush.com/blog/crawlability-issues/" rel="noopener nofollow ugc">https://www.semrush.com/blog/crawlability-issues/</a></li>
+<li><a class="inline-onebox" href="https://www.woorank.com/en/edu/seo-guides/what-are-crawl-errors" rel="noopener nofollow ugc">What Are Crawl Errors? Why Do Crawl Errors Matter?</a></li>
+<li><a href="https://www.binaryfolks.com/blog/challenges-and-best-practices-for-data-scraping" rel="noopener nofollow ugc">https://www.binaryfolks.com/blog/challenges-and-best-practices-for-data-scraping</a></li>
+<li><a class="inline-onebox" href="https://www.deepcrawl.com/knowledge/guides/fix-failed-website-crawls/" rel="noopener nofollow ugc">How to Fix Your Failed Website Crawls - Deepcrawl</a></li>
+<li><a href="https://chato.cl/papers/crawling_thesis/practical.pdf" rel="noopener nofollow ugc">https://chato.cl/papers/crawling_thesis/practical.pdf</a></li>
+<li><a class="inline-onebox" href="https://support.google.com/adsense/answer/2381908?hl=en" rel="noopener nofollow ugc">Fix AdSense crawler issues - Google AdSense Help</a></li>
+<li><a class="inline-onebox" href="https://yoast.com/crawl-errors/" rel="noopener nofollow ugc">What are crawl errors? • SEO for beginners • Yoast</a></li>
+<li><a href="https://www.quantzig.com/blog/web-crawler-challenges-crawling/" rel="noopener nofollow ugc">https://www.quantzig.com/blog/web-crawler-challenges-crawling/</a></li>
+<li><a class="inline-onebox" href="https://techvice.org/blog/popular/web-scraping-challenges-and-how-to-deal-with-them/" rel="noopener nofollow ugc">Web scraping challenges and how to deal with them - Techvice</a></li>
+<li><a class="inline-onebox" href="https://www.octoparse.com/blog/9-web-scraping-challenges" rel="noopener nofollow ugc">9 Web Scraping Challenges You Should Know | Octoparse</a></li>
+<li><a class="inline-onebox" href="https://research.aimultiple.com/web-scraping-challenges/" rel="noopener nofollow ugc">The Ultimate Guide to Web Scraping Challenges &amp; Best Practices</a></li>
+<li><a href="https://www.quora.com/What-are-your-biggest-problems-in-web-scraping" rel="noopener nofollow ugc">https://www.quora.com/What-are-your-biggest-problems-in-web-scraping</a></li>
+<li><a class="inline-onebox" href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-fragid">HTML Standard</a></li>
+<li><a class="inline-onebox" href="https://github.com/bokand/ScrollToTextFragment/pulls" rel="noopener nofollow ugc">Pull requests · bokand/ScrollToTextFragment · GitHub</a></li>
+<li><a class="inline-onebox" href="https://github.com/WICG/scroll-to-text-fragment" rel="noopener nofollow ugc">GitHub - WICG/scroll-to-text-fragment: Proposal to allow specifying a text snippet in a URL fragment</a></li>
+<li><a class="inline-onebox" href="https://www.parsehub.com/blog/what-is-web-scraping/" rel="noopener nofollow ugc">What is Web Scraping and What is it Used For? | ParseHub</a></li>
+<li><a class="inline-onebox" href="https://www.hackerearth.com/practice/notes/simple-http-server-in-python/" rel="noopener nofollow ugc">Simple HTTP server in Python | HackerEarth</a></li>
+<li><a href="https://reqres.in/" rel="noopener nofollow ugc">https://reqres.in/</a></li>
+<li><a class="inline-onebox" href="https://help.tableau.com/current/api/rest_api/en-us/REST/rest_api_concepts_example_requests.htm" rel="noopener nofollow ugc">REST API Example Requests - Tableau</a></li>
+<li><a href="https://http.cat/" rel="noopener nofollow ugc">https://http.cat/</a></li>
+<li><a class="inline-onebox" href="https://digital.nhs.uk/developer/api-catalogue/hello-world" rel="noopener nofollow ugc">Hello World API - NHS Digital</a></li>
+<li><a class="inline-onebox" href="https://www.restapitutorial.com/lessons/httpmethods.html" rel="noopener nofollow ugc">HTTP Methods for RESTful Services</a></li>
+<li><a class="inline-onebox" href="https://www.tutorialspoint.com/http/http_methods.htm" rel="noopener nofollow ugc">HTTP - Methods</a></li>
+<li><a class="inline-onebox" href="https://restfulapi.net/http-methods/" rel="noopener nofollow ugc">HTTP Methods - REST API Tutorial</a></li>
+<li><a class="inline-onebox" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">HTTP/1.1: Method Definitions</a></li>
+<li><a class="inline-onebox" href="https://www.w3.org/Protocols/rfc2616/rfc2616.html">Hypertext Transfer Protocol -- HTTP/1.1</a></li>
+<li><a class="inline-onebox" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Evolution_of_HTTP" rel="noopener nofollow ugc">Evolution of HTTP - HTTP | MDN</a></li>
+<li><a class="inline-onebox" href="https://developer.mozilla.org/en-US/docs/Glossary/QUIC" rel="noopener nofollow ugc">QUIC - MDN Web Docs Glossary: Definitions of Web-related terms | MDN</a></li>
+<li><a class="inline-onebox" href="https://www.w3schools.com/whatis/whatis_http.asp" rel="noopener nofollow ugc">What is HTTP</a></li>
+<li><a class="inline-onebox" href="https://digital.nhs.uk/developer/api-catalogue/hello-world" rel="noopener nofollow ugc">Hello World API - NHS Digital</a></li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

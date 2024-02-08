@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] ImageDecoder API extension for WebCodecs</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] ImageDecoder API extension for WebCodecs</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2020-04-22</div>
+          <div class="post_content">
+<h2>Participate:</h2>
+<ul>
+<li><a href="https://github.com/dalecurtis/image-decoder-api/blob/master/explainer.md" rel="nofollow noopener">Explainer</a></li>
+<li><a href="https://github.com/dalecurtis/image-decoder-api/issues" rel="nofollow noopener">Issue Tracker</a></li>
+<li><a href="https://chromium-review.googlesource.com/c/chromium/src/+/2145133" rel="nofollow noopener">Prototype</a></li>
+</ul>
+<h2>Introduction</h2>
+<p>Today <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement" rel="nofollow noopener"><code>&lt;img&gt;</code></a> elements don’t provide access to any frames beyond the first. They also provide no control over which frame is displayed in an animation. As we look to provide audio and video codecs through <a href="https://github.com/WICG/web-codecs/blob/master/explainer.md" rel="nofollow noopener">WebCodecs</a> we should consider similar interfaces for images as well.</p>
+<p>We propose a new ImageDecoder API to provide web authors access to an <a href="https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap" rel="nofollow noopener">ImageBitmap</a> of each frame given an arbitrary byte array as input. The returned ImageBitmaps can be used for drawing to canvas or WebGL (as well as any other future ImageBitmap use cases). Since the API is not bound to the DOM it may also be used in workers.</p>
+<h2>Example 1: Animated GIF Renderer</h2>
+<pre><code class="lang-auto">// This example renders an animated image to a canvas via ReadableStream.
+
+let canvas = document.createElement('canvas');
+let canvasContext = canvas.getContext('2d');
+let imageDecoder = null;
+let imageIndex = 0;
+
+function renderImage(imageFrame) {
+  canvasContext.drawImage(imageFrame.image, 0, 0);
+  if (imageDecoder.frameCount == 1)
+    return;
+
+  if (imageIndex + 1 &gt;= imageDecoder.frameCount)
+    imageIndex = 0;
+
+  // Decode the next frame ahead of display so it's ready in time.
+  imageDecoder.decode(++imageIndex).then(nextImageFrame =&gt; setTimeout(
+      _ =&gt; { renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
+}
+
+function decodeImage(imageByteStream) {
+  imageDecoder = new ImageDecoder({data: imageByteStream, options: {}});
+  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
+  console.log('imageDecoder.type = ' + imageDecoder.type);
+  console.log('imageDecoder.repetitionCount = ' + imageDecoder.repetitionCount);
+  imageDecoder.decode(imageIndex).then(renderImage);
+}
+
+fetch("animated.gif").then(response =&gt; decodeImage(response.body));
+</code></pre>
+<p>Output:</p>
+<pre><code class="lang-auto">imageDecoder.frameCount = 20
+imageDecoder.type = "image/gif"
+imageDecoder.repetitionCount = 0
+</code></pre>
+<p><img alt="test-gif" data-base62-sha1="wpadgAppylOTrbSfs5jOaDnmi61" height="270" src="//discourse.wicg.io/uploads/default/original/2X/e/e31dcaa60d39df941c5f31b2c48b2037fffb4c1d.gif" width="320"/></p>
+<h2>Example 2: Inverted MJPEG Renderer</h2>
+<pre><code class="lang-auto">// This example renders a multipart/x-mixed-replace MJPEG stream to canvas.
+
+let canvas = document.createElement('canvas');
+let canvasContext = canvas.getContext('2d');
+
+function decodeImage(imageArrayBufferChunk) {
+  // JPEG decoders don't have the concept of multiple frames, so we need a new
+  // ImageDecoder instance for each frame.
+  let imageDecoder = new ImageDecoder(
+      {data: imageArrayBufferChunk, options: {imageOrientation: "flipY"}});
+  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
+  console.log('imageDecoder.type = ' + imageDecoder.type);
+  console.log('imageDecoder.repetitionCount = ' + imageDecoder.repetitionCount);
+  imageDecoder.decode(imageIndex).then(
+      imageFrame =&gt; canvasContext.drawImage(imageFrame.image, 0, 0));
+}
+
+fetch("https://mjpeg_server/mjpeg_stream").then(response =&gt; {
+  const contentType = response.headers.get("Content-Type");
+  if (!contentType.startsWith("multipart"))
+    return;
+
+  let boundary = contentType.split("=").pop();
+
+  // See https://github.com/whatwg/fetch/issues/1021#issuecomment-614920327
+  let parser = new MultipartParser(boundary);
+  parser.onChunk = arrayBufferChunk =&gt; decodeImage(arrayBufferChunk);
+
+  let reader = response.body.getReader();
+  reader.read().then(function getNextImageChunk({done, value}) {
+    if (done) return;
+    parser.addBinaryData(value);
+    return reader.read().then(getNextImageChunk);
+  });
+});
+</code></pre>
+<p>Output:</p>
+<pre><code class="lang-auto">imageDecoder.frameCount = 1
+imageDecoder.type = "image/jpeg"
+imageDecoder.repetitionCount = 0
+...
+</code></pre>
+<p><img alt="flipped-gif" data-base62-sha1="iyjjg7g36eONV8KUgQvbZczlpAF" height="270" src="//discourse.wicg.io/uploads/default/original/2X/8/82080be59114f242e63b2db6211aa6bdd3de780d.gif" width="320"/></p>
+<h2>Open Questions / Notes / Links</h2>
+<ul>
+<li>image/svg support is not currently possibly in Chrome since it’s bound to DOM.</li>
+<li>Using a ReadableStream may over time accumulate enough data to cause OOM.</li>
+<li>Should we allow mime sniffing at all? It’s <a href="https://github.com/dalecurtis/image-decoder-api/issues/1" rel="nofollow noopener">discouraged</a> these days, but &lt;img&gt; has historically depended on it.</li>
+<li>Is there more EXIF information that we’d want to expose?</li>
+<li>Should we allow decode() to take a “completeFramesOnly” flag which defaults to true?
+<ul>
+<li>This would allow partial decodes to be returned for more savvy users.</li>
+</ul>
+</li>
+<li>Should we take a fetch() <a href="https://developer.mozilla.org/en-US/docs/Web/API/Request" rel="nofollow noopener">Request</a> object as input so that the API can allow display with tainting of image data that would be blocked by CORS?</li>
+</ul>
+<h2>Considered alternatives</h2>
+<h3>Providing image decoders through the VideoDecoder API.</h3>
+<p>The VideoDecoder API being designed for WebCodecs is intended for transforming demuxed encoded data chunks into decoded frames. Which is problematic for image formats since generally their containers and encoded data are tightly coupled. E.g., you don’t generally have a gif demuxer and a gif decoder, just a decoder.</p>
+<p>If we allow VideoDecoder users to enqueue raw image blobs we’ll have to output all contained frames at once. Without external knowledge of frame locations within the blob, users will have to decode batches of unknown size or decode everything at once. I.e., there is no piece-wise decoding of an arbitrarily long image sequence and users need to cache all decoded outputs. This feels bad from a utility and resource usage perspective.</p>
+<p>The current API allows users to provide as much or as little data as they want. Images are not decoded until needed. Users don’t need to cache their decoded output since they have random access to arbitrary images.</p>
+<p>Other minor cumbersome details:</p>
+<ul>
+<li>Image containers may define image specific fields like repetition count.</li>
+<li>Image containers typically have complicated ICC profiles which need application.</li>
+</ul>
+<h3>Hang the API off Image/Picture elements</h3>
+<p>This is precluded due to our goal of having the API work out of DOM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2020-04-23</div>
+          <div class="post_content">
+<p>This would be great for image editing/animation software. There’s no built-in way to extract each frame of animated images like GIF and APNG, and this would let us easily do things like import a GIF as an image sequence.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2020-05-14</div>
+          <div class="post_content">
+<p>This is now available in Chrome Canary behind the --enable-blink-features=WebCodecs flag. Please try it out and let us know your thoughts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1990_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Crissov</div>
+          <div class="creation_date">2020-05-18</div>
+          <div class="post_content">
+<p>Re <em>Providing image decoders through the VideoDecoder API</em>, <a href="https://en.wikipedia.org/wiki/High_Efficiency_Image_File_Format" rel="nofollow noopener">HEIF</a> is basically a container, ISOBMFF, that is also used for videos (i.e. MP4) coupled with a video codec, e.g. HEVC, AVC or AV1, to encode still images and various kinds of image sequences – does the dismissal still apply?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2875_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dale_Curtis</div>
+          <div class="creation_date">2020-05-18</div>
+          <div class="post_content">
+<p>Yes. If we lived only in a world where HEIF/AVIF existed, then it’d be logical to require folks to demux their own packets. However we expect significant usage of current generation image formats for quite some time.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Proposal: A Color-Theme Media Query and System Colors</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Proposal: A Color-Theme Media Query and System Colors</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2018-06-15</div>
+          <div class="post_content">
+<p>I think we will design more visually comfortable and seamless websites and webapps for people once we have access to their preferred system color theme, and once we have access to certain system colors affected by those preferences.</p>
+<p>When I sit down at my computer in a comfortably-lit environment, I prefer the less glaring appearance of a dark color scheme. Other times I want a dark palette just because it’s more relaxing to me, and it helps me focus. Alternatively, when I feel a need to energize myself, I prefer light tones. Or maybe I’m just outside and need more contrast. For these varied reasons, I’ve appreciated browser extensions like Stylus and Dark Mode, and I’m <em>especially excited</em> for “Dark Modes” in Android, Linux, Windows, and now MacOS. I love having this kind of control</p>
+<p>As a web citizen and developer, I will thrive with these same choices on the web. I think this is why content-focused sites like Reddit and Twitter already offer Night Modes. I want this, and I want to offer this to my users.</p>
+<p>I’m reminded of how <code>@media (min-width)</code> turned layout into an <em>enhancement</em> at a time when most sites and site prototyping apps insisted upon a fixed width. Responsive layouts were a paradigm shift. Forcing responsive layouts upon brands and at scale seemed impractical if not impossible, but here we are — we learned, and now we thrive. I foresee the same excitement, resistance, and potential now for color-responsive websites and webapps.</p>
+<hr/>
+<p>I propose we access to the user’s system color theme with a media query:</p>
+<pre><code class="lang-css">/* define colors when the system color theme is light (a light background with dark text) */
+@media (color-theme: light) {
+  html { background: #fff; color: #000 }
+  a { color: #0000d6 }
+}
+
+/* define colors when the system color theme is dark (a dark background with light text) */
+@media (color-theme: dark) {
+  html { background: #000; color: #fff }
+  a { color: #00c0ff }
+}
+</code></pre>
+<hr/>
+<p>Now, alongside a color-theme media query, I propose we expose certain system colors as new color keywords or as <code>env()</code> values. This would be immediately useful for coloring simple websites and form controls to match the system appearance, similar to what we get with the <code>system-ui</code> font.</p>
+<pre><code class="lang-css">:root {
+  background-color: system-background-color;
+  color: system-text-color;
+  font-family: system-ui;
+}
+
+a {
+  color: system-link-color;
+}
+</code></pre>
+<p>Adding these features to CSS will require changes to <a href="https://drafts.csswg.org/mediaqueries-5/" rel="nofollow noopener">CSS Media Queries</a> and <a href="https://drafts.csswg.org/css-color-4/" rel="nofollow noopener">CSS Color</a>. Would anyone help me?</p>
+<p>I’ve made a pull request to change CSS Media Queries here: <a href="https://github.com/w3c/csswg-drafts/pull/2742" rel="nofollow noopener">https://github.com/w3c/csswg-drafts/pull/2742</a> *</p>
+<p>And here is the issue I filed for this with the CSSWG: <a href="https://github.com/w3c/csswg-drafts/issues/2735" rel="nofollow noopener">https://github.com/w3c/csswg-drafts/issues/2735</a></p>
+<p>Finally, let me emphasize that my color preference is <em>unique</em> from my lighting conditions or accessibility enhancements. While my color theme may be influenced by lighting conditions and accessibility needs, my preference wouldn’t necessarily be overruled by them.</p>
+<blockquote>
+<p>The choice of whether to enable a light or dark appearance is an aesthetic one for most users, and might not relate to ambient lighting conditions.
+— <a href="https://developer.apple.com/documentation/appkit/supporting_dark_mode_in_your_interface" rel="nofollow noopener">AppKit: Supporting Dark Mode In Your Interface</a></p>
+</blockquote>
+<p>So, would you help me write up these features? Do you have any objections or concerns?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1350_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aardrian</div>
+          <div class="creation_date">2018-06-18</div>
+          <div class="post_content">
+<p>CSS 2 offered system keywords in 1998 (<a href="https://www.w3.org/TR/2011/REC-CSS2-20110607/ui.html#system-colors">https://www.w3.org/TR/2011/REC-CSS2-20110607/ui.html#system-colors</a>), along with support for system fonts, and it has been retained by browsers even though it was deprecated in CSS 3 (<a href="https://www.w3.org/TR/css-color-3/#css-system">https://www.w3.org/TR/css-color-3/#css-system</a>).</p>
+<p>Using keywords is also a best practice in many cases when supporting Windows High Contrast Mode (<a href="http://www.gwhitworth.com/blog/2017/04/how-to-use-ms-high-contrast" rel="nofollow noopener">http://www.gwhitworth.com/blog/2017/04/how-to-use-ms-high-contrast</a>) so I expect Edge to continue to support them.</p>
+<p>So I think your suggestion has two key parts:</p>
+<ol>
+<li>
+<p>Get the spec to de-deprecate color keywords (so browsers might continue to support them),</p>
+</li>
+<li>
+<p>Work with operating systems or browsers (who do have light/dark themes already) to clearly define themes as one or the other, and expose that information.</p>
+</li>
+</ol>
+<p>Am I reading this right?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1137_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Garbee</div>
+          <div class="creation_date">2018-06-18</div>
+          <div class="post_content">
+<p>You are reading it correctly. But, de-deprecating the old color keywords doesn’t help the situation too much. What is being asked for is to tell based on the environment if the user has their desktop set to light or dark mode. The site can then adapt the display based on that. Since we can’t check for comparison of those system keywords, they won’t help too much towards the goal desired here.</p>
+<p>I believe option 2 is what this discussion thread was started to achieve in the first place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-06-23</div>
+          <div class="post_content">
+<p>Something similar <a href="https://github.com/WebKit/webkit/commit/46198bd7636f0d1f85e36d830fd3108707d4c169" rel="nofollow noopener">just shipped in Safari for macOS Mojave’s new Dark Mode</a>:</p>
+<pre><code>@media (prefers-dark-interface) { /* … */ }
+</code></pre>
+<p>This might end up the standard, from iOS dominance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2018-06-25</div>
+          <div class="post_content">
+<p><span class="mention">@Tigt</span>, that dark mode media query did not ship in any public way. It’s a private property, which may only be available to Xcode apps. I think folks started tweeting about it before testing it, and those tweets were far more popular and spreading than their corrections.</p>
+<p>I directed Apple/WebKit developers chiming in on those threads to the CSSWG thread. I don’t know if any of them intend to contribute to the conversation, but they’re invited. And if they do scan the thread, then they can address questions presented by CSSWG folks and other implementors, at least internally.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2018-06-26</div>
+          <div class="post_content">
+<p>Ah, wonderful. Thank you for the proper diligence!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1815_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathantneal</div>
+          <div class="creation_date">2018-12-12</div>
+          <div class="post_content">
+<p>To conclude this thread, styling for the operating system’s color scheme is now possible. There is a draft specification and the feature is in the technology preview of <a href="https://developer.apple.com/safari/technology-preview/release-notes/" rel="nofollow noopener">Safari 12.1</a>.</p>
+<p><a class="onebox" href="https://drafts.csswg.org/mediaqueries-5/#descdef-media-prefers-color-scheme" rel="nofollow noopener" target="_blank">https://drafts.csswg.org/mediaqueries-5/#descdef-media-prefers-color-scheme</a></p>
+<pre><code class="lang-css">@media (prefers-color-scheme: light) {
+  html { background: #fff; color: #000 }
+  a { color: #0000d6 }
+}
+
+@media (prefers-color-scheme: dark) {
+  html { background: #000; color: #fff }
+  a { color: #00c0ff }
+}
+</code></pre>
+<p>You could use this along with Custom Properties to create your own custom color schemes.</p>
+<p>On <a href="https://cssdb.org/" rel="nofollow noopener">https://cssdb.org/</a>, I made it so that you get a unique color scheme based on this query (where it’s supported) but you can also override it yourself. I polyfill it for non-supporting browsers using <a href="https://github.com/csstools/css-prefers-color-scheme" rel="nofollow noopener">css-prefers-color-scheme</a>.</p>
+<p>Thanks for sharing my enthusiasm!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3980_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Racoo</div>
+          <div class="creation_date">2019-09-02</div>
+          <div class="post_content">
+<p>It’s a little strange and jarring that Firefox doesn’t tell websites to use a dark theme when you’ve gone into customise and enabled the dark theme. Developers working on Firefox have said that it is this way because prefers-color-scheme is designed to detect the system scheme. Could something be done about this? Microsoft Edge Insider also lets users enable dark theme manually.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2430_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">emilio</div>
+          <div class="creation_date">2019-09-02</div>
+          <div class="post_content">
+<p>I think that’s <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1529323" rel="nofollow noopener">https://bugzilla.mozilla.org/show_bug.cgi?id=1529323</a>. It’s not a hard change to make but it seems a bit contingent. You’re welcome to add to the discussion there.</p>
+<p>There’s also been talk of adding explicit preferences for that (there is a hidden preference, <code>ui.systemUsesDarkTheme</code>), but exposing those in about:preferences or what not is not a decision that I can make myself <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+<p>Anyhow that is something to discuss in the Firefox bug tracker I guess.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3980_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Racoo</div>
+          <div class="creation_date">2019-09-03</div>
+          <div class="post_content">
+<p>I came from there.</p>
+<p>The contention that enabling the dark theme within Firefox should tell sites to use a dark theme is that it would work on Linux distros/W7/W8/older versions. It would also match Windows 10 quite a bit as many apps allow you to enable the dark theme for individual apps.</p>
+<p>The other argument’s only reason is that the spec does not support it. Kristoffer makes a good point in having a dark UI and light websites… This could be solved by a checkbox in the customise menu but I really do not think Mozilla would allow that as it’s not specified.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2430_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">emilio</div>
+          <div class="creation_date">2019-09-03</div>
+          <div class="post_content">
+<p>What makes you think the spec doesn’t support that? I was going to file a spec issue but <a href="https://drafts.csswg.org/mediaqueries-5/#descdef-media-prefers-color-scheme" rel="nofollow noopener">https://drafts.csswg.org/mediaqueries-5/#descdef-media-prefers-color-scheme</a> says:</p>
+<blockquote>
+<p>The method by which the user expresses their preference can vary. It might be a system-wide setting exposed by the Operating System, or a setting controlled by the User Agent.</p>
+</blockquote>
+<p>It seems like the selected theme may qualify as “a setting controlled by the User Agent” <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=9" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

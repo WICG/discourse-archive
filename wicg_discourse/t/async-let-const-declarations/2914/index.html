@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Async let/const declarations</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Async let/const declarations</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-08-06</div>
+          <div class="post_content">
+<p>Typically to load a few async calls in parallel we’d use <code>Promise.all()</code>. Using a destructured declaration we can also load each result in to a separate variable, e.g.:</p>
+<pre><code class="lang-auto">const [foo, bar, baz, ban] = await Promise.all([
+    getThing(),
+    loadStuff(),
+    fetchItem(),
+    requestObject()
+]);
+</code></pre>
+<p>However this doesn’t have great readability. For example it’s not immediately clear that <code>baz</code> is assigned the result of awaiting <code>fetchItem()</code>, because the declarations and promises don’t line up. You have to count how far along they are and match them up.</p>
+<p>They can be written out with <code>await</code> so that the declarations and promises line up, e.g.:</p>
+<pre><code class="lang-auto">const foo = await getThing(),
+    bar = await loadStuff(),
+    baz = await fetchItem(),
+    ban = await requestObject();
+</code></pre>
+<p>Unfortunately this then awaits sequentially. <code>Promise.all()</code> has a major performance advantage in being able to run them in parallel.</p>
+<p>What if we could mark this declaration to load in parallel too? For example, using <code>async const</code>:</p>
+<pre><code class="lang-auto">async const foo = await getThing(),
+    bar = await loadStuff(),
+    baz = await fetchItem(),
+    ban = await requestObject();
+</code></pre>
+<p>This would then load them all in parallel just like <code>Promise.all()</code>, and now the declarations and promises line up, improving the readability.</p>
+<p>Perhaps a better name would be <code>parallel const</code>, but this is bikeshedding.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2018-08-11</div>
+          <div class="post_content">
+<p>I’ve asked a similar question on ES Discuss last year:</p>
+<p><a class="onebox" href="https://esdiscuss.org/topic/would-it-be-possible-to-add-await-on-first-use-to-the-language" rel="nofollow noopener" target="_blank">https://esdiscuss.org/topic/would-it-be-possible-to-add-await-on-first-use-to-the-language</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

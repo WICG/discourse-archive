@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Selector based on non-attribute &ldquo;value&rdquo;. Maybe :value pseudo?</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Selector based on non-attribute &ldquo;value&rdquo;. Maybe :value pseudo?</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2021-12-21</div>
+          <div class="post_content">
+<p>The following elements have an accessible “value” getter, but that value is not accessible as an attribute or as a selector:</p>
+<ul>
+<li>textarea</li>
+<li>output</li>
+<li>button
+(maybe I forget a few additional ones)</li>
+</ul>
+<p>This makes it harder to style based on their content, unlike their cousins - the input element, which changes its value attribute when its value is set.</p>
+<p>The idea would be to have somsething like a <code>.something:value$="123"</code> selector, which would be similar to <code>input.something[value$="123"]</code> but would act upon whatever the value getter represents rather than the particular expression of that in the DOM. In the case of input elements the two would behave in the same way.</p>
+<p>This is a suggestion similar to <a class="inline-onebox" href="https://discourse.wicg.io/t/text-content-css-value-akin-to-attr/629/16">Text-content() CSS value akin to attr() - #16 by tomhodgins</a>
+But more focused on a particular set of elements (form “listed” elements).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>Could you give a practical example? How would you use this feature?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>Of course!
+Here is an example, where a “delete all” button would be hidden if a sibling output field has a zero value.
+Today you can only do this with an input or something else that has a value attribute.</p>
+<pre><code class="lang-auto">&lt;style&gt;
+#tasks #count:value^="0" + #delete {
+  display: none;
+}
+&lt;/style&gt;
+&lt;form id="tasks"&gt;
+  &lt;output id="count"&gt;&lt;/output&gt;
+  &lt;button id="delete"&gt;Delete All&lt;/button&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  document.forms.tasks.elements.count.value = 0;
+&lt;/script&gt;
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>In this case you’re setting the value via JavaScript, which sets the <code>value</code> property, not the <code>value</code> attribute, so the <code>[value="0"]</code> attribute selector wouldn’t work either.</p>
+<p>Demo: <a href="https://jsbin.com/zeduzah/edit?html,css,js,output" rel="noopener nofollow ugc">https://jsbin.com/zeduzah/edit?html,css,js,output</a></p>
+<p>The <code>[value="0"]</code> selector only matches the element if the <code>value="0"</code> attribute appears in the HTML source code, I think.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>Of course, I know, that’s why I’m suggesting a new selector <img alt=":slightly_smiling_face:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slightly_smiling_face.png?v=10" title=":slightly_smiling_face:"/>
+The idea of the new selector is that it would work on things that have a value <em>property</em> but not necessarily a value <em>attribute</em>, like output/textarea.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1693_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MaxArt</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="5718" data-username="noamr">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/noamr/40/3242_2.png" width="20"/> noamr:</div>
+<blockquote>
+<p>the input element, which changes its value attribute when its value is set.</p>
+</blockquote>
+</aside>
+<p>Small correction: as Šime is suggesting in his reply, the property that’s reflected on the <code>value</code> <em>attribute</em> is actually <code>defaultValue</code>, not <code>value</code>.</p>
+<p>All in all, your proposal doesn’t seem to be quite security-prone. In the past, we had cases of applications that got exploited because the adopted framework use to reflect the <code>value</code> property of <code>&lt;input&gt;</code> elements on the <code>value</code> attribute, allowing CSS rendering attacks on password inputs (think of <code>[value^='a'] + .x { background: url('a.gif') }</code>. This proposal would lead to the same issue all over again.</p>
+<p>What do you suggest to mitigate the problem?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">noamr</div>
+          <div class="creation_date">2021-12-28</div>
+          <div class="post_content">
+<p>Good point re. the password element - I suggest to not enable this on password elements, but only on safer elements like textarea/output. It doesn’t have to have 1:1 mapping with all elements that have a <code>value</code> property, but rather reflect that concept.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3826_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">bramus</div>
+          <div class="creation_date">2022-02-14</div>
+          <div class="post_content">
+<p>Would be nice to also have this on <code>&lt;select&gt;</code> elements, so that we can selectively show/hide succeeding form controls based on its value:</p>
+<pre><code class="lang-css">/* ❌ Doesn't work */
+select[value="1"] ~ select[data-showwhen="1"],
+select[value="2"] ~ select[data-showwhen="2"],
+select[value="3"] ~ select[data-showwhen="3"],
+select[value="4"] ~ select[data-showwhen="4"] {
+  display: block;
+}
+</code></pre>
+<hr/>
+<p>For now, we can work around this using <code>:has()</code> <em>(<a href="https://codepen.io/bramus/pen/exrYVW" rel="noopener nofollow ugc">demo on CodePen, use Safari TP</a>)</em>:</p>
+<pre><code class="lang-css">/* ✅ Works */
+select:has(option[value="1"]:checked)  ~ select[data-showwhen="1"] { … }
+</code></pre>
+<p>Would be nice if <code>select[value="…"]</code> worked as well, as it’s easier to use. It’s also a less specific selector of (0,1,1) <em>(vs (0,2,2) using <code>:has()</code>)</em>.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

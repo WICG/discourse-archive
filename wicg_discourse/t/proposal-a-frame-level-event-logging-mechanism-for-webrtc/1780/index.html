@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] A frame-level event logging mechanism for WebRTC</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] A frame-level event logging mechanism for WebRTC</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alvestrand</div>
+          <div class="creation_date">2016-10-28</div>
+          <div class="post_content">
+<p><strong>Problem</strong>
+Some projects using WebRTC functionality have indicated that they need to record data on “source to screen” performance - that is, information about how much time it takes between some event (typically frame capture) occurs in “real life” on the media-generating side and the serving of the same event to the user on the media-consuming side.</p>
+<p><strong>Approach</strong>
+I’ve sketched out an approach in this repo:</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://github.githubassets.com/favicons/favicon.svg" width="32"/>
+<a href="https://github.com/alvestrand/webrtc-framelog/" rel="nofollow noopener" target="_blank">GitHub</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="400" src="https://avatars1.githubusercontent.com/u/480893?s=400&amp;v=4" width="400"/>
+<h3><a href="https://github.com/alvestrand/webrtc-framelog/" rel="nofollow noopener" target="_blank">alvestrand/webrtc-framelog</a></h3>
+<p>An API for getting timing data from the processing of frames in a WebRTC pipeline. - alvestrand/webrtc-framelog</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>It consists of a mechanism to tell the media engine to note the times certain events happen to a frame, and a way to get these notes back to JS. It’s intended to be predictable and not too resource intensive.</p>
+<p>Comments are welcome; guidance to the WICG process as well - this is my first attempt to use this forum for an API proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Robin_Schriebman</div>
+          <div class="creation_date">2017-01-17</div>
+          <div class="post_content">
+<p>Some questions about this proposal.</p>
+<p>Usually, as an application there isn’t a clear way to determine which frame is the important frame to track. The example had a remote click and measuring the first frame after that occurred. However, these could be completely asynchronous processes (think like a slide transition) and determining the first frame is not really feasible. Is knowing the frame critical or can you get a time window and get information on all frames in the time window? Would this be performant enough to request all frames?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alvestrand</div>
+          <div class="creation_date">2017-02-06</div>
+          <div class="post_content">
+<p>The current spec says to track all the frames when logging is on, and using the frame identity (RTP time stamp) to figure out which local frames and remote frames correspond to each other, and from there go on to figure out which frames are “important”. Exposing more info about frames (for instance the frame size and whether or not it’s a keyframe) could also be valuable.</p>
+<p>I’m still unsure what API is the right one for retrieving the collected information - firing events every 50 ms is probably not a good idea. So this is still a bit vague in the proposal.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

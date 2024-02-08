@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Write-only input fields</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Write-only input fields</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>A user’s credentials are valuable, and are often the key target of phishing and content injection attacks. If a content injection attack can trick a user’s credential manager into autofilling her credentials, then the user’s credentials will be available to the attacker directly via DOM APIs or indirectly via form submission to a malicious endpoint. The latter risk can be mitigated via the Content Security Policy <code>form-action</code> directive, but the former is a real problem. If passwords are a simple <code>value</code> accessor away, users are at risk.</p>
+<p>We could mitigate this latter risk by allowing sites to opt-in to denying DOM access to an input element’s content. If JavaScript can’t grab the value, then script injection attacks have a much more difficult time of exfiltrating interesting data. This might be as simple as adding a <code>writeonly</code> attribute to <code>input</code> elements:</p>
+<pre><code>&lt;input writeonly type="password"&gt;
+</code></pre>
+<p>This would throw an <code>InvalidStateError</code> on <code>value*</code> accessors, bar the element from constraint validation, block <code>keydown</code>, <code>keyup</code>, <code>keypress</code> events, and probably other things I haven’t considered yet.</p>
+<p>This state could also be controlled via a Content Security Policy directive which would set <code>writeonly</code> state for some arbitrary set of <code>input</code> elements, perhaps based on <code>autocomplete</code> attribute values. Perhaps:</p>
+<pre><code>Content-Security-Policy: form-writeonly cc-number cc-csc ... current-password new-password
+</code></pre>
+<p>I’ve strawmanned this out in a bit of detail at <a href="https://mikewest.github.io/credentialmanagement/writeonly/">https://mikewest.github.io/credentialmanagement/writeonly/</a>, and there was a short-lived public-webapps thread at <a href="http://lists.w3.org/Archives/Public/public-webapps/2014JulSep/0165.html">http://lists.w3.org/Archives/Public/public-webapps/2014JulSep/0165.html</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>If someone can do content-injection, can’t they insert a full <code>&lt;form&gt;</code> (or insert a script that does the necessary modifications to an existing <code>&lt;form&gt;</code>) with the <code>target</code> of their choosing?  There’s no need to read the DOM value out of an input if you can just submit the form yourself.</p>
+<p>Similarly, script injection can just remove the <code>writeonly</code> attribute and then read content freely. CSP-based application might mitigate this, but still wouldn’t avoid the “just submit the form” attack.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/438_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mikewest</div>
+          <div class="creation_date">2014-09-03</div>
+          <div class="post_content">
+<p>Yes. Form injection is why I think something like CSP would be a necessary component.</p>
+<p>CSP would mitigate “just submit the form” by controlling the endpoints to which forms may be submitted via the <a href="https://w3c.github.io/webappsec/specs/content-security-policy/#directive-form-action"><code>form-action</code></a> directive.</p>
+<p>What probably also isn’t clear from the proposal is that a <a href="http://mikewest.github.io/credentialmanagement/spec/">theoretical credential manager spec</a> could provide sites/users with some way of specifying “writeonly-only” for saved credentials (similar to ‘httponly’ for cookies).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-08-08</div>
+          <div class="post_content">
+<p>Hey <span class="mention">@mikewest</span>,</p>
+<p>This is something I have been brainstorming recently in relationship to using COWL (which yeah that needs to solidify first).</p>
+<p>I think the CSP restriction feels a little fragile in that x provider might want to give me the same input fields too which collides with something I want to do. However as mentioned the other side of this is that the CSP is there to protect these fields.</p>
+<p>My current thinking was using a label like this:</p>
+<pre><code class="lang-auto">&lt;input writeonly type="password" cowl-label="https://x-pass-manager.com" /&gt;
+</code></pre>
+<p>Which in this case wouldn’t be readable by anything other than scripts with access to that label.</p>
+<p>So WebAppSec might be able to pick this back up I guess however it would be interesting to thrash this out here too.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3110_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joek</div>
+          <div class="creation_date">2020-10-05</div>
+          <div class="post_content">
+<p><span class="mention">@mikewest</span> did you manage to make any further progress with this suggestion?</p>
+<p>I still think it’s valuable and would like to figure how to move it forward.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

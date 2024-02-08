@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Hardware accelerated animation of CSS width/height</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Hardware accelerated animation of CSS width/height</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>Can we animate the width or height properties of an element without causing expensive reflows, in order to reveal or open a menu? If so, how? An alternate question might be: can animation of width/height be hardware accelerated by the GPU in certain cases?</p>
+<p>EDIT: Changed the title from “Animating CSS width/height without performance loss from reflow?” to “Hardware accelerated animation of CSS width/height”.</p>
+<p>If hardware acceleration is not possible, that’d be an nice thing to add to browsers. For example, when no element in a parent container ever need to reflow when the parent is re-sized, then it’d be nice for the resize animation to go to the GPU.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>AFAIK, scale transforms are efficient to animate. They don’t change the element’s layout size though, they just stretch the way it’s drawn, which is why they are fast. If you need it up update the layout size, then you can’t avoid the expensive reflows.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/608_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">danpeddle</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>Scale can be hardware accelerated, but it doesn’t help with dynamic dimension elements so much.</p>
+<p>ie - we have to apply some css class, measure the height of the element, remove the class, then apply a style attribute which can be transitioned. This all happens inside the browser lifecycle, as far as I understand it - meaning that it is possible to measure an element, then before the paint happens, remove the class, apply the new styles and let the browser perform its paint cycle.</p>
+<p>This is all a bit … fiddly!</p>
+<p>I was looking at some techniques for doing this on a codepen - might be interesting for you too.</p>
+<p>Two controls, click on ‘promised’ for a promise based measure / paint, and rAF for a reqAnimFrame approach.</p>
+<iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_doxzmw" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/dazld/embed/preview/doxzmw?height=300&amp;slug-hash=doxzmw&amp;default-tabs=js,result&amp;host=https://codepen.io&amp;embed-version=2" title="" width="695"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1225">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_1.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>If you need it up update the layout size, then you can’t avoid the expensive reflows.</p>
+</blockquote>
+</aside>
+<p>I don’t need it to update the layout. The element that I’m animating width and height of contains elements inside that are absolutely positioned and don’t change size. The elements inside are clipped by the animated container’s overflow:hidden property. So basically, while I animate the container open, it reveals the content inside of it. I find that this works fine on Desktop, but is jank on my Nexus 5.</p>
+<p>I’m guessing that, although I’m probably animating the width and height in the best way possible (i.e. it doesn’t cause any elements inside of it to reflow since the inner elements have constant size and are absolutely positioned), that it just simply isn’t a hardware accelerated animation, and it still runs on the main CPU? Do you think that’s the case?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<aside class="quote" data-post="3" data-topic="1225">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/danpeddle/40/608_1.png" width="20"/> danpeddle:</div>
+<blockquote>
+<p>meaning that it is possible to measure an element, then before the paint happens, remove the class, apply the new styles and let the browser perform its paint cycle.</p>
+</blockquote>
+</aside>
+<p>Are CSS animations of CSS width or height hardware accelerated by the GPU? Or do they run on the CPU?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1613_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">iank</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>Animating the width/height property triggers a layout (which runs on the CPU).</p>
+<p>If you want your animation to run on the compositor (GPU) you need to use transforms to achieve your effect.<br/>
+Have a look at: <a href="https://aerotwist.com/blog/flip-your-animations/" rel="nofollow noopener">https://aerotwist.com/blog/flip-your-animations/</a></p>
+<p>CSS Layout Containment will allow browser engines to perform an optimization which means that it’ll only reflow the subtree which you are changing. (which should reduce jank in the future).
+<a class="onebox" href="https://drafts.csswg.org/css-containment/#containment-layout" rel="nofollow noopener" target="_blank">https://drafts.csswg.org/css-containment/#containment-layout</a>
+(you may already be hitting this “layout boundary” optimization with overflow:hidden on the parent on certain browsers).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2015-12-09</div>
+          <div class="post_content">
+<p>It seems to me that if no reflow will happen that the browser should detect that, and do the clipping on the GPU (as in my case). I’ve got nothing to contain in my case as everything in the container is absolutely positioned and the container has overflow:hidden (slightly different than clip) but there’s nothing in there that will reflow when I animate the container’s width and height.</p>
+<p>I think it makes sense for a browser to detect that case draw the simple case with the GPU.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

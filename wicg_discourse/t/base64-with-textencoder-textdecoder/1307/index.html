@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Base64 with TextEncoder/TextDecoder</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Base64 with TextEncoder/TextDecoder</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/583_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinthomson</div>
+          <div class="creation_date">2016-01-29</div>
+          <div class="post_content">
+<p>I’ve written more base64 encoders and decoders than I care to remember over the years.</p>
+<p><code>atob()</code> and <code>btoa()</code> are awful APIs.  Their binary representation is packed into a string which has to be extracted using <code>.charCodeAt()</code>.  While <code>btoa()</code> might be fixed by having it accept a <code>BufferSource</code>, and maybe <code>atob()</code> might be redeemed by adding an extra parameter, I think that the encoding API is a more natural fit.</p>
+<p>Imagine this as a 6-bit per-symbol encoding of a limited subset of the full character space (i.e., only 64 different code points are recognized and encoded correctly).</p>
+<p>What is perhaps strange about this is that you would use a decoder to encode and an encoder to decode in the classic sense:</p>
+<pre><code class="lang-auto">// 'A' is the encoded form, but we use a decoder to produce it.
+console.log(new TextDecoder('base64').decode(new Uint8Array([0]))); // -&gt; 'A'
+console.log(new TextEncoder('base64').encode('A')); // -&gt; 0
+</code></pre>
+<p>Maybe that enough of a reason that this isn’t quite the right idea.  I’m also happy to patch <code>atob()</code> and <code>btoa()</code>, but this seems like a better fit.</p>
+<p>Edit: Forgot some of the rationale: While it is relatively easy to do base64 yourself, few implementations do this well.  In particular, with WebCrypto, there is greater need for constant-time encodings of binary data and I’m not aware of any of those.  The Firefox <code>btoa()</code> implementation almost certainly isn’t constant time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/611_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">inexorabletash</div>
+          <div class="creation_date">2016-02-05</div>
+          <div class="post_content">
+<p>This has been suggested multiple times - in fact, when I was first proposing the Encoding API it supported base64. Consensus was to remove it since it was out of scope (it’s not a “text encoding”) and also the encoding-with-a-decoder/decoding-with-an-encoder confusion. I tripped myself up several times on it and I’d written the spec. <img alt=":frowning:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/frowning.png?v=5" title=":frowning:"/></p>
+<p>That said, I think there’s pretty broad agreement that a <code>BufferSource</code> <img alt=":left_right_arrow:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/left_right_arrow.png?v=5" title=":left_right_arrow:"/> base64 <code>DOMString</code> API would be useful if we can come up with a sensible place to put it. Past discussions have usually ended with “can we just wedge it into <code>btoa</code>/<code>atob</code> somehow?” and the proposer lost interest in figuring out if that was possible or not. So I’d follow that track if possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/583_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">martinthomson</div>
+          <div class="creation_date">2016-02-22</div>
+          <div class="post_content">
+<p><code>atob</code> and <code>btoa</code> aren’t feasible I think.  You would need to have a signal that would allow you to have <code>atob</code> return an <code>ArrayBuffer</code>.  It’s unlikely that would be backwardly compatible.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

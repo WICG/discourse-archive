@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS for iframes</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS for iframes</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2106_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">M-J-Robbins</div>
+          <div class="creation_date">2021-10-05</div>
+          <div class="post_content">
+<p>I think it could be useful to detect when content is loaded in an iframe embedded in another page rather than loaded on it’s own in a browser window.</p>
+<p>Maybe something along the lines of a CSS <code>:root</code> selector. Would <code>iframe:root</code> make sense or <code>:iframe</code>?</p>
+<p>Also I think it would make sense to be able to detect the permissions of an iframe sandbox from within the content.</p>
+<p>Currently we can style differently if <code>allow-scripts</code> is not included in the sandbox attribute by adding styles (or content) in <code>&lt;noscript&gt;</code> tags to detect this.</p>
+<p>I was hoping to be able to use something like <code>form:disabled</code> <code>form:enabled</code> to detect <code>sandbox="allow-forms"</code> but looks like that’s not valid.</p>
+<p>And other sandbox values I’m sure could have some benefits <a class="inline-onebox" href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox" rel="noopener nofollow ugc">&lt;iframe&gt;: The Inline Frame element - HTML: HyperText Markup Language | MDN</a></p>
+<p>Not sure what the best way to approach this but something similar to the CSS <code>@supports</code> query would make the most sense to me.  <code>@function not (script){}</code> could be used instead of <code>&lt;noscript&gt;&lt;style&gt;&lt;/style&gt;&lt;/noscript&gt;</code></p>
+<p>This may well have use outside of an iframe too.</p>
+<p>I’d be interested if people had any thoughts around this</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3850_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Malvoz</div>
+          <div class="creation_date">2021-10-07</div>
+          <div class="post_content">
+<p>I think it’d be a good idea to expand on the use cases, but also separate the proposals.</p>
+<p>I think there are several proposals here, to:</p>
+<ol>
+<li>
+<p>Detect whether a document is embedded</p>
+<p>This is already advertised in supporting browsers via the <a href="https://www.w3.org/TR/fetch-metadata/#sec-fetch-dest-header"><code>Sec-Fetch-Dest</code> header</a>.
+OTOH you want to be able to do this using CSS.</p>
+</li>
+<li>
+<p>Detect if a particular feature (e.g. forms) is disabled due to sandboxing, using CSS.</p>
+</li>
+<li>
+<p>Detect if scripting is disabled/enabled, using CSS and without <code>&lt;noscript&gt;</code>.</p>
+<p>There is a CSS <a href="https://www.w3.org/TR/mediaqueries-5/#mf-scripting"><code>scripting</code> media feature</a>. But it is currently <a href="https://caniuse.com/mdn-css_at-rules_media_scripting" rel="noopener nofollow ugc">not supported</a> in any browsers.</p>
+</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2106_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">M-J-Robbins</div>
+          <div class="creation_date">2021-10-08</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@Malvoz</span></p>
+<h2>
+<a class="anchor" href="#scripting-1" name="scripting-1"></a>scripting</h2>
+<p>That’s great, I didn’t know about the <a href="https://www.w3.org/TR/mediaqueries-5/#mf-scripting"><code>scripting</code> media feature</a> that’s part of my idea already answered.</p>
+<h2>
+<a class="anchor" href="#iframe-2" name="iframe-2"></a>iframe</h2>
+<p>I’m now wondering if detecting an iframe could be covered by
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/display-mode" rel="noopener nofollow ugc">display-mode</a>, it seems to me that adding an options for <code>@media (display-mode: iframe)</code> might make sense?</p>
+<h2>
+<a class="anchor" href="#features-3" name="features-3"></a>features</h2>
+<p>And for features something like  <code>@media not (sandbox: allow-forms) {}</code> to detect that forms are not allowed.</p>
+<h2>
+<a class="anchor" href="#use-cases-4" name="use-cases-4"></a>use cases</h2>
+<p>When offering an option to embed a post, article, quote, chart etc. people often create a subdomain, so <code>www.example.com/foo</code> becomes <code>embed.example.com/foo</code>.</p>
+<p>With this proposal that wouldn’t be needed, you can strip out any unwanted additional content with some CSS.  If there are any scripts, forms, modals, etc. used they could be hidden if not supported or kept if they are.</p>
+<p>It also allows more control from the person embedding the iframe, they can choose what permissions they are comfortable allowing using the <code>sandbox</code> attribute, and the content will adapt.</p>
+<p>Some of this may be possible to do with JS but that is also the most likely thing to be disabled.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

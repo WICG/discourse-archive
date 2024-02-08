@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&lt;window&gt; element demo (same-document same-context windows)</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&lt;window&gt; element demo (same-document same-context windows)</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2020-05-24</div>
+          <div class="post_content">
+<p>I made an initial proof of concept demo that shows the idea for <a href="https://discourse.wicg.io/t/3556">https://discourse.wicg.io/t/3556</a></p>
+<p>Things to try:</p>
+<ul>
+<li>Toggle the window open or closed with the button.</li>
+<li>Close the window with OS-native close button.</li>
+<li>Click on the div while the window is closed (see the console).</li>
+<li>Click on the div while the window is open (see the console).</li>
+<li>While in devtools, try adding and removing the <code>open</code> attribute.</li>
+<li>While the window is open, try removing the <code>&lt;window&gt;</code> element in devtools.</li>
+</ul>
+<p><iframe class="cp_embed_iframe" frameborder="0" height="260" id="cp_embed_pojQopP" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" scrolling="no" seamless="seamless" src="https://codepen.io/trusktr/embed/preview/pojQopP?height=300&amp;slug-hash=pojQopP&amp;default-tabs=js,result&amp;host=https://codepen.io" title="&lt;window&gt; element concept. Render same DOM into separate window." width="695"></iframe></p>
+<p>This concept shows the basic idea, though it is missing some features:</p>
+<ul>
+<li>the demo only emulates a basic <code>click</code> event, which bubbles up from inside the <code>&lt;window&gt;</code> in the main window DOM.
+<ul>
+<li>A native solution would naturally support all events</li>
+<li>For the “polyfill” we would need to emulate the rest of them too.</li>
+<li>For the “polyfill” we will need to track the coordinates of the events within the window, and then map those back to elements in the main DOM to figure out which elements an event happened on. This could get tricky. It’s probably easy in the native implementation (at least, not any more difficult than the existing native implementation of events DOM as we currently know it).</li>
+</ul>
+</li>
+<li>The rendering is done with a canvas within the opened window, using the trick (from the <a href="https://html2canvas.hertzen.com/" rel="nofollow noopener"><code>html2canvas</code></a> lib) of sticking a <code>foreignObject</code> element inside an <code>&lt;svg&gt;</code> element, placing a copy of the DOM there, getting the pixel data from the SVG, then sending it to the canvas. This has limitations: for example cross-origin content won’t render without CORS settings, and <a href="https://html2canvas.hertzen.com/features" rel="nofollow noopener">not all CSS properties are supported</a> (f.e. no <code>transform</code> or even basics like <code>box-shadow</code>).
+<ul>
+<li>A native implementation would not have rendering limitations.</li>
+</ul>
+</li>
+</ul>
+<p>But the bottom line is, it paints a picture of how easy it could be to write multi-window applications using elements all in the same DOM. It makes things very easy.</p>
+<p>The first 30 lines of code show what a developer could do with the new <code>&lt;window&gt;</code> element; showing how easy it would be to listen to events within the same DOM, without the complexities of cross-window communication, without the complexities of having to determine how to inject CSS into the window, without the complexities of having to figure out how to map events from child window to parent window, etc.</p>
+<p>In the native implementation, there would be no JavaScript context or DOM inside the window. The opened window would be only a rendering facade for the elements inside the <code>&lt;window&gt;</code> element. The developer does everything to the window and widow’s content from the main window’s DOM.</p>
+<p>All within a single React application (or Angular/Vue/Svelte application) the develop can easily write windowed applications using a single DOM. It’s just super easy!</p>
+<p>This does add any inherently new functionality for end users of an application, it just makes the developer experience easier while the end user may not see any difference. This is similar to how APIs like <code>document.querySelector</code> and <code>customElements.define</code> have helped developers accomplish things more easily than before while not necessarily lending to a new type of experience for the end users of a developer’s product.</p>
+<p>What are your thoughts on same-document same-context windows with an element like <code>&lt;window&gt;</code>?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

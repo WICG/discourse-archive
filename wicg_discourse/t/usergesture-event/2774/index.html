@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&ldquo;usergesture&rdquo; event</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&ldquo;usergesture&rdquo; event</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2018-05-16</div>
+          <div class="post_content">
+<p>A lot of APIs - including some major ones like audio playback - are limited to a “user gesture” (i.e. a synchronous call within a user input event). For legitimate web apps that want to do something like play audio at the first opportunity (e.g. for a game title screen), there is currently an undocumented set of magic events that count as a user gesture.</p>
+<p>Currently as far as I can tell the list of events that count as a user gesture includes:</p>
+<p>click, keydown, touchend, pointerup, gamepadconnected (?)</p>
+<p>And - bizarrely - “poll every gamepad regularly and check for any button more than 75% pressed”, according to a <a href="https://chromium.googlesource.com/chromium/src/+/6e6304736564c6cdb96b650facb133c34b9e2189" rel="nofollow noopener">recent Chrome commit</a>.</p>
+<p>I am fairly sure there are more, but I can’t work out which they are. Additionally the list has changed over time, such as how mobile browsers used to allow audio playback in touchstart, but changed it to touchend. New APIs could potentially add more kinds of user gesture events as well.</p>
+<p>This makes it unnecessarily complicated for legitimate web apps to use user-gesture limited APIs at the first opportunity. Additionally it has a high risk of breakage if any of the events are changed, such as when touchstart was removed in favor of touchend - or even with subtleties like tweaking the percentage gamepad buttons must be pressed in order to qualify as pressed for a user gesture.</p>
+<p>If browsers fired a “usergesture” event at the same time as any of these other magic events that qualify as user gestures, it would simplify web app development, and future-proof usage against further changes to which events are the magic user-gesture-qualified ones. This does not make it easier to build abusive content; such content will just listen to the full list of magic events. It only makes it easier to build legitimate, future-proofed web apps.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2018-05-21</div>
+          <div class="post_content">
+<p>Just noting that the issue around this is well-known <a href="https://github.com/whatwg/html/issues/1903">https://github.com/whatwg/html/issues/1903</a> … an independent event might be a good idea tho, and might make things a bit more future compatible (without needing to stretch the definition of various things … like a “touch” being a “click”, etc.).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2093_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mustaqahmed</div>
+          <div class="creation_date">2018-05-24</div>
+          <div class="post_content">
+<p>Yes, the lack of a proper spec on user gestures and the <a href="https://docs.google.com/document/d/1hYRTEkfWDl-KO4Y6cG469FBC3nyBy9_SYItZ1EEsXUA/edit?usp=sharing" rel="nofollow noopener">behavior gap</a> among major browsers is frustrating.  In Chromium, we are currently exploring a new <a href="https://docs.google.com/document/d/1erpl1yqJlc1pH0QvVVmi1s3WzqQLsEXTLLh6VuYp228/edit?usp=sharing" rel="nofollow noopener">design</a> to hopefully fix the interop problem, see <a href="https://github.com/whatwg/html/issues/1903" rel="nofollow noopener">the github issue</a> for details.</p>
+<p>Here is our thoughts on a dedicated event for user gesture:</p>
+<ul>
+<li>
+<p>We considered the idea before and found that the core challenge remains the same: defining the “raw events” that would triggers this new event.  Without a consistent set of raw events across browsers, the new event won’t magically fix the interop problem.  We believe the web should settle on a consistent set of those raw events first—we made <a href="https://github.com/whatwg/html/pull/3659" rel="nofollow noopener">little</a> progress so far mainly because we are focusing on the underlying design now (see the design doc above).</p>
+</li>
+<li>
+<p>In our new design, we would need to fire the new event to every ancestor frame of the activated frame.  This could be misleading because only a single activation consumption attempt (e.g. the first <code>window.open()</code> call) would be successful.</p>
+</li>
+<li>
+<p>The GamePad API is inherently polling-based (vs event driven) on the device side AFAIK, so there is perhaps no way to fire a <code>usergesture</code> event without polling from the browser.</p>
+</li>
+</ul>
+<p>On a related note: we are planning to expose the user activation state of every frame as an attribute of the corresponding <code>window</code> object.  Hopefully this would address some of the use cases people have in mind.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/503_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">RickByers</div>
+          <div class="creation_date">2018-10-23</div>
+          <div class="post_content">
+<p>I agree that it’s important we make it easy for developers to tell when a page is considered to have user activation.</p>
+<p>Mustaq, on the gamepad discussion, are you saying that if a user presses a button, this is only treated as a user gesture in chromium today if the page happens to also be polling for button state? I.e. doing the polling has the side-effect of enabling gamepad-generated user-gestures? If so, I agree that’s problematic. Still, maybe if that’s actually our behavior already (which is already web-visible) then we should expose that by firing an event only in those cases?</p>
+<p>Maybe if we limited the design to an event which signals THE FIRST time a given frame has gotten activation, that would address a number of the use cases (not for consumption cases like pop-up as you point out) while being relatively simple and low risk from a performance perspective? This wouldn’t prevent us from potentially doing something more for the consumption cases in the future.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2093_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">mustaqahmed</div>
+          <div class="creation_date">2018-10-23</div>
+          <div class="post_content">
+<p>Firing an event at the very first activation of a frame sounds reasonable if it really helps some use case.</p>
+<p>I still don’t see a good solution that “fits” the Gamepad API because, as you mentioned, it’s problematic that a frame’s activation state would still be a side-effect of polling.</p>
+<p>One possible way to avoid the perceived “side-effect” is that after a gamepad is connected, the browser can possibly poll at a slow rate (say once every few seconds) until either the page has polled the same device, or any frame in the page has seen activation (whichever comes first).  This looks hacky but I guess it is acceptable because otherwise sites with background-intro-music would be encouraged to poll the device at an arbitrary rate which is clearly worse.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2612_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jbroman</div>
+          <div class="creation_date">2019-02-06</div>
+          <div class="post_content">
+<p>FWIW, W3C TAG guidelines suggest using a promise instead for “one-time events”. This has the nice effect that it’s easy for authors to wait for this even if their script runs after activation, which is hard with events.</p>
+<p><a class="onebox" href="https://w3ctag.github.io/design-principles/#one-time-events" rel="nofollow noopener" target="_blank">https://w3ctag.github.io/design-principles/#one-time-events</a></p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

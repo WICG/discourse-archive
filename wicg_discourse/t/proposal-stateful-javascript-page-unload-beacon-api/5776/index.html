@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Stateful Javascript Page Unload Beacon API</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Stateful Javascript Page Unload Beacon API</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">djw</div>
+          <div class="creation_date">2022-02-28</div>
+          <div class="post_content">
+<aside class="onebox githubblob" data-onebox-src="https://github.com/darrenw/docs/blob/main/explainers/beacon_api.md">
+<header class="source">
+<a href="https://github.com/darrenw/docs/blob/main/explainers/beacon_api.md" rel="noopener nofollow ugc" target="_blank">github.com</a>
+</header>
+<article class="onebox-body">
+<h4><a href="https://github.com/darrenw/docs/blob/main/explainers/beacon_api.md" rel="noopener nofollow ugc" target="_blank">darrenw/docs/blob/main/explainers/beacon_api.md</a></h4>
+<pre><code class="lang-md"># Stateful JavaScript Page Unload Beacon API
+
+
+Authors: [Darren Willis](https://github.com/darrenw) - Google
+
+## Stateful Javascript Page Unload Beacon API
+
+This document is an explainer for a system for sending beacons when documents are discarded, that uses a stateful API rather than having developers explicitly send beacons themselves.
+
+
+## Problem And Motivation
+
+Web developers have a need for ‘beaconing’ - that is, sending a bundle of data to a backend server, without expecting a particular response, ideally at the ‘end’ of a user’s visit to a page. There are currently [four major methods](https://calendar.perfplanet.com/2020/beaconing-in-practice/) of beaconing used around the web: adding &lt;img&gt; tags inside dismissal events, sending a sync XMLHTTPRequest (note: doesn’t work as part of dismissal events),  the Navigator.sendBeacon API, and using the fetch API with the ‘keepalive’ flag. (There may be other methods; these are the main ones). These methods all suffer from reliability problems, stemming from one core issue: There is not an ideal time in a page’s lifecycle to make the Javascript call to send out the beacon. ‘unload’ and ‘beforeunload’ are unreliable (and outright ignored by several major browsers), and pagehide and visibilitychange have [issues](https://github.com/w3c/page-visibility/issues/59) on mobile platforms.
+
+To simplify this issue and make beaconing more reliable, we propose adding a stateful Javascript API where a page can register that it wants a beacon (or beacons)  issued when it unloads or the page is hidden. Developers can populate beacon(s) with data as the user uses the page, and the browser ensures beacon(s) are reliably sent at some point in time. This frees developers from worrying about which part of the page lifecycle to send their beacon calls in.
+
+
+## Goals
+
+Provide a conservatively scoped API, which allows website authors to specify one or more beacons (HTTP requests) that should be sent reliably when the document is being unloaded.
+</code></pre>
+
+
+
+  This file has been truncated. <a href="https://github.com/darrenw/docs/blob/main/explainers/beacon_api.md" rel="noopener nofollow ugc" target="_blank">show original</a>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p><strong>Summary</strong></p>
+<p>Developers frequently want to send ‘beacons’ for usage or performance data when users are done interacting with their site, but none of the existing techniques for doing this are reliable over all platforms, and can also cause performance issues.</p>
+<p>We would like a add a new stateful beacon API inspired by the existing navigator.sendBeacon(), where the browser is in control of the exact time that the beacon is sent, rather than beacon sending being triggered by a JS call the developer makes. This both frees the developer from having to determine when and how to send their beacons, and allows for increased reliability.</p>
+<p><strong>Example usage</strong></p>
+<p>Developer creates a new <em>PendingBeacon</em> object with a target URL. From the moment of that object’s construction, the browser promises to at some point in the future send that pending beacon, even if the developer doesn’t interact with the beacon any further. The developer can, however, keep a reference to the PendingBeacon and populate it, perhaps repeatedly, with data as the user uses the page. Finally, on document unload (which may be at some arbitrary point in time due to BFCache), the beacon is sent by the browser with whichever data was attached to it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jdfreder</div>
+          <div class="creation_date">2022-03-29</div>
+          <div class="post_content">
+<p>We like this proposal, and would be excited to use it.  It would allow us to report a single beacon containing all of the ad event information that would traditionally be sent using multiple beacons.  This means less bandwidth and waking up the radio fewer times, an improvement in the end user’s web experience.  One aspect of this proposal that is very important to us, however, is reliability: the beacon needs to be sent essentially all the time.  Otherwise we would need to send some beacons directly in cases where we need our reporting to be as comprehensive as possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2022-03-30</div>
+          <div class="post_content">
+<p>This would make a lot of finicky bits around <code>sendBeacon()</code> evaporate. I’m all for it.</p>
+<p>Could this API expose an option for compressing the beacon data? One problem with <code>sendBeacon()</code> and <code>fetch(…, { keepalive: true })</code> is errors when composing them with <code>CompressionStream</code>. It makes sense: they cannot wait around for any promises or callbacks because the whole point is that they can be sent while or after the browser tears down the JS execution context.</p>
+<p>User-space compression with <code>pako.js</code> or similar is also unwise. Most compression libraries try very hard to do lazy computation via promises, callbacks, etc. You can find ones with synchronous compression, but eagerly blocking the main thread to compress data for APIs where their point is to delay work until it can’t interrupt the user… you can probably see the contradiction. (Something like <code>lzutf8</code>’s incremental <code>.compressBlock()</code> API used in <em>very</em> small frequent bursts seems like the only non-bad option.)</p>
+<p>I don’t mind lacking control over compression other than <code>true</code>/<code>false</code>, because the savings for a user’s upload bandwidth with even the equivalent of <code>gzip -1</code> are very worth it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1710_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">yoavweiss</div>
+          <div class="creation_date">2022-03-31</div>
+          <div class="post_content">
+<p>Note that this will be discussed today on the <a href="https://lists.w3.org/Archives/Public/public-web-perf/2022Mar/0011.html">WebPerfWG call - 8am PST</a>.
+Please <a href="https://meet.google.com/agz-fbji-spp">join us</a> if you’re interested in this.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

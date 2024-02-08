@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Relaxing restrictions on custom attribute names</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Relaxing restrictions on custom attribute names</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-04-16</div>
+          <div class="post_content">
+<p>As far as I understand, any user-defined attribute names on normal HTML tags must always start with <code>data-</code>.</p>
+<p>However, some JS frameworks disregard this part of the standard. E.g. Angular’s <code>ng-*</code> — even though it is possible to use correct <code>data-ng-*</code>, it does not seem to be used often, potentially because of extra verbosity. In other frameworks, e.g. Vue, it’s not even possible to use the correct prefix <a href="https://github.com/vuejs/vue/issues/273#issuecomment-196684234" rel="nofollow noopener">anymore</a>.</p>
+<p>Given the popularity of those frameworks, should the standard be changed to allow any custom attribute names — as long as they contain a dash (same as custom elements)?</p>
+<p>Obviously, existing attributes with dash have to be reserved, but I only found two: <code>accept-charset</code> and <code>http-equiv</code>, so it seems simple enough.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-16</div>
+          <div class="post_content">
+<p>For the purpose of avoiding verbosity, using the shorter <code>x-</code> prefix instead of <code>data-</code> would probably be enough.</p>
+<p>Alternatively, any custom attributes could be allowed as long as specific custom attributes (e. g. <code>foobar</code>) or prefixes (e. g. <code>ng-</code>) are declared explicitly — probably using something like the same CSS-like syntax I’ve <a href="https://www.w3.org/Bugs/Public/show_bug.cgi?id=14011">proposed</a> for custom elements back in 2011:</p>
+<pre><code>@custom {
+    * {
+        ng-*; /* Allowing `ng-` prefixed custom attributes for all elements. */
+    }
+
+    LOREM {
+        foobar; /* Allowing `foobar` attribute for `LOREM` elements. */
+    }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-04-17</div>
+          <div class="post_content">
+<p>Why not just take a descriptive approach here, and allow what people are already using?<br/>
+I thought that was the approach with HTML5+ anyway — describe and extend what the web does.</p>
+<p>Is there a significant downside in following the same rules as custom elements?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-04-18</div>
+          <div class="post_content">
+<p>I agree with <span class="mention">@ashmind</span>, relaxing it to the same rules as custom elements makes a lot of sense.</p>
+<p>The main reason originally for this was to prevent pollution of the attributes that would prevent the standard being able to add new ones. I already namespace my attributes so can end up with elements that have multiple attributes like “<code>data-foo-hideable data-foo-someproperty data-foo-somethingelse</code>”. The <code>data-</code> adds nothing but can make things harder to read once it starts stacking up.</p>
+<p>The current situation with libraries like Vue and Angular isn’t harmful in terms of polluting the attribute namespace and they went that direction because it improves readability by dropping unnecessary verbosity.</p>
+<p>I think it is reasonable to relax the rules to the following:</p>
+<ol>
+<li>Custom attribute names must contain a hyphen</li>
+<li>The prefix must be at least 2 characters long</li>
+<li>The prefix must not be in the list of reserved attribute prefixes</li>
+<li>Frameworks and libraries should use the same prefix for all their custom attributes</li>
+</ol>
+<p>1 Designates the way everyone is actually doing it anyway.</p>
+<p>2 is more to avoid an excessive risk of namespace collisions. It’s no less enforceable than the current ‘data-’ prefix issue but is a more reasonable ask for libraries to adhere to (eg libraries like Vue would likely be happy making a change from eg <code>v-</code> to <code>vue-</code> on the basis that it’s not pointless verbosity like <code>data-v-</code> would be).</p>
+<p>3 is there to handle things like ARIA. It is possible that the spec may occasionally step on a namespace being used somewhere but adding a new attribute namespace is rarer than adding attributes by the W3C and a namespace is less likely to need to be a specific word as a single attribute would be.</p>
+<p>4 again is very much how things are being done now but it’s good guidance to build in anyway.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/130_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">fvsch</div>
+          <div class="creation_date">2016-04-19</div>
+          <div class="post_content">
+<p>Would be great, if it’s doable.</p>
+<p>At one time I had the same idea and looked up existing HTML5 attributes, and the two or 3 with an hyphen seem to be old attributes from HTML 1-3. Newer attributes after that were hyphen-less.</p>
+<p>The main exceptions would be:</p>
+<ul>
+<li>the <code>data-</code> prefix</li>
+<li>the <code>aria-</code> prefix</li>
+</ul>
+<p>I’m also wondering about SVG presentation attributes:
+<a class="onebox" href="https://www.w3.org/TR/SVG2/attindex.html#PresentationAttributes" target="_blank">https://www.w3.org/TR/SVG2/attindex.html#PresentationAttributes</a></p>
+<p>That’s a <em>lot</em> of attributes, possibly applying to elements such as <code>a</code>, <code>audio</code>, <code>video</code> and <code>iframe</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-04-20</div>
+          <div class="post_content">
+<p>2 or 3 old HTML attributes would be fine for adding them to the list of reserved prefixes but SVG could well be a show stopper. For a start that’s 27 quite generic prefixes that would need to be reserved but worse is that hyphenation is the style for SVG attributes so it’s likely that additions to the spec would want to go that way (whereas adding the equivalent of ARIA in HTML would be a very rare occurrence and easy to pick something relatively unique).</p>
+<p>It’s unfortunate that <code>dataset</code> didn’t get the same amount of attention as <code>data-</code> attributes as it would have given a reason to stick to the spec but lack of support combined with little improvement over <code>getAttribute</code> and <code>setAttribute</code> meant little reason other than “because spec says so”.</p>
+<p>Either way we’re in a situation where the spec is not reflective of usage and I see the future having a lot more frameworks using <code>namespace-</code> over <code>data-namespace-</code>. Google was really unhelpful using <code>ng-</code> for angular as it’s hard to push for spec compliance when one of the browser implementers isn’t following it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2016-04-20</div>
+          <div class="post_content">
+<p>SVG’s hyphenated attributes are the ones that are taken directly from CSS; whenever SVG adds support for/invents a CSS property, new attributes come along. SVG2 is adding even more and including support for existing properties such as <code>z-index</code>, so this is quite troublesome.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2016-04-22</div>
+          <div class="post_content">
+<p>+1. I’ve thought about this for a long time too. I wish that were the case, currently having to use two namespaces results to very verbose attribute names, i.e. data-projectname-foobar, which is why Angular is just ignoring data- altogether.
+Sure, there are existing attributes with hyphens, but they could become exceptions, just like with custom elements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-04-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="1444">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashmind/40/356_1.png" width="20"/> ashmind:</div>
+<blockquote>
+<p>Given the popularity of those frameworks, should the standard be changed to allow any custom attribute names — as long as they contain a dash (same as custom elements)?</p>
+</blockquote>
+</aside>
+<p>I think not. I think the standard should be modified to simply allow us to use any attribute names we want. If you asked ESDiscuss if we should limit function name to start with <code>f</code> and in <code>function fMyFunction() {}</code> people would go nuts. I don’t see why HTML has to be different from that.</p>
+<p>But, anyways, all browsers support this already, so it doesn’t matter so much (that’s why we can use any custom attributes we want on our custom elements, otherwise it wouldn’t be as fun). :}</p>
+<aside class="quote" data-post="2" data-topic="1444">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>Alternatively, any custom attributes could be allowed as long as specific custom attributes (e. g. foobar) or prefixes (e. g. ng-) are declared explicitly</p>
+</blockquote>
+</aside>
+<p>I think that would just complicate things. Browsers currently let us put any attributes we want on elements, and I think that’s fine. It’s up to us to know whether the attribute we’re using is meant to do something (natively) or not. It’s like setting a property on an object in JavaScript: we can set it to whatever we please, and we understand that it’s possible setting the value might do something (and it’s up to us to know what that something is (i.e. read API documentation)).</p>
+<aside class="quote" data-post="4" data-topic="1444">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/c/ce7236/40.png" width="20"/> chaoaretasty:</div>
+<blockquote>
+<p>The main reason originally for this was to prevent pollution of the attributes that would prevent the standard being able to add new ones</p>
+</blockquote>
+</aside>
+<p>People keep mentioning this for various parts of the HTML API, but to me this point it moot. Let us override anything we wish, and assume it is our responsibility to read API documentation before we blindly override everything. Programming languages are like that, and I think HTML should be too. For example, one argument against allowing us to define elements with names of already-existing elements is that “it would prevent the standard being able to add new ones”. I wholeheartedly disagree: browser could add anything they want, and users should beable to override them as they please. We can do it in JavaScript (for example, override the property of an object, in some cases the global object), so why not in HTML?</p>
+<pre><code class="lang-auto">document.registerElement('img', BecauseThisIsMyAppAndIWantTo)
+document.registerElement('monster', MonsterElement)
+</code></pre>
+<p>Because, why not? Simply saying that “browsers need to be able to introduce new elements” isn’t a good reason. If we allow native elements to be overridden, then my previous example proves that the feature is future-proof; for example, if browsers introduce a new element called <code>&lt;monster&gt;</code>, the app that runs the previous code will not break because the <code>&lt;monster&gt;</code> tag will continue to use the app author’s logic, not the browser’s native logic.</p>
+<p>It would be like in JavaScript: if I have some code that overrides <code>window.setInterval</code> with a custom function, no amount of updates to the browser’s native implementation will ever interfere with mine. Why not let HTML be as flexible and customizable (and as fun and pleasurable to work with) as JavaScript?</p>
+<p>I think it is reasonable to relax the rules to the following:</p>
+<ol>
+<li>Custom attribute names can be anything, and same with custom element names.</li>
+<li>Put a hyphen in it if you feel like it, or don’t.</li>
+<li>Frameworks and libraries should choose to do whatever they want to do (like currently?)</li>
+<li>Be free.</li>
+</ol>
+<p>I think that this list (it’s not really a list, since it really boils down to item 1) can be nicely coupled with the idea of <a href="https://discourse.wicg.io/t/proposal-register-custom-elements-onto-shadowdom-roots/1440">encapsulating things such as custom elements (with <em>any</em> name and with any attributes) inside of ShadowDOM roots</a>. The concept would be similar to what React has introduced: encapsulation of HTML elements (JSX) inside of components (classes that extend React.Component). In this case, the encapsulation of HTML happens inside Custom Elements using ShadowDOM roots. Let a component author decide for him/her-self what an <code>&lt;img&gt;</code> tag means inside of his/her component. We can in React, and the concepts there have been proven based on React’s popularity, and based on the <a href="https://forums.meteor.com/t/react-facebook-patent-a-problem/21152/34" rel="nofollow noopener">spawning of a number of libraries inspired similar to React</a>.</p>
+<hr/>
+<p>In conclusion, restrictions beyond the native restrictions on element/attribute naming don’t provide much benefit. I’d love to see a day when we can override any element with out own, or make news ones with any name, and with component encapsulation using Custom Elements + ShadowDOM (or something similar, but ShadowDOM seems to be where it’s heading).</p>
+<p>React and similar libraries are the embodiment of what the web does not yet have. I believe in the web’s ability to improve, and I’d love to see the day when HTML can be as flexible, as custom, and as modular as React components (or Angular directives, or Riot.js custom tags) so that we don’t need a 3rd-party library for such a thing. Well, the web doesn’t seem to have any plan for a feature whereby we can repeat elements based on an array of data like those 3rd-party libraries do, but that’s an idea for another day…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-04-23</div>
+          <div class="post_content">
+<p>We could allow using any custom attributes as long as their names are <strong>started</strong> with underscore (<strong><code>_</code></strong>) (my preferred option) or hyphen (<strong><code>-</code></strong>):</p>
+<pre><code>&lt;div _foo="Hello" -bar="World"&gt;&lt;/div&gt;
+</code></pre>
+<p>Such prefixes are guaranteedly not used in standard attribute names, so they are automatically <strong>future-proof</strong> and safe to use for custom purposes while being extremely short (just one character instead of five in case of <code>data-</code>).</p>
+<p>Both of the prefixes <strong>work in all current browsers</strong> (selectors, <code>getAttribute()</code>, <code>setAttribute()</code>), including Firefox, Opera (Blink), Opera 12 (Presto), IE (at least 8+), Edge. So it’s just a matter of <strong>documenting existing implementations</strong> and removing purely <strong>formal limitation</strong> without any harm.</p>
+<p>I am going to adopt using underscore-prefixed attributes from now on at least for attributes added dynamically via JS and thus not discoverable by static-HTML validators.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1260_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">prlbr</div>
+          <div class="creation_date">2016-05-08</div>
+          <div class="post_content">
+<p>Your override example only works because you register the element with JavaScript, or am I wrong? If we allow custom attributes (e.g. <code>foo</code>) without registering them via JavaScript and <code>foo</code> is later added as an attribute in the spec, clients have no way to know whether the attribute shall be interpreted as defined in the new spec or as overriding the new spec.</p>
+<p>I also doubt that requiring authors to register their custom attributes with JavaScript would solve this, because we cannot expect clients to interpret the JavaScript part. Hence even attributes that are registered in JavaScript to override spec behaviour are probably going to be interpreted according to the spec quite often.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-05-10</div>
+          <div class="post_content">
+<p>I’ve thought a bit more on SVG, and I think it’s useful to consider what would currently happen on conflicts.</p>
+<p>For example, let’s say <code>ng</code> has some meaning for SVG, and so tomorrow SVG decides to add <code>ng-hide</code> as an attribute to all SVG and HTML elements. Such proposal would never get through — it would break half of the web. If there was a popular framework using <code>z-</code> as a prefix, same would apply to <code>z-index</code>.</p>
+<p>So SVG attributes are somewhat limited by existing frameworks, but it also limits any new frameworks — which does not seem like the right approach.</p>
+<p>I suggest the following as the future-safe path:</p>
+<ol>
+<li>SVG should use a prefix for its attributes when used on HTML elements (same as ARIA does). Obviously older attributes can’t be re-prefixed, but those can be marked as deprecated in the long term.</li>
+<li>Any attributes names are allowed, as long as they have a non-alphanumeric character (originally I suggested <code>-</code>, but there is <a href="https://angular.io/docs/ts/latest/guide/template-syntax.html#!#binding-syntax-an-overview" rel="nofollow noopener">Angular 2</a> which is going its own way yet again)</li>
+<li>Conflicts between frameworks and things like SVG/ARIA will happen only on prefix basis, which wouldn’t be hard to resolve.</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-05-10</div>
+          <div class="post_content">
+<p>We can re-prefix existing SVG attributes just so long as the old ones are kept as aliases, similar to : and :: for pseudo classes.</p>
+<p>That Angular thing is really annoying though, you’d have thought Google would have paid lip service to sane attributes at least…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2910_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">trusktr</div>
+          <div class="creation_date">2016-05-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="1444">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/mt/40/913_1.png" width="20"/> MT:</div>
+<blockquote>
+<p>We could allow using any custom attributes as long as their names are started with underscore (_) (my preferred option) or hyphen (-):</p>
+</blockquote>
+</aside>
+<p>You know, that’s not so bad. <code>_foo</code> and<code>-foo</code> are easier to write than <code>data-</code>, and I like that much more. I hadn’t realized how great of a problem a conflict could be. Could it be possible to use different versions of elements on some form of encapsulated basis (f.e. using Shadow DOM)?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2016-05-22</div>
+          <div class="post_content">
+<p>If SVG2 allows custom CSS properties as attributes (which it probably will, all CSS it uses are allowed and custom properties are highly desired), the double-hyphen might work naturally without any more speccing involved. <code>&lt;div --foo="bar"&gt;</code>, essentially.</p>
+<p>Not quite as nice as a single underscore or hyphen, but it would be more consistent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-05-23</div>
+          <div class="post_content">
+<p>That’d probably be good. Still, there is a major difference between HTML and CSS as for custom things:</p>
+<p><strong>HTML allows any attributes</strong> by default while <strong>CSS does not</strong>.</p>
+<p>It does not generally make sense to (continue to) disallow something that already <strong>works in all browsers</strong> while being totally future-proof and forward-compatible (standard attributes will certainly never start with underscore or hyphen).</p>
+<p>Moreover, we’ve already seen what happens with <em>formally</em> valid, but redundantly long prefixes (namely <code>data-</code>) — they are just ignored (e. g. in case of Angular’s <code>ng-</code>). Two-character prefix is two-times longer than a single-character one while not adding anything useful compared with single-char one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/639_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Tigt</div>
+          <div class="creation_date">2016-06-13</div>
+          <div class="post_content">
+<p>Some mucking around with an XML well-formedness validator indicates only leading underscores work in XML. I know that doesn’t sound like something to care about, but the HTML5 parsing algorithm to this day takes some pains to keep a reasonable XML serialization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">chaoaretasty</div>
+          <div class="creation_date">2016-06-14</div>
+          <div class="post_content">
+<p>I think this is an important point. Currently HTML5 features that prevent a document also being well formed XML document are alternatives to ones that preserve XML well formedness (eg not requiring closing tags on many elements). A spec that explicitly encourages breaking XML compatibility, rather than just allowing it, should be avoided.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/913_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MT</div>
+          <div class="creation_date">2016-06-14</div>
+          <div class="post_content">
+<p>So the underscore prefix is now even more preferred. Well, the less options we have, the easier is their speccing, and the faster we can get rid of the pure formal limitation.</p>
+<p>A description of underscore-prefixed attributes could be added to the existing <a href="https://html.spec.whatwg.org/multipage/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes">section</a> about <code>data-*</code> attributes in the HTML spec like as follows:</p>
+<blockquote>
+<p>Custom data attribute may also use the underscore character (<code>_</code>) as a prefix instead of <code>data-</code>. Unlike <code>data-</code> prefixed attributes, underscore-prefixed attributes are not reflected in the string map available via the <code>dataset</code> property of the element.</p>
+<p><em>Example:</em></p>
+<pre><code> &lt;div _foo="Hello"&gt;&lt;/div&gt;</code></pre>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1991_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ashmind</div>
+          <div class="creation_date">2016-06-22</div>
+          <div class="post_content">
+<p>Requiring underscore wouldn’t solve the initial problem though – the reality of frameworks that have already defined their own approach. Angular is very popular, Angular 2 is going to be at least somewhat popular.</p>
+<p>I would be surprised if they can be convinced to switch to leading _ at this stage.</p>
+<p>Given that <code>-</code> is valid in XML attributes, requiring it <em>or</em> any other non-alpha character would not require breaking XML compatibility, but would support frameworks that already break it (e.g. Angular 2).</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

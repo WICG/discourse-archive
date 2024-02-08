@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>&ldquo;inert&rdquo; attribute</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">&ldquo;inert&rdquo; attribute</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<h2>tl;dr</h2>
+<p>The <code>inert</code> attribute would allow web authors to mark parts of the DOM tree as <a href="https://html.spec.whatwg.org/multipage/interaction.html#inert">inert</a>:</p>
+<blockquote>
+<p>When a node is inert, then the user agent must act as if the node was absent for the purposes of targeting user interaction events, may ignore the node for the purposes of text search user interfaces (commonly known as “find in page”), and may prevent the user from selecting text in that node.</p>
+</blockquote>
+<p>Furthermore, a node which is <strong>inert</strong> should also be hidden from assistive technology.</p>
+<h2>Longer version</h2>
+<p>Check out the brief, yet comprehensive, <a href="https://github.com/WICG/inert/blob/master/README.md" rel="nofollow noopener">inert explainer</a>.</p>
+<p>Try out the <a href="https://github.com/WICG/inert#notes-on-the-polyfill" rel="nofollow noopener">polyfill</a>.</p>
+<p>See it in action on <a href="https://www.youtube.com/watch?v=fGLp_gfMMGU" rel="nofollow noopener">a11ycasts</a>.</p>
+<h2>What do you think?</h2>
+<p>My slightly biased opinion: this seems like extremely low-hanging fruit for keyboard accessibility. It’s easy to understand, not too difficult to implement on the browser side, bundles a bunch of useful functionality together yet remains primitive enough to be flexible. It solves a real problem which has existed for a long time and which today has no straightforward solution.</p>
+<p>We’re explicitly looking for implementer interest from other browsers, but any feedback would be welcome. Developers: do you have questions/concerns? Is there more we can add (examples, edge cases, etc) to bolster the case? Browser representatives: is there anything technically blocking you from implementing this as outlined in the explainer?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/709_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcysutton</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>This is so desperately needed. Thank you!</p>
+<p>Using an attribute to make entire regions of a document inert is a huge effort- and time-saver. Without inert, one has to walk the DOM and set/remove <code>tabindex</code> on all focusable elements (while maintaining their original values). It’s both a heavy-handed technique and a difficult one for many web developers.</p>
+<p>I like that you also noted inert should hide subtrees from assistive technologies since I was unable to tell from reading previous proposals whether that was intended. Hiding subtrees from AT would prevent both keyboard and screen reader users from accidentally navigating inert regions–where <code>tabindex</code> alone would only solve this for the former group.</p>
+<p>One thing the inert-polyfill should do <em>now</em> is add <code>aria-hidden="true"</code> to inert regions–as of yesterday it did not.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>Hm, the polyfill I linked to has set <code>aria-hidden</code> since the first commit. There was another polyfill floating around, also from Google, which did not - perhaps you’re thinking of that one?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/709_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcysutton</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>Ah, yes–I must have used the wrong polyfill. The Google one that can be found on npm does not have that functionality. Thanks for the update!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>How is this semantically different from the <code>hidden</code> attribute?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p><code>hidden</code> affects the visual presentation/rendering; <code>inert</code> does not. Check out the <a href="https://wicg.github.io/inert/inert.html" rel="nofollow noopener">demo page</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1047_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">robdodson</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>sorry about that Marcy! We just published our polyfill to npm: <a href="https://www.npmjs.com/package/wicg-inert" rel="nofollow noopener">https://www.npmjs.com/package/wicg-inert</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p><code>hidden</code> affecting visual presentation / rendering is just a matter of applying a different CSS rule (it’s perfectly valid to set a non-<code>none</code> display rule on <code>hidden</code>, though it’s admittedly likely to conflict with the common author-side pattern of including a <code>[hidden] {display: none !important}</code> as part of a page’s base styles) than the <em>suggested</em> rendering by the user-agent; <a href="https://html.spec.whatwg.org/multipage/interaction.html#the-hidden-attribute">its semantic definition for interaction</a> seems <em>very</em> similar to <code>inert</code>:</p>
+<blockquote>
+<p>When specified on an element, it indicates that the element is not yet, or is no longer, directly relevant to the page’s current state, or that it is being used to declare content to be reused by other parts of the page as opposed to being directly accessed by the user.</p>
+</blockquote>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>Also, the terminology conflicts with the existing meaning of “inert” to refer to DOM content that is not <em>evaluated beyond parsing</em>, ie. the “inert” content of the <code>&lt;template&gt;</code> tag.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>Since <code>hidden</code> is typically implemented <em>only</em> using CSS, if you override the CSS styles you also override its behaviour - there is no other behaviour defined in the spec.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/709_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcysutton</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>A project is likely to use both <code>hidden</code> and <code>inert</code> alongside each other; overriding one for the purpose of the other sounds messy. Inert and hidden serve different purposes–<code>hidden</code> in my experience is a shortcut to CSS <code>display: none</code>, while <code>inert</code> is necessary to create a backdrop for modal dialogs, menus and offscreen contexts that don’t impact the visual design or allow user interaction. This distinction highlights the support gap we are looking to fill with <code>inert</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>What about just expanding the <code>disabled</code> attribute to be a global attribute that could be applied to any element, to denote these semantics?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>I like this exploration, but I don’t think that’s a workable idea either. <code>disabled</code> form elements etc. have a specific meaning, and are also exposed to assistive technology.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>See, that’s the part I’m not wild about about this proposal: it’s going to be equivalent to <code>hidden</code> (semantically) for assistive technologies - the only point on which it <em>differs</em> is for non-assistive use cases, which feels like it’s going to lead to misunderstandings of “oh, <code>inert</code> just lets me disable UI interaction on the element without hiding it” for devs who don’t recognize that there’s a web outside of pointers+screens, meaning that it’d be prone to misuse for elements with <em>semantic importance</em>, whose presence should <em>not</em> be hidden to AT.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>Hm, interesting point. Is there a specific scenario you have in mind?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>The (mis)use case I’m picturing here is basically anything where I’d use <code>pointer-events: none</code> and <code>user-select: none</code>, like a text-based popup or something else where I’m coding around UA features and think <code>evt.preventDefault()</code> is too much hassle. I discover that there’s this <code>inert</code> attribute, and I go "oh neat, an HTML attribute that’s shorthand for <code>onclick="return false"</code>".</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>Like, really, the <em>biggest</em> beef I have with this is just bikeshedding that the name <code>inert</code> is semantically bad, which historically leads to disasters around dev (mis)discovery. Like, if it were called something like <code>inaccessible</code>, I’d have less of a problem with it (though I still don’t like how it eats into the use cases for the already woefully-under-and-misused <code>hidden</code> attribute, exacerbating the problems <code>hidden</code> <em>already</em> has around devs not realizing it has aria-equivalent semantic implications).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>“inert is necessary to create a backdrop for modal dialogs and blocking contexts that preserve the visual design (while dimmed), but do not allow user interaction.”</p>
+<p>So, basically a modal <code>&lt;dialog&gt;</code>? Are there other uses for inert not covered by <code>&lt;dialog&gt;</code>?</p>
+<p><a class="onebox" href="http://demo.agektmr.com/dialog/" rel="nofollow noopener" target="_blank">http://demo.agektmr.com/dialog/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1134_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">alice</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<p>The explainer has a few suggestions! <a href="https://github.com/WICG/inert/blob/master/README.md#use-cases" rel="nofollow noopener">https://github.com/WICG/inert/blob/master/README.md#use-cases</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2501_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">stuartpb</div>
+          <div class="creation_date">2016-11-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="13" data-topic="1838">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/alice/40/1134_1.png" width="20"/> alice:</div>
+<blockquote>
+<p>disabled form elements etc. have a specific meaning, and are also exposed to assistive technology.</p>
+</blockquote>
+</aside>
+<p>Well, to your point, looking at the described use cases, it seems like many of them have the <em>same</em> meaning as disabled form elements (ie. “Form content which is not currently relevant”), and as such, as far as I can tell, <em>should</em> be exposed to AT, the way that disabled form elements are now.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

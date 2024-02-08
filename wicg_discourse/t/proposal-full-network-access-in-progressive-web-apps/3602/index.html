@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Full Network Access in Progressive Web Apps</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Full Network Access in Progressive Web Apps</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-03</div>
+          <div class="post_content">
+<h1>Unrestricted Network Access in Progressive Web Apps</h1>
+<p>This is a proposal for adding a web API that allows Progressive Web Applications to request unrestricted network access. Unrestricted network access would include, but not be limited to,</p>
+<ul>
+<li>a way to sidestep content security policy and/or cross-origin resource security on networked resources,</li>
+<li>a way to send arbitrary data to a server or other system, and</li>
+<li>access to details such as the public and private IP address of the device.</li>
+</ul>
+<p>This sort of access could be dangerous, so it needs to be granted by the user and be easy to revoke. The user agent would need to be very clear on what the permission does and how to revoke it.</p>
+<h2>Use Cases</h2>
+<ul>
+<li>A media player could use the API to, for example, load a podcasts RSS feed from a server with a different origin and strict CSP/CORS, parse the feed, then load an audio file from the same server.-</li>
+<li>An instant messaging application could use the API to load an image from a server with strict CSP/CORS, without needing to use its own backend as a proxy of sorts.</li>
+<li>A third-party social network client could use the API to access a social networks API.</li>
+<li>An email client could use the API to communicate with an POP3 server to download messages.</li>
+</ul>
+<h2>Why do we need a new built-in API?</h2>
+<ul>
+<li>There’s no way for the above use case examples to exist unless they had the infrastructure to support such a thing.</li>
+<li>Progressive Web Apps can become more aligned with the ability of native programs.</li>
+</ul>
+<h2>Security &amp; Privacy</h2>
+<p>Allowing complete unfettered network access has many obvious security and privacy issues. Therefore, access to the API should only be granted if all the following circumstances are met:</p>
+<ul>
+<li>The user has initiated action on the requesting page (e.g., clicked a button),</li>
+<li>a secure context is requesting access, and</li>
+<li>the PWA has been installed/added to the home screen.</li>
+</ul>
+<p>In addition, the User Agent should make the ramifications of granting permission very clear, and make it easy to revoke the permission.</p>
+<h2>Alternatives Considered</h2>
+<ul>
+<li>Not having a dedicated API at all, and retaining the current model of a client interacting with its backend to access CSP/CORS-protected assets.
+<ul>
+<li>This isn’t ideal because serverless PWAs cannot access protected assets, and there’s still limited access to the local network (e.g., accessing internal IP address).</li>
+</ul>
+</li>
+</ul>
+<h2>Potential Follow-Up Work</h2>
+<ul>
+<li>We have not done the work of defining the API with a WebIDL document yet.</li>
+<li>The ability to convey network connectivity status should be considered (e.g. whether the device is on WiFi or mobile data, what kind of mobile data connection, whether the device is in data-saver mode or the network is flagged metered)</li>
+</ul>
+<hr/>
+<p>GitHub Repo: <a href="https://github.com/Xylobol/unrestricted-network-access-proposal/tree/master" rel="nofollow noopener">https://github.com/Xylobol/unrestricted-network-access-proposal/tree/master</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2318_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oliverdunk</div>
+          <div class="creation_date">2019-06-03</div>
+          <div class="post_content">
+<p>I can’t begin to say how much I’d love this. It’s completely understandable that we’re not there yet - providing arbitrary network access safely is obviously tough. That said, being able to communicate with protocols the web doesn’t natively support would give PWAs so much power.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ruben</div>
+          <div class="creation_date">2019-06-03</div>
+          <div class="post_content">
+<p>I like the part about being able to use other non-web protocols.</p>
+<p>About the CSP-protection, I don’t think the risks are worth it:</p>
+<ol>
+<li>An evil PWA could use the unrestricted, CSP-free network access to do XSRF, and perform actions on behalf of the user on his bank account, for example.</li>
+<li>An evil third party who knows that the non-evil PWA doesn’t have any CSP protection, could more easily issue XSS attacks against the non-evil PWA. Once such PWA is owned by the evil third party, it’s XSRF powers become really dangerous.</li>
+<li>The average user won’t understand any of this, and won’t realize what granting this permission really means.</li>
+</ol>
+<p>This is why there is no such permission as “get all the user saved passwords”. The risks totally overweight the (potentially) legitimate use cases.</p>
+<p>Even browser extensions have a different security model from websites precisely because they have some of the powers you describe. For example, they have to declare on which websites they request such powers. Also, the extension registry is controlled by a third party, who can vet such extensions, or the authors, pre-screen them, and even mass-uninstall them if they are found to be dangerous. In contrast, any website automatically becomes a PWA if it meets a few simple criteria and even when one individual has been found to be evil, there is no way to block that user from creating more PWAs on different domains.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2318_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oliverdunk</div>
+          <div class="creation_date">2019-06-04</div>
+          <div class="post_content">
+<p>Regarding permissions, this is a tough one. Clearly explicitly requesting each site is a safer option, but it does add friction that would make apps feel less native. That aside, I think making the assumption that every PWA would get these permissions is wrong. There would absolutely be some sort of user consent, at least once.</p>
+<p>Regarding CSP, I believe the problem with your argument is that you would’t inherit anything. You would be sending the raw packets, and though you might be signed in to Facebook in the browser, you would’t be here. XSRF only applies when you can abuse the browser’s state.</p>
+<p>XSS attacks might be possible. That should be prevented with security headers, and good practice. Native apps are just as vulnerable - we’ve seen the WhatsApp buffer overflow bug!</p>
+<p>The average user will definitely struggle to understand this. But again, that’s the same with native apps where users still accept permissions without much thought.</p>
+<blockquote>
+<p>This is why there is no such permission as “get all the user saved passwords”. The risks totally overweight the (potentially) legitimate use cases.</p>
+</blockquote>
+<p>Forgive me if I sound rude, but this seems like a ludicrous comparison. What about this feature implies such access?</p>
+<p>TLDR: this is absolutely a hard thing to do right. There are risks if it’s done wrong, But native apps have this power, and if I as a user want to grant it to a website as well, I should be able to. We should be looking for ways to make a proposal with the fewest compromises. Compromises will definitely have to be made but I don’t believe this feature is as bad as you think.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-04</div>
+          <div class="post_content">
+<blockquote>
+<ol>
+<li>An evil PWA could use the unrestricted, CSP-free network access to do XSRF, and perform actions on behalf of the user on his bank account, for example.</li>
+</ol>
+</blockquote>
+<p>The PWA would not get access to the state of other websites and apps.</p>
+<blockquote>
+<ol start="2">
+<li>An evil third party who knows that the non-evil PWA doesn’t have any CSP protection, could more easily issue XSS attacks against the non-evil PWA.</li>
+</ol>
+</blockquote>
+<p>This is a tricky issue that also (in a different form) plagues native apps. The real solution to this one is for the programmer to be vigilant and to quickly respond to any concerns regarding security.</p>
+<blockquote>
+<ol start="3">
+<li>The average user won’t understand any of this, and won’t realize what granting this permission really means.</li>
+</ol>
+</blockquote>
+<p>Beyond an explainer page or something, I (unfortunately) think there’s not much we can do here. We can’t protect an unaware user who wants do something from themselves and provide developers with great capabilities at the same time. This discussion really breaks down to “how much control should the user have?”, and it’s an extremely difficult thing to get right. There are risks, and compromises will be made, but I think this capability is absolutely worth it, simply because of the doors it would open.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1172_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Ruben</div>
+          <div class="creation_date">2019-06-04</div>
+          <div class="post_content">
+<p>You are both right that native apps have all that power, and face similar security concerns. However, there is a key difference between native apps and PWAs: the trust model.</p>
+<p>When users install native apps, they often do so through some trusted third party (e.g. an app store, a linux distribution, etc), same as it happens with browser extensions. It’s in the best interest of that third party to minimize the amount of malware distributed through its channel to retain users’ trust. The incentives align to provide the safest possible experience. Most users understand that installing a native app from an untrusted source is a bad idea.</p>
+<p>When users install PWAs, the trust model is exactly the same as the web. There is no third party providing any trust, besides the browser itself. There is an implicit assumption that the browser is designed in such a way that making dangerous websites is hard, and if a website (or PWA) manages to steal your money, you would blame the browser for not being secure enough.</p>
+<p>The passwords example was indeed ludicrous, but it’s comparable to the power being given to the PWA. To a certain extent, it doesn’t matter whether the PWA can reuse cookies from other sites. As long as it can fully control an HTTP channel, and since it has access to a great DOM rendering engine, it can build a meta-browser without too much code (it just needs to work in exactly one target page). It would be really easy to convince enough users to log in to Facebook again, through the meta-browser and then do whatever you want with their accounts without any further consent, since you have the credentials.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Dodoid</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>That trusted third party is way, way less universal than one might think.</p>
+<p>On Windows, a lot of users still install software from installers which they simply download from a website and run. People who run Windows 7 or earlier (of which there are still many), or who don’t have or want a Microsoft account, don’t have any other way to install software anyway (and probably, in most cases, don’t care that they don’t). Windows users see so many UAC popups that they learn to click “Yes” whenever they see one, and given that even very mundane things on Windows (again, especially older Windows, which are still extremely common) can often require administrator access, many (or even most?) installers will ask for it.</p>
+<p>On macOS, some software is available on the App Store, but even a lot of what is there is also separately downloadable as a PKG installer or a disk image with just a big .app to run. Software that must run as root, or unsigned software that recommends that users blindly run “sudo spctl --master-disable” in order to run it, are not uncommon, especially when it comes to (very popular!) less-than-legitimate copies of software.</p>
+<p>On GNU/Linux, you sorta think the average user might know what they’re doing a little more, but there too, a lot of software that can’t get into a common distro’s package repos (or just doesn’t want to deal with it) just recommends that users add and trust the devs own repos. Of course, if the software is an AppImage or something, or if the user compiles and installs from source, there’s no package manager to deal with at all, and the software can basically do whatever.</p>
+<p>On Android, installing downloaded APKs (and trusting the browser to install them) is semi-common, though not as much as on desktop stuff. A lot of people I know do this for NewPipe and other legitimate but Google-EULA-violating stuff.</p>
+<p>iOS is really the lone place where unverified software is truly uncommon or limited to knowledgeable users (those who jailbreak), and even there it looks like the Supreme Court may have a chance to change that.</p>
+<p>The status-quo for the history of computing has been that software is installed at the users behest, and is at least moderately privileged, whereas content is not privileged and, traditionally, has not been “run” at all. As the web increasingly shifts from delivery of purely content to a mix of content and applications (the latter supported via PWAs), this needs to be acknowledged and cautiously handled. Believe me, I’m all for security. I do think more needs to be done for sandboxing of applications (Qubes OS, which I have daily-driven off and on for the past two years, has an interesting approach to this), and I truly believe that PWAs currently do, and should continue to, provide a secure-by-default, user-friendly way of doing this. No previous attempt at more powerful applications on the web (be it Java applets, ActiveX, or anything else like that) has ever provided an environment as secure, user-friendly, seamless, and compatible as PWAs do today.</p>
+<p>That said, if the web, through PWAs, is truly to become an application platform, then the web needs to evolve to support, in a far more secure manner of course, the local, privileged things that Java applets or ActiveX allowed in the past, and that to this day continue to force developers to rely on proxies and other workarounds.</p>
+<p>There is a balance to be struck between truly absurd and unnecessary APIs (driver installation from JavaScript? PWA disk partitioning? web microcode update API?) and things such as network access that even platforms as locked-down as iOS apps support.</p>
+<p>Network access, with appropriate permissions and user awareness, is not too much to ask. You can’t have hypothetical users that are simultaneously too stupid not to accept a permission clearly saying that an application might be able to access other websites, but also too smart not to follow a glossy step-by-step download page to run a local version of the same application with full local root privileges.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<blockquote>
+<p>When users install native apps, they often do so through some trusted third party (e.g. an app store, a linux distribution, etc), same as it happens with browser extensions. It’s in the best interest of that third party to minimize the amount of malware distributed through its channel to retain users’ trust. The incentives align to provide the safest possible experience. Most users understand that installing a native app from an untrusted source is a bad idea.</p>
+</blockquote>
+<p>This is very true (excluding that list bit), and that’s why we’ve gotta ask for permission first.</p>
+<blockquote>
+<p>As long as it can fully control an HTTP channel, and since it has access to a great DOM rendering engine, it can build a meta-browser without too much code (it just needs to work in exactly one target page). It would be really easy to convince enough users to log in to Facebook again, through the meta-browser and then do whatever you want with their accounts without any further consent, since you have the credentials.</p>
+</blockquote>
+<p>I could already do this, all I need to do is set up a backend as a proxy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>I think the right compromise when it comes to security is to have everything scoped per-origin. Users can recognize the URLs, and the UA can state something among the lines of “the PWA can download and upload arbitrary data from and to these services/websites/whatever”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>Why add a way to side-step CSP? If it’s a problem for you, it’s fully under your control, so you can remove it. You could even change the CSP sent to browsers depending on their settings.</p>
+<p>Meanwhile if any CSP bypassing feature exists, the security of all websites using CSP is impacted. It gives attackers a theoretical way to turn XSS in to CSP bypass. I have a web app using a very strict CSP, and I would loathe to have a feature in the browser that was designed to bypass it. How do I make absolutely sure that feature is completely, 100% turned off? In my opinion, it simply shouldn’t exist.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2318_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">oliverdunk</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="10" data-topic="3602">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Why add a way to side-step CSP? If it’s a problem for you, it’s fully under your control, so you can remove it. You could even change the CSP sent to browsers depending on their settings.</p>
+</blockquote>
+</aside>
+<p>The whole point of this, as explained in the first post, is to allow your application to communicate with a server that you don’t control. You might want to download from a POP3 server, for example, and you certainly shouldn’t need to ask every mail host in the world to set CORS headers for you.</p>
+<aside class="quote no-group" data-post="10" data-topic="3602">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>Meanwhile if any CSP bypassing feature exists, the security of all websites using CSP is impacted. It gives attackers a theoretical way to turn XSS in to CSP bypass.</p>
+</blockquote>
+</aside>
+<aside class="quote no-group" data-post="10" data-topic="3602">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ashleyscirra/40/658_2.png" width="20"/> AshleyScirra:</div>
+<blockquote>
+<p>How do I make absolutely sure that feature is completely, 100% turned off?</p>
+</blockquote>
+</aside>
+<p>You’re right, this does mean you lose control as the host of a website, but that’s the point. You can’t stop me making an Android app to communicate with your site as I wish, and we shouldn’t limit the web either. Security risks will be circumvented with tight permission controls.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p><span class="mention">@oliverdunk</span> is correct on all these points. I would like to add that a lot of XSS attacks would be hampered due to a lack of state and that I’m completely open to editing my proposal to require the permission to be granted per-origin.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="11" data-topic="3602">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/oliverdunk/40/2318_2.png" width="20"/> oliverdunk:</div>
+<blockquote>
+<p>You might want to download from a POP3 server, for example, and you certainly shouldn’t need to ask every mail host in the world to set CORS headers for you.</p>
+</blockquote>
+</aside>
+<p>You answered by point about CSP by talking about CORS. These are different technologies. I think you’ve missed my point…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>oh my god how did I miss that, should’ve waited a few hours and re-read it - one sec, gonna update OP</p>
+<hr/>
+<p>edit: quickly edited OP to mention CORS, will rework it more once I’m off work</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>If you want to disable CORS, you’re opening an even bigger security vulnerability! Now users who approve the prompt could have all their private content stolen from social networks and messaging apps by the page that was given the permission. There is absolutely no way this will be allowed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>Remember, the requesting page does not get state. These permissions also wouldn’t allow the page to read every byte going over the network.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>That doesn’t matter. You’re deliberately breaking a core security feature of the web that is essential for people’s ability to trust web content is private and secure.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>Could you elaborate more about the particular sort of attack you’re proposing? I can’t exactly tell what your argument is here. I understand that this is a huge security risk in itself, and that’s why I want to be careful about it, but I can’t take a certain situation into account when I don’t know what the situation is.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/658_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">AshleyScirra</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>There’s already lots of information on the web about how CORS works and why it’s important. I’m not here to re-explain all of that - I’m just pointing out this would be catastrophic for security and there is no way it will be accepted by browser makers. You should understand why security features exist before proposing to break them!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2360_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">xylobol</div>
+          <div class="creation_date">2019-06-05</div>
+          <div class="post_content">
+<p>Please see my previous reply, I’ve just edited it. I fully understand why the security features exist, but they can get in the way - that’s what this proposal is for.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

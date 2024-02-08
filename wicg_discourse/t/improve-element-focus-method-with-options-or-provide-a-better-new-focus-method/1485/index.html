@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Improve element.focus method (with options) or provide a better new focus method</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Improve element.focus method (with options) or provide a better new focus method</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-07</div>
+          <div class="post_content">
+<p>Managing focus and moving focus from one element to another is quite important for creating accessible webpages.</p>
+<p>At the same time the provided focus function by the browser comes with annoying shortcomings making this task a pain in the ass.</p>
+<p>There are in essence two major problems.</p>
+<p><strong>1. Implicit call to scrollIntoView</strong></p>
+<p>If an element gains focus, the <code>:focus</code> style is attached and after that it is checked, wether this element is currently in view. If not, it will be scrolled into view. This might sound as a nice built-in feature, it becomes annoying as soon as you are using animations. A demo of what happens can be seen here: <a href="https://jsfiddle.net/trixta/ab226ap9/" rel="nofollow noopener">https://jsfiddle.net/trixta/ab226ap9/</a>.</p>
+<p>As a side effect this behavior also always causes layout thrashing.</p>
+<p><strong>2. focus doesn’t work with visibility transitions</strong></p>
+<p>If an element is transitioned from visibility: hidden to visibility: visible. It is considered as visibility: hidden until the transition stops. Until then it can’t be focused. While I don’t understand why, I assume this can’t be changed for backcompat reasons anymore. However an element that is already in fact visible to the user and is transitioning to visible should be focusable. A demo that shows this problem can be seen here: <a href="https://jsfiddle.net/trixta/6racogpn/" rel="nofollow noopener">https://jsfiddle.net/trixta/6racogpn/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2016-05-07</div>
+          <div class="post_content">
+<p>Why is <code>visibility</code> transitioned in your demos? The animation seems to render fine without it.</p>
+<p>I’ve created a demo that used the <code>"transitionend"</code> event to set the focus on the input: <a href="https://jsfiddle.net/1f13pnwb/1/" rel="nofollow noopener">https://jsfiddle.net/1f13pnwb/1/</a>, and I’m not experiencing the scroll-into-view issue anymore.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-08</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>Why is visibility transitioned in your demos? The animation seems to render fine without it.</p>
+</blockquote>
+</aside>
+<p>It would be an a11y fail, if it wouldn’t be <code>visibility: hidden</code>. For two simple reasons.</p>
+<ol>
+<li>If you tab through the page you can reach the input (and all other focusable content in this area) without seeing it. (And you might re-add content jumps.)</li>
+<li>You have introduced a control that shows/hides another content area, but for screenreader users this area is not hidden and therefore the control wouldn’t make sense.</li>
+</ol>
+<p>You need <code>visibility: hidden</code> to hide it.</p>
+<aside class="quote" data-post="2" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/simevidas/40/1026_1.png" width="20"/> simevidas:</div>
+<blockquote>
+<p>I’ve created a demo that used the “transitionend” event to set the focus on the input</p>
+</blockquote>
+</aside>
+<p>Yes, this is a workaround, but it doesn’t really help in real world situations. In those situations you have a generalized JS code and some CSS code. The JS should not know whether there is a CSS <code>transition</code> or what <code>transition</code> is used. The CSS dev might also want to use multiple effects and so on. Even your example doesn’t work properly, it focuses the input on every <code>transitionend</code> not only on showing. If another transition is in place you get multiple events, which <code>transitionend</code> is the right to use? What happens if no CSS transition is used and instead another JS script hooks into a triggered event to provide a JS animation and so on.</p>
+<p>And here is where the pain starts. You need to write a quite amount of code, that re-checks the visual state of the element over and over again to decide, when it is save to focus it.</p>
+<p>If you look into this project: <a href="https://github.com/medialize/ally.js" rel="nofollow noopener">https://github.com/medialize/ally.js</a>. You will see some code that does just that, checking as soon as an element can be focused without creating a scroll problem and so on. It’s quite amount of code to realize this simple a11y focus management task.</p>
+<p>At the end of this you will realize, that you can’t focus an <code>input</code> async on most mobile browser, you need to focus it inside of a trusted <code>click</code> or <code>touch*</code> event.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2016-05-11</div>
+          <div class="post_content">
+<blockquote>
+<ol>
+<li>Implicit call to scrollIntoView</li>
+</ol>
+</blockquote>
+<p><a href="https://github.com/whatwg/html/issues/94">whatwg/html#94</a> is trying to get that behavior specified. <a href="https://github.com/whatwg/html/issues/834">whatwg/html#834</a> Is discussing adding and argument to <code>Element#focus()</code> to control the style of scrolling.</p>
+<blockquote>
+<p>It’s quite amount of code to realize this simple a11y focus management task.</p>
+</blockquote>
+<p>As far as I see, <a href="https://github.com/WICG/IntersectionObserver/">IntersectionObserver</a> will help with reducing the footprint.</p>
+<blockquote>
+<p>At the end of this you will realize, that you can’t focus an input async on most mobile browser, you need to focus it inside of a trusted click or touch* event.</p>
+</blockquote>
+<p>do you have links to research on this?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-11</div>
+          <div class="post_content">
+<p>Thanks very helpful informations (as always).</p>
+<p>About the mobile problem. I have not so much, but you can google those problems (<a href="https://www.google.de/search?client=opera&amp;q=input+focus+iphone+keyboard&amp;sourceid=opera&amp;ie=UTF-8&amp;oe=UTF-8" rel="nofollow noopener">https://www.google.de/search?client=opera&amp;q=input+focus+iphone+keyboard&amp;sourceid=opera&amp;ie=UTF-8&amp;oe=UTF-8</a>).</p>
+<p>Basically the restrictions with <code>focus</code> on mobile are similar to <code>requestFullscreen</code>. The reasoning is that it would be a usability problem if the software keyboard is shown automatically on page load in mobile browsers.</p>
+<p>I’m trying to solve the problem different. Instead of waiting until the element is in viewport. I collect the scroll positions of all ancestors, focus the element and then restore the scroll positions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2016-05-11</div>
+          <div class="post_content">
+<blockquote>
+<p>The reasoning is that it would be a usability problem if the software keyboard is shown automatically on page load in mobile browsers.</p>
+</blockquote>
+<p>That’s the opposite of my experience. Focusing an input element would make the OSK (On Screen Keyboard) show up, which is why I generally prefer to focus the container element, rather than the first input element.</p>
+<p>But what you’re saying is that the OSK doesn’t show up unless there is immediate user intent (expressed through a click/tap). This does not mean that the element doesn’t receive focus, though. It just means that the secondary action - showing the OSK when an element receives focus - is not as controllable as you want it to be.</p>
+<blockquote>
+<p>I’m trying to solve the problem different. Instead of waiting until the element is in viewport. I collect the scroll positions of all ancestors, focus the element and then restore the scroll positions.</p>
+</blockquote>
+<p>I’ve not pursued this idea in ally.js because of the following reasons:</p>
+<ul>
+<li>I don’t know if any other component is listening to <code>scroll</code> events, which might get confused by this moot double-scroll action.</li>
+<li>Asynchronous operations happening on <code>focus</code> that require to know the position of the element receiving focus might execute at a bad time and not recover the position because there’s no <code>scroll</code> event after the focused element became visible in the viewport.</li>
+<li>I don’t know how things would behave in while the off-screen element has focus and the user does something. Granted, this is only the case for a few hundred milliseconds, but it’s still an unknown.</li>
+</ul>
+<p>That said, I imagine this approach to be far more efficient than what ally.js does at the moment. Which is calculate the visible area of an element on every animation frame.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-16</div>
+          <div class="post_content">
+<p>What about the <code>visibility: visible</code> restriction?</p>
+<p>I mean: Despite the fact that an element is visible (for the sighted user), because it is transitioning from <code>hidden</code> to <code>visible</code>, it is not focusable (for the visually impaired user).</p>
+<p>As I can re-call correctly, earlier drafts including earlier implementations of the <code>visibility</code> transition forced us to write code like this:</p>
+<pre><code>.box {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0 400ms, opacity 400ms;
+}
+
+.box.show {
+    transition-delay: 0;
+    opacity: 1;
+    visibility: visible;
+}
+</code></pre>
+<p>This was changed, so that developers can write <code>visibility</code> transitions more 	intuitive. But this change was only solved  for sighted users and if developers want to write accessible components they still need to write CSS like this or do jumps in their JS focus implementations.</p>
+<p>As a result the developer community were given an improved API to write inaccessible code more easily.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2016-05-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/6f9a4e/40.png" width="20"/> aFarkas:</div>
+<blockquote>
+<p>What about the visibility: visible restriction?</p>
+</blockquote>
+</aside>
+<p>I’m afraid I don’t understand what the problem is, other than developers potentially not properly understanding how transitions work.</p>
+<aside class="quote" data-post="7" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/6f9a4e/40.png" width="20"/> aFarkas:</div>
+<blockquote>
+<p>This was changed, so that developers can write visibility transitions more intuitive.</p>
+</blockquote>
+</aside>
+<p>To what change are you referring? The given CSS example is pretty much the way I’ve solved this problem in my apps today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-22</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<p>To what change are you referring?</p>
+</blockquote>
+</aside>
+<p>The old specification said:</p>
+<blockquote>
+<p>visibility: interpolated via a discrete step. The interpolation happens in real number space between 0 and 1, where 1 is “visible” and all other values are “hidden”.</p>
+</blockquote>
+<p>This made the code above necessary to create a fadeOut effect.</p>
+<p>The new spec says:</p>
+<blockquote>
+<p>visibility: if one of the values is ‘visible’, interpolated as a discrete step where values of the timing function between 0 and 1 map to ‘visible’ and other values of the timing function (which occur only at the start/end of the transition or as a result of ‘cubic-bezier()’ functions with Y values outside of [0, 1]) map to the closer endpoint; if neither value is ‘visible’ then not interpolable.</p>
+</blockquote>
+<p>This makes animating visibility in conjunction with other properties much simpler. You can write it this way:</p>
+<pre><code>.box {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 400ms, opacity 400ms;
+}
+
+.box.show {
+    opacity: 1;
+    visibility: visible;
+}
+</code></pre>
+<p>But: If you get the computed visibility style during such a transition, you will see that the browser actually sets the element to <code>visibility: hidden</code> and does not allow focus at this time.</p>
+<aside class="quote" data-post="8" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/rodneyrehm/40/510_1.png" width="20"/> rodneyrehm:</div>
+<blockquote>
+<p>The given CSS example is pretty much the way I’ve solved this problem in my apps today.</p>
+</blockquote>
+</aside>
+<p>If you look around, you will see that 99% of all developers are using the later technique and not yours. And the change was introduced to make developer lives easier, but also introduced this a11y issue at the same time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2016-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/6f9a4e/40.png" width="20"/> aFarkas:</div>
+<blockquote>
+<p>The new spec says:</p>
+<p>visibility: if one of the values is ‘visible’, interpolated as a discrete step where values of the timing function between 0 and 1 map to ‘visible’ and other values of the timing function (which occur only at the start/end of the transition or as a result of ‘cubic-bezier()’ functions with Y values outside of [0, 1]) map to the closer endpoint; if neither value is ‘visible’ then not interpolable.</p>
+</blockquote>
+</aside>
+<p>Thanks for the pointer, I completely missed that…</p>
+<aside class="quote" data-post="9" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/6f9a4e/40.png" width="20"/> aFarkas:</div>
+<blockquote>
+<p>But: If you get the computed visibility style during such a transition, you will see that the browser actually sets the element to visibility: hidden and does not allow focus at this time.</p>
+</blockquote>
+</aside>
+<p>At least Firefox, Safari, Chrome, IE10+ disagree with your statement, if <a href="http://jsbin.com/joregecagi/edit?css,js,console,output">this test</a> is accurate: the element is <code>visible</code> throughout the transition. How did you come to your conclusion that this was broken?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-23</div>
+          <div class="post_content">
+<p>I have a lot to do, so I can’t look deeper into this. But here is my testcase saying it is hidden:
+<a class="onebox" href="https://jsfiddle.net/trixta/f8owaL10/" rel="nofollow noopener" target="_blank">https://jsfiddle.net/trixta/f8owaL10/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2016-05-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="11" data-topic="1485">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/6f9a4e/40.png" width="20"/> aFarkas:</div>
+<blockquote>
+<p>But here is my testcase saying it is hidden: <a href="https://jsfiddle.net/trixta/f8owaL10/">https://jsfiddle.net/trixta/f8owaL10/</a></p>
+</blockquote>
+</aside>
+<p>I’ve changed my <a href="http://jsbin.com/qusetuleba/1/edit?css,js,console,output">test-case</a> to log the first few animation frames. The problem is the value isn’t transitioned right away, but 1 frame (Chrome) or 2 frames (Firefox) later. As far as I understand <a href="https://drafts.csswg.org/css-transitions/#starting">Starting of transitions</a> there’s no mandate for the first animation frame to occur synchronously, so the browser’s behavior seems fine from a specification perspective. The <a href="http://jsbin.com/hulacefiza/edit?css,js,console,output">transition-delay test-case</a> shows immediate change. I have no idea if both notations should behave identically.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/510_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">rodneyrehm</div>
+          <div class="creation_date">2016-05-24</div>
+          <div class="post_content">
+<p>I just spoke to <span class="mention">@tabatkins</span> and got confirmation that this is a “quality-of-implementation issue”. Both notations should behave the same way, i.e change the value of the visibility property synchronously. He suggest we start filing bugs against the various browsers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2016-05-24</div>
+          <div class="post_content">
+<p>I’m pretty sure it’s not a quality of implementation issue. The jsbin you posted uses a transition duration of zero for visibility. No transition is generated when the duration is zero (see <a href="https://drafts.csswg.org/css-transitions/#starting" rel="nofollow noopener">https://drafts.csswg.org/css-transitions/#starting</a>) so you should not expect the same result as when actually running a transition.</p>
+<p>When transitions are generated, as you note, transitions do not start immediately. That’s deliberate since it allows the browser to layerize content as needed before the animation starts so there is no jump at the start. As a result, the animation sits at progress 0 for one or two frames which, if you’re transitioning from ‘hidden’ to ‘visible’, produces visibility: hidden.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">birtles</div>
+          <div class="creation_date">2016-05-25</div>
+          <div class="post_content">
+<p>(For my own reference, to clarify the comment about zero-duration transitions, I’m referring to <a href="http://jsbin.com/korituzoqo/1/edit?css,console,output" rel="nofollow noopener">this jsbin</a>. The reason this one goes to ‘visible’ right away when hiding (unlike <a href="http://jsbin.com/conecomivo/edit?css,console,output" rel="nofollow noopener">the other jsbin</a>) is that it uses the transition timing defined by the destination style, which has no delay, hence a zero combined duration. You can see the difference in Firefox at least by opening the DevTools Inspector and using the Animations panel although you’ll need to select the second jsbin runner iframe as the target to debug. You’ll notice that no transition is generated for the hide case.)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2520_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">aFarkas</div>
+          <div class="creation_date">2016-05-25</div>
+          <div class="post_content">
+<p>So if it is not an implementation issue of the CSS transitions. What can we do to make focusing in those cases less painful?</p>
+<p>Redefine the focusing method, if an element is transitioned to visible await a focusable state and focus then?</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

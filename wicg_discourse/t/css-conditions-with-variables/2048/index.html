@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>CSS Conditions with Variables</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">CSS Conditions with Variables</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2017-03-04</div>
+          <div class="post_content">
+<p>I’d like to propose a form of CSS conditions that makes it possible to apply a set of declarations if a condition with a CSS variable (custom property) evaluates to true. With a syntax like that:</p>
+<pre><code class="lang-nohighlight">@when       = @when ( &lt;condition&gt; ) { &lt;declaration-list&gt; }
+&lt;condition&gt; = &lt;var()-function&gt; &lt;operator&gt; &lt;declaration-value&gt;
+&lt;operator&gt;  = '=' | '&lt;' | '&lt;=' | '&gt;' | '&gt;=' | '!='
+</code></pre>
+<p>Which would look like this:</p>
+<pre><code class="lang-css">.foo {
+	float: none;
+	color: red;
+	@when (var(--my-var) &gt; 200px) {
+		float: left;
+		color: blue;
+	};
+}
+</code></pre>
+<p>How the values should be compared could depend on the type of the comparison values. So that <code>10.0px = 10px</code> and <code>96px = 1in</code> result in true. It might be also a good idea to support comparison of colors and other more complex value types.</p>
+<p>I think there are many use cases for such a feature. Theming with CSS variables would be more powerful because a component could react to special cases like a higher letter spacing if a font size variable is set to a very small size.</p>
+<p>There is already a workaround to achieve CSS conditions: <a href="http://kizu.ru/en/fun/conditions-for-css-variables/" rel="nofollow noopener">http://kizu.ru/en/fun/conditions-for-css-variables/</a>. But it can only be used for properties that support <code>calc()</code> and it’s quite hard to write compared to a simple condition syntax.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<p>–my-var is probably a value calculated by js, because you are using js already you could add a class and get the same result.</p>
+<pre><code class="lang-css">.foo {
+	--is-content-query: 200px;
+
+	float: none;
+	color: red;
+}
+
+.foo.foo--is-content-query {
+	float: left;
+	color: blue;
+}
+</code></pre>
+<p>my comment is to push you to create a stronger use case <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<p>CSS actually does have variables.</p>
+<aside class="onebox whitelistedgeneric">
+<header class="source">
+<img class="site-icon" height="32" src="https://developer.mozilla.org/static/img/favicon32.7f3da72dcea1.png" width="32"/>
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" rel="nofollow noopener" target="_blank">MDN Web Docs</a>
+</header>
+<article class="onebox-body">
+<img class="thumbnail onebox-avatar" height="500" src="https://developer.mozilla.org/static/img/opengraph-logo.72382e605ce3.png" width="500"/>
+<h3><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties" rel="nofollow noopener" target="_blank">Using CSS custom properties (variables)</a></h3>
+<p>Custom properties (sometimes referred to as CSS variables or cascading variables) are entities defined by CSS authors that contain specific values to be reused throughout a document. They are set using custom property notation (e.g., --main-color:...</p>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<blockquote>
+<p>–my-var is probably a value calculated by js</p>
+</blockquote>
+<p>Why should that be the case? CSS variables are very useful without JS.</p>
+<blockquote>
+<p>you could add a class and get the same result.</p>
+</blockquote>
+<p>CSS variables are very different to classes, they inherit by default for example. That means you would have to set the class on every descendant element to get the same effect.</p>
+<blockquote>
+<p>my comment is to push you to create a stronger use case <img alt=":slight_smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/slight_smile.png?v=5" title=":slight_smile:"/></p>
+</blockquote>
+<p>I think better theming of components via variables is already a very valid use case. I also wrote a small article about how this feature might bring us some form of container queries: <a href="https://au.si/css-conditions-cq-alternative" rel="nofollow noopener">https://au.si/css-conditions-cq-alternative</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<blockquote>
+<p>CSS actually does have variables.</p>
+</blockquote>
+<p>Yes. This proposal is for adding a conditions feature to CSS that can be used with the already existing variables feature.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<aside class="quote" data-post="4" data-topic="2048">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ausi/40/761_1.png" width="20"/> ausi:</div>
+<blockquote>
+<p>–my-var is probably a value calculated by js</p>
+<p>Why should that be the case? CSS variables are very useful without JS.</p>
+</blockquote>
+</aside>
+<p>Because right now css variable use static value and they do not reference the computed style value. You can use them statically for theming or dynamically with JS.</p>
+<aside class="quote" data-post="4" data-topic="2048">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ausi/40/761_1.png" width="20"/> ausi:</div>
+<blockquote>
+<p>you could add a class and get the same result.</p>
+<p>CSS variables are very different to classes, they inherit by default for example. That means you would have to set the class on every descendant element to get the same effect.</p>
+</blockquote>
+</aside>
+<p>Yes you would need to add selector in the css but on html you need just one.</p>
+<pre><code class="lang-css">.component {
+	width: 500px;
+}
+
+.component.is-content-query {
+	width: 100%;
+}
+
+.component__element {
+	float: left;
+	width: 50%;
+}
+
+.component.is-content-query .component__element {
+	float: none;
+	width: 100%;
+}
+</code></pre>
+<p>Probably I would be interested to see <code>@when</code> operator used to create a simpler way to apply certain style depending certain condition at run time or the ability to share the computed style with other classes. Maybe Houdini will be able to sort it out these problems.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3066_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jhpratt</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<p>Sorry, I wasn’t clear. I was responding to <span class="mention">@MatteoWebDesigner</span>, who I thought was saying that variables were only handled in JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-05</div>
+          <div class="post_content">
+<p>Yes what I meant is one of the great advantages of css variables is evaluation at run time.
+It replace the use of inline style, you can define inside your css files how you want to apply css variables value. <span class="mention">@when</span> operator could enhance this feature and would make easier to create more sophisticated scenario. If we think in terms of static theming that is easy to accomplish with sass, browser vendor will never implement solution which are solved already.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1843_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">leaverou</div>
+          <div class="creation_date">2017-03-06</div>
+          <div class="post_content">
+<p>First off, I would LOVE something like this in CSS. I use variables extensively and I have needed this so many times. Yes, anything that can be handled with this can be handled by setting a myriad of classes on dozens of elements and their descendants, but it can produce much more elegant solutions.</p>
+<p>HOWEVER, this suffers from the classic cyclical problem which causes the CSS WG to reject many proposals. Consider this snippet:</p>
+<pre><code>.foo {
+	color: red;
+	@when (var(--my-var) &gt; 200px) {
+		--my-var: 100px;
+		color: blue;
+	};
+}
+</code></pre>
+<p>What color does this produce, red or blue? Probably the only correct solution would be if it keeps alternating between red and blue, and we resolved not to add such features to CSS a while ago.</p>
+<p>So, while I would find this very useful, I think the chances of it getting accepted are slim. However, a slightly less powerful form of it might be accepted: A conditional that applies to the <strong>parent</strong> instead of the current element, so cycles are impossible because you cannot set a variable for the parent inside a given CSS rule. Many of my use cases would be solved by this lighter form, what about yours?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2017-03-06</div>
+          <div class="post_content">
+<p>Thanks for the great feedback!</p>
+<p>The cyclical problem is a bit different from other proposals I think, because it’s not operating at the selector level but at declaration level. And for declarations there are already rules how to handle cyclic dependencies AFAIK. For example:</p>
+<pre><code class="lang-css">.foo {
+	--a: var(--b);
+	--b: var(--a);
+}
+</code></pre>
+<p>This is specified to fail for both <code>--a</code> and <code>--b</code> and sets them to the initial/invalid value. I think the <code>@when</code> could work similar to <code>@apply</code>. For example:</p>
+<pre><code class="lang-css">.foo {
+	color: var(--color);
+	--color: blue;
+	@apply --mixin;
+	--mixin: {
+		--color: red;
+		--mixin: {
+			--color: green;
+		};
+	};
+}
+</code></pre>
+<p>This always resolves to <code>red</code>. I think the <code>@when</code> in your example would always be true, as long as the parent <code>--my-var</code> is larger than <code>200px</code>, and <code>color: blue</code> should always apply.</p>
+<p>If I’m wrong and <code>@when</code> has different cyclical problems then <code>--*</code> and <code>@apply</code>, I agree that applying the condition to the variables of the parent element would still make this feature very very useful.</p>
+<blockquote>
+<p>Many of my use cases would be solved by this lighter form, what about yours?</p>
+</blockquote>
+<p>Most use cases I could think of so far, are solved by the lighter form too. But if it’s possible to handle the cyclical problem, I would prefer the more powerful version.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-03-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="2048">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/leaverou/40/110_1.png" width="20"/> leaverou:</div>
+<blockquote>
+<p>HOWEVER, this suffers from the classic cyclical problem which causes the CSS WG to reject many proposals</p>
+</blockquote>
+</aside>
+<p>I wonder if the cyclical problem is less problematic in here. In element query the problem was parent size could depend on children size but in here you deliberately assigning a new value on the var, in this case is developer fault and it can be fixed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1239_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">satyanath</div>
+          <div class="creation_date">2017-03-12</div>
+          <div class="post_content">
+<p>I feel that exposing existing values (already exposed in javascript) in CSS would be immensely useful. For example in javascript we can access offsetWidth and offsetHeight of any element. Now it would be great if there is a readonly (or even read write) system variable exposed in CSS for these. That would help prevent us having to maintain the variables and keep it updated all through the inheritance.</p>
+<p>Also required would be a good syntax in referring values of these variables from other elements context. For example if one wants to set the width of an element based on the width of the parent - we should be able to access the parents variables.  We may need to access siblings variables also - so the syntax should be generic enough to allow accessing variables of other elements. While this may be against encapsulation - we could evolve syntax to allow access and restrict access.</p>
+<p>if --offset-width is the name given to the system variable equivalent of the offsetWidth of the element, then the css code could be</p>
+<pre><code>.element {
+	width: var(--offset-width@parent)/2;
+}
+</code></pre>
+<p>Note: this is just a suggestion of the syntax. If the @ symbol cannot be used here we can use some other special character.</p>
+<p>Yes conditions would be useful, but I feel that should come after exposing the style variables available in javascript.</p>
+<p>I read your other post on how this could help in container queries, but frankly if one has to modify a big existing site and introduce container queries in some small portion being modified - it would be a nightmare to use this approach as one has to go on maintain the variables right from the top.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1242_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">MatteoWebDesigner</div>
+          <div class="creation_date">2017-04-01</div>
+          <div class="post_content">
+<p>What about this case:</p>
+<ul>
+<li>when .parent is small we want to stack our children</li>
+<li>when .parent is larger let the children use their auto size</li>
+</ul>
+<pre><code class="lang-auto">&lt;div class="parent"&gt;
+  &lt;button class="child"&gt;button&lt;/button&gt;
+  &lt;button class="child"&gt;button&lt;/button&gt;
+&lt;/div&gt;
+</code></pre>
+<pre><code class="lang-css">.parent {
+  display: flex;
+  background: orange;
+  flex-direction: column;
+}
+
+@media (min-width: 500px) {
+  .parent {
+    flex-direction: initial;
+  }
+}
+
+.child {
+  display: block;
+}
+</code></pre>
+<p>Instead of having the children define their size with a condition we can define the condition on the parent and use flexbox to decide how they are going to be layout out. css grid does calculation on its container size and decide how to layout their children depending their size (auto-fit, minmax).
+I think this solution does not suffer the cyclical problem:</p>
+<pre><code class="lang-css">.parent {
+  display: flex;
+  background: orange;
+  flex-direction: if(min-width: 200px, initial, column) ; 
+  // equivalent in javascript   
+  // let flexDirection = width &lt;= 200px ? 'initial' : 'column';
+}
+
+.child {
+  display: block;
+}
+</code></pre>
+<p>we could use it to create simple condition with css vars too</p>
+<pre><code class="lang-auto">.parent {
+   --state: true;
+}
+
+.child {
+   color: if(var(--state), red, blue);
+}
+</code></pre>
+<p>A more powerful approach would be to use if() with css grid, usually you would use media query</p>
+<pre><code class="lang-css">.grid {
+  display: grid;
+  grid-gap: 10px 20px;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr 1fr auto;
+  grid-template-areas: 
+    'header'
+    'none'
+    'none'
+    'button'
+  ;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid gray;
+  border-radius: 4px;
+}
+
+@media (min-width: 500px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 
+      'header header'
+      'none none'
+      'button button'
+    ;
+  }
+}
+
+.grid h1 {
+  text-align: center;
+  grid-area: header;
+}
+
+.grid label {
+  display: flex;
+  align-items: center;
+}
+
+.grid input {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.grid button {
+  background-color: #03a9f4;
+  grid-column-start: 1;
+  grid-column-end: span 2;
+  grid-area: button;
+}
+</code></pre>
+<p>with if() and other possible operators</p>
+<pre><code class="lang-css">/* option 1 */
+.grid {
+    display: grid;
+    grid-gap: 10px 20px;
+	
+	grid-template-columns: if(min-width: 300px, 
+		1fr 1fr,
+		1fr
+	);
+	
+	grid-template-rows: if(min-width: 300px, 
+		auto 1fr 1fr auto,
+		auto 1fr auto
+	);
+    
+	grid-template-areas: if(min-width: 300px, 
+		'header header' 
+		'none none' 
+		'button button', 
+		
+		'header' 
+		'none' 
+		'none' 
+		'button'
+	);
+}
+
+/* option 2 */
+.grid {
+    display: grid;
+    grid-gap: 10px 20px;
+	
+	grid-template-columns: 1fr;
+	grid-template-rows: auto 1fr auto;
+	grid-template-areas:  
+		'header' 
+		'none' 
+		'none' 
+		'button'
+	;
+	
+	@when (min-width: 300px) {
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: auto 1fr 1fr auto;
+		grid-template-areas: 
+			'header header' 
+			'none none' 
+			'button button'
+		;
+	}
+}
+
+/* option 3 */
+.grid {
+	grid-template-columns: 1fr;
+	...
+	
+	@minwidth (300px) {
+		grid-template-columns: 1fr 1fr;
+		...
+	}
+}
+
+/* option 4 */
+.grid {
+	grid-template-columns: minwidth(300px, 1fr 1fr, 1fr);
+	grid-template-columns: maxwidth(300px, 1fr, 1fr 1fr);
+}
+</code></pre>
+<p>Syntax wise I think we could think something more concise but I think what we are doing here is not far from css grid fit-content minmax</p>
+<p>All examples are on jsfiddle: <a href="https://jsfiddle.net/b6gmo8mn/4/" rel="nofollow noopener">https://jsfiddle.net/b6gmo8mn/4/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2017-04-04</div>
+          <div class="post_content">
+<blockquote>
+<p>What about this case:</p>
+<ul>
+<li>when .parent is small we want to stack our children</li>
+<li>when .parent is larger let the children use their auto size</li>
+</ul>
+</blockquote>
+<p>This sounds exactly like container queries (aka element queries) and there is already a discussion about it here: <a href="https://discourse.wicg.io/t/element-queries/26">Element Queries</a></p>
+<blockquote>
+<p>I think this solution does not suffer the cyclical problem</p>
+</blockquote>
+<p>I don’t think that’s true. If you can change the style of an element based on the layout width of its parent you may end up in an endless recursion.</p>
+<p>My proposal for CSS conditions is limited to CSS variables and I think this is very important to make it implementable for browsers. Getting access to properties like <code>offsetWidth</code> is a completely different topic I think and is not related to this proposal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2017-05-18</div>
+          <div class="post_content">
+<p>It looks like <a href="http://www.xanthir.com/b4o00" rel="nofollow noopener">CSS @apply was discarded</a>, partly because of some problems it has with applying mixins that themself include other variables.</p>
+<p>So I think <span class="mention">@leaverou</span> is right with the suggestion that the conditions should be resolved against the variables/properties of the parent element to make this feature possible to implement in browsers.</p>
+<p>For CSS custom properties level 2 <a href="https://lists.w3.org/Archives/Public/www-style/2012Aug/0891.html">there is a chance</a> that we get a <code>parent-var()</code> function that resolves variables against the inherited value. So it might be a good idea to only support <code>parent-var()</code> in the <code>@when()</code> conditions at first. It would still be a very powerful feature this way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/662_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">eeeps</div>
+          <div class="creation_date">2017-07-28</div>
+          <div class="post_content">
+<p>Just a note to say that I ran across this today, which seems related:</p>
+<p><a class="onebox" href="https://tabatkins.github.io/specs/css-when-else/" rel="nofollow noopener" target="_blank">https://tabatkins.github.io/specs/css-when-else/</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2017-07-28</div>
+          <div class="post_content">
+<p>No, that’s not particularly related, it’s just a generalization of the existing conditional rules, plus conditional chaining.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/761_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ausi</div>
+          <div class="creation_date">2019-01-20</div>
+          <div class="post_content">
+<p>I just recently discovered a way that makes it possible to use similar conditions using the CSS animation feature.</p>
+<p>My example from the <a href="https://discourse.wicg.io/t/css-conditions-with-variables/2048/1">original post</a> can be written in today’s CSS like so:</p>
+<pre><code class="lang-css">.foo {
+	float: none;
+	color: red;
+	animation: 10000s step-end foo paused;
+	animation-delay: calc((0 - var(--my-var)) * 1s);
+}
+@keyframes foo {
+	/* (min-width: 200px) */ 2% {
+		float: left;
+		color: blue;
+	}
+}
+</code></pre>
+<p>For this to work, <code>--my-var</code> has to be a unit-less number though. More information about this technique can be found here: <a href="https://au.si/css-conditions-today" rel="nofollow noopener">https://au.si/css-conditions-today</a></p>
+<p>I think this demonstrates that the groundwork for such a feature is already there and the general concept of CSS conditions is possible to implement in browsers. It would be really great if we could get some browser vendors onboard to push this feature request forward.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

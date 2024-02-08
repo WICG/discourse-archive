@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>[Proposal] Title Bar Customization for Web Apps</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">[Proposal] Title Bar Customization for Web Apps</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-03-03</div>
+          <div class="post_content">
+<p>Full explainer available in the <a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/master/TitleBarCustomization/explainer.md" rel="nofollow noopener">MSEdgeExplainers repo</a></p>
+<h1>Background</h1>
+<p>PWAs hosted within a user agent (UA) frame are able to declare which browser display mode best meets the needs of the application via the manifest file’s <a href="https://developer.mozilla.org/en-US/docs/Web/Manifest/display" rel="nofollow noopener"><code>display</code> member</a>. Currently, there are 4 supported values and their behaviors on Chromium browsers are described below:</p>
+<ul>
+<li>
+<code>fullscreen</code>: All of the available display is used and no UA chrome is shown. This is implemented only for mobile devices running Android or iOS.</li>
+<li>
+<code>standalone</code>: The web app looks like a standalone application. The title bar includes the title of the application, a web app menu button, and caption control buttons (minimize, maximize/restore, close).</li>
+<li>
+<code>minimal-ui</code>: Similar to <code>standalone</code>, except it also contains a back and refresh button.</li>
+<li>
+<code>browser</code>: Currently, the same as <code>minimal-ui</code>
+</li>
+</ul>
+<h1>Problem</h1>
+<p>Developers want to create an immersive, native-like title bar for their desktop applications, but the display modes listed above do not support this. Instead, developers must shift content down below the reserved title bar area, which can create a cramped application space especially on portable devices with smaller screens.</p>
+<h1>Proposal</h1>
+<p>The solution proposed in this explainer is broken down into multiple parts:</p>
+<ol>
+<li>A new display modifier option for the web app manifest -  <code>"caption-controls-overlay"</code>
+</li>
+<li>New APIs for developers to query the bounding rects and other states of the UA provided caption controls overlay which will overlay into the web content area through a new object on the  <code>window.navigator</code>  property called  <code>controlsOverlay</code>
+</li>
+<li>New CSS environment variables to define the left and right insets from the edges of the window:  <code>unsafe-area-top-inset-left</code>  and  <code>unsafe-area-top-inset-right</code>
+</li>
+<li>A standards-based way for developers to define system drag regions on their content</li>
+</ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1580_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joeyparrish</div>
+          <div class="creation_date">2020-03-04</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="1" data-topic="4278" data-username="abaker">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/a/a4c791/40.png" width="20"/> abaker:</div>
+<blockquote>
+<p>the UA provided caption controls overlay</p>
+</blockquote>
+</aside>
+<p>What does this mean?  I’m not familiar with this.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-03-04</div>
+          <div class="post_content">
+<p>Apparently I forgot to explain the most important concept, so thanks for calling that out!</p>
+<p>The caption controls overlay is a notch-like overlay that would live in the upper-left or upper-right corner of the window and contains the caption control buttons (minimize, maximize/restore, close), a small draggable region, and any other controls required for privacy and security (e.g. the three-dot menu button in Chromium provides site security information and more).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1580_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joeyparrish</div>
+          <div class="creation_date">2020-03-04</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="3" data-topic="4278" data-username="abaker">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/a/a4c791/40.png" width="20"/> abaker:</div>
+<blockquote>
+<p>the caption control buttons (minimize, maximize/restore, close)</p>
+</blockquote>
+</aside>
+<p>Sorry, but I must be missing something still.  What does you mean by caption here?  To me, a caption is a bit of text that overlays a video with a transcription of the audio.  But that doesn’t make sense to me in this context, so I assume you mean something else.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-03-04</div>
+          <div class="post_content">
+<p>On Windows, the minimize, maximize/restore, and close buttons are referred to “caption controls” . On Mac, they’re referred to “window controls”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1580_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joeyparrish</div>
+          <div class="creation_date">2020-03-05</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="5" data-topic="4278" data-username="abaker">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v4/letter/a/a4c791/40.png" width="20"/> abaker:</div>
+<blockquote>
+<p>On Windows, the minimize, maximize/restore, and close buttons are referred to “caption controls”</p>
+</blockquote>
+</aside>
+<p>Is this a widely used term outside of Microsoft?  I’ve never heard that before, and the first page of a Google search for “caption controls” in quotes only returns results about captioning and subtitles.</p>
+<p>If this is a Windows-specific term or a Microsoft-specific term, perhaps there’s a more general term that would better fit a web API that is not OS-specific.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-03-05</div>
+          <div class="post_content">
+<p>It seems to be Microsoft/Windows specific. Maybe we can switch <code>caption-controls-overlay</code> to <code>title-bar-controls-overlay</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1580_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">joeyparrish</div>
+          <div class="creation_date">2020-03-06</div>
+          <div class="post_content">
+<p>That sounds good to me.  I think I would have understood that right away.  Thank you so much for taking the time to help me understand!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2455_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">DanielHerr</div>
+          <div class="creation_date">2020-03-06</div>
+          <div class="post_content">
+<p>Title bars are also not universal. For example, titles are not included in the window frame on Chrome OS.</p>
+<p>Also, including the name title bar makes it sound like titles are part of the overlay, when this would involve removing them if they exist.</p>
+<p>How about <code>window-controls-overlay</code>?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-03-06</div>
+          <div class="post_content">
+<p>In the case of ChromeOS, I would guess that the top of the window frame would still be called a “title bar” even if it doesn’t have a title in it, just because that is visually similar to a title bar. I’d be interested to hear what others would refer to it as.</p>
+<p>That said, I do like <code>windows-controls-overlay</code> because it describes the main feature of the overlay: the window controls. The only concern that I have is that it could lead people to believe that it <em>only</em> contains the window controls, when in reality, it also contains a few other buttons/items.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-04-03</div>
+          <div class="post_content">
+<p>We’ve updated the explainer title and content per feedback here and elsewhere:</p>
+<h1>Window Controls Overlay for Installed Desktop Web Apps</h1>
+<h2>Background</h2>
+<p>PWAs hosted within a user agent (UA) frame are able to declare which browser display mode best meets the needs of the application via the manifest file’s <a href="https://developer.mozilla.org/en-US/docs/Web/Manifest/display" rel="nofollow noopener"> <code>display</code>  member </a>. Currently, there are 4 supported values and their behaviors on Chromium browsers are described below:</p>
+<ul>
+<li>
+<code>fullscreen</code> : All of the available display is used and no UA chrome is shown. This is implemented only for mobile devices running Android or iOS.</li>
+<li>
+<code>standalone</code> : The web app looks like a standalone application. The title bar includes the title of the application, a web app menu button, and window control buttons (minimize, maximize/restore, close).</li>
+<li>
+<code>minimal-ui</code> : Similar to  <code>standalone</code> , except it also contains a back and refresh button.</li>
+<li>
+<code>browser</code> : Currently, the same as  <code>minimal-ui</code>
+</li>
+</ul>
+<h2>Problem</h2>
+<p>Developers want to create an immersive, native-like title bar for their desktop applications, but the display modes listed above do not support this. Instead, developers must shift content down below the reserved title bar area, which can create a cramped application space especially on portable devices with smaller screens.</p>
+<h2>Proposal</h2>
+<p>Add the option extend the app’s client area to cover the entire window–including the title bar area–and overlay the window control buttons (close, maximize/restore, minimize) on top of the client area. A developer then use this feature to create an installed desktop app with the appearance of a native title bar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-07-02</div>
+          <div class="post_content">
+<p>Hello WICG chairs. This API now has interest from Google (issue link below) and Microsoft. I would like to request to move the explainer to a WICG repo for incubation. Thanks!</p>
+<aside class="onebox githubissue">
+<header class="source">
+<a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/issues/306" rel="nofollow noopener" target="_blank">github.com/MicrosoftEdge/MSEdgeExplainers</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container" title="Issue">
+<svg aria-hidden="true" class="github-icon" height="60" viewbox="0 0 14 16" width="60"><path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+</div>
+<div class="github-info-container">
+<h4>
+<a href="https://github.com/MicrosoftEdge/MSEdgeExplainers/issues/306" rel="nofollow noopener" target="_blank">Chromium support and collaboration!</a>
+</h4>
+<div class="github-info">
+<div class="date">
+        opened <span class="discourse-local-date" data-date="2020-04-29" data-format="ll" data-time="17:13:21" data-timezone="UTC">05:13PM - 29 Apr 20 UTC</span>
+</div>
+<div class="user">
+<a href="https://github.com/michaelwasserman" rel="nofollow noopener" target="_blank">
+<img alt="michaelwasserman" class="onebox-avatar-inline" height="20" src="https://avatars1.githubusercontent.com/u/9258267?v=4" width="20"/>
+          michaelwasserman
+        </a>
+</div>
+</div>
+</div>
+</div>
+<div class="github-row">
+<p class="github-content">Several Chromium folks support this proposal and want to collaborate!
+Here's a doc with steps for web platform features that also have...</p>
+</div>
+<div class="labels">
+<span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">Window Controls Overlay</span>
+</div>
+</article>
+<div class="onebox-metadata">
+</div>
+<div style="clear: both"></div>
+</aside>
+<p>cc. <span class="mention">@marcosc</span>, <span class="mention">@cwilso</span>, <span class="mention">@yoavweiss</span>, <span class="mention">@travisleithead</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2421_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">marcosc</div>
+          <div class="creation_date">2020-07-06</div>
+          <div class="post_content">
+<p>Hi Amanda,
+I’ve set up <a href="http://github.com/WICG/display-override">http://github.com/WICG/display-override</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/2180_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">travisleithead</div>
+          <div class="creation_date">2020-07-08</div>
+          <div class="post_content">
+<p>Additionally, we have setup <a href="https://github.com/WICG/window-controls-overlay" rel="nofollow noopener">https://github.com/WICG/window-controls-overlay</a> to directly incubate the feature proposed in the subject of this thread. Note that <a href="http://github.com/WICG/display-override" rel="nofollow noopener">display-override</a> is a building block for the window-controls-overlay feature, however, the scenarios and uses cases are sufficiently different to merit each to incubate in separate repos. Thanks!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abaker</div>
+          <div class="creation_date">2020-07-08</div>
+          <div class="post_content">
+<p>Thanks <span class="mention">@marcosc</span> and <span class="mention">@travisleithead</span> for getting this set up!</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

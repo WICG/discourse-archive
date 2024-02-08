@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Media feature for viewing distance</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Media feature for viewing distance</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2014-07-14</div>
+          <div class="post_content">
+<p>Possible values:</p>
+<ul>
+<li>close, handheld, mobile, …</li>
+<li>desktop, laptop, …</li>
+<li>far, tv, …</li>
+</ul>
+<p>E.g.</p>
+<pre><code>@media (distance: far) {  
+    /* increase text size here */
+}
+</code></pre>
+<p>Would this make sense?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-07-15</div>
+          <div class="post_content">
+<p>That’s already baked into the definition of “viewport” and CSS px - a device’s viewport should be sized to a number of CSS px such that the px takes up a viewing angle of approximately .0213 degrees.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/3804_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">simevidas</div>
+          <div class="creation_date">2014-07-15</div>
+          <div class="post_content">
+<p>Ah gotcha. I wonder if smart TVs honor this rule. I fear they don’t.  PPK complains in <a href="http://www.quirksmode.org/blog/archives/2014/07/samsung_smart_t.html" rel="nofollow noopener">a blog post</a> that a Samsung smart TV has a viewport width of 1280px which is “way too high” and that ideally it should be around 768px. The <a href="http://viewportsizes.com/" rel="nofollow noopener">viewport sizes site</a> reports 1280px and even a 1920px value.</p>
+<p>How can we deal with this issue in our CSS (and HTML) code? Is there a way to target smart TVs and force a zoom-in that effectively emulates a 768px viewport?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2014-07-15</div>
+          <div class="post_content">
+<p>Not really, no.  MQs are purposely designed to discourage this kind of device-sniffing in favor of device-agnostic capability testing.  If a browser has too large of a viewport for its anticipated viewing distance, it’s simply badly designed, and there’s not much you can do about that.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2014-07-18</div>
+          <div class="post_content">
+<p>the behavior of TVs should, in my humble view, be similar to that of browsers on mobile/tablet devices.</p>
+<p>by default, the browser is free to choose some viewport size that the manufacturer believes shows the majority of sites in a reasonably ok fashion (e.g. on phones, it’s around 900-ish px. TV manufacturers seem to think that 1280px or even full 1920px is the best initial way to go).</p>
+<p>however, if viewport meta (or <span class="mention">@viewport</span>) is present and set to width=device-width, TV browsers should switch to an “ideal viewport” which would be much closer to the CSS reference pixel <a href="http://www.w3.org/TR/CSS21/syndata.html#length-units">http://www.w3.org/TR/CSS21/syndata.html#length-units</a></p>
+<p>This ideal viewport will depend on the physical size of the TV (e.g. whether it’s a 30" or 50" TV) and the average viewing distance (usually touted as 10’ / ~3m…the “ten foot experience”).</p>
+<p>i’ve made a rough ideal viewport calculator here based on the CSS reference pixel calculations <a href="http://patrickhlauke.github.io/web-tv/ideal-viewport/" rel="nofollow noopener">http://patrickhlauke.github.io/web-tv/ideal-viewport/</a></p>
+<p>of course, this assumes that TV manufacturers / OEMs will customise the browser’s ideal viewport for each model based on its diagonal screen size. this may or may not happen. also, this raises the issue of what set-top boxes, consoles, etc should do, which don’t have knowledge of the actual physical dimensions of the display they’re attached to. in these situations, however, i could envisage a step during the STB/console/etc setup process (see for instance Google TV, which - on first run - lets you exactly tweak the visible part of the viewport/safe areas to ensure your content isn’t cut off by a shoddy TV…a similar step could be included that asks users to choose out of 3-4 possible lines of text at different sizes to pick the most legible, and extrapolate from that).</p>
+<p>in answer to “How can we deal with this issue in our CSS (and HTML) code” … well, currently, TV manufacturers etc have apparently been living under the illusion that “developers will build a separate TV version of their site for OUR device”…i suspect this is a side effect of having walled gardens like HbbTV and (web-based) TV app stores (like Opera TV Store for instance), where devs are effectively <em>forced</em> to make a custom version. but for the “wild” web it’s simply ludicrous to think that all but the largest sites (and even there it’s often doubtful) will do some form of UA sniffing and then redirect to a “TV optimised” version. (echoes of old “dot mobi”/“m dot” sites…including same arguments “people don’t want the ‘full’ site on their TV, they just want video and pretty pictures”). (see for instance “Redirecting TV users to the right version” on <a href="https://developers.google.com/tv/web/docs/implement_for_tv#architecture" rel="nofollow noopener">https://developers.google.com/tv/web/docs/implement_for_tv#architecture</a>)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/1994_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">patrick_h_lauke</div>
+          <div class="creation_date">2014-07-18</div>
+          <div class="post_content">
+<p>related: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1015872" rel="nofollow noopener">https://bugzilla.mozilla.org/show_bug.cgi?id=1015872</a></p>
+<p>some additional thoughts: having a media feature that simply says “tv” or similar risks repeating the same mistake that media <em>types</em> made, trying to neatly categorise devices into broad buckets of “screen”, “handheld”, “tv” etc. device boundaries are far more fluid than that. true, one of the big problems with media types was also their mutually-exclusive nature (a device can’t react to more than one type at the same time) and the fact that - through cargo cult, or simply ignorance - a lot of web content still uses “screen”. TVs already had to adapt to this and ignore media type “tv” as otherwise most web content would simply be unstyled (same as mobile/tablet browsers ignoring “handheld”).</p>
+<p>see also <a href="http://dev.w3.org/csswg/mediaqueries/#media-types">http://dev.w3.org/csswg/mediaqueries/#media-types</a> “Unfortunately, media types have proven insufficient as a way of discriminating between devices with different styling needs”</p>
+<p>curious side-note: the only browser i’m aware of that reacts to media type “tv” is the original Opera-based Wii browser, but even here it uses heuristics: if there is any “tv” stylesheet/<span class="mention">@media</span> block present, it will react to that. otherwise, it will be a “screen” device (see <a href="https://twitter.com/g33konaut/status/452551318683803649/photo/1" rel="nofollow noopener">https://twitter.com/g33konaut/status/452551318683803649/photo/1</a> and <a href="https://twitter.com/g33konaut/status/452751113369157632/photo/1" rel="nofollow noopener">https://twitter.com/g33konaut/status/452751113369157632/photo/1</a> )</p>
+<p>with media <em>features</em> at least, it wouldn’t be mutually exclusive…but the problem of being overly broad remains. it’s better to stick with granular, discrete features (for instance, i could envisage some media feature to say that the browser uses d-pad-style controls, for instance).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<p>Hi</p>
+<p>Rather than create a new thread thought it made sense to continue this one on.</p>
+<p>I was just reading “Media Queries Level 4” and was disappointed to see their still doesn’t appear to be a way to properly recognise the kind of device that a user is using. Without a way to recognise that the user is using a TV in some way we are unable to provide them with the optimum experience when using our site, we know that when a user is using a TV that they are:</p>
+<ul>
+<li>far away from the display</li>
+<li>likely using a remote control of some kind</li>
+</ul>
+<p>With this knowledge we can then enhance our interfaces to work best under these constraints, then if the browser supports further features  we can then progressively enhance for them. For a TV I would want to make many of my elements bigger and easier to interact with, without a way to distinguish between a TV and Desktop browsers I can’t do this.</p>
+<p>You mentioned that we have had issues in the past with TV manufacturers however I would hope that now we are seeing a convergence of smarttv platforms such as android TV we will see more standardisation across the industry and our web specifications should be supporting this from a web point of view.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-03-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="7" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<ul>
+<li>far away from the display</li>
+</ul>
+</blockquote>
+</aside>
+<p>How do you respond to this?</p>
+<aside class="quote">
+<blockquote>
+<ul>
+<li>likely using a remote control of some kind</li>
+</ul>
+</blockquote>
+</aside>
+<p>This is theoretically handled by the ‘pointer’ media query - a remote is definitely a “coarse” pointer, so your buttons should be large.  If there’s more we can provide, we’d like to know about it.</p>
+<p>We definitely dont’ want to expose the device type itself, because that’s <em>meaningless</em>; if I’m using a TV as a 4k desktop monitor (totally reasonable), it should act like any other monitor.  I <em>definitely</em> don’t want any silly TV styles in that case.  This is why we’re providing more granular MQs to <em>replace</em> the old and busted “media type” concept, so you can style based on what you <em>actually care about</em>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-03-17</div>
+          <div class="post_content">
+<p>So when it comes to responding to “Far away from the display” you respond by providing bolder and clearer call to actions.</p>
+<p>If we take the example of the iPlayer application the web based tv guide looks like this</p>
+<p><img height="500" src="//discourse.wicg.io/uploads/default/553/fe004fe38a619adc.png" width="568"/> </p>
+<p>Its really functional, works really well but its built for using on a desktop where you are up close and can clearly see all the different interactions. Imagine viewing that on your TV however and it wont work as well as it is harder to see everything that is going on. The BBC have solved this problem by building dedicated Apps, take the PS3 app for example:</p>
+<p><img height="363" src="//discourse.wicg.io/uploads/default/552/74ca88af80b06e12.png" width="580"/> </p>
+<p>Everything is bigger and bolder, it is showing similar information but it is bigger so it can be seen better from a distance. Its this that I want to be able to achieve without a native app, I want to know someone is using a device which they are not up close and personal so I can adapt my sites to work better by increasing text size, adding bigger and bolder call to actions.</p>
+<p>This is really important for us being able to build responsive sites, responsive no longer should be about catering for mobile, tablet and desktop. Its about progressively enhancing our sites to work on any device and as I hope I have pointed out, the TV is currently being let down by us in terms of what we could do with it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-03-17</div>
+          <div class="post_content">
+<p>We can’t assume that our TV’s will always be paired with remote controls so from a spec point of view we couldnt assume they are using a TV based upon their input method.</p>
+<p>Take the example of the Sony X9005B, it comes with a traditional up down, left right controller but it also comes with a remote control that uses a trackpad which could therefore be seen as a ‘fine’ pointer. If we only increase button sizes for “coarse” pointers then users of a TV that uses a “fine” pointer will not be getting the refined experience that we are trying to offer them.</p>
+<p>I understand we don’t want to expose the device type itself because you are not only relying on vendors to properly implement them (which historically they haven’t) but also we have no idea what new devices will come out tommorow that we will have not added support for in our spec. Your point about a TV being used as a desktop monitor however doesn’t make sense as as soon as its plugged into a desktop it is using the desktop browser running on the computer, rather than using a TV browser, or games console browser. By this I mean the way in which the software chooses what the device is changes because the context is different, it is very unlikely in that scenario you will be using your TV’s built in browser.</p>
+<p>So having ruled out pointers, and ruled out exposing a device type a couple of ideas spring to mind:</p>
+<p>context media query - a media query that allows us to understand the context of the device and what it is used for, is it a personal device used up close or is it a display that we sit away from and perhaps share with others</p>
+<p>distance - a value for expected physical distance from the display the user is expected to be, this could have a sensible default for different device types but potentially be configurable in a browser setting</p>
+<p>I prefer the idea of context as they can be device independant yet provide us with context about how the user might use a device which could help us provide better context based experiences.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-03-17</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>So when it comes to responding to “Far away from the display” you respond by providing bolder and clearer call to actions.</p>
+</blockquote>
+</aside>
+<p>Thanks for the examples!  This is literally just “large vs small viewport”, though.  A TV might be huge, but with a similarly large viewing distance, may actually present a much smaller viewport (in CSS px, which are technically an angular measure) than a monitor.  No additional MQ is needed here; you’d present similar UI to a tablet user.</p>
+<p>(Now, TVs might not present an appropriately-sized viewport, but that’s just a bug in their browser implementations.  We don’t add features just to work around bugs; it’s simpler for everyone if the bug is just fixed.)</p>
+<aside class="quote" data-post="10" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>Take the example of the Sony X9005B, it comes with a traditional up down, left right controller but it also comes with a remote control that uses a trackpad which could therefore be seen as a ‘fine’ pointer. If we only increase button sizes for “coarse” pointers then users of a TV that uses a “fine” pointer will not be getting the refined experience that we are trying to offer them.</p>
+</blockquote>
+</aside>
+<p>A trackpad is indeed a “fine” pointer; what difference in “refined experience” does this present?  The coarse-pointer TV would just get larger buttons.  If you’re basing a bunch of unrelated UI decisions off of pointer:fine/coarse, you’re doing it wrong and will be giving people bad experiences.</p>
+<aside class="quote" data-post="10" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>Your point about a TV being used as a desktop monitor however doesn’t make sense as as soon as its plugged into a desktop it is using the desktop browser running on the computer, rather than using a TV browser, or games console browser. By this I mean the way in which the software chooses what the device is changes because the context is different, it is very unlikely in that scenario you will be using your TV’s built in browser.</p>
+</blockquote>
+</aside>
+<p>The software is irrelevant.  My point is that the correct display for a TV is entirely dependent on use.  You seem to understand this, but are dismissing it somehow as a software difference, rather than as a usage difference.  If I run my desktop browser on my TV (and set things up so that it has a proper viewport size, etc), I should be getting the same experiences as a “TV browser” or “game console browser”.  There’s no difference in environment.</p>
+<aside class="quote" data-post="10" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>context media query - a media query that allows us to understand the context of the device and what it is used for, is it a personal device used up close or is it a display that we sit away from and perhaps share with others</p>
+<p>distance - a value for expected physical distance from the display the user is expected to be, this could have a sensible default for different device types but potentially be configurable in a browser setting</p>
+</blockquote>
+</aside>
+<p>Again, this is just a matter of viewport size.  You don’t actually care about how far away the person is, you care about how large the screen is in their field of view, which, when set up appropriately, is automatically handled by scaling the px unit appropriately and sizing the viewport accordingly.  Based on a rough eyeballing from my couch, my TV’s viewport should be about 1000px wide; that’ll give a px size similar to my laptop.</p>
+<p>As I’ve said before, there might be more context that could be usefully provided. For example, you mention “share with others” - if this is a useful bit of information that authors would cause authors to change their page style, we can think about adding it as media query.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-03-18</div>
+          <div class="post_content">
+<aside class="quote no-group" data-post="11" data-topic="534" data-username="tabatkins">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_2.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Thanks for the examples!  This is literally just “large vs small viewport”, though.  A TV might be huge, but with a similarly large viewing distance, may actually present a much smaller viewport (in CSS px, which are technically an angular measure) than a monitor.  No additional MQ is needed here; you’d present similar UI to a tablet user.</p>
+<p>(Now, TVs might not present an appropriately-sized viewport, but that’s just a bug in their browser implementations.  We don’t add features just to work around bugs; it’s simpler for everyone if the bug is just fixed.)</p>
+</blockquote>
+</aside>
+<p>I disagree that this is about viewport because you might not want to render the same interface on a tablet as the TV even if they have the same viewport size. This could be for many reasons:</p>
+<ul>
+<li>You might be optimising the tablet experience for how you would interact with it with touch, this can effect the look of the UI</li>
+<li>The context of use is different, the way you would use a website on a TV is very different to how you would want to use it on a tablet - see how BBC do iPlayer on iPad for example.</li>
+</ul>
+<p><img height="373" src="//discourse.wicg.io/uploads/default/556/ddfc318e4ea7c940.jpg" width="301"/></p>
+<aside class="quote no-group" data-post="11" data-topic="534" data-username="tabatkins">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_2.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>A trackpad is indeed a “fine” pointer; what difference in “refined experience” does this present?  The coarse-pointer TV would just get larger buttons.  If you’re basing a bunch of unrelated UI decisions off of pointer:fine/coarse, you’re doing it wrong and will be giving people bad experiences.</p>
+</blockquote>
+</aside>
+<p>I was replying to your suggestion that you would make buttons bigger for a coarse pointer, but on a TV with a “fine” pointer because of the viewing distance you would also need the larger buttons to make them clearer from being further away. This is why I wouldnt want to target large buttons using the pointer media query if my intent for them is for TV users (of course you should do this for other course input types, but in the example of TV I always want them to be big)</p>
+<aside class="quote no-group" data-post="11" data-topic="534" data-username="tabatkins">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_2.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>The software is irrelevant.  My point is that the correct display for a TV is entirely dependent on use.  You seem to understand this, but are dismissing it somehow as a software difference, rather than as a usage difference.  If I run my desktop browser on my TV (and set things up so that it has a proper viewport size, etc), I should be getting the same experiences as a “TV browser” or “game console browser”.  There’s no difference in environment.</p>
+</blockquote>
+</aside>
+<p>If you are using a 40 inch 4k tv up close as a monitor vs using it as a TV you wouldn’t want to get the same interface as when using the TV as an actual TV. By plugging it into your computer it is working just like any other monitor, your up close so the viewport can be bigger because you wouldnt be expecting to get a mobile or tablet experience, you would expect the full desktop experience, you wouldn’t want it to work like your TV browser or game console browser because the context in using it is different.</p>
+<p>When reclining on your sofa however your in a different frame of mind, and the way you interact with content is different, typically these would be quick interactions so the interface needs to be able to reflect this. As mentioned earlier, this cannot be achieved with just viewport alone</p>
+<aside class="quote no-group" data-post="11" data-topic="534" data-username="tabatkins">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_2.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>As I’ve said before, there might be more context that could be usefully provided. For example, you mention “share with others” - if this is a useful bit of information that authors would cause authors to change their page style, we can think about adding it as media query.</p>
+</blockquote>
+</aside>
+<p>It is this context that matters, even if you are using the TV on your own, the fact that its a device your viewing from far away gives it a very different experience than a tablet which is up close and feels a lot more personal. Both could have different interfaces, and they should.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-03-18</div>
+          <div class="post_content">
+<aside class="quote" data-post="12" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>You might be optimising the tablet experience for how you would interact with it with touch, this can effect the look of the UI</p>
+</blockquote>
+</aside>
+<p>What’s the difference there?  We suspect there’s a use for a MQ for how easy it is to scroll or otherwise interact with the screen, for instance; remotes are hard to use, touch is easy.  Is that what’s being captured there?</p>
+<aside class="quote" data-post="12" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>The context of use is different, the way you would use a website on a TV is very different to how you would want to use it on a tablet - see how BBC do iPlayer on iPad for example.</p>
+</blockquote>
+</aside>
+<p>I don’t have an ipad, so I can’t see this in action.  What’s the important differences there?</p>
+<aside class="quote" data-post="12" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>I was replying to your suggestion that you would make buttons bigger for a coarse pointer, but on a TV with a “fine” pointer because of the viewing distance you would also need the larger buttons to make them clearer from being further away. This is why I wouldnt want to target large buttons using the pointer media query if my intent for them is for TV users (of course you should do this for other course input types, but in the example of TV I always want them to be big)</p>
+</blockquote>
+</aside>
+<p>You need large buttons even for a “(pointer:fine)” TV <em>because the TV screen is small at standard viewing distances</em>.  That should be reflected in the viewport size, and the size of the CSS px, so creating a reasonably-sized button for a normal monitor should also make it reasonably-sized for a good pointer on the TV.  Like I said in my earlier message, my 40" tv is actually only about 1000px wide. (And my living room is small and thus the TV is closer than normal; it’s very possible that it should report itself as 800px to be good for “standard” viewing distance.)</p>
+<p>In other words, if you need to oversize your buttons to make them good for a TV with a touchpad, it’s because the TV browser is not setting up the px size properly.  If it was, a standard button would be big enough.</p>
+<aside class="quote" data-post="12" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/jonthanfielding/40/480_1.png" width="20"/> jonthanfielding:</div>
+<blockquote>
+<p>When reclining on your sofa however your in a different frame of mind, and the way you interact with content is different, typically these would be quick interactions so the interface needs to be able to reflect this. As mentioned earlier, this cannot be achieved with just viewport alone</p>
+</blockquote>
+</aside>
+<p>Yeah, that’s possible.  It would be interesting to figure out how to phrase a media query for capturing this distinction.  I wonder what else might want to do it?  Like, video games should present the same UI for TV and monitor; the distance of the screen doesn’t really make a difference.  Is it really just television (and its equivalents) that need it?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-03-23</div>
+          <div class="post_content">
+<aside class="quote" data-post="13" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>I don’t have an ipad, so I can’t see this in action.  What’s the important differences there?</p>
+</blockquote>
+</aside>
+<p>So what they do is optimise the experience based upon how you would use the app, the Tablet you might scroll through swipe through lots of content to find something that appeals, where as with the TV app they seem to expect you to know more about what you want to watch.</p>
+<p>##<span class="hashtag">#Tablet</span></p>
+<ul>
+<li>Swipe through content</li>
+<li>Text is smaller as you are close to device</li>
+<li>Takes advantage of gestures to swipe content, while this is a functionality difference it effects how it looks</li>
+<li>Buttons are medium sized, just right for clicking on</li>
+</ul>
+<p>##<span class="hashtag">#Tv</span></p>
+<ul>
+<li>Step through content,</li>
+<li>Text is big and bold</li>
+<li>Buttons really big and bold</li>
+<li>Bigger iconography</li>
+</ul>
+<aside class="quote" data-post="13" data-topic="534">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/tabatkins/40/302_1.png" width="20"/> tabatkins:</div>
+<blockquote>
+<p>Yeah, that’s possible.  It would be interesting to figure out how to phrase a media query for capturing this distinction.  I wonder what else might want to do it?  Like, video games should present the same UI for TV and monitor; the distance of the screen doesn’t really make a difference.  Is it really just television (and its equivalents) that need it?</p>
+</blockquote>
+</aside>
+<p>Part of the problem with this is we have to imagine devices that havent been invented yet and plan for them. Technically all devices have a context of use BUT we currently make assumptions of context of use based mainly on viewport size. Perhaps something that stops us assuming context would be useful</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-27</div>
+          <div class="post_content">
+<p>Much like the light-level media queries does leaving the manufacturer open to implementing the meaning of ‘far’ and ‘close’ make sense.</p>
+<p>Does leaving open the meaning of such values much like (‘dim’, ‘normal’ and ‘washed’) allow for better alignment or end up in vendor hell?</p>
+<p>I have come accustomed to expect absolute units like (x meters, y cm) and (y lumen, 80% washed) but perhaps adding units like this add very little meaning.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/480_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonthanfielding</div>
+          <div class="creation_date">2015-03-30</div>
+          <div class="post_content">
+<p>Another thing to mention is that part of the problem with all of these is that the definition of far and close would need to be clearly defined in the specification to stop them being open for interpretation by the manufacturers. 2 ft could be far for some manufacturers but close for others.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-03-30</div>
+          <div class="post_content">
+<p><span class="mention">@jonthanfielding</span> +1</p>
+<p><span class="mention">@tabatkins</span> was there any motivation for light-level to not be specific units at all?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-04-08</div>
+          <div class="post_content">
+<p>Yeah, devices in the wild report <em>wildly</em> varying lumen levels for the same light level; actual lumen sensors seem to be all over the place in terms of calibration.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/582_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">jonathank</div>
+          <div class="creation_date">2015-04-09</div>
+          <div class="post_content">
+<p>I was thinking that might be your answer.</p>
+<p>Could those issues both for lumen and distance be resolved by using averaging and thresholds windows?</p>
+<p>So similar to how server alerts generally work to average out peaks in CPU usage but alert when after a window of x seconds and the average is over y.</p>
+<p>So perhaps:</p>
+<pre><code class="lang-auto">@media (light-level: 1000lm avg 5s) {
+  p { color:#000; }
+}
+
+@media (distance: 1m avg 5s) {
+  p {font-size: 4em;}
+}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/302_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">tabatkins</div>
+          <div class="creation_date">2015-04-10</div>
+          <div class="post_content">
+<p>Can you justify why you need that at all?  The other reason we omitted lumens is that there’s doesn’t seem to be any need for it; even if every device reported lumens correctly, there’s really no reason to have light-level information at the lumen granularity.  The three categories we defined seem to capture all that you need to actually respond to - normal light, low light, and bright light.  There just isn’t anything you can usefully adjust at a higher granularity than that.</p>
+<p>(It also means you don’t have to go research what lumen levels actually mean, since I doubt very many people know off the top of their head how bright 1000 lumens are. ^_^)</p>
+<p>The problems with viewing distance are separate, and have already been discussed - viewing distance just isn’t a useful thing to ask about.  It’s being used as a proxy for a few other types of things, and if we want to address those, we should do so directly.  Using indirect variables just means you’ll react incorrectly when the things you’re measuring don’t perfectly correspond to the things you’re trying to respond to.</p>
+<p>In particular, “far” viewing distance is really just a proxy for “probably interacting more passively” - it’s a user interaction mode you’re trying to detect/respond to, not the distance from the screen.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>

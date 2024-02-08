@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <title>Request For Comments: SIMD.js in asm.js</title>
+    <link rel="stylesheet" href="../../../archived.css" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  </head>
+  
+  <body>
+    <header class="header">
+      <div class="title-span">
+        <a href="../../../">
+          <img src="../../../images/site-logo.png" height="66" alt="WICG" id="site-logo" />
+        </a>
+      </div>
+    </header>
+
+    <div class="main">
+    <div class="archive-span">A partial archive of discourse.wicg.io as of Thursday February 08, 2024.</div>
+    <h1 class="topic-title">Request For Comments: SIMD.js in asm.js</h1>
+            <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-10-21</div>
+          <div class="post_content">
+<p>Here is a description of the proposed changes to asm.js validation to incorporate ES7 <a href="https://github.com/johnmccutchan/ecmascript_simd" rel="nofollow noopener">SIMD.js</a>.  These changes have <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=992267" rel="nofollow noopener">landed</a> in Firefox Nightly but (along with SIMD.js) will not be released until
+SIMD.js has stabilized in TC39.  Thus, we are definitely open to feedback, comments and suggestions concerning the validation rules.  (For any discussion of SIMD.js itself; please go to the <a href="https://github.com/johnmccutchan/ecmascript_simd" rel="nofollow noopener">GitHub repo</a> or es-discuss.)</p>
+<p>The extension to asm.js validation is comprised of:</p>
+<ul>
+<li>New <a href="http://asmjs.org/spec/latest/#value-types" rel="nofollow noopener">value types</a> for SIMD expressions:</li>
+<li>int32x4, float32x4</li>
+<li>These vector types are not super/sub-types of anything:
+<ul>
+<li>Since not a subtype of extern, vector types cannot be passed/returned from FFI (see <a href="//discourse.wicg.io/t/simd-should-they-be-returned-from-passed-to-ffi/543">topic</a>)</li>
+</ul>
+</li>
+<li>Other 16-byte SIMD vector types are being <a href="https://github.com/johnmccutchan/ecmascript_simd" rel="nofollow noopener">proposed</a> (e.g. float64x2, int8x16).  The rest of the proposal will stick to just int32x4, float32x4, though.</li>
+<li>New <a href="http://asmjs.org/spec/latest/#global-variable-type-annotations" rel="nofollow noopener">stdlib imports</a> and <a href="http://asmjs.org/spec/latest/#global-types" rel="nofollow noopener">global types</a> for SIMD constructors and operations:</li>
+<li>SIMD constructor imports <code>stdlib.SIMD.(int32x4|float32x4)</code> are given types {int32x4ctor, float32x4ctor}, resp.</li>
+<li>Ability to import SIMD operations off of SIMD constructors.
+<ul>
+<li>Same <a href="http://asmjs.org/spec/latest/#linking-0" rel="nofollow noopener">link-time validation rules</a> apply as with stdlib Math imports.</li>
+<li>For example, <code>var i4 = stdlib.SIMD.int32x4; var i4add = i4.add;</code> has signature (int32x4,int32x4)-&gt;int32x4.</li>
+<li>Still working on the full list (will post later), but basically: everything in SIMD.js.</li>
+</ul>
+</li>
+<li>New numeric literal form: <code>simdCtor(x,y,z,w)</code>
+</li>
+<li>where <code>simdCtor</code> is a global of type {int32x4ctor, float32x4ctor}.</li>
+<li>For int32x4ctor, x,y,z,w must each be int numeric literals</li>
+<li>For float32x4ctor, x,y,z,w must each be numeric literals (no fround coercion necessary/allowed)</li>
+<li>Can be used in <a href="http://asmjs.org/spec/latest/#return-type-annotations" rel="nofollow noopener">return</a>, <a href="http://asmjs.org/spec/latest/#variable-type-annotations" rel="nofollow noopener">variable</a>, and <a href="http://asmjs.org/spec/latest/#global-variable-type-annotations" rel="nofollow noopener">global variable</a> type annotations.</li>
+<li>New <a href="http://asmjs.org/spec/latest/#annotations" rel="nofollow noopener">type annotation</a> form: <code>check(…)</code>.</li>
+<li>where <code>check</code> is a stdlib import of <code>(int32x4ctor|float32x4).check</code>, an operation that throws if the operand is not already a value of the associated SIMD vector type, otherwise returning the operand unmodified.</li>
+<li>Can be used for <a href="http://asmjs.org/spec/latest/#parameter-type-annotations" rel="nofollow noopener">parameter</a>, <a href="http://asmjs.org/spec/latest/#return-type-annotations" rel="nofollow noopener">return</a>, and <a href="http://asmjs.org/spec/latest/#global-variable-type-annotations" rel="nofollow noopener">global variable import</a> type annotations.</li>
+<li>Can be used to provide the <em>actual return type</em> of a SIMD-returning function in <a href="http://asmjs.org/spec/latest/#validatecall-e" rel="nofollow noopener">ValidateCall</a>.</li>
+<li>A new value type, “doublelit”, which is a subtype of double and the type given to <a href="http://asmjs.org/spec/latest/#numericliteral" rel="nofollow noopener">numeric literals containing a decimal character</a>.</li>
+<li>The reason for splitting double is to allow certain float32x4 SIMD ops to be passed double literals without requiring fround.</li>
+<li>For example, float32x4.splat has signature: float -&gt; float32x4 ∧ doublit -&gt; float32x4.</li>
+<li>The SIMD constructors can be called as stdlib functions:</li>
+<li>int32x4ctor has signature: (intish<sup>4</sup>)-&gt;int32x4</li>
+<li>float32x4ctor has signature: ((floatish + doublelit)<sup>4</sup>)-&gt;float32x4</li>
+<li>New dot-access expression forms:</li>
+<li>
+<code>expr.(x|y|z|w)</code>, where <code>expr</code> has type {int32x4, float32x4} and the result type is {signed, float}, resp.</li>
+<li>
+<code>expr.signMask</code>, where <code>expr</code> has type {int32x4, float32x4} and the result type is signed</li>
+</ul>
+<p>Here is an example asm.js module that uses these features:</p>
+<pre><code>function asmModule(stdlib, imports) {
+    "use asm";
+    var i4 = stdlib.SIMD.int32x4;  // simd constructor
+    var i4c = i4.check;            // used for type annotations
+    var i4add = i4.add;            // import simd op
+    var g1 = i4c(imports.g1);       // global var import
+    var g2 = i4(0,1,2,3);          // global var initialized
+    function f(i,j) {
+        i = i|0;
+        j = i4c(j);                 // simd parameter
+        var k = i4(0,0,0,0);       // simd local var
+        k = i4(i, i+1, i+2, i+3);  // simd constructor call
+        k = i4add(j, k);           // operation call
+        return i4c(k);              // simd return
+    }
+    function g(i) {
+        i = i|0;
+        g2 = i4c(f(i, g1));         // simd-returning callsite
+        i = g2.w;                  // simd property access
+        return i|0;
+    }
+    return g
+}
+print(asmModule(this, {g1:SIMD.int32x4(9,9,9,9)})(5)); // 17
+</code></pre>
+<p>Again, comments welcome.  Sorry for the liberties taken with mixed regex/set syntax.  I will update the proposal in-place in response to discussion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abchatra</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>Looks good to me in general. Questions:</p>
+<p>[quote=“luke, post:1, topic:676”]
+For int32x4ctor, x,y,z,w must each be fixnum or unsigned numeric literals
+[/quote] Why can’t this be signed?</p>
+<p>[quote=“luke, post:1, topic:676”]
+Can be used in return, variable, and global variable type annotations.
+[/quote] How does the return to javascript world will handle SIMD type? I understand you disallow for foreign functions.
+This is for the return from external call.</p>
+<p>[quote=“luke, post:1, topic:676”]
+Can be used for parameter, return, and global variable import type annotations.
+[/quote]  How is parameter coercion done? Is it something like float32x4(a.x, a.y, a.z, a.w);? If yes what happens if a is undefined or null? Also if you have an example for global import type annotation that would be great.</p>
+<p>There is no mention of  Float32x4Array &amp; Int32x4Array typed array access here. Is that reserved for future?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sunfish</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<aside class="quote" data-post="2" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Why can’t this be signed?</p>
+</blockquote>
+</aside>
+<p>It’s consistent with the existing <a href="http://asmjs.org/spec/latest/#numericliteral" rel="nofollow noopener">asm.js 6.8.2 “NumericLiteral”</a>. I don’t know the specific reason, but I’d guess it’s because it simplifies validation, since a leading ‘-’ is a unary operator in the grammar rather than being part of the literal.</p>
+<aside class="quote" data-post="2" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>How does the return to javascript world will handle SIMD type? I understand you disallow for foreign functions.</p>
+</blockquote>
+</aside>
+<p>At a return out of asm.js, the return value may be boxed, similar to how other scalar values may be boxed.</p>
+<aside class="quote" data-post="2" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>How is parameter coercion done? Is it something like float32x4(a.x, a.y, a.z, a.w);? If yes what happens if a is undefined or null? Also if you have an example for global import type annotation that would be great.</p>
+</blockquote>
+</aside>
+<p>In addition to the 4-argument form, the float32 constructor also has a single-argument form which is the “type annotation” form mentioned above. float32x4(a) returns a unmodified, provided that the type check passes.</p>
+<aside class="quote" data-post="2" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>There is no mention of  Float32x4Array &amp; Int32x4Array typed array access here. Is that reserved for future?</p>
+</blockquote>
+</aside>
+<p>I think for now, having just load and store is attractive for its simplicity, since unaligned accesses are an important use case for SIMD, and load and store can support both aligned and unaligned accesses in a consistent way. And, they don’t need the shift trick used elsewhere in asm.js (x[i&gt;&gt;4]), which Float32x4Array etc. would need.</p>
+<p>I’ve also started contemplating proposing ‘alignedLoad’ and ‘alignedStore’ functions to accompany them, which could be semantically identical to ‘load’ and store’, but would allow us to define different performance characteristics. We could make ‘alignedLoad’ and ‘alignedStore’ faster on aligned accesses on some platforms at the expense of making them drastically slower on unaligned addresses (as in, a hardware misalignment trap may be generated which the JIT handles so that it can transparently fix everything up). That way, we could get what speed benefits there are to be had from known alignments, with consistency between the aligned and unaligned syntax and semantics, and all without the shift trick in asm.js. What would you think of this idea?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abchatra</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>Thanks Dan for the answers.</p>
+<p>[quote=“sunfish, post:3, topic:676”]
+It’s consistent with the existing asm.js 6.8.2 “NumericLiteral”. I don’t
+[/quote] Negative -NumericLiteral are allowed in variable declarations. See <a href="http://asmjs.org/spec/latest/#variable-type-annotations" rel="nofollow noopener">asm.js 5.4 variable type annotations</a>.</p>
+<aside class="quote" data-post="3" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/s/96bed5/40.png" width="20"/> sunfish:</div>
+<blockquote>
+<p>At a return out of asm.js, the return value may be boxed, similar to how other scalar values may be boxed</p>
+</blockquote>
+</aside>
+<p>If its legal to return the SIMD boxed value to javascript, why disallow it in foreign functions?</p>
+<aside class="quote" data-post="3" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/s/96bed5/40.png" width="20"/> sunfish:</div>
+<blockquote>
+<p>float32x4(a) returns a unmodified</p>
+</blockquote>
+</aside>
+<p>Ah. Thanks. Though where is this API defined? I don’t see this as part of constructor API in <a href="https://github.com/johnmccutchan/ecmascript_simd" rel="nofollow noopener">SIMD.js spec</a></p>
+<aside class="quote" data-post="3" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/s/96bed5/40.png" width="20"/> sunfish:</div>
+<blockquote>
+<p>as in, a hardware misalignment trap may be generated which the JIT handles so that it can transparently fix everything up</p>
+</blockquote>
+</aside>
+<p>Interesting idea. Though there are kernel which will trap the hardware exception for you and make the operation seamless but slow (I remember Windows ARM version did that long ago). It might be hard to gauge if you are getting a predictable performance or not. Saying this I am no expert here. What platform are you looking at to optimize?</p>
+<aside class="quote" data-post="3" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/s/96bed5/40.png" width="20"/> sunfish:</div>
+<blockquote>
+<p>I think for now, having just load and store is attractive for its simplicity</p>
+</blockquote>
+</aside>
+<p>Do you mean direct load from the typed array heap buffer instead of Float32x4Array?  That might work. Tc39 committee may not like it though <img alt=":smile:" class="emoji" src="//discourse.wicg.io/images/emoji/twitter/smile.png?v=5" title=":smile:"/> .</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/335_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ben</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>Interesting discussions!</p>
+<aside class="quote" data-post="2" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Why can’t this be signed?</p>
+</blockquote>
+</aside>
+<p>I think this should indeed accept <strong>signed</strong>. Moreover, it seems misleading the Numeric literal form accepts unsigned. Indeed, ToInt32 is applied to the input anyhow, so the unsigned would be cast to an int32. So I propose the NumericLiteral int32x4 accept fixnum and signed.</p>
+<aside class="quote" data-post="4" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Ah. Thanks. Though where is this API defined? I don’t see this as part of constructor API in SIMD.js spec</p>
+</blockquote>
+</aside>
+<p>This is <a href="https://github.com/johnmccutchan/ecmascript_simd/blob/master/src/ecmascript_simd.js#L85" rel="nofollow noopener">there</a>, for instance. If the constructor only receives 1 argument which is the right SIMD type, the original value is returned.</p>
+<aside class="quote" data-post="4" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Do you mean direct load from the typed array heap buffer instead of Float32x4Array?  That might work. Tc39 committee may not like it though  .</p>
+</blockquote>
+</aside>
+<p>asm.js being a <em>strict subset</em> of JS, it sounds acceptable to me to have features in SIMD.js which aren’t in asm.js (and not the other way around, as a strict subset). In this particular case, load and store provide the same solution to the problem of loading and storing values, and avoid introducing new array views and thus new -ish types (out of bounds accesses would need float32x4ish and int32x4ish).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>Sorry for mixup with int32x4 literals; that was just my bug in transcribing the type rules in Odin and Ben is right.  Fixed in the OP.</p>
+<aside class="quote" data-post="4" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>If its legal to return the SIMD boxed value to javascript, why disallow it in foreign functions?</p>
+</blockquote>
+</aside>
+<p>You’re right it is rather irregular.  The essential difference that motivated the current design is that FFI functions are meant to be somewhat fast (they have a special IC-like calling path in Odin), and boxing a SIMD value into a GC object is going to be really slow operation.  Since symmetry is appealing, perhaps instead we should add the general asm.js rule that the parameter and return type of exported functions should be &lt;: extern?  Any thoughts on this?</p>
+<aside class="quote" data-post="4" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Though there are kernel which will trap the hardware exception for you and make the operation seamless but slow (I remember Windows ARM version did that long ago). It might be hard to gauge if you are getting a predictable performance or not.</p>
+</blockquote>
+</aside>
+<p>In theory, you’d get the same alignment-trap-faulting behavior when executing as native, so, in that respect, asm.js is still predictably close to native :).</p>
+<aside class="quote" data-post="4" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Do you mean direct load from the typed array heap buffer instead of Float32x4Array?  That might work. Tc39 committee may not like it though  .</p>
+</blockquote>
+</aside>
+<p>Here’s the <a href="https://github.com/johnmccutchan/ecmascript_simd/issues/78" rel="nofollow noopener">link</a> to the load/store proposal.  We’ve also tentatively run it by a few TC39 members and no major objects after the rationale is given.  By phrasing the load/store operations in terms of indexing the given view, there’s just optimized version of what you could write in JS.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-05</div>
+          <div class="post_content">
+<p>Well, I was wrong twice on this int32x4 numeric literal business.  Current Odin accepts any int numeric literal (so anything in the range [INT32_MIN, UINT32_MAX]).  Of course that’s not a reason in and of itself.  While it may seem more explicit to only accept int32s (given that int32x4 performs ToInt32 on its arguments), the two reasons for accepting any int are:</p>
+<ol>
+<li>it is more symmetric with scalar integer variable initializers (which have the same numeric literal range)</li>
+<li>even though you can express any big unsigned [INT32_MAX+1, UINT32_MAX] literal as a negative literal, it can be more convenient to use a big unsigned literal when, e.g., specifying a bit pattern in hex (and we actually expect people to read/write SIMD.js in asm.js by hand).</li>
+</ol>
+<p>Sorry for the churn.  Updated in OP, but certainly open to other opinions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">abchatra</div>
+          <div class="creation_date">2014-11-06</div>
+          <div class="post_content">
+<p>Thanks Folks for the detailed answers.</p>
+<aside class="quote" data-post="6" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/7ab992/40.png" width="20"/> luke:</div>
+<blockquote>
+<p>Since symmetry is appealing, perhaps instead we should add the general asm.js rule that the parameter and return type</p>
+</blockquote>
+</aside>
+<p>I prefer symmetry. Its so much easier to understand the rules when you have symmetry. Though I will leave this to your preference.</p>
+<aside class="quote" data-post="1" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/7ab992/40.png" width="20"/> luke:</div>
+<blockquote>
+<p>and global variable import type annotations</p>
+</blockquote>
+</aside>
+<p>Do you have an example for global variable import annotation for simdCtor?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-06</div>
+          <div class="post_content">
+<aside class="quote" data-post="8" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>I prefer symmetry. Its so much easier to understand the rules when you have symmetry.</p>
+</blockquote>
+</aside>
+<p>Sounds good to me.  Sound good to you Benjamin?</p>
+<aside class="quote" data-post="8" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/a/da6949/40.png" width="20"/> abchatra:</div>
+<blockquote>
+<p>Do you have an example for global variable import annotation for simdCtor?</p>
+</blockquote>
+</aside>
+<p>I really should have put up an example module that used all these features.  Adding that to the OP now.  Let me know if this leaves anything still ambiguous.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/335_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ben</div>
+          <div class="creation_date">2014-11-12</div>
+          <div class="post_content">
+<aside class="quote" data-post="9" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/7ab992/40.png" width="20"/> luke:</div>
+<blockquote>
+<p>Sounds good to me.  Sound good to you Benjamin?</p>
+</blockquote>
+</aside>
+<p>Although I really like the argument of symmetry between FFI and exported functions, I think the workaround to not being able to pass SIMD arguments to an exported function would be to pass 4 arguments instead and create the SIMD vector in the function body. This seems pretty artificial, would increase register or stack pressure.</p>
+<pre><code class="lang-auto">/* i.e. instead of */
+function f(vec) {
+  vec = SIMD_int32x4(vec);
+  // do something with vec
+}
+/* we'd have */
+function f(x, y, z, w) {
+  var vec = SIMD_int32x4(x, y, z, w);
+  // do something with vec
+}
+</code></pre>
+<p>For returning SIMD values, it’s even worse, as when one wants to return a SIMD variable, one would have to store the four lanes, store them in global variables (4 SIMD lanes extractions and 4 global vars stores) and implement accessors to these global vars.</p>
+<p>This argument needs to be mitigated with the usage of external SIMD values. If SIMD values could be passed to other platform APIs directly (say, to WebGL for instance), this could be interesting to keep. Moreover, the asm.js SIMD API might be a subset of the full SIMD.js API, so this would be nice to keep for interacting between asm.js code and SIMD-not-in-asmjs code. In a nutshell, this seems to depend upon the use cases. I don’t have a strong opinion here, except for the cases of readibility and simplicity.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-11-12</div>
+          <div class="post_content">
+<p>Yes, but passing SIMD vectors by value through exported functions is also going to be slow (likely slower, b/c GC interaction). Internal asm.js-&gt;asm.js calls needn’t be penalized since they shouldn’t be calling exported functions.  For that matter, from what I hear, real SIMD kernels don’t even need the ability to pass SIMD vectors as arguments at all, so asm.js supporting SIMD argument types is already of questionable value (and will cause horrible performance on engines that aren’t able either inline the callee or pass SIMD vectors as unboxed arguments).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Nagy_Mostafa</div>
+          <div class="creation_date">2014-12-16</div>
+          <div class="post_content">
+<aside class="quote" data-post="1" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/letter_avatar_proxy/v2/letter/l/7ab992/40.png" width="20"/> luke:</div>
+<blockquote>
+<p>float32x4ctor has signature: (floatish4)-&gt;float32x4 ∧ (doublelit4)-&gt;float32x4</p>
+</blockquote>
+</aside>
+<p>Does float32x4ctor support mixed args of floatish and doublelit ? The way it is specified now, it doesn’t. So either all floatish or all doublelit. This causes asymmetry with int32x4ctor which supports all combinations (because int literal types are subtype of intish). Do we need to specify all combinations of floatish/doublelit args as overloads ?</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2014-12-16</div>
+          <div class="post_content">
+<p>Oops, you’re exactly right, you shouldn’t have to specify all-floatish or all-doublelit; this is indeed what is in Firefox atm.  Instead of a big overload set, I think we can formalize it with a sum type: <code>(floatish + doublelit)<sup>4</sup>-&gt;float32x4</code>.  In general a sum type would require some sort of dynamic tagging, but the intended meaning here is that the immediate argument must be either floatish or doublelit, so you can statically know what you have.  Make sense?  Updated above.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">Weiliang_Lin</div>
+          <div class="creation_date">2015-01-07</div>
+          <div class="post_content">
+<aside class="quote" data-post="10" data-topic="676">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" class="avatar" height="20" src="//discourse.wicg.io/user_avatar/discourse.wicg.io/ben/40/335_1.png" width="20"/> ben:</div>
+<blockquote>
+<p>For returning SIMD values, it’s even worse, as when one wants to return a SIMD variable, one would have to store the four lanes, store them in global variables (4 SIMD lanes extractions and 4 global vars stores) and implement accessors to these global vars.</p>
+</blockquote>
+</aside>
+<p>Any purpose for this design?
+Instead of</p>
+<pre><code>  function g(i) {
+    i = i|0;
+    var g3 = i4(f(i, g1)); 
+    i = g3.w; 
+    return i|0;
+  }
+</code></pre>
+<p>We have to write as below</p>
+<pre><code>  function g(i) {
+    i = i|0;
+    var g3 = i4(0, 0, 0, 0);
+    g3 = i4(f(i, g1)); 
+    i = g3.w;
+    return i|0;
+  }</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">James_Vickers</div>
+          <div class="creation_date">2015-03-11</div>
+          <div class="post_content">
+<p>While the vectors look useful, that’s not how I want to program. Conceptually, there is the step of loading the values into vectors. I don’t know if the compiler will optimize this away, of course it would help if it did this when possible. In terms of the JavaScript code, it’s still requiring multiple instructions.</p>
+<p>Also, this proposal is limited to 4 SIMD lanes (for floats). I’d like something able to make use of the capabilities of  processors such as Haswell that can do 8 at once. I suggest that the proposal gets extended to include 256 bit wide SIMD instructions, with the SIMD being emulated if it’s not available (eg CPUs capable of 4 at a time would do that twice, but the JS code is the same).</p>
+<p>I’d like there to be the means to call a SIMD instruction with one instruction, which would be very much like intrinsics in C++. I understand that there could be some problems with allowing the full range of instructions because of safety (like gather?). Allowing / encouraging SIMD with one statement would really be what SIMD is about - it does start with ‘Single Instruction’. This would require aligned data to be used, such as Typed Arrays, or smalloc in node/iojs.</p>
+<p>I want to be able to call _mm256_div_ps and the like from JavaScript.</p>
+<p>I’d like the SIMD functions to be callable on aligned data. Instead of a pointer, they can be given an object reference and position within that object (if that can be made to compile efficiently and safely).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">luke</div>
+          <div class="creation_date">2015-03-11</div>
+          <div class="post_content">
+<p>These are interesting points to discuss, but they concern the SIMD.js proposal itself (currently being discussed on a <a href="https://github.com/johnmccutchan/ecmascript_simd" rel="nofollow noopener">GitHub repo</a>).  What is being described in this topic is just the embedding of SIMD.js into asm.js by assigning types that guarantee full optimization.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/{size}.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">sunfish</div>
+          <div class="creation_date">2015-03-11</div>
+          <div class="post_content">
+<p>When you talk about “single instructions” and “multiple instructions”, I don’t quite understand what you’re saying.</p>
+<p>Concerning the second paragraph, it’s an open design question. We’re doing 128-bit today, because it’s useful and widely implementable, and it’s a good way to work out the set of operations needed and the semantics. It will certainly be possible to extend the API to 256-bit or even 512-bit or more in the future. However, wider SIMD types either mean that application writers will need to write multiple versions of their code to get portability, or JITs will have to split wider types up on some machines, and while that’s doable, it can greatly increase register pressure, so it isn’t entirely ideal. Perhaps what we really want, beyond 128-bit, is N-bit, where N is determined by the JIT. Or perhaps we want something else entirely. But it’s an open question right now.</p>
+<p>Concerning alignment, this is also something that is still an open design question. There are two aspects to it: alignment of the data, and alignment assumptions of the accesses. Alignment of the data certainly matters, but it’ll need to be addressed within ArrayBuffer and other places where memory is actually allocated. Alignment assumptions of the accesses are less clearly valuable; if the data is actually aligned, unknown-alignment accesses are just as fast as known-alignment accesses on many processors. And, known-alignment accesses will add complexity in JS engines, as they’d have to handle alignment traps when the data isn’t actually aligned. So, it’s still being considered.</p>
+<p>Memory references via load and store within objects will likely be something we can add once Typed Objects are standardized.</p>
+<p>Of course, one can also have SIMD values as properties of normal JS objects or as global or local variables, which you can reference directly without using load/store.</p>
+<p>If you have further questions or thoughts on the SIMD.js API itself, you’re welcome to file an issue on <a href="https://github.com/johnmccutchan/ecmascript_simd" rel="nofollow noopener">the GitHub repo</a> issue tracker. Hopefully soon we’ll be switching over to a more proper forum, but at the moment the work is largely focused around writing the polyfill code as a reference implementation, so GitHub remains somewhat convenient.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="post_container">
+        <div class="avatar_container">
+          <img src="../../../images/335_2.png" class="avatar" />
+        </div>
+        <div class="post">
+          <div class="user_name">ben</div>
+          <div class="creation_date">2015-03-27</div>
+          <div class="post_content">
+<p>In addition to the original post, here’s a list of the SIMD operations for each type, as implemented as of today in Spidermonkey (Firefox’s JS VM). This list may change in the future, as implementation evolves, adding / substracting types / operations.</p>
+<p>Here’s an example of a module that imports an operation and uses it:</p>
+<pre><code class="lang-auto">function f(glob) {
+  "use asm";
+  var int32x4 = glob.SIMD.int32x4;
+  var add = int32x4.add;
+  var check = int32x4.check;
+  function g() {
+    var v = int32x4(1, 2, 3, 4);
+    var w = int32x4(4, 5, 6, 7);
+    return check(add(v, w));
+  }
+  return g;
+</code></pre>
+<p>Semantics of these operations is described by the polyfill implementation on the github’s repo linked in the first message.</p>
+<ul>
+<li>SIMD.float32x4.abs: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.add: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.and: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.bitselect: int32x4,float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.check: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.div: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.equal: float32x4,float32x4 -&gt; int32x4</li>
+<li>SIMD.float32x4.fromInt32x4Bits: int32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.fromInt32x4: int32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.greaterThan: float32x4,float32x4 -&gt; int32x4</li>
+<li>SIMD.float32x4.greaterThanOrEqual: float32x4,float32x4 -&gt; int32x4</li>
+<li>SIMD.float32x4.lessThan: float32x4,float32x4 -&gt; int32x4</li>
+<li>SIMD.float32x4.lessThanOrEqual: float32x4,float32x4 -&gt; int32x4</li>
+<li>SIMD.float32x4.load: Uint8ArrayView,intish -&gt; float32x4</li>
+<li>SIMD.float32x4.loadX: Uint8ArrayView,intish-&gt; float32x4</li>
+<li>SIMD.float32x4.loadXY: Uint8Array,intish-&gt; float32x4</li>
+<li>SIMD.float32x4.loadXYZ: Uint8Array,intish-&gt; float32x4</li>
+<li>SIMD.float32x4.max: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.maxNum: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.min: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.minNum: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.mul: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.neg: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.notEqual: float32x4,float32x4 -&gt; int32x4</li>
+<li>SIMD.float32x4.not: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.or: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.reciprocalApproximation: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.reciprocalSqrtApproximation: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.select: int32x4,float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.shuffle: float32x4,float32x4,(int literal between 0 and 7 inclusive)**4 -&gt; float32x4</li>
+<li>SIMD.float32x4.splat: (floatish|double lit) -&gt; void</li>
+<li>SIMD.float32x4.sqrt: float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.store: Uint8Array,intish,float32x4 -&gt; void</li>
+<li>SIMD.float32x4.storeX: Uint8Array,intish,float32x4 -&gt; void</li>
+<li>SIMD.float32x4.storeXY: Uint8Array,intish,float32x4 -&gt; void</li>
+<li>SIMD.float32x4.storeXYZ: Uint8Array,intish,float32x4 -&gt; void</li>
+<li>SIMD.float32x4.sub: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.float32x4.swizzle: float32x4,(int literal between 0 and 3 inclusive) -&gt; float32x4</li>
+<li>SIMD.float32x4.withW: float32x4,(floatish|double lit) -&gt; float32x4</li>
+<li>SIMD.float32x4.withX: float32x4,(floatish|double lit) -&gt; float32x4</li>
+<li>SIMD.float32x4.withY: float32x4,(floatish|double lit) -&gt; float32x4</li>
+<li>SIMD.float32x4.withZ: float32x4,(floatish|double lit) -&gt; float32x4</li>
+<li>SIMD.float32x4.xor: float32x4,float32x4 -&gt; float32x4</li>
+<li>SIMD.int32x4.add: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.and: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.bitselect: int32x4,int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.check: int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.equal: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.fromFloat32x4Bits: float32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.fromFloat32x4: float32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.greaterThan: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.greaterThanOrEqual: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.lessThan: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.lessThanOrEqual: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.load: Uint8ArrayView,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.loadX: Uint8ArrayView,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.loadXY: Uint8ArrayView,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.loadXYZ: Uint8ArrayView,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.mul: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.neg: int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.notEqual: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.not: int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.or: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.select: int32x4,int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.shiftLeftByScalar: int32x4,intish-&gt; int32x4</li>
+<li>SIMD.int32x4.shiftRightArithmeticByScalar: int32x4,intish-&gt; int32x4</li>
+<li>SIMD.int32x4.shiftRightLogicalByScalar: int32x4,intish-&gt; int32x4</li>
+<li>SIMD.int32x4.shuffle: int32x4,int32x4,(int literal between 0 and 7 inclusive)**4 -&gt; int32x4</li>
+<li>SIMD.int32x4.splat: integer -&gt; void</li>
+<li>SIMD.int32x4.store: Uint8Array,intish,int32x4 -&gt; void</li>
+<li>SIMD.int32x4.storeX: Uint8Array,intish,int32x4 -&gt; void</li>
+<li>SIMD.int32x4.storeXY: Uint8Array,intish,int32x4 -&gt; void</li>
+<li>SIMD.int32x4.storeXYZ: Uint8Array,intish,int32x4 -&gt; void</li>
+<li>SIMD.int32x4.sub: int32x4,int32x4 -&gt; int32x4</li>
+<li>SIMD.int32x4.swizzle: int32x4,(int literal between 0 and 3 inclusive)**4 -&gt; int32x4</li>
+<li>SIMD.int32x4.withW: int32x4,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.withX: int32x4,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.withY: int32x4,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.withZ: int32x4,intish -&gt; int32x4</li>
+<li>SIMD.int32x4.xor: int32x4,int32x4 -&gt; int32x4</li>
+</ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </body>
+</html>
