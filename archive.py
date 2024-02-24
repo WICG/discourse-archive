@@ -70,7 +70,7 @@ main_template = """<!DOCTYPE html>
           <span class="topic-head">Topics</span>
           <span class="category-head">Category</span>
           <span class="post-count-head">Posts</span>
-          <span class="post-creation-date-head">Created</span>
+          <span class="post-creation-date-head">Updated</span>
         </div>
         <!-- TOPIC_LIST -->
       </div>
@@ -168,7 +168,7 @@ def post_row(post_json):
 
     user_name = post_json['username']
     content = post_json['cooked']
-    creation_date = post_json['created_at'].split('T')[0]
+    creation_date = post_json['updated_at'].split('T')[0]
     
     # Since we don't generate user information, 
     # replace any anchors of class mention with a span
