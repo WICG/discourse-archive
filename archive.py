@@ -15,7 +15,7 @@
 import os
 from datetime import date
 base_url = 'https://discourse.wicg.io'
-path = os.path.join(os.getcwd(), 'wicg_discourse')
+path = os.path.join(os.getcwd(), 'docs')
 archive_blurb = "A partial archive of discourse.wicg.io as of " + \
     date.today().strftime("%A %B %d, %Y") + '.'
 
@@ -168,7 +168,7 @@ def post_row(post_json):
 
     user_name = post_json['username']
     content = post_json['cooked']
-    creation_date = post_json['updated_at'].split('T')[0]
+    creation_date = post_json['created_at'].split('T')[0]
     
     # Since we don't generate user information, 
     # replace any anchors of class mention with a span
@@ -239,7 +239,10 @@ def topic_row(topic_json):
     topic_url = 't/' + topic_json['slug']+'/'+str(topic_json['id'])
     topic_title_text = topic_json['fancy_title']
     topic_post_count = topic_json['posts_count']
-    topic_post_creation_date = topic_json['created_at'].split('T')[0]
+    topic_date = topic_json.get('last_posted_at', None)
+    if not topic_date:
+      topic_date = topic_json['created_at']
+    topic_post_creation_date = topic_date.split('T')[0]
     topic_pinned = topic_json['pinned_globally']
     try:
         topic_category = category_id_to_name[topic_json['category_id']]
